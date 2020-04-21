@@ -1,8 +1,8 @@
 # Extracts the secrets for the XMMP account `account_name`.
 def xmpp_account(account_name, required_options = [])
   begin
-    account = $config["Pidgin"]["Accounts"]["XMPP"][account_name]
-    check_keys = ["username", "domain", "password"] + required_options
+    account = $config['Pidgin']['Accounts']['XMPP'][account_name]
+    check_keys = ['username', 'domain', 'password'] + required_options
     for key in check_keys do
       assert(account.has_key?(key))
       assert_not_nil(account[key])
@@ -72,53 +72,53 @@ def click_mid_right_edge(pattern, **opts)
 end
 
 When /^I create my XMPP account$/ do
-  account = xmpp_account("Tails_account")
-  @screen.click("PidginAccountManagerAddButton.png")
-  @screen.wait("PidginAddAccountWindow.png", 20)
-  click_mid_right_edge("PidginAddAccountProtocolLabel.png")
-  @screen.click("PidginAddAccountProtocolXMPP.png")
+  account = xmpp_account('Tails_account')
+  @screen.click('PidginAccountManagerAddButton.png')
+  @screen.wait('PidginAddAccountWindow.png', 20)
+  click_mid_right_edge('PidginAddAccountProtocolLabel.png')
+  @screen.click('PidginAddAccountProtocolXMPP.png')
   # We first wait for some field that is shown for XMPP but not the
   # default (IRC) since we otherwise may decide where we click before
   # the GUI has updated after switching protocol.
-  @screen.wait("PidginAddAccountXMPPDomain.png", 5)
-  click_mid_right_edge("PidginAddAccountXMPPUsername.png")
-  @screen.type(account["username"])
-  click_mid_right_edge("PidginAddAccountXMPPDomain.png")
-  @screen.type(account["domain"])
-  click_mid_right_edge("PidginAddAccountXMPPPassword.png")
-  @screen.type(account["password"])
-  @screen.click("PidginAddAccountXMPPRememberPassword.png")
-  if account["connect_server"]
-    @screen.click("PidginAddAccountXMPPAdvancedTab.png")
-    click_mid_right_edge("PidginAddAccountXMPPConnectServer.png")
-    @screen.type(account["connect_server"])
+  @screen.wait('PidginAddAccountXMPPDomain.png', 5)
+  click_mid_right_edge('PidginAddAccountXMPPUsername.png')
+  @screen.type(account['username'])
+  click_mid_right_edge('PidginAddAccountXMPPDomain.png')
+  @screen.type(account['domain'])
+  click_mid_right_edge('PidginAddAccountXMPPPassword.png')
+  @screen.type(account['password'])
+  @screen.click('PidginAddAccountXMPPRememberPassword.png')
+  if account['connect_server']
+    @screen.click('PidginAddAccountXMPPAdvancedTab.png')
+    click_mid_right_edge('PidginAddAccountXMPPConnectServer.png')
+    @screen.type(account['connect_server'])
   end
-  @screen.click("PidginAddAccountXMPPAddButton.png")
+  @screen.click('PidginAddAccountXMPPAddButton.png')
 end
 
 Then /^Pidgin automatically enables my XMPP account$/ do
-  account = xmpp_account("Tails_account")
-  jid = account["username"] + '@' + account["domain"]
+  account = xmpp_account('Tails_account')
+  jid = account['username'] + '@' + account['domain']
   try_for(3 * 60) do
     pidgin_account_connected?(jid, 'prpl-jabber')
   end
   $vm.focus_window('Buddy List')
-  @screen.wait("PidginAvailableStatus.png", 60 * 3)
+  @screen.wait('PidginAvailableStatus.png', 60 * 3)
 end
 
 Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
-  account = xmpp_account("Friend_account", ["otr_key"])
-  bot_opts = account.select { |k, _| ["connect_server"].include?(k) }
+  account = xmpp_account('Friend_account', ['otr_key'])
+  bot_opts = account.select { |k, _| ['connect_server'].include?(k) }
   if join_chat
-    bot_opts["auto_join"] = [@chat_room_jid]
+    bot_opts['auto_join'] = [@chat_room_jid]
   end
-  @friend_name = account["username"]
-  @chatbot = ChatBot.new(account["username"] + "@" + account["domain"],
-                         account["password"], account["otr_key"], bot_opts)
+  @friend_name = account['username']
+  @chatbot = ChatBot.new(account['username'] + '@' + account['domain'],
+                         account['password'], account['otr_key'], bot_opts)
   @chatbot.start
   add_after_scenario_hook { @chatbot.stop }
   $vm.focus_window('Buddy List')
-  @screen.wait("PidginFriendOnline.png", 60)
+  @screen.wait('PidginFriendOnline.png', 60)
 end
 
 When /^I start a conversation with my friend$/ do
@@ -126,30 +126,30 @@ When /^I start a conversation with my friend$/ do
   # Clicking the middle, bottom of this image should query our
   # friend, given it's the only subscribed user that's online, which
   # we assume.
-  r = @screen.find("PidginFriendOnline.png")
+  r = @screen.find('PidginFriendOnline.png')
   x = r.x + r.w / 2
   y = r.y + r.h
   @screen.click(x, y, double: true)
   # Since Pidgin sets the window name to the contact, we have no good
   # way to identify the conversation window. Let's just look for the
   # expected menu bar.
-  @screen.wait("PidginConversationWindowMenuBar.png", 10)
+  @screen.wait('PidginConversationWindowMenuBar.png', 10)
 end
 
 And /^I say (.*) to my friend( in the multi-user chat)?$/ do |msg, multi_chat|
-  msg = "ping" if msg == "something"
+  msg = 'ping' if msg == 'something'
   if multi_chat
-    $vm.focus_window(@chat_room_jid.split("@").first)
-    msg = @friend_name + ": " + msg
+    $vm.focus_window(@chat_room_jid.split('@').first)
+    msg = @friend_name + ': ' + msg
   else
     $vm.focus_window(@friend_name)
   end
-  @screen.type(msg, ["Return"])
+  @screen.type(msg, ['Return'])
 end
 
 Then /^I receive a response from my friend( in the multi-user chat)?$/ do |multi_chat|
   if multi_chat
-    $vm.focus_window(@chat_room_jid.split("@").first)
+    $vm.focus_window(@chat_room_jid.split('@').first)
   else
     $vm.focus_window(@friend_name)
   end
@@ -163,19 +163,19 @@ end
 
 When /^I start an OTR session with my friend$/ do
   $vm.focus_window(@friend_name)
-  @screen.click("PidginConversationOTRMenu.png")
+  @screen.click('PidginConversationOTRMenu.png')
   @screen.hide_cursor
-  @screen.click("PidginOTRMenuStartSession.png")
+  @screen.click('PidginOTRMenuStartSession.png')
 end
 
 Then /^Pidgin automatically generates an OTR key$/ do
-  @screen.wait("PidginOTRKeyGenPrompt.png", 30)
-  @screen.wait("PidginOTRKeyGenPromptDoneButton.png", 30).click
+  @screen.wait('PidginOTRKeyGenPrompt.png', 30)
+  @screen.wait('PidginOTRKeyGenPromptDoneButton.png', 30).click
 end
 
 Then /^an OTR session was successfully started with my friend$/ do
   $vm.focus_window(@friend_name)
-  @screen.wait("PidginConversationOTRUnverifiedSessionStarted.png", 10)
+  @screen.wait('PidginConversationOTRUnverifiedSessionStarted.png', 10)
 end
 
 # The reason the chat must be empty is to guarantee that we don't mix
@@ -183,40 +183,40 @@ end
 # bot.
 When /^I join some empty multi-user chat$/ do
   $vm.focus_window('Buddy List')
-  @screen.click("PidginBuddiesMenu.png")
-  @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
-  @screen.wait("PidginJoinChatWindow.png", 10).click
-  click_mid_right_edge("PidginJoinChatRoomLabel.png")
-  account = xmpp_account("Tails_account")
-  if account.has_key?("chat_room") && \
-     !account["chat_room"].nil? && \
-     !account["chat_room"].empty?
-    chat_room = account["chat_room"]
+  @screen.click('PidginBuddiesMenu.png')
+  @screen.wait('PidginBuddiesMenuJoinChat.png', 10).click
+  @screen.wait('PidginJoinChatWindow.png', 10).click
+  click_mid_right_edge('PidginJoinChatRoomLabel.png')
+  account = xmpp_account('Tails_account')
+  if account.has_key?('chat_room') && \
+     !account['chat_room'].nil? && \
+     !account['chat_room'].empty?
+    chat_room = account['chat_room']
   else
     chat_room = random_alnum_string(10, 15)
   end
   @screen.type(chat_room)
 
   # We will need the conference server later, when starting the bot.
-  click_mid_right_edge("PidginJoinChatServerLabel.png")
-  @screen.press("ctrl", "a")
-  @screen.press("ctrl", "c")
+  click_mid_right_edge('PidginJoinChatServerLabel.png')
+  @screen.press('ctrl', 'a')
+  @screen.press('ctrl', 'c')
   conference_server =
-    $vm.execute_successfully("xclip -o", :user => LIVE_USER).stdout.chomp
-  @chat_room_jid = chat_room + "@" + conference_server
+    $vm.execute_successfully('xclip -o', :user => LIVE_USER).stdout.chomp
+  @chat_room_jid = chat_room + '@' + conference_server
 
-  @screen.click("PidginJoinChatButton.png")
+  @screen.click('PidginJoinChatButton.png')
   # The following will both make sure that the we joined the chat, and
   # that it is empty. We'll also deal with the *potential* "Create New
   # Room" prompt that Pidgin shows for some server configurations.
-  images = ["PidginCreateNewRoomPrompt.png",
-            "PidginChat1UserInRoom.png",]
+  images = ['PidginCreateNewRoomPrompt.png',
+            'PidginChat1UserInRoom.png',]
   image_found, = @screen.wait_any(images, 30)
-  if image_found == "PidginCreateNewRoomPrompt.png"
-    @screen.click("PidginCreateNewRoomAcceptDefaultsButton.png")
+  if image_found == 'PidginCreateNewRoomPrompt.png'
+    @screen.click('PidginCreateNewRoomAcceptDefaultsButton.png')
   end
   $vm.focus_window(@chat_room_jid)
-  @screen.wait("PidginChat1UserInRoom.png", 10)
+  @screen.wait('PidginChat1UserInRoom.png', 10)
 end
 
 # Since some servers save the scrollback, and sends it when joining,
@@ -224,13 +224,13 @@ end
 # messages when looking for a particular response, or similar.
 When /^I clear the multi-user chat's scrollback$/ do
   $vm.focus_window(@chat_room_jid)
-  @screen.click("PidginConversationMenu.png")
-  @screen.wait("PidginConversationMenuClearScrollback.png", 10).click
+  @screen.click('PidginConversationMenu.png')
+  @screen.wait('PidginConversationMenuClearScrollback.png', 10).click
 end
 
 Then /^I can see that my friend joined the multi-user chat$/ do
   $vm.focus_window(@chat_room_jid)
-  @screen.wait("PidginChat2UsersInRoom.png", 60)
+  @screen.wait('PidginChat2UsersInRoom.png', 60)
 end
 
 def configured_pidgin_accounts
@@ -238,10 +238,10 @@ def configured_pidgin_accounts
   xml = REXML::Document.new(
     $vm.file_content("/home/#{LIVE_USER}/.purple/accounts.xml")
   )
-  xml.elements.each("account/account") do |e|
-    account = e.elements["name"].text
-    account_name, network = account.split("@")
-    protocol = e.elements["protocol"].text
+  xml.elements.each('account/account') do |e|
+    account = e.elements['name'].text
+    account_name, network = account.split('@')
+    protocol = e.elements['protocol'].text
     port = e.elements["settings/setting[@name='port']"].text
     username_element = e.elements["settings/setting[@name='username']"]
     realname_elemenet = e.elements["settings/setting[@name='realname']"]
@@ -277,7 +277,7 @@ def chan_image(account, channel, image)
       },
     },
   }
-  return images[account][channel][image] + ".png"
+  return images[account][channel][image] + '.png'
 end
 
 def default_chan(account)
@@ -298,22 +298,22 @@ When /^I open Pidgin's account manager window$/ do
 end
 
 When /^I see Pidgin's account manager window$/ do
-  @screen.wait("PidginAccountWindow.png", 40)
+  @screen.wait('PidginAccountWindow.png', 40)
 end
 
 When /^I close Pidgin's account manager window$/ do
-  @screen.wait("PidginDialogCloseButton.png", 10).click
+  @screen.wait('PidginDialogCloseButton.png', 10).click
 end
 
 When /^I close Pidgin$/ do
   $vm.focus_window('Buddy List')
-  @screen.press("ctrl", "q")
+  @screen.press('ctrl', 'q')
   @screen.wait_vanish('PidginAvailableStatus.png', 10)
 end
 
 When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   @screen.click("PidginAccount_#{account}.png")
-  @screen.type(["Left"], ["space"])
+  @screen.type(['Left'], ['space'])
   if deactivate
     @screen.wait_vanish('PidginAccountEnabledCheckbox.png', 5)
   else
@@ -362,13 +362,13 @@ end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   $vm.focus_window('Buddy List')
-  @screen.wait("PidginBuddiesMenu.png", 20).click
-  @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
-  @screen.wait("PidginJoinChatWindow.png", 10).click
-  click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  @screen.wait('PidginBuddiesMenu.png', 20).click
+  @screen.wait('PidginBuddiesMenuJoinChat.png', 10).click
+  @screen.wait('PidginJoinChatWindow.png', 10).click
+  click_mid_right_edge('PidginJoinChatRoomLabel.png')
   @screen.type(channel)
-  @screen.click("PidginJoinChatButton.png")
-  @chat_room_jid = channel + "@" + account
+  @screen.click('PidginJoinChatButton.png')
+  @chat_room_jid = channel + '@' + account
   $vm.focus_window(@chat_room_jid)
   @screen.hide_cursor
   try_for(60) do
@@ -378,7 +378,7 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
       # If the channel tab can't be found it could be because there were
       # multiple connection attempts and the channel tab we want is off the
       # screen. We'll try closing tabs until the one we want can be found.
-      @screen.press("ctrl", "w")
+      @screen.press('ctrl', 'w')
       raise e
     end
   end
@@ -425,14 +425,14 @@ def pidgin_add_certificate_from(cert_file)
     # do anything. Hence, this noop exception handler.
   end
   @screen.wait('GtkFileTypeFileNameButton.png', 10).click
-  @screen.press("alt", "l") # "Location" field
-  @screen.type(cert_file, ["Return"])
+  @screen.press('alt', 'l') # "Location" field
+  @screen.type(cert_file, ['Return'])
 end
 
 Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
   wait_and_focus('PidginCertificateAddHostnameDialog.png', 10, 'Certificate Import')
-  @screen.type("XXX test XXX", ["Return"])
+  @screen.type('XXX test XXX', ['Return'])
   wait_and_focus('PidginCertificateTestItem.png', 10, 'Certificate Manager')
 end
 
@@ -443,13 +443,13 @@ end
 
 When /^I close Pidgin's certificate manager$/ do
   wait_and_focus('PidginCertificateManagerDialog.png', 10, 'Certificate Manager')
-  @screen.press("Escape")
+  @screen.press('Escape')
   # @screen.wait('PidginCertificateManagerClose.png', 10).click
   @screen.wait_vanish('PidginCertificateManagerDialog.png', 10)
 end
 
 When /^I close Pidgin's certificate import failure dialog$/ do
-  @screen.press("Escape")
+  @screen.press('Escape')
   # @screen.wait('PidginCertificateManagerClose.png', 10).click
   @screen.wait_vanish('PidginCertificateImportFailed.png', 10)
 end
@@ -462,7 +462,7 @@ When /^I see the Tails roadmap URL$/ do
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
-      @screen.press("Page_Up")
+      @screen.press('Page_Up')
       raise e
     end
   end

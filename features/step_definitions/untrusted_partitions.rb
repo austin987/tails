@@ -12,7 +12,7 @@ end
 
 Then /^Tails has no disk swap enabled$/ do
   # Skip first line which contain column headers
-  swap_info = $vm.execute_successfully("tail -n+2 /proc/swaps").stdout
+  swap_info = $vm.execute_successfully('tail -n+2 /proc/swaps').stdout
   assert(swap_info.empty?,
          "Disk swapping is enabled according to /proc/swaps:\n" + swap_info)
   mem_info = $vm.execute_successfully("grep '^Swap' /proc/meminfo").stdout
@@ -35,7 +35,7 @@ Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"
     :path => (old == '' ? (type == 'ISO' ? TAILS_ISO : TAILS_IMG)
                         : (type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG)),
     :opts => {
-      :format   => "raw",
+      :format   => 'raw',
       :readonly => true,
     },
   }

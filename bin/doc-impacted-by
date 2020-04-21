@@ -33,34 +33,34 @@ end
 def parse_argv!
   options = Hash.new
   opt_parser = OptionParser.new do |opts|
-    opts.banner = "Usage: [OPTION]... COMMITISH1 COMMITISH2 MANIFEST1 MANIFEST2"
-    opts.separator ""
-    opts.separator "Produces a list of documentation pages that might need " \
-                   "attention due to the changes from COMMITISH1 to " \
-                   "COMMITISH2. The corresponding .build-manifest files must " \
-                   "be passed as MANIFEST1 and MANIFEST2."
-    opts.separator ""
-    opts.separator "Example:"
-    opts.separator "    bin/doc-impacted-by 3.0 3.2 " \
-                   "tails-amd64-3.0.build-manifest " \
-                   "tails-amd64-3.2.build-manifest"
-    opts.separator ""
-    opts.separator "Options:"
+    opts.banner = 'Usage: [OPTION]... COMMITISH1 COMMITISH2 MANIFEST1 MANIFEST2'
+    opts.separator ''
+    opts.separator 'Produces a list of documentation pages that might need ' \
+                   'attention due to the changes from COMMITISH1 to ' \
+                   'COMMITISH2. The corresponding .build-manifest files must ' \
+                   'be passed as MANIFEST1 and MANIFEST2.'
+    opts.separator ''
+    opts.separator 'Example:'
+    opts.separator '    bin/doc-impacted-by 3.0 3.2 ' \
+                   'tails-amd64-3.0.build-manifest ' \
+                   'tails-amd64-3.2.build-manifest'
+    opts.separator ''
+    opts.separator 'Options:'
 
-    opts.on("-h", "--help", "Show this message") do
+    opts.on('-h', '--help', 'Show this message') do
       puts opts
       exit
     end
 
-    opts.on("-f PATH", "--relationship-file=PATH",
-            "Use a custom PATH for the doc-source relationship description " +
+    opts.on('-f PATH', '--relationship-file=PATH',
+            'Use a custom PATH for the doc-source relationship description ' +
             "file (default: #{File.basename(DEFAULT_RELATIONSHIP_FILE)} in " +
-            "the Git root)") do |path|
+            'the Git root)') do |path|
       options['relationship-file'] = path
     end
 
-    opts.on("-s", "--skip-packages", "Skip looking at packages, " +
-                                     "only look at Git") do
+    opts.on('-s', '--skip-packages', 'Skip looking at packages, ' +
+                                     'only look at Git') do
       options['skip-packages'] = true
     end
   end
@@ -157,10 +157,10 @@ def find_impacted_docs(impact_map,
   # something like `git.object(new_commit).path('wiki/src')` but the
   # Git module we use seem to not support listing files at a certain
   # commit.
-  git_cmd_wiki_files = "git ls-tree -r --full-tree " +
+  git_cmd_wiki_files = 'git ls-tree -r --full-tree ' +
                        "--name-only #{new_commit} -- wiki/src"
   doc_pages = `#{git_cmd_wiki_files}`.chomp.split("\n")
-  assert_equal(0, $CHILD_STATUS.exitstatus, "Error: `git ls-tree` failed")
+  assert_equal(0, $CHILD_STATUS.exitstatus, 'Error: `git ls-tree` failed')
 
   old_packages = old_manifest.keys
   new_packages = new_manifest.keys
@@ -185,8 +185,8 @@ def find_impacted_docs(impact_map,
         file_paths = source
       else
         raise "Unknown field '#{type}' in impact map; this should not " +
-              "happen, and probably means canonicalize_relationship() " +
-              "is buggy"
+              'happen, and probably means canonicalize_relationship() ' +
+              'is buggy'
       end
     end
     all_source_file_paths = file_paths + test_paths
@@ -220,7 +220,7 @@ def find_impacted_docs(impact_map,
           assert_not_equal(
             old, new,
             "'#{package}' has identical data in both manifests so it is " +
-            "a bug that we ended up here"
+            'a bug that we ended up here'
           )
           package_changes = old_manifest[package]
                             .keys.sort.map do |key|
@@ -272,11 +272,11 @@ if impacted_docs.size > 0
     end
     .join("\n\n")
 
-  puts "The following documentation pages need investigation:"
+  puts 'The following documentation pages need investigation:'
   puts
   puts result
 end
 if options['skip-packages']
-  STDERR.puts "Warning! The --skip-packages option makes this " +
-              "report incomplete!"
+  STDERR.puts 'Warning! The --skip-packages option makes this ' +
+              'report incomplete!'
 end

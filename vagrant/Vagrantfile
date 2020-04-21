@@ -20,13 +20,13 @@ require_relative 'lib/tails_build_settings'
 
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.configure("2") do |config|
+Vagrant.configure('2') do |config|
   config.vm.box = box_name
-  config.vm.box_url = "http://127.0.0.1/dev/null"
-  ENV['EXPORTED_VARIABLES'] ||= ""
+  config.vm.box_url = 'http://127.0.0.1/dev/null'
+  ENV['EXPORTED_VARIABLES'] ||= ''
   env_vars = ENV.select { |k, _| ENV['EXPORTED_VARIABLES'].split.include?(k) }
                 .map { |k, v| "#{k}='#{v}'" } .join(' ')
-  config.vm.provision "shell", inline: <<-EOF
+  config.vm.provision 'shell', inline: <<-EOF
     sudo #{env_vars} /vagrant/provision/setup-tails-builder
   EOF
   config.vm.synced_folder '.', '/vagrant', type: '9p', readonly: true

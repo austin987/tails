@@ -48,19 +48,19 @@ AfterConfiguration do |config|
   # we'll do some special things.
   $started_first_product_feature = false
 
-  if File.exist?($config["TMPDIR"])
-    if !File.directory?($config["TMPDIR"])
+  if File.exist?($config['TMPDIR'])
+    if !File.directory?($config['TMPDIR'])
       raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
-            "directory"
+            'directory'
     end
-    if !File.owned?($config["TMPDIR"])
+    if !File.owned?($config['TMPDIR'])
       raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
-            "current user"
+            'current user'
     end
-    FileUtils.chmod(0755, $config["TMPDIR"])
+    FileUtils.chmod(0755, $config['TMPDIR'])
   else
     begin
-      FileUtils.mkdir_p($config["TMPDIR"])
+      FileUtils.mkdir_p($config['TMPDIR'])
     rescue Errno::EACCES => e
       raise "Cannot create temporary directory: #{e}"
     end
@@ -79,7 +79,7 @@ end
 
 BeforeFeature('@product', '@source') do |feature|
   raise "Feature #{feature.file} is tagged both @product and @source, " +
-        "which is an impossible combination"
+        'which is an impossible combination'
 end
 
 at_exit do
@@ -116,9 +116,9 @@ def save_journal(path)
     $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
     file.write($vm.file_content('/tmp/systemd.journal'))
   end
-  save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
+  save_failure_artifact('Systemd journal', "#{path}/systemd.journal")
 rescue Exception => e
-  info_log("Exception thrown while trying to save the journal: " +
+  info_log('Exception thrown while trying to save the journal: ' +
            "#{e.class.name}: #{e}")
 end
 
@@ -142,7 +142,7 @@ BeforeFeature('@product') do
   images.each do |type, path|
     if path.nil?
       raise "No Tails #{type} image specified, and none could be found " +
-            "in the current directory"
+            'in the current directory'
     end
     if File.exist?(path)
       # Workaround: when libvirt takes ownership of the ISO/IMG image it may
@@ -154,9 +154,9 @@ BeforeFeature('@product') do
           File.chmod(0644, path)
         else
           raise "warning: the Tails #{type} image must be world readable " +
-                "or be owned by the current user to be available inside " +
-                "the guest VM via host-to-guest shares, which is required " +
-                "by some tests"
+                'or be owned by the current user to be available inside ' +
+                'the guest VM via host-to-guest shares, which is required ' +
+                'by some tests'
         end
       end
     else
@@ -171,7 +171,7 @@ BeforeFeature('@product') do
   end
 
   if not($started_first_product_feature)
-    $virt = Libvirt.open("qemu:///system")
+    $virt = Libvirt.open('qemu:///system')
     VM.remove_all_snapshots if !KEEP_SNAPSHOTS
     $vmnet = VMNet.new($virt, VM_XML_PATH)
     $vmstorage = VMStorage.new($virt, VM_XML_PATH)
@@ -200,7 +200,7 @@ end
 # *first* Before hook matching @product listed in this file.
 Before('@product') do |scenario|
   $failure_artifacts = Array.new
-  if $config["CAPTURE"]
+  if $config['CAPTURE']
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
     capture = IO.popen([ffmpeg,
@@ -215,16 +215,16 @@ Before('@product') do |scenario|
                         :err => ['/dev/null', 'w'],])
     @video_capture_pid = capture.pid
   end
-  if $config["IMAGE_BUMPING_MODE"]
+  if $config['IMAGE_BUMPING_MODE']
     @screen = ImageBumpingScreen.new
   else
     @screen = Screen.new
   end
   # English will be assumed if this is not overridden
-  $language = ""
-  @os_loader = "MBR"
-  @sudo_password = "asdf"
-  @persistence_password = "asdf"
+  $language = ''
+  @os_loader = 'MBR'
+  @sudo_password = 'asdf'
+  @persistence_password = 'asdf'
   # See comment for add_extra_allowed_host() above.
   @extra_allowed_hosts ||= []
 end
@@ -241,28 +241,28 @@ After('@product') do |scenario|
     # capture. Let's wait a few seconds more to make it easier to see
     # what the error was.
     sleep 3 if scenario.failed?
-    Process.kill("INT", @video_capture_pid)
+    Process.kill('INT', @video_capture_pid)
     Process.wait(@video_capture_pid)
-    save_failure_artifact("Video", @video_path)
+    save_failure_artifact('Video', @video_path)
   end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
-    secs = "%02d" % (time_of_fail % 60)
-    mins = "%02d" % ((time_of_fail / 60) % 60)
-    hrs  = "%02d" % (time_of_fail / (60 * 60))
+    secs = '%02d' % (time_of_fail % 60)
+    mins = '%02d' % ((time_of_fail / 60) % 60)
+    hrs  = '%02d' % (time_of_fail / (60 * 60))
     elapsed = "#{hrs}:#{mins}:#{secs}"
     info_log("Scenario failed at time #{elapsed}")
     screenshot_path = sanitize_filename("#{scenario.name}.png")
     $vm.display.screenshot(screenshot_path)
-    save_failure_artifact("Screenshot", screenshot_path)
+    save_failure_artifact('Screenshot', screenshot_path)
     exception_name = scenario.exception.class.name
     case exception_name
     when 'FirewallAssertionFailedError'
       Dir.glob("#{$config["TMPDIR"]}/*.pcap").each do |pcap_file|
-        save_failure_artifact("Network capture", pcap_file)
+        save_failure_artifact('Network capture', pcap_file)
       end
     when 'TorBootstrapFailure'
-      save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
+      save_failure_artifact('Tor logs', "#{$config["TMPDIR"]}/log.tor")
       chutney_logs = sanitize_filename(
         "#{elapsed}_#{scenario.name}_chutney-data"
       )
@@ -274,11 +274,11 @@ After('@product') do |scenario|
       )
       info_log
       info_log_artifact_location(
-        "Chutney logs",
+        'Chutney logs',
         "#{ARTIFACTS_DIR}/#{chutney_logs}"
       )
     when 'TimeSyncingError'
-      save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
+      save_failure_artifact('Htpdate logs', "#{$config["TMPDIR"]}/log.htpdate")
     end
     # Note that the remote shell isn't necessarily running at all
     # times a scenario can fail (and a scenario failure could very
@@ -299,7 +299,7 @@ After('@product') do |scenario|
       info_log
       info_log_artifact_location(type, artifact_path)
     end
-    if $config["INTERACTIVE_DEBUGGING"]
+    if $config['INTERACTIVE_DEBUGGING']
       pause(
         "Scenario failed: #{scenario.name}. " +
         "The error was: #{scenario.exception.class.name}: #{scenario.exception}"

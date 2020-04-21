@@ -11,16 +11,16 @@ def checkpoints
     },
 
     'no-network-logged-in'                       => {
-      :description       => "I have started Tails from DVD without network and logged in",
-      :parent_checkpoint => "tails-greeter",
+      :description       => 'I have started Tails from DVD without network and logged in',
+      :parent_checkpoint => 'tails-greeter',
       :steps             => [
         'I log in to a new session',
       ],
     },
 
     'with-network-logged-in'                     => {
-      :description       => "I have started Tails from DVD and logged in and the network is connected",
-      :parent_checkpoint => "no-network-logged-in",
+      :description       => 'I have started Tails from DVD and logged in and the network is connected',
+      :parent_checkpoint => 'no-network-logged-in',
       :steps             => [
         'the network is plugged',
         'Tor is ready',
@@ -31,8 +31,8 @@ def checkpoints
 
     'no-network-bridge-mode'                     => {
       :temporary         => true,
-      :description       => "I have started Tails from DVD without network and logged in with bridge mode enabled",
-      :parent_checkpoint => "tails-greeter",
+      :description       => 'I have started Tails from DVD without network and logged in with bridge mode enabled',
+      :parent_checkpoint => 'tails-greeter',
       :steps             => [
         'I enable the specific Tor configuration option',
         'I log in to a new session',
@@ -42,8 +42,8 @@ def checkpoints
 
     'no-network-logged-in-sudo-passwd'           => {
       :temporary         => true,
-      :description       => "I have started Tails from DVD without network and logged in with an administration password",
-      :parent_checkpoint => "tails-greeter",
+      :description       => 'I have started Tails from DVD without network and logged in with an administration password',
+      :parent_checkpoint => 'tails-greeter',
       :steps             => [
         'I set an administration password',
         'I log in to a new session',
@@ -52,8 +52,8 @@ def checkpoints
 
     'with-network-logged-in-sudo-passwd'         => {
       :temporary         => true,
-      :description       => "I have started Tails from DVD and logged in with an administration password and the network is connected",
-      :parent_checkpoint => "no-network-logged-in-sudo-passwd",
+      :description       => 'I have started Tails from DVD and logged in with an administration password and the network is connected',
+      :parent_checkpoint => 'no-network-logged-in-sudo-passwd',
       :steps             => [
         'the network is plugged',
         'Tor is ready',
@@ -79,7 +79,7 @@ def checkpoints
     },
 
     'usb-install-logged-in'                      => {
-      :description       => "I have started Tails without network from a USB drive without a persistent partition and logged in",
+      :description       => 'I have started Tails without network from a USB drive without a persistent partition and logged in',
       :parent_checkpoint => 'usb-install-tails-greeter',
       :steps             => [
         'I log in to a new session',
@@ -102,7 +102,7 @@ def checkpoints
     },
 
     'usb-install-with-persistence-logged-in'     => {
-      :description       => "I have started Tails without network from a USB drive with a persistent partition enabled and logged in",
+      :description       => 'I have started Tails without network from a USB drive with a persistent partition enabled and logged in',
       :parent_checkpoint => 'usb-install-with-persistence-tails-greeter',
       :steps             => [
         'I enable persistence',
@@ -118,10 +118,10 @@ def checkpoints
 end
 
 def reach_checkpoint(name)
-  scenario_indent = " " * 4
-  step_indent = " " * 6
+  scenario_indent = ' ' * 4
+  step_indent = ' ' * 6
 
-  step "a computer"
+  step 'a computer'
   if VM.snapshot_exists?(name)
     $vm.restore_snapshot(name)
     post_snapshot_restore_hook(name)
@@ -140,12 +140,12 @@ def reach_checkpoint(name)
     end
     debug_log(scenario_indent + "Checkpoint: #{checkpoint_description}",
               color: :white, timestamp: false)
-    step_action = "Given"
+    step_action = 'Given'
     if parent_checkpoint
       parent_description = checkpoints[parent_checkpoint][:description]
       debug_log(step_indent + "#{step_action} #{parent_description}",
                 color: :green, timestamp: false)
-      step_action = "And"
+      step_action = 'And'
     end
     steps.each do |s|
       begin
@@ -158,7 +158,7 @@ def reach_checkpoint(name)
       end
       debug_log(step_indent + "#{step_action} #{s}",
                 color: :green, timestamp: false)
-      step_action = "And"
+      step_action = 'And'
     end
     $vm.save_snapshot(name)
   end

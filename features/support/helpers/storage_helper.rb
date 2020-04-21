@@ -40,7 +40,7 @@ class VMStorage
         # which we want to support.
         FileUtils.mkdir(@pool_path)
         FileUtils.chown(nil, 'libvirt-qemu', @pool_path)
-        FileUtils.chmod("ug+wrx", @pool_path)
+        FileUtils.chmod('ug+wrx', @pool_path)
       end
     end
     @pool.create unless @pool.active?
@@ -88,13 +88,13 @@ class VMStorage
 
   def create_new_disk(name, **options)
     options[:size] ||= 2
-    options[:unit] ||= "GiB"
-    options[:type] ||= "qcow2"
+    options[:unit] ||= 'GiB'
+    options[:type] ||= 'qcow2'
     # Require 'slightly' more space to be available to give a bit more leeway
     # with rounding, temp file creation, etc.
     reserved = 500
     needed = convert_to_MiB(options[:size].to_i, options[:unit])
-    avail = convert_to_MiB(get_free_space('host', @pool_path), "KiB")
+    avail = convert_to_MiB(get_free_space('host', @pool_path), 'KiB')
     assert(avail - reserved >= needed,
            "Error creating disk \"#{name}\" in \"#{@pool_path}\". " \
            "Need #{needed} MiB but only #{avail} MiB is available of " \
@@ -106,13 +106,13 @@ class VMStorage
     else
       old_vol.delete
     end
-    uid = Etc.getpwnam("libvirt-qemu").uid
-    gid = Etc.getgrnam("libvirt-qemu").gid
+    uid = Etc.getpwnam('libvirt-qemu').uid
+    gid = Etc.getgrnam('libvirt-qemu').gid
     vol_xml = REXML::Document.new(File.read("#{@xml_path}/volume.xml"))
     vol_xml.elements['volume/name'].text = name
     size_b = convert_to_bytes(options[:size].to_f, options[:unit])
     vol_xml.elements['volume/capacity'].text = size_b.to_s
-    vol_xml.elements['volume/target/format'].attributes["type"] = options[:type]
+    vol_xml.elements['volume/target/format'].attributes['type'] = options[:type]
     vol_xml.elements['volume/target/path'].text = "#{@pool_path}/#{name}"
     vol_xml.elements['volume/target/permissions/owner'].text = uid.to_s
     vol_xml.elements['volume/target/permissions/group'].text = gid.to_s
@@ -140,7 +140,7 @@ class VMStorage
   def disk_format(name)
     vol = @pool.lookup_volume_by_name(name)
     vol_xml = REXML::Document.new(vol.xml_desc)
-    return vol_xml.elements['volume/target/format'].attributes["type"]
+    return vol_xml.elements['volume/target/format'].attributes['type']
   end
 
   def disk_path(name)
@@ -176,7 +176,7 @@ class VMStorage
       primary_partition = g.list_partitions()[0]
       if opts[:luks_password]
         g.luks_format(primary_partition, opts[:luks_password], 0)
-        luks_mapping = File.basename(primary_partition) + "_unlocked"
+        luks_mapping = File.basename(primary_partition) + '_unlocked'
         g.luks_open(primary_partition, opts[:luks_password], luks_mapping)
         luks_dev = "/dev/mapper/#{luks_mapping}"
         g.mkfs(fstype, luks_dev)

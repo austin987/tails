@@ -6,7 +6,7 @@ def udev_watchdog_monitored_device
   # /usr/local/sbin/udev-watchdog /devices/pci0000:00/0000:00:01.1/ata2/host1/target1:0:0/1:0:0:0/block/sr0 cd
   # We're only interested in the device itself, not in the type
   ps_output_scan = ps_output.scan(/^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/)
-  assert_equal(ps_output_scan.count, 1, "There should be one udev-watchdog running.")
+  assert_equal(ps_output_scan.count, 1, 'There should be one udev-watchdog running.')
   monitored_out = ps_output_scan.flatten[0]
   assert_not_nil(monitored_out)
   monitored_device_id = $vm.file_content('/sys' + monitored_out + '/dev').chomp
@@ -60,7 +60,7 @@ end
 
 Given /^I prepare Tails for memory erasure tests$/ do
   # Have our initramfs-pre-shutdown-hook sleep for a while
-  $vm.execute_successfully("touch /run/initramfs/tails_shutdown_debugging")
+  $vm.execute_successfully('touch /run/initramfs/tails_shutdown_debugging')
 
   # We exclude the memory we reserve for the kernel and admin
   # processes above from the free memory since fillram will be run by
@@ -76,9 +76,9 @@ Given /^I prepare Tails for memory erasure tests$/ do
 end
 
 When /^I start a process allocating (\d+) ([[:alpha:]]+) of memory with a known pattern$/ do |size, unit|
-  fillram_script_path = "/tmp/fillram"
+  fillram_script_path = '/tmp/fillram'
   @fillram_cmd = "python3 #{fillram_script_path}"
-  fillram_done_path = fillram_script_path + "_done"
+  fillram_done_path = fillram_script_path + '_done'
   fillram_script = <<~EOF
     import math
     import time
@@ -114,7 +114,7 @@ def assert_filesystem_is_full(mountpoint)
   assert_equal(
     0, avail_space,
     "#{avail_space} kB is still free on #{mountpoint}," +
-    "while this filesystem was expected to be full"
+    'while this filesystem was expected to be full'
   )
 end
 
@@ -149,7 +149,7 @@ Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$
   assert(coverage > min_coverage,
          "#{"%.3f" % (coverage * 100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " +
          "has the pattern, but more than #{"%.3f" % (min_coverage * 100)}% " +
-         "was expected")
+         'was expected')
 end
 
 Then(/^patterns cover at least (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
@@ -159,7 +159,7 @@ Then(/^patterns cover at least (\d+) MiB in the guest's memory$/) do |expected_p
   assert(coverage >= min_coverage,
          "#{"%.3f" % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
          "has the pattern, but more than #{"%.3f" % (min_coverage * 100)}% " +
-         "was expected")
+         'was expected')
 end
 
 Then(/^patterns cover less than (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
@@ -169,7 +169,7 @@ Then(/^patterns cover less than (\d+) MiB in the guest's memory$/) do |expected_
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
          "has the pattern, but less than #{"%.3f" % (max_coverage * 100)}% " +
-         "was expected")
+         'was expected')
 end
 
 When(/^I umount "([^"]*)"$/) do |mount_arg|
@@ -185,30 +185,30 @@ Then /^I find very few patterns in the guest's memory$/ do
 end
 
 When /^I wait for Tails to finish wiping the memory$/ do
-  @screen.wait("MemoryWipeCompleted.png", 90)
+  @screen.wait('MemoryWipeCompleted.png', 90)
 end
 
 When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) filesystem$/) do |size_MiB, fs|
   pattern = "wipe_didnt_work\n"
   pattern_nb = (convert_to_bytes(size_MiB.to_i, 'MiB') / pattern.size).floor
   if fs == 'root'
-    dest_file = "/" + random_alpha_string(10)
+    dest_file = '/' + random_alpha_string(10)
   elsif fs == 'persistent'
-    dest_file = "/home/amnesia/Persistent/" + random_alpha_string(10)
+    dest_file = '/home/amnesia/Persistent/' + random_alpha_string(10)
   else
-    raise "This should not happen"
+    raise 'This should not happen'
   end
   $vm.execute_successfully(
     "for i in $(seq 1 #{pattern_nb}) ; do " +
     "   echo wipe_didnt_work >> '#{dest_file}' ; " +
-    "done"
+    'done'
   )
 end
 
 When(/^I drop all kernel caches$/) do
-  $vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
+  $vm.execute_successfully('echo 3 > /proc/sys/vm/drop_caches')
 end
 
 When(/^I trigger shutdown$/) do
-  $vm.spawn("halt")
+  $vm.spawn('halt')
 end

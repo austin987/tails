@@ -41,7 +41,7 @@ def ensure_chutney_is_running
     # will prevent chutney from starting the network unless the tor
     # processes are killed manually.
     begin
-      cmd_helper(["pkill", "--full", "--exact",
+      cmd_helper(['pkill', '--full', '--exact',
                   "tor -f #{env['CHUTNEY_DATA_DIR']}/nodes/.*/torrc --quiet",])
     rescue
     end
@@ -51,10 +51,10 @@ def ensure_chutney_is_running
         chutney_cmd.call('start')
       rescue Test::Unit::AssertionFailedError
         if File.directory?(env['CHUTNEY_DATA_DIR'])
-          raise "You are running with --keep-snapshots but Chutney failed " +
-                "to start with its current data directory. To recover you " +
+          raise 'You are running with --keep-snapshots but Chutney failed ' +
+                'to start with its current data directory. To recover you ' +
                 "likely want to delete '#{env['CHUTNEY_DATA_DIR']}' and " +
-                "all test suite snapshots and then start over."
+                'all test suite snapshots and then start over.'
         else
           chutney_cmd.call('configure')
           chutney_cmd.call('start')
@@ -80,7 +80,7 @@ def ensure_chutney_is_running
     status = chutney_cmd.call('status')
     match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
     assert_not_nil(match, "Chutney's status did not contain the expected " +
-                          "string listing the number of running nodes")
+                          'string listing the number of running nodes')
     running, total = match[1, 2].map { |x| x.to_i }
     assert_equal(
       total, running, "Chutney is only running #{running}/#{total} nodes"
@@ -117,7 +117,7 @@ When /^I configure Tails to use a simulated Tor network$/ do
   # with the more explicit, step-based approach.
 
   assert(not($vm.execute('service tor status').success?),
-         "Running this step when Tor is running is probably not intentional")
+         'Running this step when Tor is running is probably not intentional')
   ensure_chutney_is_running
   # Most of these lines are taken from chutney's client template.
   client_torrc_lines = [

@@ -33,56 +33,56 @@ class Screen
   # keys that tend to be the same on all keyboards, no matter locale.
   # Beware that this has not been tested/verified thoroughly!
   COMMON_KEYMAP = {
-    "a" => [0x1e], "b" => [0x30], "c" => [0x2e], "d" => [0x20], "e" => [0x12],
-    "f" => [0x21], "g" => [0x22], "h" => [0x23], "i" => [0x17], "j" => [0x24],
-    "k" => [0x25], "l" => [0x26], "m" => [0x32], "n" => [0x31], "o" => [0x18],
-    "p" => [0x19], "q" => [0x10], "r" => [0x13], "s" => [0x1f], "t" => [0x14],
-    "u" => [0x16], "v" => [0x2f], "w" => [0x11], "x" => [0x2d], "y" => [0x15],
-    "z" => [0x2c],
+    'a' => [0x1e], 'b' => [0x30], 'c' => [0x2e], 'd' => [0x20], 'e' => [0x12],
+    'f' => [0x21], 'g' => [0x22], 'h' => [0x23], 'i' => [0x17], 'j' => [0x24],
+    'k' => [0x25], 'l' => [0x26], 'm' => [0x32], 'n' => [0x31], 'o' => [0x18],
+    'p' => [0x19], 'q' => [0x10], 'r' => [0x13], 's' => [0x1f], 't' => [0x14],
+    'u' => [0x16], 'v' => [0x2f], 'w' => [0x11], 'x' => [0x2d], 'y' => [0x15],
+    'z' => [0x2c],
 
-    "A" => [0x2a, 0x1e], "B" => [0x2a, 0x30], "C" => [0x2a, 0x2e],
-    "D" => [0x2a, 0x20], "E" => [0x2a, 0x12], "F" => [0x2a, 0x21],
-    "G" => [0x2a, 0x22], "H" => [0x2a, 0x23], "I" => [0x2a, 0x17],
-    "J" => [0x2a, 0x24], "K" => [0x2a, 0x25], "L" => [0x2a, 0x26],
-    "M" => [0x2a, 0x32], "N" => [0x2a, 0x31], "O" => [0x2a, 0x18],
-    "P" => [0x2a, 0x19], "Q" => [0x2a, 0x10], "R" => [0x2a, 0x13],
-    "S" => [0x2a, 0x1f], "T" => [0x2a, 0x14], "U" => [0x2a, 0x16],
-    "V" => [0x2a, 0x2f], "W" => [0x2a, 0x11], "X" => [0x2a, 0x2d],
-    "Y" => [0x2a, 0x15], "Z" => [0x2a, 0x2c],
+    'A' => [0x2a, 0x1e], 'B' => [0x2a, 0x30], 'C' => [0x2a, 0x2e],
+    'D' => [0x2a, 0x20], 'E' => [0x2a, 0x12], 'F' => [0x2a, 0x21],
+    'G' => [0x2a, 0x22], 'H' => [0x2a, 0x23], 'I' => [0x2a, 0x17],
+    'J' => [0x2a, 0x24], 'K' => [0x2a, 0x25], 'L' => [0x2a, 0x26],
+    'M' => [0x2a, 0x32], 'N' => [0x2a, 0x31], 'O' => [0x2a, 0x18],
+    'P' => [0x2a, 0x19], 'Q' => [0x2a, 0x10], 'R' => [0x2a, 0x13],
+    'S' => [0x2a, 0x1f], 'T' => [0x2a, 0x14], 'U' => [0x2a, 0x16],
+    'V' => [0x2a, 0x2f], 'W' => [0x2a, 0x11], 'X' => [0x2a, 0x2d],
+    'Y' => [0x2a, 0x15], 'Z' => [0x2a, 0x2c],
 
-    "1" => [0x02], "2" => [0x03], "3" => [0x04], "4" => [0x05],
-    "5" => [0x06], "6" => [0x07], "7" => [0x08], "8" => [0x09],
-    "9" => [0x0a], "0" => [0x0b],
+    '1' => [0x02], '2' => [0x03], '3' => [0x04], '4' => [0x05],
+    '5' => [0x06], '6' => [0x07], '7' => [0x08], '8' => [0x09],
+    '9' => [0x0a], '0' => [0x0b],
 
-    "f1" => [0x3b], "f2" => [0x3c], "f3" => [0x3d], "f4" => [0x3e],
-    "f5" => [0x3f], "f6" => [0x40], "f7" => [0x41], "f8" => [0x42],
-    "f9" => [0x43], "f10" => [0x44], "f11" => [0x57], "f12" => [0x58],
+    'f1' => [0x3b], 'f2' => [0x3c], 'f3' => [0x3d], 'f4' => [0x3e],
+    'f5' => [0x3f], 'f6' => [0x40], 'f7' => [0x41], 'f8' => [0x42],
+    'f9' => [0x43], 'f10' => [0x44], 'f11' => [0x57], 'f12' => [0x58],
 
-    "page_up" => [0x68], "page_down" => [0x6d], "home" => [0x66],
-    "end" => [0x6b], "insert" => [0x6e], "delete" => [0x6f],
-    "up" => [0x67], "down" => [0x6c], "left" => [0x69], "right" => [0x6a],
-    "escape" => [0x01], "backspace" => [0x0e],
-    "printscreen" => [0x63], "sysrq" => [0x63],
-    "space" => [0x39], " " => [0x39],
-    "return" => [0x1c], "enter" => [0x1c], "\n" => [0x1c],
-    "tab" => [0x0f], "\t" => [0x0f],
-    "alt" => [0x38], "right_alt" => [0x64],
-    "ctrl" => [0x1d], "right_ctrl" => [0x61],
-    "shift" => [0x2a], "right_shift" => [0x36],
+    'page_up' => [0x68], 'page_down' => [0x6d], 'home' => [0x66],
+    'end' => [0x6b], 'insert' => [0x6e], 'delete' => [0x6f],
+    'up' => [0x67], 'down' => [0x6c], 'left' => [0x69], 'right' => [0x6a],
+    'escape' => [0x01], 'backspace' => [0x0e],
+    'printscreen' => [0x63], 'sysrq' => [0x63],
+    'space' => [0x39], ' ' => [0x39],
+    'return' => [0x1c], 'enter' => [0x1c], "\n" => [0x1c],
+    'tab' => [0x0f], "\t" => [0x0f],
+    'alt' => [0x38], 'right_alt' => [0x64],
+    'ctrl' => [0x1d], 'right_ctrl' => [0x61],
+    'shift' => [0x2a], 'right_shift' => [0x36],
   }
 
   US_KEYMAP = COMMON_KEYMAP.merge(
     {
-      "-" => [0x0c], "=" => [0x0d], ";" => [0x27], "'" => [0x28],
-      "`" => [0x29], "\\" => [0x2b], "," => [0x33], "." => [0x34],
-      "/" => [0x35], "<" => [0x56], "[" => [0x1a], "]" => [0x1b],
-      "!" => [0x2a, 0x02], "@" => [0x2a, 0x03], "#" => [0x2a, 0x04],
-      "$" => [0x2a, 0x05], "%" => [0x2a, 0x06], "^" => [0x2a, 0x07],
-      "&" => [0x2a, 0x08], "*" => [0x2a, 0x09], "(" => [0x2a, 0x0a],
-      ")" => [0x2a, 0x0b], "_" => [0x2a, 0x0c], "+" => [0x2a, 0x0d],
-      "{" => [0x2a, 0x1a], "}" => [0x2a, 0x1b], ":" => [0x2a, 0x27],
-      "\"" => [0x2a, 0x28], "~" => [0x2a, 0x29], "|" => [0x2a, 0x2b],
-      "?" => [0x2a, 0x35], ">" => [0x2a, 0x56],
+      '-' => [0x0c], '=' => [0x0d], ';' => [0x27], "'" => [0x28],
+      '`' => [0x29], '\\' => [0x2b], ',' => [0x33], '.' => [0x34],
+      '/' => [0x35], '<' => [0x56], '[' => [0x1a], ']' => [0x1b],
+      '!' => [0x2a, 0x02], '@' => [0x2a, 0x03], '#' => [0x2a, 0x04],
+      '$' => [0x2a, 0x05], '%' => [0x2a, 0x06], '^' => [0x2a, 0x07],
+      '&' => [0x2a, 0x08], '*' => [0x2a, 0x09], '(' => [0x2a, 0x0a],
+      ')' => [0x2a, 0x0b], '_' => [0x2a, 0x0c], '+' => [0x2a, 0x0d],
+      '{' => [0x2a, 0x1a], '}' => [0x2a, 0x1b], ':' => [0x2a, 0x27],
+      '"' => [0x2a, 0x28], '~' => [0x2a, 0x29], '|' => [0x2a, 0x2b],
+      '?' => [0x2a, 0x35], '>' => [0x2a, 0x56],
     }
   )
 
@@ -92,7 +92,7 @@ class Screen
   end
 
   def xdotool(*args)
-    out = cmd_helper(["xdotool"] + args.map { |x| x.to_s })
+    out = cmd_helper(['xdotool'] + args.map { |x| x.to_s })
     assert(out.empty?, "xdotool reported an error:\n" + out)
   end
 
@@ -176,7 +176,7 @@ class Screen
     end
     # If we've reached this point, none of the patterns could be found.
     raise FindFailed.new("can not find any of the patterns #{patterns} " +
-                        "on the screen")
+                        'on the screen')
   end
 
   def exists_any(*args, **opts)
@@ -193,7 +193,7 @@ class Screen
     end
   rescue Timeout::Error
     raise FindFailed.new("can not find any of the patterns #{patterns} " +
-                         "on the screen")
+                         'on the screen')
   end
 
   def press(*sequence, **opts)
@@ -279,7 +279,7 @@ class Screen
     opts[:repeat] = 2 if opts[:double]
     opts[:log] = true if opts[:log].nil?
     x, y = hover(*args, **opts.clone.update(log: false))
-    action = "clicking"
+    action = 'clicking'
     if opts[:repeat] == 2
       action = "double-#{action}"
     elsif opts[:repeat] > 2
@@ -325,7 +325,7 @@ class ImageBumpingScreen
         "r: Retry image (pro tip: manually update the image first!)\n" +
         "i: Ignore this image for the remaining of the run\n" +
         "d: Debugging REPL\n" +
-        "q: Abort (to the FindFailed exception)"
+        'q: Abort (to the FindFailed exception)'
       )
       c = STDIN.getch
       case c
@@ -334,7 +334,7 @@ class ImageBumpingScreen
           STDERR.puts "Trying with sensitivity #{sensitivity}..."
           p = @screen.match_screen(image, sensitivity, true)
           if p
-            STDERR.puts "Found match! Accept? (y/n)"
+            STDERR.puts 'Found match! Accept? (y/n)'
             loop do
               c = STDIN.getch
               if c == 'y'
@@ -348,13 +348,13 @@ class ImageBumpingScreen
             break if c == 3.chr # Ctrl+C => 3
           end
         end
-        STDERR.puts "Failed to automatically bump image"
+        STDERR.puts 'Failed to automatically bump image'
       when 'r'
         p = @screen.match_screen(image, opts[:sensitivity], true)
         if p.nil?
-          STDERR.puts "Failed to find image"
+          STDERR.puts 'Failed to find image'
         else
-          STDERR.puts "Found match! Accept? (y/n)"
+          STDERR.puts 'Found match! Accept? (y/n)'
           c = STDIN.getch
           return p if c == 'y'
         end

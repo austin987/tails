@@ -3,7 +3,7 @@ Given /^Tails ([[:alnum:]~.]+) has been released$/ do |version|
 
   old_branch = current_branch
 
-  fatal_system "git checkout --quiet stable"
+  fatal_system 'git checkout --quiet stable'
   old_entries = File.open('debian/changelog') { |f| f.read }
   File.open('debian/changelog', 'w') do |changelog|
     changelog.write(<<~END_OF_CHANGELOG)
@@ -62,7 +62,7 @@ Given(/^frozen APT snapshots are encoded in config\/APT_snapshots\.d$/) do
     end
   end
   # We never freeze debian-security
-  File.open("config/APT_snapshots.d/debian-security/serial", 'w+') do |serial|
+  File.open('config/APT_snapshots.d/debian-security/serial', 'w+') do |serial|
     serial.write("latest\n")
   end
 end
@@ -121,7 +121,7 @@ end
 
 Given(/^the config\/APT_overlays\.d directory is empty$/) do
   Dir.glob('config/APT_overlays.d/*').empty? \
-  || raise("config/APT_overlays.d/ is not empty")
+  || raise('config/APT_overlays.d/ is not empty')
 end
 
 Given(/^config\/APT_overlays\.d contains ['"]?([[:alnum:].-]+)['"]?$/) do |suite|

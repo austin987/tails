@@ -1,14 +1,14 @@
 require 'packetfu'
 
 def looks_like_dhcp_packet?(eth_packet, protocol, sport, dport, ip_packet)
-  protocol == "udp" && sport == 68 && dport == 67 &&
-    eth_packet.eth_daddr == "ff:ff:ff:ff:ff:ff" &&
-    ip_packet && ip_packet.ip_daddr == "255.255.255.255"
+  protocol == 'udp' && sport == 68 && dport == 67 &&
+    eth_packet.eth_daddr == 'ff:ff:ff:ff:ff:ff' &&
+    ip_packet && ip_packet.ip_daddr == '255.255.255.255'
 end
 
 def is_rarp_packet?(p)
   # Details: https://www.netometer.com/qa/rarp.html#A13
-  p.force_encoding("UTF-8").start_with?(
+  p.force_encoding('UTF-8').start_with?(
     "\xFF\xFF\xFF\xFF\xFF\xFFRT\x00\xAC\xDD\xEE\x805\x00\x01\b\x00\x06"
   ) && (p[19] == "\x03" || p[19] == "\x04")
 end
@@ -60,14 +60,14 @@ def pcap_connections_helper(pcap_file, **opts)
       protocol = 'arp'
     else
       raise FirewallAssertionFailedError.new(
-        "Found something that cannot be parsed"
+        'Found something that cannot be parsed'
       )
     end
 
     next if opts[:ignore_dhcp] &&
             looks_like_dhcp_packet?(eth_packet, protocol,
                                     sport, dport, ip_packet)
-    next if opts[:ignore_arp] && protocol == "arp"
+    next if opts[:ignore_arp] && protocol == 'arp'
     next if opts[:ignore_sources].include?(eth_packet.eth_saddr)
 
     packet_info = {

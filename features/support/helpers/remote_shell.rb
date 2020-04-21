@@ -21,7 +21,7 @@ module RemoteShell
 
   def communicate(vm, *args, **opts)
     opts[:timeout] ||= DEFAULT_TIMEOUT
-    socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
+    socket = TCPSocket.new('127.0.0.1', vm.get_remote_shell_port)
     id = (@@request_id += 1)
     # Since we already have defined our own Timeout in the current
     # scope, we have to be more careful when referring to the Timeout
@@ -34,8 +34,8 @@ module RemoteShell
         line = socket.readline("\n").chomp("\n")
         response_id, status, *rest = JSON.load(line)
         if response_id == id
-          if status != "success"
-            if (status == "error") && (rest.class == Array) && (rest.size == 1)
+          if status != 'success'
+            if (status == 'error') && (rest.class == Array) && (rest.size == 1)
               msg = rest.first
               raise ServerFailure.new("#{msg}")
             else
@@ -44,7 +44,7 @@ module RemoteShell
           end
           return rest
         else
-          debug_log("Dropped out-of-order remote shell response: " +
+          debug_log('Dropped out-of-order remote shell response: ' +
                     "got id #{response_id} but expected id #{id}")
         end
       end
@@ -65,9 +65,9 @@ module RemoteShell
     # background (or running scripts that does the same) or any
     # application we want to interact with.
     def self.execute(vm, cmd, **opts)
-      opts[:user] ||= "root"
+      opts[:user] ||= 'root'
       opts[:spawn] = false unless opts.has_key?(:spawn)
-      type = opts[:spawn] ? "spawn" : "call"
+      type = opts[:spawn] ? 'spawn' : 'call'
       debug_log("Remote shell: #{type}ing as #{opts[:user]}: #{cmd}")
       ret = RemoteShell.communicate(vm, 'sh_' + type, opts[:user], cmd, **opts)
       debug_log("Remote shell: #{type} returned: #{ret}") if not(opts[:spawn])
@@ -100,19 +100,19 @@ module RemoteShell
 
   class PythonCommand
     def self.execute(vm, code, **opts)
-      opts[:user] ||= "root"
+      opts[:user] ||= 'root'
       show_code = code.chomp
       if show_code["\n"]
         show_code = "\n" +
                     show_code.lines
-                             .map { |l| " " * 4 + l.chomp }
+                             .map { |l| ' ' * 4 + l.chomp }
                              .join("\n")
       end
       debug_log("executing Python as #{opts[:user]}: #{show_code}")
       ret = RemoteShell.communicate(
         vm, 'python_execute', opts[:user], code, **opts
       )
-      debug_log("execution complete")
+      debug_log('execution complete')
       return ret
     end
 

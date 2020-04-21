@@ -11,7 +11,7 @@ def electrum_wizard
 end
 
 Then /^I start Electrum through the GNOME menu$/ do
-  step "I start \"Electrum Bitcoin Wallet\" via GNOME Activities Overview"
+  step 'I start "Electrum Bitcoin Wallet" via GNOME Activities Overview'
 end
 
 Then /^Electrum (?:has started|starts)$/ do
@@ -23,9 +23,9 @@ end
 When /^a bitcoin wallet is (|not )present$/ do |existing|
   wallet = "/home/#{LIVE_USER}/.electrum/wallets/default_wallet"
   case existing
-  when ""
+  when ''
     step "the file \"#{wallet}\" exists after at most 30 seconds"
-  when "not "
+  when 'not '
     step "the file \"#{wallet}\" does not exist"
   else
     raise "Unknown value specified for #{existing}"
@@ -77,7 +77,7 @@ Then /^I see a warning that Electrum is not persistent$/ do
     Dogtail::Application.new('zenity')
       .child(roleName: 'label')
       .name
-      .start_with?("Persistence is disabled for Electrum")
+      .start_with?('Persistence is disabled for Electrum')
   )
 end
 

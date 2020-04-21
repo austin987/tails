@@ -15,7 +15,7 @@ begin
     end
   end
 rescue NameError => e
-  raise e if e.to_s != "uninitialized constant Cucumber::Core"
+  raise e if e.to_s != 'uninitialized constant Cucumber::Core'
 end
 
 # Sort of inspired by Cucumber::RbSupport::RbHook (from cucumber
@@ -63,7 +63,7 @@ if not($at_exit_print_artifacts_dir_patching_done)
   $at_exit_print_artifacts_dir_patching_done = true
 end
 
-def info_log(message = "", **options)
+def info_log(message = '', **options)
   options[:color] = :clear
   # This trick allows us to use a module's (~private) method on a
   # one-off basis.
@@ -77,7 +77,7 @@ def debug_log(message, **options)
     if options[:timestamp]
       # Force UTC so the local timezone difference vs UTC won't be
       # added to the result.
-      elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime("%H:%M:%S.%9N")
+      elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime('%H:%M:%S.%9N')
       message = "#{elapsed}: #{message}"
     end
     $debug_log_fns.each { |fn| fn.call(message, **options) }

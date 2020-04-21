@@ -55,19 +55,19 @@ def try_for(timeout, **options)
         # XXX: The commit that introduced this version check can be
         # reverted when we drop support for running the test suite on
         # Debian Stretch.
-        if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.4")
-          elapsed = ('%.2f' % elapsed).chomp(".00").chomp(".0").chomp("0")
+        if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
+          elapsed = ('%.2f' % elapsed).chomp('.00').chomp('.0').chomp('0')
         else
           elapsed = elapsed.ceil(2)
         end
         debug_log("try_for: attempt #{attempts} (#{elapsed}s elapsed " +
                   "of #{timeout}s)...") if options[:log]
         if yield
-          debug_log("try_for: success!") if options[:log]
+          debug_log('try_for: success!') if options[:log]
           return
         end
-        debug_log("try_for: failed by code block " +
-                  "returning failure") if options[:log]
+        debug_log('try_for: failed by code block ' +
+                  'returning failure') if options[:log]
       rescue NameError, UniqueTryForTimeoutError => e
         # NameError most likely means typos, and hiding that is rarely
         # (never?) a good idea, so we rethrow them. See below why we
@@ -78,7 +78,7 @@ def try_for(timeout, **options)
         # block. Well we save the last exception so we can print it in
         # case of a timeout.
         last_exception = e
-        debug_log("try_for: failed with exception: " +
+        debug_log('try_for: failed with exception: ' +
                   "#{last_exception.class}: #{last_exception}") if options[:log]
       end
       sleep options[:delay]
@@ -119,7 +119,7 @@ class MaxRetriesFailure < StandardError
 end
 
 def force_new_tor_circuit()
-  debug_log("Forcing new Tor circuit...")
+  debug_log('Forcing new Tor circuit...')
   # Tor rate limits NEWNYM to at most one per 10 second period.
   interval = 10
   if $__last_newnym
@@ -148,7 +148,7 @@ def retry_tor(recovery_proc = nil, &block)
 end
 
 def retry_action(max_retries, options = {}, &block)
-  assert(max_retries.is_a?(Integer), "max_retries must be an integer")
+  assert(max_retries.is_a?(Integer), 'max_retries must be an integer')
   options[:recovery_proc] ||= nil
   options[:operation_name] ||= 'Operation'
 
@@ -158,7 +158,7 @@ def retry_action(max_retries, options = {}, &block)
       debug_log("retry_action: trying #{options[:operation_name]} (attempt " +
                 "#{retries} of #{max_retries})...")
       block.call
-      debug_log("retry_action: success!")
+      debug_log('retry_action: success!')
       return
     rescue NameError => e
       # NameError most likely means typos, and hiding that is rarely
@@ -204,15 +204,15 @@ end
 
 def convert_bytes_mod(unit)
   case unit
-  when "bytes", "b" then mod = 1
-  when "KB"         then mod = 10**3
-  when "k", "KiB"   then mod = 2**10
-  when "MB"         then mod = 10**6
-  when "M", "MiB"   then mod = 2**20
-  when "GB"         then mod = 10**9
-  when "G", "GiB"   then mod = 2**30
-  when "TB"         then mod = 10**12
-  when "T", "TiB"   then mod = 2**40
+  when 'bytes', 'b' then mod = 1
+  when 'KB'         then mod = 10**3
+  when 'k', 'KiB'   then mod = 2**10
+  when 'MB'         then mod = 10**6
+  when 'M', 'MiB'   then mod = 2**20
+  when 'GB'         then mod = 10**9
+  when 'G', 'GiB'   then mod = 2**30
+  when 'TB'         then mod = 10**12
+  when 'T', 'TiB'   then mod = 2**40
   else
     raise "invalid memory unit '#{unit}'"
   end
@@ -235,7 +235,7 @@ def cmd_helper(cmd, env = {})
   if cmd.instance_of?(Array)
     cmd << { :err => [:child, :out] }
   elsif cmd.instance_of?(String)
-    cmd += " 2>&1"
+    cmd += ' 2>&1'
   end
   env = ENV.to_h.merge(env)
   IO.popen(env, cmd) do |p|
@@ -270,7 +270,7 @@ def get_free_space(machine, path)
   case machine
   when 'host'
     assert(File.exist?(path), "Path '#{path}' not found on #{machine}.")
-    free = cmd_helper(["df", path])
+    free = cmd_helper(['df', path])
   when 'guest'
     assert($vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
     free = $vm.execute_successfully("df '#{path}'")
@@ -300,14 +300,14 @@ end
 # Sanitize the filename from unix-hostile filename characters
 def sanitize_filename(filename, **options)
   options[:replacement] ||= '_'
-  bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
+  bad_unix_filename_chars = Regexp.new('[^A-Za-z0-9_\\-.,+:]')
   filename.gsub(bad_unix_filename_chars, options[:replacement])
 end
 
 def info_log_artifact_location(type, path)
   if $config['ARTIFACTS_BASE_URI']
     # Remove any trailing slashes, we'll add one ourselves
-    base_url = $config['ARTIFACTS_BASE_URI'].gsub(/\/*$/, "")
+    base_url = $config['ARTIFACTS_BASE_URI'].gsub(/\/*$/, '')
     path = "#{base_url}/#{File.basename(path)}"
   end
   info_log("#{type.capitalize}: #{path}")
@@ -320,7 +320,7 @@ def notify_user(message)
   cmd_helper(alarm_script.gsub('%m', message))
 end
 
-def pause(message = "Paused")
+def pause(message = 'Paused')
   notify_user(message)
   STDERR.puts
   STDERR.puts message
@@ -329,12 +329,12 @@ def pause(message = "Paused")
   STDOUT.write "\a"
   STDERR.puts
   loop do
-    STDERR.puts "Return/q: Continue; d: Debugging REPL"
+    STDERR.puts 'Return/q: Continue; d: Debugging REPL'
     c = STDIN.getch
     case c
-    when "q", "\r", 3.chr # Ctrl+C => 3
+    when 'q', "\r", 3.chr # Ctrl+C => 3
       return
-    when "d"
+    when 'd'
       binding.pry(quiet: true) # rubocop:disable Lint/Debugger
     end
   end
@@ -420,7 +420,7 @@ ensure
       # Process has already exited.
     else
       begin
-        Process.kill("KILL", p.pid)
+        Process.kill('KILL', p.pid)
       rescue IOError, Errno::ESRCH
         # Process has already exited.
       end

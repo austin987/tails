@@ -61,14 +61,14 @@ module Dogtail
       @opts[:user] ||= LIVE_USER
       @find_code = "dogtail.tree.root.application('#{@app_name}')"
       script_lines = [
-        "import dogtail.config",
-        "import dogtail.tree",
-        "import dogtail.predicate",
-        "import dogtail.rawinput",
-        "dogtail.config.logDebugToFile = False",
-        "dogtail.config.logDebugToStdOut = False",
-        "dogtail.config.blinkOnActions = True",
-        "dogtail.config.searchShowingOnly = True",
+        'import dogtail.config',
+        'import dogtail.tree',
+        'import dogtail.predicate',
+        'import dogtail.rawinput',
+        'dogtail.config.logDebugToFile = False',
+        'dogtail.config.logDebugToStdOut = False',
+        'dogtail.config.blinkOnActions = True',
+        'dogtail.config.searchShowingOnly = True',
         "#{@var} = #{@find_code}",
       ]
       run(script_lines)
@@ -95,13 +95,13 @@ module Dogtail
     end
 
     def exist?
-      run("dogtail.config.searchCutoffCount = 0")
+      run('dogtail.config.searchCutoffCount = 0')
       run(@find_code)
       return true
     rescue
       return false
     ensure
-      run("dogtail.config.searchCutoffCount = 20")
+      run('dogtail.config.searchCutoffCount = 20')
     end
 
     def self.value_to_s(v)
@@ -126,7 +126,7 @@ module Dogtail
     # into the parentheses of a Python function call.
     # Example: [42, {:foo => 'bar'}] => "42, foo = 'bar'"
     def self.args_to_s(args)
-      return "" if args.size == 0
+      return '' if args.size == 0
 
       args_list = args
       args_hash = nil
@@ -163,16 +163,16 @@ module Dogtail
           end
         end
       end
-      findChildren_opts = ""
+      findChildren_opts = ''
       if findChildren_opts_hash.size > 0
-        findChildren_opts = ", "
+        findChildren_opts = ', '
         + self.class.args_to_s([findChildren_opts_hash])
       end
       predicate_opts = self.class.args_to_s(args)
       nodes_var = "nodes#{@@node_counter += 1}"
       find_script_lines = [
         "#{nodes_var} = #{@var}.findChildren(" \
-        "dogtail.predicate.GenericPredicate(" \
+        'dogtail.predicate.GenericPredicate(' \
         "#{predicate_opts})#{findChildren_opts})",
         "print(len(#{nodes_var}))",
       ]

@@ -7,7 +7,7 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
                 :user => LIVE_USER)
     step 'I kill the process "git"'
     @screen.type('clear')
-    @screen.press("Return")
+    @screen.press('Return')
   end
 
   retry_tor(recovery_proc) do

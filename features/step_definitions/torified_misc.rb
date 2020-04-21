@@ -13,7 +13,7 @@ end
 
 When /^I wget "([^"]+)" to stdout(?:| with the '([^']+)' options)$/ do |target, options|
   retry_tor do
-    if target == "some Tails mirror"
+    if target == 'some Tails mirror'
       host = 'dl.amnesia.boum.org'
       address = Resolv.new.getaddresses(host).sample
       puts "Resolved #{host} to #{address}"

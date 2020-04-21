@@ -20,8 +20,8 @@ VM_MEMORY_FOR_DISK_BUILDS = VM_MEMORY_BASE
 VM_MEMORY_FOR_RAM_BUILDS = VM_MEMORY_BASE + BUILD_SPACE_REQUIREMENT
 
 # The builder VM's platform
-ARCHITECTURE = "amd64"
-DISTRIBUTION = "buster"
+ARCHITECTURE = 'amd64'
+DISTRIBUTION = 'buster'
 
 # The name of the Vagrant box
 def box_name

@@ -10,7 +10,7 @@ end
 def read_and_validate_ssh_config srv_type
   conf = $config[srv_type]
   begin
-    required_settings = ["private_key", "public_key", "username", "hostname"]
+    required_settings = ['private_key', 'public_key', 'username', 'hostname']
     required_settings.each do |key|
       assert(conf.has_key?(key))
       assert_not_nil(conf[key])
@@ -26,14 +26,14 @@ def read_and_validate_ssh_config srv_type
 
   case srv_type
   when 'SSH'
-    @ssh_host        = conf["hostname"]
-    @ssh_port        = conf["port"].to_i if conf["port"]
-    @ssh_username    = conf["username"]
+    @ssh_host        = conf['hostname']
+    @ssh_port        = conf['port'].to_i if conf['port']
+    @ssh_username    = conf['username']
     assert_not_ipaddr(@ssh_host)
   when 'SFTP'
-    @sftp_host       = conf["hostname"]
-    @sftp_port       = conf["port"].to_i if conf["port"]
-    @sftp_username   = conf["username"]
+    @sftp_host       = conf['hostname']
+    @sftp_port       = conf['port'].to_i if conf['port']
+    @sftp_username   = conf['username']
     assert_not_ipaddr(@sftp_host)
   end
 end
@@ -42,12 +42,12 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on
   $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'",
                            :user => LIVE_USER)
   if server_type == 'Git' || lan
-    secret_key = $config["Unsafe_SSH_private_key"]
-    public_key = $config["Unsafe_SSH_public_key"]
+    secret_key = $config['Unsafe_SSH_private_key']
+    public_key = $config['Unsafe_SSH_public_key']
   else
     read_and_validate_ssh_config server_type
-    secret_key = $config[server_type]["private_key"]
-    public_key = $config[server_type]["public_key"]
+    secret_key = $config[server_type]['private_key']
+    public_key = $config[server_type]['public_key']
   end
 
   $vm.execute_successfully("echo '#{secret_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'",
@@ -59,9 +59,9 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on
 end
 
 Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
-  @screen.wait("SSHFingerprint.png", 60)
+  @screen.wait('SSHFingerprint.png', 60)
   sleep 1 # brief pause to ensure that the following keystrokes do not get lost
-  @screen.type('yes', ["Return"])
+  @screen.type('yes', ['Return'])
 end
 
 def get_free_tcp_port
@@ -83,7 +83,7 @@ end
 When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
   case location
   when 'Internet'
-    read_and_validate_ssh_config "SSH"
+    read_and_validate_ssh_config 'SSH'
   when 'LAN'
     @ssh_port = @sshd_server_port
     @ssh_username = 'user'
@@ -97,7 +97,7 @@ When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
   step 'process "ssh" is not running'
 
   recovery_proc = Proc.new do
-    step 'I kill the process "ssh"' if $vm.has_process?("ssh")
+    step 'I kill the process "ssh"' if $vm.has_process?('ssh')
     step 'I run "clear" in GNOME Terminal'
   end
 
@@ -113,7 +113,7 @@ Then /^I have sucessfully logged into the SSH server$/ do
 end
 
 Then /^I connect to an SFTP server on the Internet$/ do
-  read_and_validate_ssh_config "SFTP"
+  read_and_validate_ssh_config 'SFTP'
 
   @sftp_port ||= 22
   @sftp_port = @sftp_port.to_s
@@ -132,9 +132,9 @@ Then /^I connect to an SFTP server on the Internet$/ do
     connect_bar
       .child(roleName: 'filler', recursive: false)
       .child(roleName: 'text', recursive: false)
-      .text = "sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port
+      .text = 'sftp://' + @sftp_username + '@' + @sftp_host + ':' + @sftp_port
     connect_bar.button('Connect', recursive: false).click
-    step "I verify the SSH fingerprint for the SFTP server"
+    step 'I verify the SSH fingerprint for the SFTP server'
   end
 end
 
@@ -144,7 +144,7 @@ Then /^I verify the SSH fingerprint for the SFTP server$/ do
   end
   # Here we'd like to click on the button using Dogtail, but something
   # is buggy so let's just use the keyboard.
-  @screen.type(["Tab"], ["Return"])
+  @screen.type(['Tab'], ['Return'])
 end
 
 Then /^I successfully connect to the SFTP server$/ do

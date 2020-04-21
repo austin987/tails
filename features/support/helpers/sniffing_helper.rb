@@ -23,13 +23,13 @@ class Sniffer
   def capture
     job = IO.popen(
       [
-        "/usr/sbin/tcpdump",
-        "-n",
-        "-U",
-        "--immediate-mode",
-        "-i", @vmnet.bridge_name,
-        "-w", @pcap_file,
-        :err => ["/dev/null", "w"],
+        '/usr/sbin/tcpdump',
+        '-n',
+        '-U',
+        '--immediate-mode',
+        '-i', @vmnet.bridge_name,
+        '-w', @pcap_file,
+        :err => ['/dev/null', 'w'],
       ]
     )
     @pid = job.pid
@@ -37,7 +37,7 @@ class Sniffer
 
   def stop
     begin
-      Process.kill("TERM", @pid)
+      Process.kill('TERM', @pid)
       Process.wait(@pid)
     rescue
       # noop

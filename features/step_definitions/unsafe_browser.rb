@@ -2,7 +2,7 @@
 
 When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  @screen.type(["Tab"], ["Return"])
+  @screen.type(['Tab'], ['Return'])
 end
 
 def supported_torbrowser_languages
@@ -35,26 +35,26 @@ Then /^the Unsafe Browser works in all supported languages$/ do
       failed << lang
       next
     end
-    step "I close the Unsafe Browser"
-    step "the Unsafe Browser chroot is torn down"
+    step 'I close the Unsafe Browser'
+    step 'the Unsafe Browser chroot is torn down'
   end
   assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
 end
 
 Then /^the Unsafe Browser has no add-ons installed$/ do
-  step "I open the address \"about:addons\" in the Unsafe Browser"
-  step "I see \"UnsafeBrowserNoAddons.png\" after at most 30 seconds"
+  step 'I open the address "about:addons" in the Unsafe Browser'
+  step 'I see "UnsafeBrowserNoAddons.png" after at most 30 seconds'
 end
 
 Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
-  info = xul_application_info("Unsafe Browser")
+  info = xul_application_info('Unsafe Browser')
   # "Show all bookmarks"
-  @screen.press("shift", "ctrl", "o")
-  @screen.wait("UnsafeBrowserExportBookmarksButton.png", 20).click
-  @screen.wait("UnsafeBrowserExportBookmarksMenuEntry.png", 20).click
-  @screen.wait("UnsafeBrowserExportBookmarksSavePrompt.png", 20)
+  @screen.press('shift', 'ctrl', 'o')
+  @screen.wait('UnsafeBrowserExportBookmarksButton.png', 20).click
+  @screen.wait('UnsafeBrowserExportBookmarksMenuEntry.png', 20).click
+  @screen.wait('UnsafeBrowserExportBookmarksSavePrompt.png', 20)
   path = "/home/#{info[:user]}/bookmarks"
-  @screen.type(path, ["Return"])
+  @screen.type(path, ['Return'])
   chroot_path = "#{info[:chroot]}/#{path}.json"
   try_for(10) { $vm.file_exist?(chroot_path) }
   dump = JSON.load($vm.file_content(chroot_path))
@@ -63,9 +63,9 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
     mozilla_uris_counter = 0
     a.each do |h|
       h.each_pair do |k, v|
-        if k == "children"
+        if k == 'children'
           mozilla_uris_counter += check_bookmarks_helper(v)
-        elsif k == "uri"
+        elsif k == 'uri'
           uri = v
           if uri.match("^https://(?:support|www)\.mozilla\.org/")
             mozilla_uris_counter += 1
@@ -78,15 +78,15 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
     return mozilla_uris_counter
   end
 
-  mozilla_uris_counter = check_bookmarks_helper(dump["children"])
+  mozilla_uris_counter = check_bookmarks_helper(dump['children'])
   assert_equal(5, mozilla_uris_counter,
                "Unexpected number (#{mozilla_uris_counter}) of mozilla " \
-               "bookmarks")
-  @screen.press("alt", "F4")
+               'bookmarks')
+  @screen.press('alt', 'F4')
 end
 
 Then /^the Unsafe Browser has a red theme$/ do
-  @screen.wait("UnsafeBrowserRedTheme.png", 10)
+  @screen.wait('UnsafeBrowserRedTheme.png', 10)
 end
 
 Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" locale)?$/ do |locale|
@@ -98,10 +98,10 @@ Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" 
     if File.exist?("#{OPENCV_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
       start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
     else
-      start_page_image = "UnsafeBrowserStartPage.png"
+      start_page_image = 'UnsafeBrowserStartPage.png'
     end
   else
-    start_page_image = "UnsafeBrowserStartPage.png"
+    start_page_image = 'UnsafeBrowserStartPage.png'
   end
   # rubocop:enable Style/ConditionalAssignment
   @screen.wait(start_page_image, 60)
@@ -111,7 +111,7 @@ Then /^the Unsafe Browser has started(?: in the "([^"]+)" locale)?$/ do |locale|
   if locale
     step "the Unsafe Browser shows a warning as its start page in the \"#{locale}\" locale"
   else
-    step "the Unsafe Browser shows a warning as its start page"
+    step 'the Unsafe Browser shows a warning as its start page'
   end
 end
 
@@ -120,13 +120,13 @@ Then /^I see a warning about another instance already running$/ do
 end
 
 Then /^I can start the Unsafe Browser again$/ do
-  step "I start the Unsafe Browser"
+  step 'I start the Unsafe Browser'
 end
 
 When /^I configure the Unsafe Browser to use a local proxy$/ do
   socksport_lines =
     $vm.execute_successfully('grep -w "^SocksPort" /etc/tor/torrc').stdout
-  assert(socksport_lines.size >= 4, "We got fewer than four Tor SocksPorts")
+  assert(socksport_lines.size >= 4, 'We got fewer than four Tor SocksPorts')
   proxy = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/).sample
   proxy_host = proxy[0]
   proxy_port = proxy[1]
@@ -163,12 +163,12 @@ But /^checking for updates is disabled in the Unsafe Browser's configuration$/ d
 end
 
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
-  uid = $vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
+  uid = $vm.execute_successfully('id -u clearnet').stdout.chomp.to_i
   pkts = ip4tables_packet_counter_sum(:tables => ['OUTPUT'], :uid => uid)
   case sent
   when ''
-    assert(pkts > 0, "Packets have not gone out to the internet.")
+    assert(pkts > 0, 'Packets have not gone out to the internet.')
   when 'not'
-    assert_equal(pkts, 0, "Packets have gone out to the internet.")
+    assert_equal(pkts, 0, 'Packets have gone out to the internet.')
   end
 end

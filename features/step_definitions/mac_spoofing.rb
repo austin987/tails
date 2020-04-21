@@ -1,18 +1,18 @@
 def all_ethernet_nics
   $vm.execute_successfully(
-    "get_all_ethernet_nics", :libs => 'hardware'
+    'get_all_ethernet_nics', :libs => 'hardware'
   ).stdout.split
 end
 
 When /^I disable MAC spoofing in Tails Greeter$/ do
   open_greeter_additional_settings()
-  @screen.wait("TailsGreeterMACSpoofing.png", 30).click
-  @screen.wait("TailsGreeterDisableMACSpoofing.png", 10).click
-  @screen.wait("TailsGreeterAdditionalSettingsAdd.png", 10).click
+  @screen.wait('TailsGreeterMACSpoofing.png', 30).click
+  @screen.wait('TailsGreeterDisableMACSpoofing.png', 10).click
+  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
 Then /^the (\d+)(?:st|nd|rd|th) network device has (its real|a spoofed) MAC address configured$/ do |dev_nr, mode|
-  is_spoofed = (mode == "a spoofed")
+  is_spoofed = (mode == 'a spoofed')
   alias_name = "net#{dev_nr.to_i - 1}"
   nic_real_mac = $vm.real_mac(alias_name)
   nic = "eth#{dev_nr.to_i - 1}"
@@ -26,11 +26,11 @@ Then /^the (\d+)(?:st|nd|rd|th) network device has (its real|a spoofed) MAC addr
       end
     else
       if nic_real_mac != nic_current_mac
-        raise "The MAC address is spoofed but was expected to not be"
+        raise 'The MAC address is spoofed but was expected to not be'
       end
     end
   rescue Exception => e
-    save_failure_artifact("Network capture", @sniffer.pcap_file)
+    save_failure_artifact('Network capture', @sniffer.pcap_file)
     raise e
   end
 end
@@ -51,7 +51,7 @@ Then /^some network device leaked the real MAC address$/ do
 end
 
 Given /^macchanger will fail by not spoofing and always returns ([\S]+)$/ do |mode|
-  $vm.execute_successfully("mv /usr/bin/macchanger /usr/bin/macchanger.orig")
+  $vm.execute_successfully('mv /usr/bin/macchanger /usr/bin/macchanger.orig')
   $vm.execute_successfully("ln -s /bin/#{mode} /usr/bin/macchanger")
 end
 
@@ -61,7 +61,7 @@ Given /^no network interface modules can be unloaded$/ do
   # exactly "modprobe", so we just move it somewhere our of the path
   # instead of renaming it ".real" or whatever we usuablly do when
   # diverting executables for wrappers.
-  modprobe_divert = "/usr/local/lib/modprobe"
+  modprobe_divert = '/usr/local/lib/modprobe'
   $vm.execute_successfully(
     "dpkg-divert --add --rename --divert '#{modprobe_divert}' /sbin/modprobe"
   )
@@ -73,7 +73,7 @@ Given /^no network interface modules can be unloaded$/ do
     exec '#{modprobe_divert}' "${@}"
   EOF
   $vm.file_append('/sbin/modprobe', fake_modprobe_wrapper)
-  $vm.execute_successfully("chmod a+rx /sbin/modprobe")
+  $vm.execute_successfully('chmod a+rx /sbin/modprobe')
 end
 
 Then /^(\d+|no) network interface(?:s)? (?:is|are) enabled$/ do |expected_nr_nics|
@@ -88,13 +88,13 @@ Then /^the MAC spoofing panic mode disabled networking$/ do
   nm_is_disabled = $vm.pidof('NetworkManager').empty? &&
                    nm_state[/^LoadState=masked$/] &&
                    nm_state[/^ActiveState=inactive$/]
-  assert(nm_is_disabled, "NetworkManager was not disabled")
+  assert(nm_is_disabled, 'NetworkManager was not disabled')
   all_ethernet_nics.each do |nic|
-    ["nic_ipv4_addr", "nic_ipv6_addr"].each do |function|
+    ['nic_ipv4_addr', 'nic_ipv6_addr'].each do |function|
       addr = $vm.execute_successfully(
         "#{function} #{nic}", :libs => 'hardware'
       ).stdout.chomp
-      assert_equal("", addr, "NIC #{nic} was assigned address #{addr}")
+      assert_equal('', addr, "NIC #{nic} was assigned address #{addr}")
     end
   end
 end

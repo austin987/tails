@@ -125,12 +125,12 @@ end
 
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
-  @screen.wait("SeahorseWindow.png", 10).click
+  @screen.wait('SeahorseWindow.png', 10).click
   seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait('SeahorsePreferences.png', 20)
-  @screen.press("alt", "p") # Option: "Publish keys to...".
-  @screen.press("Down") # select HKP server
-  @screen.press("Escape") # no "Close" button
+  @screen.press('alt', 'p') # Option: "Publish keys to...".
+  @screen.press('Down') # select HKP server
+  @screen.press('Escape') # no "Close" button
 end
 
 Then /^I synchronize keys in Seahorse$/ do
@@ -155,12 +155,12 @@ Then /^I synchronize keys in Seahorse$/ do
   end
 
   retry_tor(recovery_proc) do
-    @screen.wait("SeahorseWindow.png", 10).click
+    @screen.wait('SeahorseWindow.png', 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuSync.png',
                                'seahorse')
     @screen.wait('SeahorseSyncKeys.png', 20)
-    @screen.press("alt", "s") # Button: Sync
+    @screen.press('alt', 's') # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
     try_for(120) do
       change_of_status?
@@ -190,17 +190,17 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
   recovery_proc = Proc.new do
     setup_onion_keyserver
     @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
-    @screen.press("ctrl", "w")
+    @screen.press('ctrl', 'w')
   end
   retry_tor(recovery_proc) do
-    @screen.wait("SeahorseWindow.png", 10).click
+    @screen.wait('SeahorseWindow.png', 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuFind.png',
                                'seahorse')
     @screen.wait('SeahorseFindKeysWindow.png', 10)
     # Seahorse doesn't seem to support searching for fingerprints
     # (https://gitlab.gnome.org/GNOME/seahorse/issues/177)
-    @screen.type(keyid, ["Return"])
+    @screen.type(keyid, ['Return'])
     begin
       @screen.wait_any(['SeahorseFoundKeyResult.png',
                         'GnomeCloseButton.png',], 120)
@@ -209,13 +209,13 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
       # Sometimes--but not always--if we click another window
       # the main Seahorse window will unfreeze, allowing us
       # to continue normally.
-      @screen.click("SeahorseSearch.png")
+      @screen.click('SeahorseSearch.png')
     end
     check_for_seahorse_error
-    @screen.click("SeahorseKeyResultWindow.png")
+    @screen.click('SeahorseKeyResultWindow.png')
     # Use the context menu to import the key:
-    @screen.click("SeahorseFoundKeyResult.png", button: 'right')
-    @screen.click("SeahorseImport.png")
+    @screen.click('SeahorseFoundKeyResult.png', button: 'right')
+    @screen.click('SeahorseImport.png')
     try_for(120) do
       change_of_status?(keyid)
     end
@@ -239,7 +239,7 @@ def disable_IPv6_for_dirmngr
 end
 
 def restart_dirmngr
-  $vm.execute_successfully("systemctl --user restart dirmngr.service",
+  $vm.execute_successfully('systemctl --user restart dirmngr.service',
                            :user => LIVE_USER)
 end
 
@@ -274,7 +274,7 @@ Given /^Seahorse is configured to use Chutney's onion keyserver$/ do
                'Seahorse should only have one keyserver configured.')
   assert_equal(
     'hkp://' + CONFIGURED_KEYSERVER_HOSTNAME, @gnome_keyservers[0],
-    "Seahorse is not configured to use the correct keyserver"
+    'Seahorse is not configured to use the correct keyserver'
   )
   # ... before replacing it
   $vm.execute_successfully(

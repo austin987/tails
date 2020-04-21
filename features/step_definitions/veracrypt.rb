@@ -27,7 +27,7 @@ def veracrypt_volume_size_in_GNOME_Disks(**options)
 end
 
 def create_veracrypt_keyfile()
-  keyfile = Tempfile.create('veracrypt-keyfile', $config["TMPDIR"])
+  keyfile = Tempfile.create('veracrypt-keyfile', $config['TMPDIR'])
   keyfile << 'asdf'
   keyfile.close
   return keyfile.path
@@ -50,8 +50,8 @@ def create_veracrypt_volume(type, with_keyfile)
   fatal_system "losetup -f '#{disk_path}'"
   loop_dev = `losetup -j '#{disk_path}'`.split(':').first
   tcplay_create_cmd = "tcplay --create --device='#{loop_dev}'" \
-                    + " --weak-keys --insecure-erase"
-  tcplay_create_cmd += " --hidden" if @veracrypt_is_hidden
+                    + ' --weak-keys --insecure-erase'
+  tcplay_create_cmd += ' --hidden' if @veracrypt_is_hidden
   tcplay_create_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
   debug_log "tcplay create command: #{tcplay_create_cmd}"
   PTY.spawn(tcplay_create_cmd) do |r_f, w_f, pid|
@@ -90,13 +90,13 @@ def create_veracrypt_volume(type, with_keyfile)
     ($CHILD_STATUS.exitstatus == 0) || raise("#{tcplay_map_cmd} exited with #{$CHILD_STATUS.exitstatus}")
   end
   fatal_system "mkfs.vfat '/dev/mapper/veracrypt' >/dev/null"
-  Dir.mktmpdir('veracrypt-mountpoint', $config["TMPDIR"]) do |mountpoint|
+  Dir.mktmpdir('veracrypt-mountpoint', $config['TMPDIR']) do |mountpoint|
     fatal_system "mount -t vfat '/dev/mapper/veracrypt' '#{mountpoint}'"
     # must match SecretFileOnVeraCryptVolume.png when displayed in GNOME Files
     FileUtils.cp('/usr/share/common-licenses/GPL-3', "#{mountpoint}/GPL-3")
     fatal_system "umount '#{mountpoint}'"
   end
-  fatal_system "tcplay --unmap=veracrypt"
+  fatal_system 'tcplay --unmap=veracrypt'
   fatal_system "losetup -d '#{loop_dev}'"
   File.delete(keyfile)
 end
@@ -110,14 +110,14 @@ When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( 
   case with_options
   when ' with a PIM'
     assert_equal(type, 'basic',
-                 "Only basic containers are supported with PIM.")
+                 'Only basic containers are supported with PIM.')
     @veracrypt_needs_pim = true
     # Instead of creating a container, we use the one we have in Git.
     @veracrypt_shared_dir_in_guest = share_host_files(
       $veracrypt_basic_container_with_pim
     )
     $vm.execute_successfully(
-      "mv " +
+      'mv ' +
       "'#{@veracrypt_shared_dir_in_guest}/#{File.basename($veracrypt_basic_container_with_pim)}' " +
       "'#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
     )
@@ -143,7 +143,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
     sleep 2 # avoid ENTER being eaten by the auto-completion system
-    @screen.press("Return")
+    @screen.press('Return')
   end
   @screen.wait('VeraCryptUnlockDialog.png', 10)
   @screen.type(
@@ -151,15 +151,15 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   )
   if @veracrypt_needs_pim
     # Go back to the PIM entry text field
-    @screen.press("shift", "Tab")
+    @screen.press('shift', 'Tab')
     sleep 1 # Otherwise typing the PIM goes in the void
     @screen.type($veracrypt_pim)
   end
   @screen.click('VeraCryptUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
-  @screen.press("Return")
+  @screen.press('Return')
   @screen.wait_vanish('VeraCryptUnlockDialog.png', 10)
   try_for(30) do
-    $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
+    $vm.execute_successfully('ls /media/amnesia/*/GPL-3')
   end
 end
 
@@ -198,7 +198,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     end
     @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
     sleep 2 # avoid ENTER being eaten by the auto-completion system
-    @screen.press("Return")
+    @screen.press('Return')
     try_for(15) do
       begin
         disks.children(roleName: 'table cell').find do |row|
@@ -235,8 +235,8 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   # with imaget matching (that sometimes clicks just a little bit
   # outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)
-  @screen.press("alt", 'u') # "Unlock" button
-  try_for(10, :msg => "Failed to mount the unlocked volume") do
+  @screen.press('alt', 'u') # "Unlock" button
+  try_for(10, :msg => 'Failed to mount the unlocked volume') do
     begin
       unlocked_volume = disks.child("#{size} VeraCrypt/TrueCrypt", roleName: 'panel', showingOnly: true)
       unlocked_volume.click
@@ -254,8 +254,8 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       false
     end
   end
-  try_for(10, :msg => "/media/amnesia/*/GPL-3 does not exist") do
-    $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
+  try_for(10, :msg => '/media/amnesia/*/GPL-3 does not exist') do
+    $vm.execute_successfully('ls /media/amnesia/*/GPL-3')
   end
 end
 
@@ -282,6 +282,6 @@ When /^I lock the currently opened VeraCrypt (volume|file container)$/ do |suppo
 end
 
 Then /^the VeraCrypt (?:volume|file container) has been unmounted and locked$/ do
-  assert(!$vm.execute("ls /media/amnesia/*/GPL-3").success?)
+  assert(!$vm.execute('ls /media/amnesia/*/GPL-3').success?)
   assert(!$vm.execute('ls /dev/mapper/tcrypt-*').success?)
 end

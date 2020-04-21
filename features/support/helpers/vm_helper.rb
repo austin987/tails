@@ -50,7 +50,7 @@ class VMNet
   end
 
   def bridge_mac
-    File.open("/sys/class/net/#{bridge_name}/address", "rb").read.chomp
+    File.open("/sys/class/net/#{bridge_name}/address", 'rb').read.chomp
   end
 end
 
@@ -155,7 +155,7 @@ class VM
 
   def set_boot_device(dev)
     if is_running?
-      raise "boot settings can only be set for inactive vms"
+      raise 'boot settings can only be set for inactive vms'
     end
 
     domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -170,7 +170,7 @@ class VM
 
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
-      raise "A CDROM device already exists"
+      raise 'A CDROM device already exists'
     end
 
     cdrom_rexml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml")).root
@@ -186,10 +186,10 @@ class VM
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
     if cdrom_el.nil?
-      raise "No CDROM device is present"
+      raise 'No CDROM device is present'
     end
 
-    domain_rexml.elements["domain/devices"].delete_element(cdrom_el)
+    domain_rexml.elements['domain/devices'].delete_element(cdrom_el)
     update(domain_rexml.to_s)
   end
 
@@ -201,7 +201,7 @@ class VM
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
     if cdrom_el.nil?
-      raise "No CDROM device is present"
+      raise 'No CDROM device is present'
     end
 
     cdrom_el.delete_element('source')
@@ -210,7 +210,7 @@ class VM
     # While the CD-ROM is removed successfully we still get this
     # error, so let's ignore it.
     acceptable_error =
-      "Call to virDomainUpdateDeviceFlags failed: internal error: unable to " +
+      'Call to virDomainUpdateDeviceFlags failed: internal error: unable to ' +
       "execute QEMU command 'eject': (Tray of device '.*' is not open|" +
       "Device '.*' is locked)"
     raise e if not(Regexp.new(acceptable_error).match(e.to_s))
@@ -230,7 +230,7 @@ class VM
 
   def set_cdrom_boot(image)
     if is_running?
-      raise "boot settings can only be set for inactive vms"
+      raise 'boot settings can only be set for inactive vms'
     end
 
     domain_rexml = REXML::Document.new(@domain.xml_desc)
@@ -267,19 +267,19 @@ class VM
 
     removable_usb = nil
     case type
-    when "removable usb", "usb"
-      type = "usb"
-      removable_usb = "on"
-    when "non-removable usb"
-      type = "usb"
-      removable_usb = "off"
+    when 'removable usb', 'usb'
+      type = 'usb'
+      removable_usb = 'on'
+    when 'non-removable usb'
+      type = 'usb'
+      removable_usb = 'off'
     end
     # Get the next free /dev/sdX on guest
     letter = 'a'
-    dev = "sd" + letter
+    dev = 'sd' + letter
     while list_disk_devs.include?(dev)
       letter = (letter[0].ord + 1).chr
-      dev = "sd" + letter
+      dev = 'sd' + letter
     end
     assert letter <= 'z'
 
@@ -336,7 +336,7 @@ class VM
 
   def disk_dev(name)
     (rexml = disk_rexml_desc(name)) || (return nil)
-    return "/dev/" + rexml.elements['disk/target'].attribute('dev').to_s
+    return '/dev/' + rexml.elements['disk/target'].attribute('dev').to_s
   end
 
   def disk_name(dev)
@@ -365,7 +365,7 @@ class VM
 
   def set_disk_boot(name, type)
     if is_running?
-      raise "boot settings can only be set for inactive vms"
+      raise 'boot settings can only be set for inactive vms'
     end
 
     plug_drive(name, type) if not(disk_plugged?(name))
@@ -386,14 +386,14 @@ class VM
   # XXX-9p in common_steps.rb for more information.
   def add_share(source, tag)
     if is_running?
-      raise "shares can only be added to inactive vms"
+      raise 'shares can only be added to inactive vms'
     end
 
     # The complete source directory must be group readable by the user
     # running the virtual machine, and world readable so the user inside
     # the VM can access it (since we use the passthrough security model).
-    FileUtils.chown_R(nil, "libvirt-qemu", source)
-    FileUtils.chmod_R("go+rX", source)
+    FileUtils.chown_R(nil, 'libvirt-qemu', source)
+    FileUtils.chmod_R('go+rX', source)
     xml = REXML::Document.new(File.read("#{@xml_path}/fs_share.xml"))
     xml.elements['filesystem/source'].attributes['dir'] = source
     xml.elements['filesystem/target'].attributes['dir'] = tag
@@ -413,7 +413,7 @@ class VM
 
   def set_os_loader(type)
     if is_running?
-      raise "boot settings can only be set for inactive vms"
+      raise 'boot settings can only be set for inactive vms'
     end
 
     if type == 'UEFI'
@@ -425,7 +425,7 @@ class VM
       )
       update(domain_xml.to_s)
     else
-      raise "unsupported OS loader type"
+      raise 'unsupported OS loader type'
     end
   end
 
@@ -438,7 +438,7 @@ class VM
   end
 
   def execute(cmd, **options)
-    options[:user] ||= "root"
+    options[:user] ||= 'root'
     options[:spawn] = false unless options.has_key?(:spawn)
     if options[:libs]
       libs = options[:libs]
@@ -448,7 +448,7 @@ class VM
         ". /usr/local/lib/tails-shell-library/#{lib_name}.sh"
       end
       cmds << cmd
-      cmd = cmds.join(" && ")
+      cmd = cmds.join(' && ')
     end
     return RemoteShell::ShellCommand.new(self, cmd, **options)
   end
@@ -478,13 +478,13 @@ class VM
   end
 
   def wait_until_remote_shell_is_up(timeout = 90)
-    try_for(timeout, :msg => "Remote shell seems to be down") do
+    try_for(timeout, :msg => 'Remote shell seems to be down') do
       remote_shell_is_up?
     end
   end
 
   def host_to_guest_time_sync
-    host_time = DateTime.now.strftime("%s").to_s
+    host_time = DateTime.now.strftime('%s').to_s
     execute("date -s '@#{host_time}'").success?
   end
 
@@ -504,7 +504,7 @@ class VM
 
   def select_virtual_desktop(desktop_number, user = LIVE_USER)
     assert(desktop_number >= 0 && desktop_number <= 3,
-           "Only values between 0 and 1 are valid virtual desktop numbers")
+           'Only values between 0 and 1 are valid virtual desktop numbers')
     execute_successfully(
       "xdotool set_desktop '#{desktop_number}'",
       :user => user
@@ -594,18 +594,18 @@ class VM
   end
 
   def get_clipboard
-    execute_successfully("xsel --output --clipboard", :user => LIVE_USER).stdout
+    execute_successfully('xsel --output --clipboard', :user => LIVE_USER).stdout
   end
 
   def internal_snapshot_xml(name)
     disk_devs = list_disk_devs
     disks_xml = "    <disks>\n"
     for dev in disk_devs
-      snapshot_type = disk_type(dev) == "qcow2" ? 'internal' : 'no'
+      snapshot_type = disk_type(dev) == 'qcow2' ? 'internal' : 'no'
       disks_xml +=
         "      <disk name='#{dev}' snapshot='#{snapshot_type}'></disk>\n"
     end
-    disks_xml += "    </disks>"
+    disks_xml += '    </disks>'
     return <<~EOF
       <domainsnapshot>
         <name>#{name}</name>
@@ -634,7 +634,7 @@ class VM
     internal_snapshot = false
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
-      if e.elements['driver'].attribute('type').to_s == "qcow2"
+      if e.elements['driver'].attribute('type').to_s == 'qcow2'
         internal_snapshot = true
         break
       end
@@ -675,7 +675,7 @@ class VM
         @domain.revert_to_snapshot(potential_internal_snapshot)
       rescue Guestfs::Error, Libvirt::RetrieveError
         raise "The (internal nor external) snapshot #{name} may be known " +
-              "by libvirt but it cannot be restored. " +
+              'by libvirt but it cannot be restored. ' +
               "To investigate, use 'virsh snapshot-list TailsToaster'. " +
               "To clean up old dangling snapshots, use 'virsh snapshot-delete'."
       end
@@ -733,7 +733,7 @@ class VM
   def get_remote_shell_port
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/serial') do |e|
-      if e.attribute('type').to_s == "tcp"
+      if e.attribute('type').to_s == 'tcp'
         return e.elements['source'].attribute('service').to_s.to_i
       end
     end

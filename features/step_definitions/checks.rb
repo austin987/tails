@@ -36,16 +36,16 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
 end
 
 Then /^the live user has been setup by live\-boot$/ do
-  assert($vm.execute("test -e /var/lib/live/config/user-setup").success?,
-         "live-boot failed its user-setup")
-  actual_username = $vm.execute(". /etc/live/config/username.conf; " +
-                                "echo $LIVE_USERNAME").stdout.chomp
+  assert($vm.execute('test -e /var/lib/live/config/user-setup').success?,
+         'live-boot failed its user-setup')
+  actual_username = $vm.execute('. /etc/live/config/username.conf; ' +
+                                'echo $LIVE_USERNAME').stdout.chomp
   assert_equal(LIVE_USER, actual_username)
 end
 
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
-  expected_groups = groups.split(" ") << LIVE_USER
-  actual_groups = $vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, "").split(" ")
+  expected_groups = groups.split(' ') << LIVE_USER
+  actual_groups = $vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, '').split(' ')
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
   assert_equal(0, unexpected.size,
@@ -61,23 +61,23 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
   owner = $vm.execute("stat -c %U:%G #{home}").stdout.chomp
   perms = $vm.execute("stat -c %a #{home}").stdout.chomp
   assert_equal("#{LIVE_USER}:#{LIVE_USER}", owner)
-  assert_equal("700", perms)
+  assert_equal('700', perms)
 end
 
 Then /^no unexpected services are listening for network connections$/ do
-  for line in $vm.execute_successfully("ss -ltupn").stdout.chomp.split("\n") do
+  for line in $vm.execute_successfully('ss -ltupn').stdout.chomp.split("\n") do
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
     next unless ['tcp', 'udp'].include?(proto)
 
-    laddr, lport = splitted[4].split(":")
+    laddr, lport = splitted[4].split(':')
     proc = /users:\(\("([^"]+)"/.match(splitted[6])[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
       if SERVICES_EXPECTED_ON_ALL_IFACES.include?([proc, laddr, lport]) ||
-         SERVICES_EXPECTED_ON_ALL_IFACES.include?([proc, laddr, "*"])
+         SERVICES_EXPECTED_ON_ALL_IFACES.include?([proc, laddr, '*'])
         puts "Service '#{proc}' is listening on #{laddr}:#{lport} " +
-             "but has an exception"
+             'but has an exception'
       else
         raise "Unexpected service '#{proc}' listening on #{laddr}:#{lport}"
       end
@@ -87,12 +87,12 @@ end
 
 When /^Tails has booted a 64-bit kernel$/ do
   assert($vm.execute("uname -r | grep -qs 'amd64$'").success?,
-         "Tails has not booted a 64-bit kernel.")
+         'Tails has not booted a 64-bit kernel.')
 end
 
 Then /^the VirtualBox guest modules are available$/ do
-  assert($vm.execute("modinfo vboxguest").success?,
-         "The vboxguest module is not available.")
+  assert($vm.execute('modinfo vboxguest').success?,
+         'The vboxguest module is not available.')
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
@@ -127,7 +127,7 @@ Then /^MAT can clean some sample PNG file$/ do
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
     cleaned_png_on_guest = "/home/#{LIVE_USER}/#{png_name}".sub(/[.]png$/, '.cleaned.png')
     step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
-    raw_check_cmd = "grep --quiet --fixed-strings --text " +
+    raw_check_cmd = 'grep --quiet --fixed-strings --text ' +
                     "'Created with GIMP'"
     assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'", user: LIVE_USER).success?,
            'The comment is not present in the PNG')
@@ -138,7 +138,7 @@ Then /^MAT can clean some sample PNG file$/ do
     $vm.execute_successfully("mat2 '#{png_on_guest}'", :user => LIVE_USER)
     check_after = $vm.execute_successfully("mat2 --show '#{cleaned_png_on_guest}'",
                                            :user => LIVE_USER).stdout
-    assert(check_after.include?("No metadata found"),
+    assert(check_after.include?('No metadata found'),
            "MAT failed to clean '#{png_on_host}'")
     assert($vm.execute(raw_check_cmd + " '#{cleaned_png_on_guest}'", user: LIVE_USER).failure?,
            'The comment is still present in the PNG')
@@ -147,12 +147,12 @@ Then /^MAT can clean some sample PNG file$/ do
 end
 
 Then /^AppArmor is enabled$/ do
-  assert($vm.execute("aa-status").success?, "AppArmor is not enabled")
+  assert($vm.execute('aa-status').success?, 'AppArmor is not enabled')
 end
 
 Then /^some AppArmor profiles are enforced$/ do
-  assert($vm.execute("aa-status --enforced").stdout.chomp.to_i > 0,
-         "No AppArmor profile is enforced")
+  assert($vm.execute('aa-status --enforced').stdout.chomp.to_i > 0,
+         'No AppArmor profile is enforced')
 end
 
 def get_seccomp_status(process)
@@ -194,7 +194,7 @@ When /^I disable all networking in the Tails Greeter$/ do
   open_greeter_additional_settings()
   @screen.wait('TailsGreeterNetworkConnection.png', 30).click
   @screen.wait('TailsGreeterDisableAllNetworking.png', 10).click
-  @screen.wait("TailsGreeterAdditionalSettingsAdd.png", 10).click
+  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|

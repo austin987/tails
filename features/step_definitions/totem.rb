@@ -7,7 +7,7 @@ Given /^I create sample videos$/ do
   add_after_scenario_hook { FileUtils.rm_r(@video_dir_on_host) }
   fatal_system("#{ffmpeg} -loop 1 -t 30 -f image2 " +
                "-i 'features/images/USBTailsLogo.png' " +
-               "-an -vcodec libx264 -y " +
+               '-an -vcodec libx264 -y ' +
                '-filter:v "crop=in_w-mod(in_w\,2):in_h-mod(in_h\,2)" ' +
                "'#{@video_dir_on_host}/video.mp4' >/dev/null 2>&1")
 end
@@ -41,9 +41,9 @@ def disable_tor_reject_internal_addresses
     'ClientRejectInternalAddresses 0',
   ]
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)
-  $vm.execute("systemctl stop tor@default.service")
-  $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
-  $vm.execute("systemctl start tor@default.service")
+  $vm.execute('systemctl stop tor@default.service')
+  $vm.execute('systemctl --no-block restart tails-tor-has-bootstrapped.target')
+  $vm.execute('systemctl start tor@default.service')
   wait_until_tor_is_working
 end
 
@@ -73,6 +73,6 @@ Then /^I can watch a WebM video over HTTPs$/ do
   end
   retry_tor(recovery_on_failure) do
     step "I open \"#{test_url}\" with Totem"
-    @screen.wait("SampleRemoteWebMVideoFrame.png", 120)
+    @screen.wait('SampleRemoteWebMVideoFrame.png', 120)
   end
 end

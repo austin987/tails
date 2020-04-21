@@ -1,21 +1,21 @@
-ASP_STATE_DIR = "/run/live-additional-software"
+ASP_STATE_DIR = '/run/live-additional-software'
 ASP_CONF = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
 
 Then /^the Additional Software (upgrade|installation) service has started$/ do |service|
   if $vm.file_exist?(ASP_CONF) && !$vm.file_empty?(ASP_CONF)
     case service
-    when "installation"
-      service = "tails-additional-software-install"
+    when 'installation'
+      service = 'tails-additional-software-install'
       seconds_to_wait = 600
-    when "upgrade"
-      service = "tails-additional-software-upgrade"
+    when 'upgrade'
+      service = 'tails-additional-software-upgrade'
       seconds_to_wait = 900
     end
     try_for(seconds_to_wait, :delay => 10) do
       $vm.execute("systemctl status #{service}.service").success?
     end
-    if service == "installation"
-      step "I am notified that the installation succeeded"
+    if service == 'installation'
+      step 'I am notified that the installation succeeded'
     end
   end
 end
@@ -26,7 +26,7 @@ Then /^I am notified I can not use Additional Software for "([^"]*)"$/ do |packa
 end
 
 Then /^I am notified that the installation succeeded$/ do
-  title = "Additional software installed successfully"
+  title = 'Additional software installed successfully'
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
@@ -49,16 +49,16 @@ end
 
 Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |package|
   try_for(30) do
-    assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
+    assert($vm.file_exist?(ASP_CONF), 'ASP configuration file not found')
     step 'all persistence configuration files have safe access rights'
     $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
-    $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages")
+    $vm.execute_successfully('ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages')
     $vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?
   end
 end
 
 Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
-  assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
+  assert($vm.file_exist?(ASP_CONF), 'ASP configuration file not found')
   step 'all persistence configuration files have safe access rights'
   try_for(30) do
     $vm.execute("grep \"#{package}\" #{ASP_CONF}").stdout.empty?
@@ -67,20 +67,20 @@ end
 
 When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/ do |decision, action, package|
   case action
-  when "adding"
+  when 'adding'
     notification_title = "Add #{package} to your additional software?"
     case decision
-    when "accept"
+    when 'accept'
       button_title = 'Install Every Time'
-    when "refuse"
+    when 'refuse'
       button_title = 'Install Only Once'
     end
-  when "removing"
+  when 'removing'
     notification_title = "Remove #{package} from your additional software?"
     case decision
-    when "accept"
+    when 'accept'
       button_title = 'Remove'
-    when "refuse"
+    when 'refuse'
       button_title = 'Cancel'
     end
   end
@@ -88,7 +88,7 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Soft
     notification =
       Dogtail::Application
       .new('gnome-shell')
-      .children('', roleName: "notification")
+      .children('', roleName: 'notification')
       .find { |notif| notif.child?(notification_title, roleName: 'label') }
     assert_not_nil(notification)
     notification.child(button_title, roleName: 'push button').click

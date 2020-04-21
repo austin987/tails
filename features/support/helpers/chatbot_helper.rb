@@ -11,12 +11,12 @@ class ChatBot
   end
 
   def start
-    @otr_key_file = Tempfile.new("otr_key.", $config["TMPDIR"])
+    @otr_key_file = Tempfile.new('otr_key.', $config['TMPDIR'])
     @otr_key_file << @otr_key
     @otr_key_file.close
 
     cmd_helper(['/usr/bin/convertkey', @otr_key_file.path])
-    cmd_helper(["mv", "#{@otr_key_file.path}3", @otr_key_file.path])
+    cmd_helper(['mv', "#{@otr_key_file.path}3", @otr_key_file.path])
 
     cmd = [
       "#{GIT_DIR}/features/scripts/otr-bot.py",
@@ -24,11 +24,11 @@ class ChatBot
       @password,
       @otr_key_file.path,
     ]
-    if @opts["connect_server"]
-      cmd += ["--connect-server", @opts["connect_server"]]
+    if @opts['connect_server']
+      cmd += ['--connect-server', @opts['connect_server']]
     end
-    cmd += ["--auto-join"] + @opts["auto_join"] if @opts["auto_join"]
-    cmd += ["--log-file", DEBUG_LOG_PSEUDO_FIFO]
+    cmd += ['--auto-join'] + @opts['auto_join'] if @opts['auto_join']
+    cmd += ['--log-file', DEBUG_LOG_PSEUDO_FIFO]
 
     job = IO.popen(cmd)
     @pid = job.pid
@@ -37,7 +37,7 @@ class ChatBot
   def stop
     @otr_key_file.delete
     begin
-      Process.kill("TERM", @pid)
+      Process.kill('TERM', @pid)
       Process.wait(@pid)
     rescue
       # noop
@@ -48,7 +48,7 @@ class ChatBot
     begin
       ret = Process.kill(0, @pid)
     rescue Errno::ESRCH => e
-      if e.message == "No such process"
+      if e.message == 'No such process'
         return false
       else
         raise e

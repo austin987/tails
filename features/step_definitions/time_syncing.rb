@@ -8,7 +8,7 @@ end
 
 When /^I set the system time to "([^"]+)"$/ do |time|
   $vm.execute_successfully("date -s '#{time}'")
-  new_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
+  new_time = DateTime.parse($vm.execute_successfully('date').stdout).to_time
   expected_time_lower_bound = DateTime.parse(time).to_time
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= new_time &&
@@ -20,16 +20,16 @@ end
 When /^I bump the (hardware clock's|system) time with "([^"]+)"$/ do |clock_type, timediff|
   case clock_type
   when "hardware clock's"
-    old_time = DateTime.parse($vm.execute_successfully("hwclock -r").stdout).to_time
+    old_time = DateTime.parse($vm.execute_successfully('hwclock -r').stdout).to_time
     $vm.execute_successfully("hwclock --set --date 'now #{timediff}'")
-    new_time = DateTime.parse($vm.execute_successfully("hwclock -r").stdout).to_time
+    new_time = DateTime.parse($vm.execute_successfully('hwclock -r').stdout).to_time
   when 'system'
-    old_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
+    old_time = DateTime.parse($vm.execute_successfully('date').stdout).to_time
     $vm.execute_successfully("date -s 'now #{timediff}'")
-    new_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
+    new_time = DateTime.parse($vm.execute_successfully('date').stdout).to_time
   end
   expected_time_lower_bound = DateTime.parse(
-    cmd_helper(["date", "-d", "#{old_time} #{timediff}"])
+    cmd_helper(['date', '-d', "#{old_time} #{timediff}"])
   ).to_time
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= new_time &&
@@ -39,7 +39,7 @@ When /^I bump the (hardware clock's|system) time with "([^"]+)"$/ do |clock_type
 end
 
 Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
-  guest_time_str = $vm.execute("date --rfc-2822").stdout.chomp
+  guest_time_str = $vm.execute('date --rfc-2822').stdout.chomp
   guest_time = Time.rfc2822(guest_time_str)
   host_time = Time.now
   diff = (host_time - guest_time).abs
@@ -87,9 +87,9 @@ Then /^Tails' hardware clock is close to the host system's time$/ do
 end
 
 Then /^the hardware clock is still off by "([^"]+)"$/ do |timediff|
-  hwclock = DateTime.parse($vm.execute_successfully("hwclock -r").stdout.chomp).to_time
+  hwclock = DateTime.parse($vm.execute_successfully('hwclock -r').stdout.chomp).to_time
   expected_time_lower_bound = DateTime.parse(
-    cmd_helper(["date", "-d", "now #{timediff}"])
+    cmd_helper(['date', '-d', "now #{timediff}"])
   ).to_time - max_time_drift
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= hwclock &&

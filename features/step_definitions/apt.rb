@@ -2,14 +2,14 @@ require 'uri'
 
 def apt_sources
   $vm.execute_successfully(
-    "cat /etc/apt/sources.list /etc/apt/sources.list.d/*"
+    'cat /etc/apt/sources.list /etc/apt/sources.list.d/*'
   ).stdout
 end
 
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
   apt_sources.chomp.each_line do |line|
-    next if !line.start_with? "deb"
+    next if !line.start_with? 'deb'
 
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
@@ -52,7 +52,7 @@ When /^I update APT using apt$/ do
   retry_tor(recovery_proc) do
     Timeout.timeout(15 * 60) do
       $vm.execute_successfully("echo #{@sudo_password} | " +
-                               "sudo -S apt update", :user => LIVE_USER)
+                               'sudo -S apt update', :user => LIVE_USER)
     end
   end
 end
@@ -144,20 +144,20 @@ end
 When /^I update APT using Synaptic$/ do
   recovery_proc = Proc.new do
     step 'I kill the process "synaptic"'
-    step "I start Synaptic"
+    step 'I start Synaptic'
   end
   retry_tor(recovery_proc) do
     @synaptic.button('Reload').click
     sleep 10 # It might take some time before APT starts downloading
-    try_for(15 * 60, :msg => "Took too much time to download the APT data") do
-      !$vm.has_process?("/usr/lib/apt/methods/tor+http")
+    try_for(15 * 60, :msg => 'Took too much time to download the APT data') do
+      !$vm.has_process?('/usr/lib/apt/methods/tor+http')
     end
     assert_raise(Dogtail::Failure) do
       @synaptic.child(roleName: 'dialog', recursive: false)
                .child('Error', roleName: 'icon', retry: false)
     end
-    if !$vm.has_process?("synaptic")
-      raise "Synaptic process vanished, did it segfault again?"
+    if !$vm.has_process?('synaptic')
+      raise 'Synaptic process vanished, did it segfault again?'
     end
   end
 end
@@ -168,7 +168,7 @@ Then /^I install "(.+)" using Synaptic$/ do |package_name|
     # We can't use execute_successfully here: the package might not be
     # installed at this point, and then "apt purge" would return non-zero.
     $vm.execute("apt -y purge #{package_name}")
-    step "I start Synaptic"
+    step 'I start Synaptic'
   end
   retry_tor(recovery_proc) do
     @synaptic.button('Search').click

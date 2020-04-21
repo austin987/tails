@@ -5,25 +5,25 @@ class Display
   end
 
   def active?
-    p = IO.popen(["xprop", "-display", @x_display,
-                  "-name", "#{@domain} (1) - Virt Viewer",
-                  :err => ["/dev/null", "w"],])
+    p = IO.popen(['xprop', '-display', @x_display,
+                  '-name', "#{@domain} (1) - Virt Viewer",
+                  :err => ['/dev/null', 'w'],])
     Process.wait(p.pid)
     $CHILD_STATUS.success?
   end
 
   def start
-    @virtviewer = IO.popen(["virt-viewer", "--direct",
-                            "--kiosk",
-                            "--reconnect",
-                            "--connect", "qemu:///system",
-                            "--display", @x_display,
+    @virtviewer = IO.popen(['virt-viewer', '--direct',
+                            '--kiosk',
+                            '--reconnect',
+                            '--connect', 'qemu:///system',
+                            '--display', @x_display,
                             @domain,
-                            :err => ["/dev/null", "w"],])
+                            :err => ['/dev/null', 'w'],])
     # We wait for the display to be active to not lose actions
     # (e.g. key presses) that come immediately after starting (or
     # restoring) a vm
-    try_for(20, delay: 0.1, msg: "virt-viewer failed to start") do
+    try_for(20, delay: 0.1, msg: 'virt-viewer failed to start') do
       active?
     end
   end
@@ -31,7 +31,7 @@ class Display
   def stop
     return if @virtviewer.nil?
 
-    Process.kill("TERM", @virtviewer.pid)
+    Process.kill('TERM', @virtviewer.pid)
     @virtviewer.close
   rescue IOError
     # IO.pid throws this if the process wasn't started yet. Possibly

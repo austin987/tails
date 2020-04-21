@@ -76,7 +76,7 @@ def run_command(*args)
   Process.wait Kernel.spawn(*args)
   if $CHILD_STATUS.exitstatus != 0
     raise CommandError.new("command #{args} failed with exit status " +
-                           "%{status}", status: $CHILD_STATUS.exitstatus)
+                           '%{status}', status: $CHILD_STATUS.exitstatus)
   end
 end
 
@@ -84,7 +84,7 @@ def capture_command(*args)
   stdout, stderr, proc_status = Open3.capture3(*args)
   if proc_status.exitstatus != 0
     raise CommandError.new("command #{args} failed with exit status " +
-                           "%{status}: %{stderr}",
+                           '%{status}: %{stderr}',
                            stderr: stderr, status: proc_status.exitstatus)
   end
   return stdout, stderr
@@ -161,7 +161,7 @@ def vm_state
   elsif status_line['running']
     return :running
   else
-    raise "could not determine VM state"
+    raise 'could not determine VM state'
   end
 end
 
@@ -234,8 +234,8 @@ task :parse_build_options do
     # HTTP proxy settings
     when 'extproxy'
       unless EXTERNAL_HTTP_PROXY
-        abort "No HTTP proxy set, but one is required by " \
-              "TAILS_BUILD_OPTIONS. Aborting."
+        abort 'No HTTP proxy set, but one is required by ' \
+              'TAILS_BUILD_OPTIONS. Aborting.'
       end
       ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'extproxy'
@@ -244,8 +244,8 @@ task :parse_build_options do
       ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
       if opt == 'vmproxy+extproxy'
         unless EXTERNAL_HTTP_PROXY
-          abort "No HTTP proxy set, but one is required by " \
-                "TAILS_BUILD_OPTIONS. Aborting."
+          abort 'No HTTP proxy set, but one is required by ' \
+                'TAILS_BUILD_OPTIONS. Aborting.'
         end
         ENV['TAILS_ACNG_PROXY'] = EXTERNAL_HTTP_PROXY
       end
@@ -312,7 +312,7 @@ task :parse_build_options do
 
   if ENV['TAILS_OFFLINE_MODE'] == '1'
     if ENV['TAILS_PROXY'].nil?
-      abort "You must use a caching proxy when building offline"
+      abort 'You must use a caching proxy when building offline'
     end
   end
 end
@@ -349,7 +349,7 @@ def list_artifacts
   user = vagrant_ssh_config('User')
   stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " +
                                         "-name 'tails-amd64-*' " +
-                                        "-o -name tails-build-env.list").first
+                                        '-o -name tails-build-env.list').first
   stdout.split("\n")
 rescue VagrantCommandError
   return Array.new
@@ -371,7 +371,7 @@ task :validate_http_proxy do
 
     if proxy_host.nil?
       ENV['TAILS_PROXY'] = nil
-      $stderr.puts "Ignoring invalid HTTP proxy."
+      $stderr.puts 'Ignoring invalid HTTP proxy.'
       return
     end
 
@@ -383,7 +383,7 @@ task :validate_http_proxy do
 
     $stderr.puts "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
   else
-    $stderr.puts "No HTTP proxy set."
+    $stderr.puts 'No HTTP proxy set.'
   end
 end
 
@@ -409,7 +409,7 @@ task :setup_environment => ['validate_git_state'] do
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible: " +
             "either validate_git_state is buggy or the 'origin' remote " +
-            "does not point to the official Tails Git repository."
+            'does not point to the official Tails Git repository.'
     end
   end
 end
@@ -504,7 +504,7 @@ task :build => [
   end
 end
 
-desc "Retrieve build artifacts from the Vagrant box"
+desc 'Retrieve build artifacts from the Vagrant box'
 task :retrieve_artifacts do
   retrieve_artifacts
 end
@@ -523,7 +523,7 @@ def retrieve_artifacts(missing_ok: false)
   user = vagrant_ssh_config('User')
   hostname = vagrant_ssh_config('HostName')
   key_file = vagrant_ssh_config('IdentityFile')
-  $stderr.puts "Retrieving artifacts from Vagrant build box."
+  $stderr.puts 'Retrieving artifacts from Vagrant build box.'
   run_vagrant_ssh(
     "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
   )
@@ -553,7 +553,7 @@ def domain_name
 end
 
 def clean_up_builder_vms
-  $virt = Libvirt.open("qemu:///system")
+  $virt = Libvirt.open('qemu:///system')
 
   clean_up_domain = Proc.new do |domain|
     next if domain.nil?
@@ -574,21 +574,21 @@ def clean_up_builder_vms
   previous_domain = $virt.list_all_domains.find { |d| d.name == domain_name }
   if previous_domain && previous_domain.active?
     begin
-      run_vagrant_ssh("mountpoint -q /var/cache/apt-cacher-ng")
+      run_vagrant_ssh('mountpoint -q /var/cache/apt-cacher-ng')
     rescue VagrantCommandError
     # Nothing to unmount.
     else
-      run_vagrant_ssh("sudo systemctl stop apt-cacher-ng.service")
-      run_vagrant_ssh("sudo umount /var/cache/apt-cacher-ng")
-      run_vagrant_ssh("sudo sync")
+      run_vagrant_ssh('sudo systemctl stop apt-cacher-ng.service')
+      run_vagrant_ssh('sudo umount /var/cache/apt-cacher-ng')
+      run_vagrant_ssh('sudo sync')
     end
     begin
-      run_vagrant_ssh("mountpoint -q /var/cache/tails-website")
+      run_vagrant_ssh('mountpoint -q /var/cache/tails-website')
     rescue VagrantCommandError
     # Nothing to unmount.
     else
-      run_vagrant_ssh("sudo umount /var/cache/tails-website")
-      run_vagrant_ssh("sudo sync")
+      run_vagrant_ssh('sudo umount /var/cache/tails-website')
+      run_vagrant_ssh('sudo sync')
     end
   end
   clean_up_domain.call(previous_domain)
@@ -620,9 +620,9 @@ ensure
   $virt.close
 end
 
-desc "Remove all libvirt volumes named tails-builder-* (run at your own risk!)"
+desc 'Remove all libvirt volumes named tails-builder-* (run at your own risk!)'
 task :clean_up_libvirt_volumes do
-  $virt = Libvirt.open("qemu:///system")
+  $virt = Libvirt.open('qemu:///system')
   begin
     pool = $virt.lookup_storage_pool_by_name('default')
   rescue Libvirt::RetrieveError
@@ -704,7 +704,7 @@ namespace :vm do
     run_vagrant('provision')
   end
 
-  desc "Destroy build virtual machine (clean up all files except the " \
+  desc 'Destroy build virtual machine (clean up all files except the ' \
        "vmproxy's apt-cacher-ng data and the website cache)"
   task :destroy do
     clean_up_builder_vms
@@ -747,7 +747,7 @@ namespace :basebox do
   def clean_up_basebox(box)
     run_vagrant('box', 'remove', '--force', box)
     begin
-      $virt = Libvirt.open("qemu:///system")
+      $virt = Libvirt.open('qemu:///system')
       $virt
         .lookup_storage_pool_by_name('default')
         .lookup_volume_by_name("#{box}_vagrant_box_image_0.img")

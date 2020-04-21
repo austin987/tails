@@ -38,21 +38,21 @@ def create_git
     END_OF_CHANGELOG
   end
 
-  fatal_system "git init --quiet"
+  fatal_system 'git init --quiet'
   fatal_system "git config user.email 'tails@boum.org'"
   fatal_system "git config user.name 'Tails developers'"
-  fatal_system "git add debian/changelog"
+  fatal_system 'git add debian/changelog'
   fatal_system "git commit --quiet debian/changelog -m 'First release'"
-  fatal_system "git branch -M stable"
-  fatal_system "git branch testing stable"
-  fatal_system "git branch devel stable"
-  fatal_system "git branch feature/jessie devel"
+  fatal_system 'git branch -M stable'
+  fatal_system 'git branch testing stable'
+  fatal_system 'git branch devel stable'
+  fatal_system 'git branch feature/jessie devel'
 end
 
 def current_branch
   cmd = 'git rev-parse --symbolic-full-name --abbrev-ref HEAD'.split
   branch = cmd_helper(cmd).strip
-  assert_not_equal("HEAD", branch, "We are in 'detached HEAD' state")
+  assert_not_equal('HEAD', branch, "We are in 'detached HEAD' state")
   return branch
 end
 
@@ -65,7 +65,7 @@ rescue Test::Unit::AssertionFailedError
   begin
     current_branch
   rescue Test::Unit::AssertionFailedError
-    ""
+    ''
   end
 end
 
@@ -126,6 +126,6 @@ RSpec::Matchers.define :have_time_based_snapshot do
     "Current mirror: #{string}"
   end
   description do
-    "expected a time-based snapshot"
+    'expected a time-based snapshot'
   end
 end
