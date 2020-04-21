@@ -181,8 +181,6 @@ def retry_action(max_retries, options = {}, &block)
   end
 end
 
-alias :retry_times :retry_action
-
 class TorBootstrapFailure < StandardError
 end
 
