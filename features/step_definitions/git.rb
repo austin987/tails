@@ -20,8 +20,8 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
       !$vm.has_process?('/usr/bin/git')
     }
     Dogtail::Application.new('gnome-terminal-server')
-      .child('Terminal', roleName: 'terminal')
-      .text['Unpacking objects: 100%']
+                        .child('Terminal', roleName: 'terminal')
+                        .text['Unpacking objects: 100%']
   end
 end
 

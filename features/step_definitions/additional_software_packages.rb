@@ -87,8 +87,8 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Soft
   try_for(300) do
     notification =
       Dogtail::Application.new('gnome-shell')
-        .children('', roleName: "notification")
-        .find { |notif| notif.child?(notification_title, roleName: 'label') }
+                          .children('', roleName: "notification")
+                          .find { |notif| notif.child?(notification_title, roleName: 'label') }
     assert_not_nil(notification)
     notification.child(button_title, roleName: 'push button').click
   end

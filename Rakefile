@@ -138,7 +138,7 @@ def vagrant_ssh_config(key)
   # Cache results
   if $vagrant_ssh_config.nil?
     $vagrant_ssh_config = capture_vagrant('ssh-config').first.split("\n") \
-                           .map { |line| line.strip.split(/\s+/, 2) } .to_h
+                                                       .map { |line| line.strip.split(/\s+/, 2) } .to_h
     # The path in the ssh-config output is quoted, which is not what
     # is expected outside of a shell, so let's get rid of the quotes.
     $vagrant_ssh_config['IdentityFile'].gsub!(/^"|"$/, '')
@@ -466,7 +466,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
     end
 
     exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }
-                   .collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+                                     .collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
 
     begin
       retrieved_artifacts = false
@@ -708,8 +708,8 @@ namespace :basebox do
 
   def baseboxes
     capture_vagrant('box', 'list').first.lines
-      .grep(/^tails-builder-.*/)
-      .map { |x| x.chomp.sub(/\s.*$/, '') }
+                                  .grep(/^tails-builder-.*/)
+                                  .map { |x| x.chomp.sub(/\s.*$/, '') }
   end
 
   def clean_up_basebox(box)

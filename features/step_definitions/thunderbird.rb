@@ -80,8 +80,8 @@ Then /^I see that only the (.+) add-on(?:s are| is) enabled in Thunderbird$/ do 
   expected_addons = addons.split(/, | and /)
   actual_addons =
     @thunderbird_addons.child('Enigmail', roleName: 'label')
-    .parent.parent.children(roleName: 'list item', recursive: false)
-    .map { |item| item.name }
+                       .parent.parent.children(roleName: 'list item', recursive: false)
+                       .map { |item| item.name }
   expected_addons.each do |addon|
     result = actual_addons.find { |e| e.start_with?(addon) }
     assert_not_nil(result)
@@ -117,7 +117,7 @@ def wait_for_thunderbird_progress_bar_to_vanish (thunderbird_frame)
   try_for(120) do
     begin
       thunderbird_frame.child(roleName: 'status bar', retry: false)
-        .child(roleName: 'progress bar', retry: false)
+                       .child(roleName: 'progress bar', retry: false)
       false
     rescue
       true
@@ -132,7 +132,7 @@ When /^I fetch my email$/ do
   thunderbird_frame = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
 
   thunderbird_frame.child('Mail Toolbar', roleName: 'tool bar')
-    .button('Get Messages').click
+                   .button('Get Messages').click
   wait_for_thunderbird_progress_bar_to_vanish(thunderbird_frame)
 end
 
@@ -188,18 +188,18 @@ When /^I send an email to myself$/ do
   thunderbird_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
   compose_window = thunderbird_app.child('Write: (no subject) - Thunderbird')
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
-    .typeText($config['Icedove']['address'])
+                .typeText($config['Icedove']['address'])
   # The randomness of the subject will make it easier for us to later
   # find *exactly* this email. This makes it safe to run several tests
   # in parallel.
   @subject = "Automated test suite: #{random_alnum_string(32)}"
   compose_window.child('Subject:', roleName: 'entry')
-    .typeText(@subject)
+                .typeText(@subject)
   compose_window = thunderbird_app.child("Write: #{@subject} - Thunderbird")
   compose_window.child('', roleName: 'internal frame')
-    .typeText('test')
+                .typeText('test')
   compose_window.child('Composition Toolbar', roleName: 'tool bar')
-    .button('Send').click
+                .button('Send').click
   try_for(120, delay: 2) do
     not compose_window.exist?
   end
@@ -227,7 +227,7 @@ Then /^my Thunderbird inbox is non-empty$/ do
   thunderbird_inbox.click
   message_list = thunderbird_main.child('Filter these messages <Ctrl+Shift+K>',
                                         roleName: 'entry')
-                   .parent.parent.child(roleName: 'table')
+                                 .parent.parent.child(roleName: 'table')
   visible_messages = message_list.children(recursive: false,
                                            roleName:  'table row')
   assert(visible_messages.size > 0)

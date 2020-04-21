@@ -396,8 +396,8 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   step 'I start "Tor Browser" via GNOME Activities Overview'
   if offline
     start_button = Dogtail::Application.new('zenity')
-                       .dialog('Tor is not ready', showingOnly: true)
-                       .button('Start Tor Browser', showingOnly: true)
+                                       .dialog('Tor is not ready', showingOnly: true)
+                                       .button('Start Tor Browser', showingOnly: true)
     # Sometimes this click is lost. Maybe the dialog is not fully setup yet?
     sleep 2
     start_button.click
@@ -985,7 +985,7 @@ Then /^Tails is running version (.+)$/ do |version|
   v1 = running_tails_version
   assert_equal(version, v1, "The version doesn't match tails-version's output")
   v2 = $vm.file_content('/etc/os-release')
-       .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
+          .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
   assert_equal(version, v2, "The version doesn't match /etc/os-release")
 end
 

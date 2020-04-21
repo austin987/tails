@@ -150,6 +150,6 @@ end
 Then /^I successfully connect to the SFTP server$/ do
   try_for(60) do
     Dogtail::Application.new('nautilus')
-      .child?("#{@sftp_username} on #{@sftp_host}")
+                        .child?("#{@sftp_username} on #{@sftp_host}")
   end
 end

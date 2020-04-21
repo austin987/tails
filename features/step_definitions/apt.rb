@@ -154,7 +154,7 @@ When /^I update APT using Synaptic$/ do
     }
     assert_raise(Dogtail::Failure) do
       @synaptic.child(roleName: 'dialog', recursive: false)
-        .child('Error', roleName: 'icon', retry: false)
+               .child('Error', roleName: 'icon', retry: false)
     end
     if !$vm.has_process?("synaptic")
       raise "Synaptic process vanished, did it segfault again?"
