@@ -36,6 +36,7 @@ def try_for(timeout, **options)
   if block_given? && timeout.nil?
     return yield
   end
+
   options[:delay] ||= 1
   options[:log] = true if options[:log].nil?
   last_exception = nil
@@ -309,6 +310,7 @@ end
 def notify_user(message)
   alarm_script = $config['NOTIFY_USER_COMMAND']
   return if alarm_script.nil? || alarm_script.empty?
+
   cmd_helper(alarm_script.gsub('%m', message))
 end
 
@@ -374,6 +376,7 @@ def dbus_send(*args, **opts)
   opts[:return_shellcommand] ||= false
   c = dbus_send_get_shellcommand(*args, **opts)
   return c if opts[:return_shellcommand]
+
   assert_vmcommand_success(c)
   # The first line written is about timings and other stuff we don't
   # care about; we only care about the return values.

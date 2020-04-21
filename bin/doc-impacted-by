@@ -98,6 +98,7 @@ def canonicalize_relationship(orig_entry)
   fields = field_abbreviations.values
   field_abbreviations.each do |short, long|
     next unless entry.has_key?(short)
+
     assert(not(entry.has_key?(long)),
            "contains both '#{long}' and its abbreviation '#{short}'")
     v = entry[short]
@@ -113,6 +114,7 @@ def canonicalize_relationship(orig_entry)
          "contains invalid fields: #{entry.keys - fields}")
   fields.each do |field|
     next unless entry.has_key?(field)
+
     entry[field] = entry[field].arrayify
   end
   return entry

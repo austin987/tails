@@ -69,6 +69,7 @@ Then /^no unexpected services are listening for network connections$/ do
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
     next unless ['tcp', 'udp'].include?(proto)
+
     laddr, lport = splitted[4].split(":")
     proc = /users:\(\("([^"]+)"/.match(splitted[6])[1]
     # Services listening on loopback is not a threat

@@ -153,6 +153,7 @@ class VM
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
+
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/os/boot'].attributes['dev'] = dev
     update(domain_xml.to_s)
@@ -162,10 +163,12 @@ class VM
     if is_running?
       raise "Can't attach a CDROM device to a running domain"
     end
+
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
       raise "A CDROM device already exists"
     end
+
     cdrom_rexml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml")).root
     domain_rexml.elements['domain/devices'].add_element(cdrom_rexml)
     update(domain_rexml.to_s)
@@ -175,11 +178,13 @@ class VM
     if is_running?
       raise "Can't detach a CDROM device to a running domain"
     end
+
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
     if cdrom_el.nil?
       raise "No CDROM device is present"
     end
+
     domain_rexml.elements["domain/devices"].delete_element(cdrom_el)
     update(domain_rexml.to_s)
   end
@@ -194,6 +199,7 @@ class VM
     if cdrom_el.nil?
       raise "No CDROM device is present"
     end
+
     cdrom_el.delete_element('source')
     update(domain_rexml.to_s)
   rescue Libvirt::Error => e
@@ -210,6 +216,7 @@ class VM
     if image.nil? or image == ''
       raise "Can't set cdrom image to an empty string"
     end
+
     remove_cdrom_image
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
@@ -221,6 +228,7 @@ class VM
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
+
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     if not domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
       add_cdrom_device
@@ -252,6 +260,7 @@ class VM
     if disk_plugged?(name)
       raise "disk '#{name}' already plugged"
     end
+
     removable_usb = nil
     case type
     when "removable usb", "usb"
@@ -351,6 +360,7 @@ class VM
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
+
     plug_drive(name, type) if not(disk_plugged?(name))
     set_boot_device('hd')
     # XXX:Stretch: since our isotesters upgraded QEMU from
@@ -371,6 +381,7 @@ class VM
     if is_running?
       raise "shares can only be added to inactive vms"
     end
+
     # The complete source directory must be group readable by the user
     # running the virtual machine, and world readable so the user inside
     # the VM can access it (since we use the passthrough security model).
@@ -397,6 +408,7 @@ class VM
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
+
     if type == 'UEFI'
       domain_xml = REXML::Document.new(@domain.xml_desc)
       domain_xml.elements['domain/os'].add_element(
@@ -674,6 +686,7 @@ class VM
 
   def VM.snapshot_exists?(name)
     return true if File.exist?(VM.ram_only_snapshot_path(name))
+
     old_domain = $virt.lookup_domain_by_name(LIBVIRT_DOMAIN_NAME)
     snapshot = old_domain.lookup_snapshot_by_name(name)
     return snapshot != nil
@@ -693,6 +706,7 @@ class VM
 
   def start
     return if is_running?
+
     @domain.create
     @display.start
   end

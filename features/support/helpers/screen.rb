@@ -123,6 +123,7 @@ class Screen
     if p.nil?
       raise FindFailed.new("cannot find #{image} on the screen")
     end
+
     m = Match.new(image, self, *p)
     debug_log("Screen: found #{image} at (#{m.middle.join(', ')})")
     return m
@@ -313,6 +314,7 @@ class ImageBumpingScreen
     if $interactive_image_bump_ignores.include?(image)
       raise ImageBumpFailed
     end
+
     message = "Failed to find #{image}"
     notify_user(message)
     STDERR.puts("Screen: #{message}, entering interactive image bumping mode")

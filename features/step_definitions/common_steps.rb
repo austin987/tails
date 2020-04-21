@@ -77,6 +77,7 @@ end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
   raise "Tails is not running" unless $vm.is_running?
+
   try_for(20, :msg => "Drive '#{name}' is not detected by Tails") do
     $vm.disk_detected?(name)
   end
@@ -613,6 +614,7 @@ Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]
       "type ethernet autoconnect yes ifname eth0"
     )
   end
+
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
@@ -1096,6 +1098,7 @@ When /^I upload "([^"]*)" to "([^"]*)"$/ do |source, destination|
       $vm.execute_successfully("mkdir -p '#{new_destination}'")
       Dir.new(path).each do |child|
         next if child == '.' or child == '..'
+
         step "I upload \"#{path}/#{child}\" to \"#{new_destination}\""
       end
     else

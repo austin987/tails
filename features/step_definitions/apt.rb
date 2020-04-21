@@ -10,6 +10,7 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
   apt_sources.chomp.each_line do |line|
     next if ! line.start_with? "deb"
+
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
       raise "Bad APT source '#{line}'"

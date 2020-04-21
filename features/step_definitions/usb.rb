@@ -28,6 +28,7 @@ def get_persistence_presets_config(skip_links = false)
     options = options_str.split(',')
     is_link = options.include? 'link'
     next if is_link && skip_links
+
     source_str = options.find { |option| /^source=/.match option }
     # If no source is given as an option, live-boot's persistence
     # feature defaults to the destination minus the initial "/".
@@ -509,6 +510,7 @@ Then /^the boot device has safe access rights$/ do
     assert_equal('660', dev_perms)
     for user, groups in all_users_with_groups do
       next if user == 'root'
+
       assert(!groups.include?(dev_group),
              "Unprivileged user '#{user}' is in group '#{dev_group}' which " \
              "owns boot device '#{dev}'")

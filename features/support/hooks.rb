@@ -168,6 +168,7 @@ BeforeFeature('@product') do |feature|
   if !File.exist?(OLD_TAILS_IMG)
     raise "The specified old Tails IMG image '#{OLD_TAILS_IMG}' does not exist"
   end
+
   if not($started_first_product_feature)
     $virt = Libvirt::open("qemu:///system")
     VM.remove_all_snapshots if !KEEP_SNAPSHOTS
@@ -188,6 +189,7 @@ AfterFeature('@product') do
   end
   $vmstorage.list_volumes.each do |vol_name|
     next if vol_name == '__internal'
+
     $vmstorage.delete_volume(vol_name)
   end
 end

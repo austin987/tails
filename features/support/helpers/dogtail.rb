@@ -84,6 +84,7 @@ module Dogtail
       if c.failure?
         raise Failure.new("The Dogtail script raised: #{c.exception}")
       end
+
       return c
     end
 
@@ -124,6 +125,7 @@ module Dogtail
     # Example: [42, {:foo => 'bar'}] => "42, foo = 'bar'"
     def self.args_to_s(args)
       return "" if args.size == 0
+
       args_list = args
       args_hash = nil
       if args_list.class == Array && args_list.last.class == Hash

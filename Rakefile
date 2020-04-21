@@ -536,6 +536,7 @@ def clean_up_builder_vms
 
   clean_up_domain = Proc.new do |domain|
     next if domain.nil?
+
     domain.destroy if domain.active?
     domain.undefine
     begin
@@ -683,6 +684,7 @@ namespace :basebox do
   desc 'Create and import the base box unless already done'
   task :create do
     next if has_box?
+
     $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
 
       This is the first time we are using this Vagrant base box so we

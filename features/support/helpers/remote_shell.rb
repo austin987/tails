@@ -146,6 +146,7 @@ module RemoteShell
       if ret.size != 1
         raise ServerFailure.new("expected 1 value but got #{ret.size}")
       end
+
       debug_log("#{mode} complete")
       return ret.first
     end

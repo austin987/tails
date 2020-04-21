@@ -31,6 +31,7 @@ class Display
 
   def stop
     return if @virtviewer.nil?
+
     Process.kill("TERM", @virtviewer.pid)
     @virtviewer.close
   rescue IOError

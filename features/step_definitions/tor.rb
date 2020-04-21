@@ -39,8 +39,10 @@ def ip4tables_packet_counter_sum(**filters)
   pkts = 0
   ip4tables_chains do |name, _, rules|
     next if filters[:tables] && not(filters[:tables].include?(name))
+
     rules.each do |rule|
       next if filters[:uid] && not(rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"])
+
       pkts += rule.attribute('packet-count').to_s.to_i
     end
   end
@@ -91,6 +93,7 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
                rule.to_s)
         state_cond = try_xml_element_text(rule, "conditions/state/state")
         next if state_cond == "ESTABLISHED"
+
         assert_not_nil(rule.elements['conditions/owner/uid-owner'])
         rule.elements.each('conditions/owner/uid-owner') do |owner|
           uid = owner.text.to_i
