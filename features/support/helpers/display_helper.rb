@@ -16,12 +16,12 @@ class Display
 
   def start
     @virtviewer = IO.popen(["virt-viewer", "--direct",
-                                           "--kiosk",
-                                           "--reconnect",
-                                           "--connect", "qemu:///system",
-                                           "--display", @x_display,
-                                           @domain,
-                                           :err => ["/dev/null", "w"]])
+                            "--kiosk",
+                            "--reconnect",
+                            "--connect", "qemu:///system",
+                            "--display", @x_display,
+                            @domain,
+                            :err => ["/dev/null", "w"]])
     # We wait for the display to be active to not lose actions
     # (e.g. key presses) that come immediately after starting (or
     # restoring) a vm

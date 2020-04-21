@@ -200,7 +200,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     @screen.type(keyid, ["Return"])
     begin
       @screen.wait_any(['SeahorseFoundKeyResult.png',
-                       'GnomeCloseButton.png'], 120)
+                        'GnomeCloseButton.png'], 120)
     rescue FindFailed
       # We may end up here if Seahorse appears to be "frozen".
       # Sometimes--but not always--if we click another window
