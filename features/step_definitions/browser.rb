@@ -114,7 +114,7 @@ end
 
 def page_has_loaded_in_the_Tor_Browser(page_titles, language)
   if page_titles.class == String
-    page_titles = [ page_titles ]
+    page_titles = [page_titles]
   end
   assert_equal(Array, page_titles.class)
   if $language == 'German'
