@@ -137,13 +137,13 @@ module Dogtail
         (if args_list.nil?
            []
          else
-           args_list.map { |e| self.value_to_s(e) }
+           args_list.map { |e| value_to_s(e) }
          end
         ) +
         (if args_hash.nil?
            []
          else
-           args_hash.map { |k, v| "#{k}=#{self.value_to_s(v)}" }
+           args_hash.map { |k, v| "#{k}=#{value_to_s(v)}" }
          end
         )
       ).join(', ')

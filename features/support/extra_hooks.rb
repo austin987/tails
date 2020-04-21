@@ -120,7 +120,7 @@ module ExtraFormatters
     def initialize(runtime, io, options)
       super(runtime, io, options)
       $debug_log_fns ||= []
-      $debug_log_fns << self.method(:debug_log)
+      $debug_log_fns << method(:debug_log)
     end
 
     def debug_log(message, **options)
