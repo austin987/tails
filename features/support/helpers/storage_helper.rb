@@ -158,7 +158,7 @@ class VMStorage
     opts[:size] ||= nil
     opts[:unit] ||= nil
     guestfs_disk_helper(name) do |g, disk_handle|
-      if ! opts[:size].nil? and ! opts[:unit].nil?
+      if !opts[:size].nil? and !opts[:unit].nil?
         g.part_init(disk_handle, parttype)
         size_in_bytes = convert_to_bytes(opts[:size].to_f, opts[:unit])
         sector_size = g.blockdev_getss(disk_handle)

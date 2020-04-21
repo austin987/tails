@@ -19,7 +19,7 @@ def post_snapshot_restore_hook(snapshot_name)
   # seems virt-viewer's auto-resolution feature moves the Greeter's
   # window outside of the visible screen.
   if snapshot_name.end_with?('tails-greeter')
-    if ! @screen.exists('TailsGreeter.png')
+    if !@screen.exists('TailsGreeter.png')
       $vm.execute_successfully("env $(tr '\\0' '\\n' < /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ | grep -E '(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') sudo -u Debian-gdm xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0")
     end
   end
@@ -561,7 +561,7 @@ Then /^Tails eventually (shuts down|restarts)$/ do |mode|
       @screen.find('TailsGreeter.png')
       true
     else
-      ! $vm.is_running?
+      !$vm.is_running?
     end
   end
 end
@@ -654,7 +654,7 @@ When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, ti
 end
 
 When /^the file "([^"]+)" does not exist$/ do |file|
-  assert(! ($vm.file_exist?(file)))
+  assert(!($vm.file_exist?(file)))
 end
 
 When /^the directory "([^"]+)" exists$/ do |directory|
@@ -662,7 +662,7 @@ When /^the directory "([^"]+)" exists$/ do |directory|
 end
 
 When /^the directory "([^"]+)" does not exist$/ do |directory|
-  assert(! ($vm.directory_exist?(directory)))
+  assert(!($vm.directory_exist?(directory)))
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
@@ -758,7 +758,7 @@ end
 
 When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) seconds)$/ do |nb, wait_time|
   nb = 0 if nb == "no"
-  sleep wait_time.to_i if ! wait_time.nil?
+  sleep wait_time.to_i if !wait_time.nil?
   assert_equal(nb.to_i, pulseaudio_sink_inputs)
 end
 

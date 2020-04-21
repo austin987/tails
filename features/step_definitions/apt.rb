@@ -9,7 +9,7 @@ end
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
   apt_sources.chomp.each_line do |line|
-    next if ! line.start_with? "deb"
+    next if !line.start_with? "deb"
 
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
@@ -85,7 +85,7 @@ def wait_for_package_removal(package)
   try_for(3*60) do
     # Once purged, a package is removed from the installed package status database
     # and "dpkg -s" returns a non-zero exit code
-    ! $vm.execute("dpkg -s #{package}").success?
+    !$vm.execute("dpkg -s #{package}").success?
   end
 end
 
