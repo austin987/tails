@@ -163,7 +163,7 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
     end
     native_libs = $vm.execute_successfully(
                        "find /usr/lib /lib -name \"#{lib_name}\""
-                                           ).stdout.split
+                     ).stdout.split
     for native_lib in native_libs do
       if /\W#{native_lib}$"/.match firefox_pmap_info
         unwanted_native_libs << lib_name

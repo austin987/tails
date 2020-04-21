@@ -139,7 +139,7 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
         (
          (destination == tor_onion_addr_space && redirected_to_trans_port) ||
          (destination == loopback_address && dns_redirected_to_tor_dns_port)
-        )
+       )
       end
       bad_rules = rules - good_rules
       assert(bad_rules.empty?,

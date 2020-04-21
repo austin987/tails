@@ -402,7 +402,7 @@ Then /^Pidgin has the expected persistent accounts configured$/ do
          "Currently configured Pidgin accounts do not match the persistent ones:\n" +
          "Current:\n#{current_accounts}\n" +
          "Persistent:\n#{@persistent_pidgin_accounts}"
-         )
+        )
 end
 
 Then /^Pidgin has the expected persistent OTR keys$/ do
