@@ -23,7 +23,7 @@ Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destinatio
     video_name = File.basename(video_on_host)
     src_on_guest = "#{@video_dir_on_guest}/#{video_name}"
     dst_on_guest = "#{destination}/#{video_name}"
-    step "I copy \"#{src_on_guest}\" to \"#{dst_on_guest}\" as user \"amnesia\""
+    step "I copy \"#{src_on_guest}\" to \"#{dst_on_guest}\" as user \"#{user}\""
   end
 end
 

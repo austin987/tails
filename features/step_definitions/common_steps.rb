@@ -666,7 +666,7 @@ When /^the directory "([^"]+)" does not exist$/ do |directory|
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
-  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", :user => LIVE_USER)
+  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", :user => user)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
