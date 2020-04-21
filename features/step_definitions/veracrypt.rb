@@ -72,7 +72,7 @@ def create_veracrypt_volume(type, with_keyfile)
     ensure
       Process.wait pid
     end
-    ($?.exitstatus == 0) || raise( "#{tcplay_create_cmd} exited with #{$?.exitstatus}")
+    ($?.exitstatus == 0) || raise("#{tcplay_create_cmd} exited with #{$?.exitstatus}")
   end
   tcplay_map_cmd = "tcplay --map=veracrypt --device='#{loop_dev}'"
   tcplay_map_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
@@ -87,7 +87,7 @@ def create_veracrypt_volume(type, with_keyfile)
     ensure
       Process.wait pid
     end
-    ($?.exitstatus == 0) || raise( "#{tcplay_map_cmd} exited with #{$?.exitstatus}")
+    ($?.exitstatus == 0) || raise("#{tcplay_map_cmd} exited with #{$?.exitstatus}")
   end
   fatal_system "mkfs.vfat '/dev/mapper/veracrypt' >/dev/null"
   Dir.mktmpdir('veracrypt-mountpoint', $config["TMPDIR"]) do |mountpoint|
