@@ -35,7 +35,7 @@ module RemoteShell
         response_id, status, *rest = JSON.load(line)
         if response_id == id
           if status != "success"
-            if status == "error" and rest.class == Array and rest.size == 1
+            if (status == "error") && (rest.class == Array) && (rest.size == 1)
               msg = rest.first
               raise ServerFailure.new("#{msg}")
             else

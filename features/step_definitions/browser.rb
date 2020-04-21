@@ -134,7 +134,7 @@ def page_has_loaded_in_the_Tor_Browser(page_titles)
       page_titles
         .map  { |page_title| "#{page_title} - #{browser_name}" }
         .any? { |page_title| page_title == frame.name }
-    } and
+    } &&
       @torbrowser.child(reload_action, roleName:    'push button',
                                        showingOnly: true)
   }

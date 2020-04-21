@@ -121,7 +121,7 @@ end
 
 Given(/^the config\/APT_overlays\.d directory is empty$/) do
   Dir.glob('config/APT_overlays.d/*').empty? \
-  or raise "config/APT_overlays.d/ is not empty"
+  || raise("config/APT_overlays.d/ is not empty")
 end
 
 Given(/^config\/APT_overlays\.d contains ['"]?([[:alnum:].-]+)['"]?$/) do |suite|

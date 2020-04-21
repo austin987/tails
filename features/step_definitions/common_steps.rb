@@ -673,7 +673,7 @@ end
 def is_persistent?(app)
   conf = get_persistence_presets_config(true)["#{app}"]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
-  c.success? and c.stdout.chomp != "overlay"
+  c.success? && (c.stdout.chomp != "overlay")
 end
 
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
@@ -1099,7 +1099,7 @@ When /^I upload "([^"]*)" to "([^"]*)"$/ do |source, destination|
       new_destination = "#{destination}/#{File.basename(path)}"
       $vm.execute_successfully("mkdir -p '#{new_destination}'")
       Dir.new(path).each do |child|
-        next if child == '.' or child == '..'
+        next if (child == '.') || (child == '..')
 
         step "I upload \"#{path}/#{child}\" to \"#{new_destination}\""
       end

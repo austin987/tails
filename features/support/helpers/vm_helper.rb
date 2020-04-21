@@ -217,7 +217,7 @@ class VM
   end
 
   def set_cdrom_image(image)
-    if image.nil? or image == ''
+    if image.nil? || (image == '')
       raise "Can't set cdrom image to an empty string"
     end
 
@@ -335,7 +335,7 @@ class VM
   end
 
   def disk_dev(name)
-    rexml = disk_rexml_desc(name) or return nil
+    (rexml = disk_rexml_desc(name)) || (return nil)
     return "/dev/" + rexml.elements['disk/target'].attribute('dev').to_s
   end
 
@@ -355,7 +355,7 @@ class VM
   end
 
   def disk_detected?(name)
-    dev = disk_dev(name) or return false
+    (dev = disk_dev(name)) || (return false)
     return execute("test -b #{dev}").success?
   end
 
@@ -662,7 +662,7 @@ class VM
   def restore_snapshot(name)
     debug_log("Restoring snapshot '#{name}'...")
     @domain.destroy if is_running?
-    @display.stop if @display and @display.active?
+    @display.stop if @display && @display.active?
     # See comment in save_snapshot() for details on why we use two
     # different type of snapshots.
     potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)

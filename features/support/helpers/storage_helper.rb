@@ -23,8 +23,8 @@ class VMStorage
     rescue Libvirt::RetrieveError
       @pool = nil
     end
-    if @pool and (not(KEEP_SNAPSHOTS) or
-                  (KEEP_SNAPSHOTS and not(Dir.exist?(@pool_path))))
+    if @pool && ((not(KEEP_SNAPSHOTS)) ||
+                  (KEEP_SNAPSHOTS && (not(Dir.exist?(@pool_path)))))
       VMStorage.clear_storage_pool(@pool)
       @pool = nil
     end
@@ -159,7 +159,7 @@ class VMStorage
     opts[:size] ||= nil
     opts[:unit] ||= nil
     guestfs_disk_helper(name) do |g, disk_handle|
-      if !opts[:size].nil? and !opts[:unit].nil?
+      if !opts[:size].nil? && !opts[:unit].nil?
         g.part_init(disk_handle, parttype)
         size_in_bytes = convert_to_bytes(opts[:size].to_f, opts[:unit])
         sector_size = g.blockdev_getss(disk_handle)

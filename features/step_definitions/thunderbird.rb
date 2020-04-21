@@ -109,7 +109,7 @@ Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server 
   assert_not_nil(section.child(protocol, roleName: 'label'))
   assert(
     section.children(roleName: 'label').any? { |label|
-      label.text == 'SSL' or label.text == 'STARTTLS'
+      (label.text == 'SSL') || (label.text == 'STARTTLS')
     }
   )
 end

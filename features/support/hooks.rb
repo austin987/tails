@@ -183,7 +183,7 @@ end
 AfterFeature('@product') do
   unless KEEP_SNAPSHOTS
     checkpoints.each do |name, vals|
-      if vals[:temporary] and VM.snapshot_exists?(name)
+      if vals[:temporary] && VM.snapshot_exists?(name)
         VM.remove_snapshot(name)
       end
     end

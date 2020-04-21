@@ -51,7 +51,7 @@ end
 
 def try_xml_element_text(element, xpath, default = nil)
   node = element.elements[xpath]
-  (node.nil? or not(node.has_text?)) ? default : node.text
+  (node.nil? || (not(node.has_text?))) ? default : node.text
 end
 
 Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
