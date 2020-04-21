@@ -36,14 +36,14 @@ Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"
                         : (type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG)),
     :opts => {
       :format   => "raw",
-      :readonly => true
-    }
+      :readonly => true,
+    },
   }
   dest_disk = {
     :path => $vm.storage.disk_path(name),
     :opts => {
-      :format => $vm.storage.disk_format(name)
-    }
+      :format => $vm.storage.disk_format(name),
+    },
   }
   $vm.storage.guestfs_disk_helper(src_disk, dest_disk) do |g, src_disk_handle, dest_disk_handle|
     g.copy_device_to_device(src_disk_handle, dest_disk_handle, {})

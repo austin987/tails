@@ -274,7 +274,7 @@ def chan_image(account, channel, image)
       'tails' => {
         'conversation_tab' => 'PidginTailsConversationTab',
         'welcome'          => 'PidginTailsChannelWelcome',
-      }
+      },
     },
   }
   return images[account][channel][image] + ".png"

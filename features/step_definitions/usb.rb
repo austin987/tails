@@ -90,7 +90,7 @@ def persistent_presets_ui_settings
     presets_ui_settings += [{
       'id'                       => id,
       'enabled'                  => (enabled == '1'),
-      'has_configuration_button' => (has_configuration_button == '1')
+      'has_configuration_button' => (has_configuration_button == '1'),
     }]
   end
   presets_ui_settings
@@ -653,8 +653,8 @@ Then /^only the expected files are present on the persistence partition on USB d
     path: $vm.storage.disk_path(name),
     opts: {
       format:   $vm.storage.disk_format(name),
-      readonly: true
-    }
+      readonly: true,
+    },
   }
   $vm.storage.guestfs_disk_helper(disk) do |g, disk_handle|
     partitions = g.part_list(disk_handle).map do |part_desc|
@@ -711,7 +711,7 @@ def iuk_changes(version)
       filesystem:  :rootfs,
       path:        'some_new_file',
       status:      :added,
-      new_content: <<~EOF
+      new_content: <<~EOF,
         Some content
       EOF
     },
@@ -719,7 +719,7 @@ def iuk_changes(version)
       filesystem:  :rootfs,
       path:        'etc/amnesia/version',
       status:      :modified,
-      new_content: <<~EOF
+      new_content: <<~EOF,
         #{version} - 20380119
         ffffffffffffffffffffffffffffffffffffffff
         live-build: 3.0.5+really+is+2.0.12-0.tails2
@@ -731,7 +731,7 @@ def iuk_changes(version)
       filesystem:  :rootfs,
       path:        'etc/os-release',
       status:      :modified,
-      new_content: <<~EOF
+      new_content: <<~EOF,
         TAILS_PRODUCT_NAME="Tails"
         TAILS_VERSION_ID="#{version}"
       EOF
@@ -739,17 +739,17 @@ def iuk_changes(version)
     {
       filesystem: :rootfs,
       path:       'usr/share/common-licenses/BSD',
-      status:     :removed
+      status:     :removed,
     },
     {
       filesystem: :rootfs,
       path:       'usr/share/doc/tor',
-      status:     :removed
+      status:     :removed,
     },
     {
       filesystem: :medium,
       path:       'utils/linux/syslinux',
-      status:     :removed
+      status:     :removed,
     }
   ]
 
@@ -762,19 +762,19 @@ def iuk_changes(version)
         filesystem:  :rootfs,
         path:        'some_new_file_2.3',
         status:      :added,
-        new_content: <<~EOF
+        new_content: <<~EOF,
           Some content 2.3
         EOF
       },
       {
         filesystem: :rootfs,
         path:       'usr/share/common-licenses/MPL-1.1',
-        status:     :removed
+        status:     :removed,
       },
       {
         filesystem: :medium,
         path:       'utils/mbr/mbr.bin',
-        status:     :removed
+        status:     :removed,
       }
     ]
   else
