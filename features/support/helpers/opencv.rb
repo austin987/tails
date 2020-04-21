@@ -23,7 +23,7 @@ module OpenCV
       err: [:child, :out]
     )
     out = p.readlines.join("\n")
-    case $?.exitstatus
+    case $CHILD_STATUS.exitstatus
     when 0
       return out.chomp.split.map { |s| s.to_i }
     when 1

@@ -13,7 +13,7 @@ include Test::Unit::Assertions
 # The Ruby Git module we use needs the Git root directory, and this
 # prevents it from being able to run the command below.
 GIT_DIR = `git rev-parse --show-toplevel`.chomp
-assert_equal(0, $?.exitstatus)
+assert_equal(0, $CHILD_STATUS.exitstatus)
 DEFAULT_RELATIONSHIP_FILE = "#{GIT_DIR}/doc-source-relationships.yml"
 
 class Object
@@ -160,7 +160,7 @@ def find_impacted_docs(impact_map,
   git_cmd_wiki_files = "git ls-tree -r --full-tree " +
                        "--name-only #{new_commit} -- wiki/src"
   doc_pages = `#{git_cmd_wiki_files}`.chomp.split("\n")
-  assert_equal(0, $?.exitstatus, "Error: `git ls-tree` failed")
+  assert_equal(0, $CHILD_STATUS.exitstatus, "Error: `git ls-tree` failed")
 
   old_packages = old_manifest.keys
   new_packages = new_manifest.keys

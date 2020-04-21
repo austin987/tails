@@ -241,7 +241,7 @@ def cmd_helper(cmd, env = {})
   IO.popen(env, cmd) do |p|
     out = p.readlines.join("\n")
     Process.wait(p.pid)
-    ret = $?
+    ret = $CHILD_STATUS
     assert_equal(0, ret, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
     return out
   end

@@ -11,7 +11,7 @@ Encoding.default_internal = Encoding::UTF_8
 
 def fatal_system(str, *args)
   unless system(str, *args)
-    raise StandardError.new("Command exited with #{$?}")
+    raise StandardError.new("Command exited with #{$CHILD_STATUS}")
   end
 end
 

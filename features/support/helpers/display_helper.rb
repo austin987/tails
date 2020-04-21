@@ -9,7 +9,7 @@ class Display
                   "-name", "#{@domain} (1) - Virt Viewer",
                   :err => ["/dev/null", "w"],])
     Process.wait(p.pid)
-    $?.success?
+    $CHILD_STATUS.success?
   end
 
   def start
@@ -47,7 +47,7 @@ class Display
   def screenshot(target)
     FileUtils.rm_f(target)
     popen_wait(['import', '-quality', '100%', '-window', 'root', target])
-    assert($?.success?)
+    assert($CHILD_STATUS.success?)
     assert(File.exist?(target))
   end
 end
