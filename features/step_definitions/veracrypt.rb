@@ -37,7 +37,7 @@ def reply_prompt(r_f, w_f, prompt_re, answer)
   r_f.expect(prompt_re) do
     debug_log "got prompt, typing #{answer}"
     sleep 1 # tcplay takes some time before it's ready to read our input
-    w_f.puts "#{answer}"
+    w_f.puts answer.to_s
   end
 end
 

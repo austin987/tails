@@ -618,7 +618,7 @@ Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]
 
   try_for(10) do
     nm_con_list = $vm.execute('nmcli --terse --fields NAME connection show').stdout
-    nm_con_list.split("\n").include? "#{con_name}"
+    nm_con_list.split("\n").include? con_name.to_s
   end
 end
 
@@ -671,7 +671,7 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
 end
 
 def is_persistent?(app)
-  conf = get_persistence_presets_config(true)["#{app}"]
+  conf = get_persistence_presets_config(true)[app.to_s]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
   c.success? && (c.stdout.chomp != 'overlay')
 end

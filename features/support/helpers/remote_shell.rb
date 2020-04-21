@@ -37,7 +37,7 @@ module RemoteShell
           if status != 'success'
             if (status == 'error') && (rest.class == Array) && (rest.size == 1)
               msg = rest.first
-              raise ServerFailure.new("#{msg}")
+              raise ServerFailure.new(msg.to_s)
             else
               raise ServerFailure.new("Uncaught exception: #{status}: #{rest}")
             end

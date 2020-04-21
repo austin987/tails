@@ -86,7 +86,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
     if @gnupg_recv_key_res.failure?
       raise "Fetching keys with the GnuPG CLI failed with:\n" +
             "#{@gnupg_recv_key_res.stdout}\n" +
-            "#{@gnupg_recv_key_res.stderr}"
+            (@gnupg_recv_key_res.stderr).to_s
     end
   end
 end
