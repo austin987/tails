@@ -78,13 +78,14 @@ def read_package_manifest_file_as_package_map(path)
   package_manifest = YAML.load(File.read(path))
   packages = package_manifest['packages']['binary'] +
              package_manifest['packages']['source']
-  packages.map do |entry|
+  packages
+    .map do |entry|
     [
       entry['package'],
       entry.clone.delete_if { |k, _| k == 'package' }
     ]
   end
-          .to_h
+    .to_h
 end
 
 def canonicalize_relationship(orig_entry)
@@ -222,12 +223,13 @@ def find_impacted_docs(impact_map,
             "'#{package}' has identical data in both manifests so it is " +
             "a bug that we ended up here"
           )
-          package_changes = old_manifest[package].keys.sort.map do |key|
+          package_changes = old_manifest[package]
+                            .keys.sort.map do |key|
             old_val = old[key]
             new_val = new[key]
             old_val != new_val ? "#{old_val} → #{new_val}" : nil
           end
-                                                 .compact.join(', ')
+                            .compact.join(', ')
           "Updated package: #{package} (#{package_changes})"
         end
         impacted_docs.deep_merge({page_path => reasons}) unless reasons.empty?
@@ -259,14 +261,17 @@ impacted_docs = find_impacted_docs(
 
 if impacted_docs.size > 0
   result =
-    impacted_docs.sort.map do |page, reasons|
+    impacted_docs
+    .sort
+    .map do |page, reasons|
       "#{page}\n" +
-        reasons.sort.map do |reason|
+        reasons
+        .sort.map do |reason|
           "- #{reason}"
         end
-               .join("\n")
+        .join("\n")
     end
-                 .join("\n\n")
+    .join("\n\n")
 
   puts "The following documentation pages need investigation:"
   puts

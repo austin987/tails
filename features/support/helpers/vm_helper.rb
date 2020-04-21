@@ -98,14 +98,15 @@ class VM
   def real_mac(alias_name)
     REXML::Document.new(@domain.xml_desc)
                    .elements["domain/devices/interface[@type='network']/" +
-                "alias[@name='#{alias_name}']"]
+                             "alias[@name='#{alias_name}']"]
                    .parent.elements['mac'].attributes['address'].to_s
   end
 
   def all_real_macs
     macs = []
-    REXML::Document.new(@domain.xml_desc)
-                   .elements.each("domain/devices/interface[@type='network']") do |nic|
+    REXML::Document
+      .new(@domain.xml_desc)
+      .elements.each("domain/devices/interface[@type='network']") do |nic|
       macs << nic.elements['mac'].attributes['address'].to_s
     end
     macs
