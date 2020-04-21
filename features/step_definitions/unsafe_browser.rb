@@ -89,6 +89,7 @@ Then /^the Unsafe Browser has a red theme$/ do
 end
 
 Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" locale)?$/ do |locale|
+  # rubocop:disable Style/ConditionalAssignment
   case locale
   # Use localized image for languages that have a translated version
   # of the Unsafe Browser homepage.
@@ -101,6 +102,7 @@ Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" 
   else
     start_page_image = "UnsafeBrowserStartPage.png"
   end
+  # rubocop:enable Style/ConditionalAssignment
   @screen.wait(start_page_image, 60)
 end
 
