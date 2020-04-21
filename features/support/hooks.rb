@@ -141,8 +141,8 @@ BeforeFeature('@product') do |feature|
   images = { 'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG }
   images.each { |type, path|
     if path.nil?
-      raise "No Tails #{type} image specified, and none could be found in the " +
-            "current directory"
+      raise "No Tails #{type} image specified, and none could be found " +
+            "in the current directory"
     end
     if File.exist?(path)
       # Workaround: when libvirt takes ownership of the ISO/IMG image it may
@@ -153,9 +153,10 @@ BeforeFeature('@product') do |feature|
         if File.owned?(path)
           File.chmod(0644, path)
         else
-          raise "warning: the Tails #{type} image must be world readable or be " +
-                "owned by the current user to be available inside the guest " +
-                "VM via host-to-guest shares, which is required by some tests"
+          raise "warning: the Tails #{type} image must be world readable " +
+                "or be owned by the current user to be available inside " +
+                "the guest VM via host-to-guest shares, which is required " +
+                "by some tests"
         end
       end
     else
@@ -262,12 +263,20 @@ After('@product') do |scenario|
       end
     when 'TorBootstrapFailure'
       save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
-      chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
+      chutney_logs = sanitize_filename(
+        "#{elapsed}_#{scenario.name}_chutney-data"
+      )
       FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
       FileUtils.rm(Dir.glob("#{$config["TMPDIR"]}/chutney-data/**/control"))
-      FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+      FileUtils.copy_entry(
+        "#{$config["TMPDIR"]}/chutney-data",
+        "#{ARTIFACTS_DIR}/#{chutney_logs}"
+      )
       info_log
-      info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+      info_log_artifact_location(
+        "Chutney logs",
+        "#{ARTIFACTS_DIR}/#{chutney_logs}"
+      )
     when 'TimeSyncingError'
       save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
     end
@@ -281,7 +290,9 @@ After('@product') do |scenario|
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
-      artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
+      artifact_name = sanitize_filename(
+        "#{elapsed}_#{scenario.name}#{File.extname(file)}"
+      )
       artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
       assert(File.exist?(file))
       FileUtils.mv(file, artifact_path)
@@ -317,7 +328,11 @@ end
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
   if scenario.passed?
-    allowed_nodes = @bridge_hosts ? @bridge_hosts : allowed_hosts_under_tor_enforcement
+    allowed_nodes = if @bridge_hosts
+                      @bridge_hosts
+                    else
+                      allowed_hosts_under_tor_enforcement
+                    end
     assert_all_connections(@tor_leaks_sniffer.pcap_file) do |c|
       allowed_nodes.include?({ address: c.daddr, port: c.dport })
     end

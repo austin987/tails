@@ -103,7 +103,10 @@ module RemoteShell
       opts[:user] ||= "root"
       show_code = code.chomp
       if show_code["\n"]
-        show_code = "\n" + show_code.lines.map { |l| " " * 4 + l.chomp } .join("\n")
+        show_code = "\n" +
+                    show_code.lines
+                             .map { |l| " " * 4 + l.chomp }
+                             .join("\n")
       end
       debug_log("executing Python as #{opts[:user]}: #{show_code}")
       ret = RemoteShell.communicate(
@@ -158,7 +161,9 @@ module RemoteShell
     end
 
     def read()
-      Base64.decode64(self.class.open(@vm, 'read', @path)).force_encoding('utf-8')
+      Base64.decode64(
+        self.class.open(@vm, 'read', @path)
+      ).force_encoding('utf-8')
     end
 
     def write(data)

@@ -12,7 +12,9 @@ class SSHServer
     @sshd_key_file = Tempfile.new("ssh_host_rsa_key", $config["TMPDIR"])
     # 'hack' to prevent ssh-keygen from prompting to overwrite the file
     File.delete(@sshd_key_file.path)
-    cmd_helper(['ssh-keygen', '-t', 'rsa', '-N', "", '-f', "#{@sshd_key_file.path}"])
+    cmd_helper(
+      ['ssh-keygen', '-t', 'rsa', '-N', "", '-f', "#{@sshd_key_file.path}"]
+    )
     @sshd_key_file.close
 
     sshd_config = <<~EOF
@@ -30,7 +32,9 @@ class SSHServer
       @authorized_keys_file = Tempfile.new("authorized_keys", $config['TMPDIR'])
       @authorized_keys_file.write(@authorized_keys)
       @authorized_keys_file.close
-      @sshd_config_file.write("AuthorizedKeysFile #{@authorized_keys_file.path}")
+      @sshd_config_file.write(
+        "AuthorizedKeysFile #{@authorized_keys_file.path}"
+      )
     end
 
     @sshd_config_file.close

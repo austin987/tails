@@ -41,7 +41,10 @@ DEBUG_LOG_PSEUDO_FIFO = "#{$config["TMPDIR"]}/debug_log_pseudo_fifo"
 DISPLAY = ENV['DISPLAY']
 GIT_DIR = ENV['PWD']
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
-LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
+LIVE_USER = cmd_helper(
+  ". config/chroot_local-includes/etc/live/config.d/username.conf; " \
+  "echo ${LIVE_USERNAME}"
+).chomp
 TAILS_ISO = ENV['TAILS_ISO']
 TAILS_IMG = TAILS_ISO.sub(/\.iso/, '.img')
 OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || TAILS_ISO
@@ -66,7 +69,7 @@ OPENCV_IMAGE_PATH = "#{Dir.pwd}/features/images/"
 OPENCV_MIN_SIMILARITY = 0.9
 
 # Constants that are statically initialized.
-CONFIGURED_KEYSERVER_HOSTNAME = 'zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion'
+CONFIGURED_KEYSERVER_HOSTNAME = 'zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion' # rubocop:disable Layout/LineLength
 TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME = 'keys.openpgp.org'
 LIBVIRT_DOMAIN_NAME = "TailsToaster"
 LIBVIRT_DOMAIN_UUID = "203552d5-819c-41f3-800e-2c8ef2545404"
@@ -82,6 +85,8 @@ SERVICES_EXPECTED_ON_ALL_IFACES =
 SOME_DNS_SERVER = "208.67.222.222"
 VM_XML_PATH = "#{Dir.pwd}/features/domains"
 
-TAILS_SIGNING_KEY = cmd_helper(". #{Dir.pwd}/config/amnesia; echo ${AMNESIA_DEV_KEYID}").tr(' ', '').chomp
+TAILS_SIGNING_KEY = cmd_helper(
+  ". #{Dir.pwd}/config/amnesia; echo ${AMNESIA_DEV_KEYID}"
+).tr(' ', '').chomp
 TAILS_DEBIAN_REPO_KEY = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
 WEBM_VIDEO_URL = 'https://tails.boum.org/lib/test_suite/test.webm'

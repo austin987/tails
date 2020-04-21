@@ -127,14 +127,19 @@ class VM
 
   def network_link_state
     REXML::Document.new(@domain.xml_desc)
-                   .elements['domain/devices/interface/link'].attributes['state']
+                   .elements['domain/devices/interface/link']
+                   .attributes['state']
   end
 
   def set_network_link_state(state)
     domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/devices/interface/link'].attributes['state'] = state
+    domain_xml
+      .elements['domain/devices/interface/link']
+      .attributes['state'] = state
     if is_running?
-      @domain.update_device(domain_xml.elements['domain/devices/interface'].to_s)
+      @domain.update_device(
+        domain_xml.elements['domain/devices/interface'].to_s
+      )
     else
       update(domain_xml.to_s)
     end
@@ -283,7 +288,9 @@ class VM
     xml.elements['disk/driver'].attributes['type'] = @storage.disk_format(name)
     xml.elements['disk/target'].attributes['dev'] = dev
     xml.elements['disk/target'].attributes['bus'] = type
-    xml.elements['disk/target'].attributes['removable'] = removable_usb if removable_usb
+    if removable_usb
+      xml.elements['disk/target'].attributes['removable'] = removable_usb
+    end
 
     plug_device(xml)
   end
@@ -292,7 +299,8 @@ class VM
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       begin
-        if e.elements['source'].attribute('file').to_s == @storage.disk_path(name)
+        if e.elements['source'].attribute('file').to_s \
+           == @storage.disk_path(name)
           return e.to_s
         end
       rescue
@@ -666,7 +674,10 @@ class VM
         potential_internal_snapshot = @domain.lookup_snapshot_by_name(name)
         @domain.revert_to_snapshot(potential_internal_snapshot)
       rescue Guestfs::Error, Libvirt::RetrieveError
-        raise "The (internal nor external) snapshot #{name} may be known by libvirt but it cannot be restored. To investigate, use 'virsh snapshot-list TailsToaster'. To clean up old dangling snapshots, use 'virsh snapshot-delete'."
+        raise "The (internal nor external) snapshot #{name} may be known " +
+              "by libvirt but it cannot be restored. " +
+              "To investigate, use 'virsh snapshot-list TailsToaster'. " +
+              "To clean up old dangling snapshots, use 'virsh snapshot-delete'."
       end
     end
     @display.start

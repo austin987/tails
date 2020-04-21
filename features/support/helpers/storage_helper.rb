@@ -130,7 +130,8 @@ class VMStorage
     end
     from_vol = @pool.lookup_volume_by_name(from)
     xml = REXML::Document.new(from_vol.xml_desc)
-    pool_path = REXML::Document.new(@pool.xml_desc).elements['pool/target/path'].text
+    pool_path = REXML::Document.new(@pool.xml_desc)
+                               .elements['pool/target/path'].text
     xml.elements['volume/name'].text = to
     xml.elements['volume/target/path'].text = "#{pool_path}/#{to}"
     @pool.create_volume_xml_from(xml.to_s, from_vol)

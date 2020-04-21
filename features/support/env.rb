@@ -80,7 +80,8 @@ end
 RSpec::Matchers.define :have_suite do |suite|
   match do |string|
     # e.g.: `deb http://deb.tails.boum.org/ 0.10 main contrib non-free`
-    %r{^deb +http://deb\.tails\.boum\.org/ +#{Regexp.escape(suite)} main}.match(string)
+    %r{^deb +http://deb\.tails\.boum\.org/ +#{Regexp.escape(suite)} main}
+      .match(string)
   end
   failure_message_for_should do |string|
     "expected the sources to include #{suite}\nCurrent sources : #{string}"
@@ -96,7 +97,9 @@ end
 RSpec::Matchers.define :have_tagged_snapshot do |tag|
   match do |string|
     # e.g.: `http://tagged.snapshots.deb.tails.boum.org/0.10`
-    %r{^http://tagged\.snapshots\.deb\.tails\.boum\.org/#{Regexp.escape(tag)}/[a-z-]+$}.match(string)
+    base_uri = 'http://tagged.snapshots.deb.tails.boum.org'
+    %r{^#{Regexp.escape(base_uri)}/#{Regexp.escape(tag)}/[a-z-]+$}
+      .match(string)
   end
   failure_message_for_should do |string|
     "expected the mirror to be #{tag}\nCurrent mirror: #{string}"
@@ -112,13 +115,15 @@ end
 RSpec::Matchers.define :have_time_based_snapshot do |tag|
   match do |string|
     # e.g.: `http://time-based.snapshots.deb.tails.boum.org/debian/2016060602`
-    %r{^http://time\-based\.snapshots\.deb\.tails\.boum\.org/[^/]+/\d+}.match(string)
+    %r{^http://time\-based\.snapshots\.deb\.tails\.boum\.org/[^/]+/\d+}
+      .match(string)
   end
   failure_message_for_should do |string|
     "expected the mirror to be a time-based snapshot\nCurrent mirror: #{string}"
   end
   failure_message_for_should_not do |string|
-    "expected the mirror not to be a time-based snapshot\nCurrent mirror: #{string}"
+    "expected the mirror not to be a time-based snapshot\n" \
+    "Current mirror: #{string}"
   end
   description do
     "expected a time-based snapshot"

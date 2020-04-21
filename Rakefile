@@ -213,13 +213,10 @@ task :parse_build_options do
 
   # Default to in-memory builds if there is enough RAM available
   options << 'ram' if enough_free_memory_for_ram_build?
-
   # Default to build using the in-VM proxy
   options << 'vmproxy'
-
   # Default to fast compression on development branches
   options << 'fastcomp' unless is_release?
-
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
   options << "cpus=#{cpus}" if cpus
@@ -236,14 +233,20 @@ task :parse_build_options do
     # Bootstrap cache settings
     # HTTP proxy settings
     when 'extproxy'
-      abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+      unless EXTERNAL_HTTP_PROXY
+        abort "No HTTP proxy set, but one is required by " \
+              "TAILS_BUILD_OPTIONS. Aborting."
+      end
       ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'extproxy'
     when 'vmproxy', 'vmproxy+extproxy'
       ENV['TAILS_PROXY'] = INTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
       if opt == 'vmproxy+extproxy'
-        abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+        unless EXTERNAL_HTTP_PROXY
+          abort "No HTTP proxy set, but one is required by " \
+                "TAILS_BUILD_OPTIONS. Aborting."
+        end
         ENV['TAILS_ACNG_PROXY'] = EXTERNAL_HTTP_PROXY
       end
     when 'noproxy'
@@ -372,8 +375,10 @@ task :validate_http_proxy do
       return
     end
 
-    if ['localhost', '[::1]'].include?(proxy_host) || proxy_host.start_with?('127.0.0.')
-      abort 'Using an HTTP proxy listening on the loopback is doomed to fail. Aborting.'
+    if ['localhost', '[::1]'].include?(proxy_host) \
+       || proxy_host.start_with?('127.0.0.')
+      abort 'Using an HTTP proxy listening on the loopback is doomed ' \
+            'to fail. Aborting.'
     end
 
     $stderr.puts "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
@@ -394,7 +399,8 @@ task :setup_environment => ['validate_git_state'] do
   if on_jenkins?
     jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(/^origin\//, '')
     if not(is_release?) && jenkins_branch != ENV['GIT_REF']
-      raise "We expected to build the Git ref '#{ENV['GIT_REF']}', but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"
+      raise "We expected to build the Git ref '#{ENV['GIT_REF']}', " \
+            "but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"
     end
   end
 
@@ -440,7 +446,17 @@ task :ensure_correct_permissions do
 end
 
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'ensure_correct_permissions', 'vm:up', 'ensure_clean_home_directory'] do
+task :build => [
+  'parse_build_options',
+  'ensure_clean_repository',
+  'maybe_clean_up_builder_vms',
+  'validate_git_state',
+  'setup_environment',
+  'validate_http_proxy',
+  'ensure_correct_permissions',
+  'vm:up',
+  'ensure_clean_home_directory'
+] do
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
@@ -451,10 +467,12 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
         virtual machine down using `rake vm:halt` before trying again.
 
       END_OF_MESSAGE
-      abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
+      abort 'Not enough memory for the virtual machine to run an in-memory ' \
+            'build. Aborting.'
     end
 
-    if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
+    if ENV['TAILS_BUILD_CPUS'] \
+       && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         The virtual machine is currently running with #{current_vm_cpus}
@@ -463,7 +481,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
         adjust the `cpus` options accordingly.
 
       END_OF_MESSAGE
-      abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
+      abort 'The virtual machine needs to be reloaded to change the number ' \
+            'of CPUs. Aborting.'
     end
 
     exported_env = EXPORTED_VARIABLES
@@ -648,7 +667,12 @@ task :clean_all => ['vm:destroy', 'basebox:clean_all']
 
 namespace :vm do
   desc 'Start the build virtual machine'
-  task :up => ['parse_build_options', 'validate_http_proxy', 'setup_environment', 'basebox:create'] do
+  task :up => [
+    'parse_build_options',
+    'validate_http_proxy',
+    'setup_environment',
+    'basebox:create',
+  ] do
     case vm_state
     when :not_created
       clean_up_builder_vms
@@ -672,11 +696,16 @@ namespace :vm do
   end
 
   desc 'Re-run virtual machine setup'
-  task :provision => ['parse_build_options', 'validate_http_proxy', 'setup_environment'] do
+  task :provision => [
+    'parse_build_options',
+    'validate_http_proxy',
+    'setup_environment',
+  ] do
     run_vagrant('provision')
   end
 
-  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data and the website cache)"
+  desc "Destroy build virtual machine (clean up all files except the " \
+       "vmproxy's apt-cacher-ng data and the website cache)"
   task :destroy do
     clean_up_builder_vms
   end

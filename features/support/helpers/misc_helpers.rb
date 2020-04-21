@@ -171,9 +171,11 @@ def retry_action(max_retries, options = {}, &block)
         options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
-        raise MaxRetriesFailure.new("#{options[:operation_name]} failed (despite retrying " +
-                                    "#{max_retries} times) with\n" +
-                                    "#{e.class}: #{e.message}")
+        raise MaxRetriesFailure.new(
+          "#{options[:operation_name]} failed (despite retrying " +
+          "#{max_retries} times) with\n" +
+          "#{e.class}: #{e.message}"
+        )
       end
     end
   end
@@ -185,11 +187,17 @@ class TorBootstrapFailure < StandardError
 end
 
 def wait_until_tor_is_working
-  try_for(270) { $vm.execute('/bin/systemctl --quiet is-active tails-tor-has-bootstrapped.target').success? }
+  try_for(270) {
+    $vm.execute(
+      '/bin/systemctl --quiet is-active tails-tor-has-bootstrapped.target'
+    ).success?
+  }
 rescue Timeout::Error
   # Save Tor logs before erroring out
   File.open("#{$config["TMPDIR"]}/log.tor", 'w') { |file|
-    $vm.execute('journalctl --no-pager -u tor@default.service > /tmp/tor.journal')
+    $vm.execute(
+      'journalctl --no-pager -u tor@default.service > /tmp/tor.journal'
+    )
     file.write($vm.file_content('/tmp/tor.journal'))
     file.write($vm.file_content('/var/log/tor/log'))
   }
@@ -361,7 +369,8 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   }
   typed_args = args.map do |arg|
     type = ruby_type_to_dbus_type[arg.class]
-    assert_not_nil(type, "No D-Bus type conversion for Ruby type '#{arg.class}'")
+    assert_not_nil(type,
+                   "No D-Bus type conversion for Ruby type '#{arg.class}'")
     "#{type}:#{arg}"
   end
   $vm.execute(

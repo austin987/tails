@@ -8,7 +8,8 @@ begin
       # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
       # cucumber-ruby-core 1.1.3, lib/cucumber/core/test/case.rb:~59.
       def accept_hook?(hook)
-        tag_expr = Cucumber::Core::Gherkin::TagExpression.new(hook.tag_expressions.flatten)
+        tag_expr = Cucumber::Core::Gherkin::TagExpression
+                   .new(hook.tag_expressions.flatten)
         tag_expr.evaluate(@tags)
       end
     end

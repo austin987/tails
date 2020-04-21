@@ -114,7 +114,8 @@ module Dogtail
       elsif [Fixnum, Float].include?(v.class)
         v.to_s
       else
-        raise "#{self.class.name} does not know how to handle argument type '#{v.class}'"
+        raise "#{self.class.name} does not know how to handle argument type " \
+              "'#{v.class}'"
       end
     end
 
@@ -132,8 +133,18 @@ module Dogtail
         *args_list, args_hash = args_list
       end
       (
-        (args_list.nil? ? [] : args_list.map { |e| self.value_to_s(e) }) +
-        (args_hash.nil? ? [] : args_hash.map { |k, v| "#{k}=#{self.value_to_s(v)}" })
+        (if args_list.nil?
+           []
+         else
+           args_list.map { |e| self.value_to_s(e) }
+         end
+        ) +
+        (if args_hash.nil?
+           []
+         else
+           args_hash.map { |k, v| "#{k}=#{self.value_to_s(v)}" }
+         end
+        )
       ).join(', ')
     end
 
@@ -154,12 +165,15 @@ module Dogtail
       end
       findChildren_opts = ""
       if findChildren_opts_hash.size > 0
-        findChildren_opts = ", " + self.class.args_to_s([findChildren_opts_hash])
+        findChildren_opts = ", "
+        + self.class.args_to_s([findChildren_opts_hash])
       end
       predicate_opts = self.class.args_to_s(args)
       nodes_var = "nodes#{@@node_counter += 1}"
       find_script_lines = [
-        "#{nodes_var} = #{@var}.findChildren(dogtail.predicate.GenericPredicate(#{predicate_opts})#{findChildren_opts})",
+        "#{nodes_var} = #{@var}.findChildren(" \
+        "dogtail.predicate.GenericPredicate(" \
+        "#{predicate_opts})#{findChildren_opts})",
         "print(len(#{nodes_var}))",
       ]
       size = run(find_script_lines).stdout.chomp.to_i

@@ -163,7 +163,9 @@ class Screen
 
   def find_any(patterns, **opts)
     opts[:log] = true if opts[:log].nil?
-    debug_log("Screen: trying to find any of #{patterns.join(', ')}") if opts[:log]
+    if opts[:log]
+      debug_log("Screen: trying to find any of #{patterns.join(', ')}")
+    end
     patterns.each do |pattern|
       begin
         return [pattern, find(pattern, **opts.clone.update(log: false))]

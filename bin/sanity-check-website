@@ -59,7 +59,8 @@ def po_file_meta_date_is_ok?(path)
     msgid_index = content_lines.find_index(msgid)
     msgstr_index = msgid_index + 1
     msgstr_line = content_lines[msgstr_index]
-    m = Regexp.new("^msgstr \"(?:#{meta_date_po_re_str})?\"$").match(msgstr_line)
+    m = Regexp.new("^msgstr \"(?:#{meta_date_po_re_str})?\"$")
+              .match(msgstr_line)
     if m.nil?
       STDERR.puts "#{path}: the 'meta date' msgid is not followed by a msgstr"
       success = false

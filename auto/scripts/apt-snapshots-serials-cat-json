@@ -17,7 +17,8 @@ origins = Dir.glob("#{config_dir}/*").map do |origin_dir|
 end
 
 origins.map do |origin|
-  serials[origin] = File.open("#{config_dir}/#{origin}/serial") { |f| f.read.chomp }
+  serial_file = "#{config_dir}/#{origin}/serial"
+  serials[origin] = File.open(serial_file) { |f| f.read.chomp }
 end
 
 puts JSON.dump(serials)
