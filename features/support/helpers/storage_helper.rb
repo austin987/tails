@@ -47,7 +47,7 @@ class VMStorage
     @pool.refresh
   end
 
-  def VMStorage.clear_storage_pool_volumes(pool)
+  def self.clear_storage_pool_volumes(pool)
     was_not_active = !pool.active?
     if was_not_active
       pool.create
@@ -64,7 +64,7 @@ class VMStorage
     # deleted by external means; let's ignore that.
   end
 
-  def VMStorage.clear_storage_pool(pool)
+  def self.clear_storage_pool(pool)
     VMStorage.clear_storage_pool_volumes(pool)
     pool.destroy if pool.active?
     pool.undefine

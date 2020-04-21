@@ -615,7 +615,7 @@ class VM
     EOF
   end
 
-  def VM.ram_only_snapshot_path(name)
+  def self.ram_only_snapshot_path(name)
     return "#{$config["TMPDIR"]}/#{name}-snapshot.memstate"
   end
 
@@ -683,7 +683,7 @@ class VM
     @display.start
   end
 
-  def VM.remove_snapshot(name)
+  def self.remove_snapshot(name)
     old_domain = $virt.lookup_domain_by_name(LIBVIRT_DOMAIN_NAME)
     potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)
     if File.exist?(potential_ram_only_snapshot_path)
@@ -694,7 +694,7 @@ class VM
     end
   end
 
-  def VM.snapshot_exists?(name)
+  def self.snapshot_exists?(name)
     return true if File.exist?(VM.ram_only_snapshot_path(name))
 
     old_domain = $virt.lookup_domain_by_name(LIBVIRT_DOMAIN_NAME)
@@ -704,7 +704,7 @@ class VM
     return false
   end
 
-  def VM.remove_all_snapshots
+  def self.remove_all_snapshots
     Dir.glob("#{$config["TMPDIR"]}/*-snapshot.memstate").each do |file|
       File.delete(file)
     end
