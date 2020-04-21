@@ -10,9 +10,9 @@ def xmpp_account(account_name, required_options = [])
     end
   rescue NoMethodError, Test::Unit::AssertionFailedError
     raise(
-      <<EOF
-Your Pidgin:Accounts:XMPP:#{account} is incorrect or missing from your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
-EOF
+      <<~EOF
+        Your Pidgin:Accounts:XMPP:#{account} is incorrect or missing from your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
+      EOF
     )
   end
   return account

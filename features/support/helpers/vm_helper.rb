@@ -597,12 +597,12 @@ class VM
         "      <disk name='#{dev}' snapshot='#{snapshot_type}'></disk>\n"
     end
     disks_xml += "    </disks>"
-    return <<-EOF
-<domainsnapshot>
-  <name>#{name}</name>
-  <description>Snapshot for #{name}</description>
-#{disks_xml}
-  </domainsnapshot>
+    return <<~EOF
+      <domainsnapshot>
+        <name>#{name}</name>
+        <description>Snapshot for #{name}</description>
+      #{disks_xml}
+        </domainsnapshot>
     EOF
   end
 

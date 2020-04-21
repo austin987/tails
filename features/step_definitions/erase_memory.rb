@@ -78,17 +78,17 @@ When /^I start a process allocating (\d+) ([[:alpha:]]+) of memory with a known 
   fillram_script_path = "/tmp/fillram"
   @fillram_cmd = "python3 #{fillram_script_path}"
   fillram_done_path = fillram_script_path + "_done"
-  fillram_script = <<-EOF
-import math
-import time
-pattern = "wipe_didnt_work\\n"
-buffer = ""
-for x in range(math.ceil(#{convert_to_bytes(size.to_i, unit)} / len(pattern))):
-  buffer += pattern
-with open("#{fillram_done_path}", "w") as f:
-  f.write("done")
-time.sleep(365*24*60*60)
-print(buffer)
+  fillram_script = <<~EOF
+    import math
+    import time
+    pattern = "wipe_didnt_work\\n"
+    buffer = ""
+    for x in range(math.ceil(#{convert_to_bytes(size.to_i, unit)} / len(pattern))):
+      buffer += pattern
+    with open("#{fillram_done_path}", "w") as f:
+      f.write("done")
+    time.sleep(365*24*60*60)
+    print(buffer)
   EOF
   $vm.file_overwrite(fillram_script_path, fillram_script)
   $vm.spawn(@fillram_cmd)

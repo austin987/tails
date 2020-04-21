@@ -15,13 +15,13 @@ class SSHServer
     cmd_helper(['ssh-keygen', '-t', 'rsa', '-N', "", '-f', "#{@sshd_key_file.path}"])
     @sshd_key_file.close
 
-    sshd_config =<<EOF
-Port #{@sshd_port}
-ListenAddress #{@sshd_host}
-UsePrivilegeSeparation no
-HostKey #{@sshd_key_file.path}
-Pidfile #{$config['TMPDIR']}/ssh.pid
-EOF
+    sshd_config =<<~EOF
+      Port #{@sshd_port}
+      ListenAddress #{@sshd_host}
+      UsePrivilegeSeparation no
+      HostKey #{@sshd_key_file.path}
+      Pidfile #{$config['TMPDIR']}/ssh.pid
+    EOF
 
     @sshd_config_file = Tempfile.new("sshd_config", $config["TMPDIR"])
     @sshd_config_file.write(sshd_config)

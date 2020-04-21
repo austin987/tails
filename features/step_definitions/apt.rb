@@ -99,10 +99,10 @@ end
 
 When /^I configure APT to prefer an old version of cowsay$/ do
   apt_source = 'deb tor+http://deb.tails.boum.org/ asp-test-upgrade-cowsay main'
-  apt_pref = <<-EOF
-Package: cowsay
-Pin: release o=Tails,a=asp-test-upgrade-cowsay
-Pin-Priority: 999
+  apt_pref = <<~EOF
+    Package: cowsay
+    Pin: release o=Tails,a=asp-test-upgrade-cowsay
+    Pin-Priority: 999
   EOF
   $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list', apt_source)
   $vm.file_overwrite('/etc/apt/preferences.d/asp-test-upgrade-cowsay', apt_pref)

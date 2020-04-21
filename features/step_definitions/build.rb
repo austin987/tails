@@ -6,15 +6,15 @@ Given /^Tails ([[:alnum:]~.]+) has been released$/ do |version|
   fatal_system "git checkout --quiet stable"
   old_entries = File.open('debian/changelog') { |f| f.read }
   File.open('debian/changelog', 'w') do |changelog|
-    changelog.write(<<END_OF_CHANGELOG)
-tails (#{version}) stable; urgency=low
-
-  * New upstream release.
-
- -- Tails developers <tails@boum.org>  Tue, 31 Jan 2012 15:12:57 +0100
-
-#{old_entries}
-END_OF_CHANGELOG
+    changelog.write(<<~END_OF_CHANGELOG)
+      tails (#{version}) stable; urgency=low
+      
+        * New upstream release.
+      
+       -- Tails developers <tails@boum.org>  Tue, 31 Jan 2012 15:12:57 +0100
+      
+      #{old_entries}
+    END_OF_CHANGELOG
   end
   fatal_system "git commit --quiet debian/changelog -m 'Release #{version}'"
   fatal_system "git tag '#{version.gsub('~', '-')}'"

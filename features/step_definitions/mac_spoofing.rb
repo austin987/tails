@@ -65,13 +65,13 @@ Given /^no network interface modules can be unloaded$/ do
   $vm.execute_successfully(
     "dpkg-divert --add --rename --divert '#{modprobe_divert}' /sbin/modprobe"
   )
-  fake_modprobe_wrapper = <<EOF
-#!/bin/sh
-if echo "${@}" | grep -q -- -r; then
-    exit 1
-fi
-exec '#{modprobe_divert}' "${@}"
-EOF
+  fake_modprobe_wrapper = <<~EOF
+    #!/bin/sh
+    if echo "${@}" | grep -q -- -r; then
+        exit 1
+    fi
+    exec '#{modprobe_divert}' "${@}"
+  EOF
   $vm.file_append('/sbin/modprobe', fake_modprobe_wrapper)
   $vm.execute_successfully("chmod a+rx /sbin/modprobe")
 end

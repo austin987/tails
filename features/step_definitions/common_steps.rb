@@ -957,9 +957,9 @@ Given /^Tails is fooled to think that version (.+) was initially installed$/ do 
   initial_os_release_file =
     '/lib/live/mount/rootfs/filesystem.squashfs/etc/os-release'
   fake_os_release_file = $vm.execute_successfully('mktemp').stdout.chomp
-  fake_os_release_content = <<-EOF
-TAILS_PRODUCT_NAME="Tails"
-TAILS_VERSION_ID="#{version}"
+  fake_os_release_content = <<~EOF
+    TAILS_PRODUCT_NAME="Tails"
+    TAILS_VERSION_ID="#{version}"
   EOF
   $vm.file_overwrite(fake_os_release_file, fake_os_release_content)
   $vm.execute_successfully("chmod a+r #{fake_os_release_file}")

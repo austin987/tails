@@ -711,29 +711,29 @@ def iuk_changes(version)
       filesystem:  :rootfs,
       path:        'some_new_file',
       status:      :added,
-      new_content: <<-EOF
-Some content
+      new_content: <<~EOF
+        Some content
       EOF
     },
     {
       filesystem:  :rootfs,
       path:        'etc/amnesia/version',
       status:      :modified,
-      new_content: <<-EOF
-#{version} - 20380119
-ffffffffffffffffffffffffffffffffffffffff
-live-build: 3.0.5+really+is+2.0.12-0.tails2
-live-boot: 4.0.2-1
-live-config: 4.0.4-1
+      new_content: <<~EOF
+        #{version} - 20380119
+        ffffffffffffffffffffffffffffffffffffffff
+        live-build: 3.0.5+really+is+2.0.12-0.tails2
+        live-boot: 4.0.2-1
+        live-config: 4.0.4-1
       EOF
     },
     {
       filesystem:  :rootfs,
       path:        'etc/os-release',
       status:      :modified,
-      new_content: <<-EOF
-TAILS_PRODUCT_NAME="Tails"
-TAILS_VERSION_ID="#{version}"
+      new_content: <<~EOF
+        TAILS_PRODUCT_NAME="Tails"
+        TAILS_VERSION_ID="#{version}"
       EOF
     },
     {
@@ -762,8 +762,8 @@ TAILS_VERSION_ID="#{version}"
         filesystem:  :rootfs,
         path:        'some_new_file_2.3',
         status:      :added,
-        new_content: <<-EOF
-Some content 2.3
+        new_content: <<~EOF
+          Some content 2.3
         EOF
       },
       {
