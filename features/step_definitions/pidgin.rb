@@ -268,7 +268,7 @@ def configured_pidgin_accounts
   return accounts
 end
 
-def chan_image (account, channel, image)
+def chan_image(account, channel, image)
   images = {
     'conference.riseup.net' => {
       'tails' => {
@@ -280,7 +280,7 @@ def chan_image (account, channel, image)
   return images[account][channel][image] + ".png"
 end
 
-def default_chan (account)
+def default_chan(account)
   chans = {
     'conference.riseup.net' => 'tails',
   }
@@ -406,7 +406,7 @@ Then /^Pidgin has the expected persistent OTR keys$/ do
   assert_equal(pidgin_otr_keys, @persistent_pidgin_otr_keys)
 end
 
-def pidgin_add_certificate_from (cert_file)
+def pidgin_add_certificate_from(cert_file)
   # Here, we need a certificate that is not already in the NSS database
   step "I copy \"/usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_EV_Root_CA.crt\" to \"#{cert_file}\" as user \"amnesia\""
 

@@ -114,7 +114,7 @@ Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server 
   )
 end
 
-def wait_for_thunderbird_progress_bar_to_vanish (thunderbird_frame)
+def wait_for_thunderbird_progress_bar_to_vanish(thunderbird_frame)
   try_for(120) do
     begin
       thunderbird_frame.child(roleName: 'status bar', retry: false)
