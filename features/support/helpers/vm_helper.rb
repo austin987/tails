@@ -512,7 +512,7 @@ class VM
   end
 
   def focus_window(window_title, user = LIVE_USER)
-    def do_focus(window_title, user)
+    do_focus = lambda do
       execute_successfully(
         "xdotool search --name '#{window_title}' windowactivate --sync",
         :user => user
@@ -520,7 +520,7 @@ class VM
     end
 
     begin
-      do_focus(window_title, user)
+      do_focus.call
     rescue ExecutionFailedInVM
       # Often when xdotool fails to focus a window it'll work when retried
       # after redrawing the screen.  Switching to a new virtual desktop then
@@ -532,7 +532,7 @@ class VM
       sleep 5
       select_virtual_desktop(0)
       sleep 5
-      do_focus(window_title, user)
+      do_focus.call
     end
   rescue
     # noop
