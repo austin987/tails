@@ -247,33 +247,33 @@ def stream_isolation_info(application)
   when "htpdate"
     {
       :grep_monitor_expr => 'users:(("curl"',
-      :socksport => 9062
+      :socksport         => 9062
     }
   when "tails-security-check"
     {
       :grep_monitor_expr => 'users:(("tails-security-"',
-      :socksport => 9062
+      :socksport         => 9062
     }
   when "tails-upgrade-frontend-wrapper"
     {
       :grep_monitor_expr => 'users:(("tails-iuk-get-u"',
-      :socksport => 9062
+      :socksport         => 9062
     }
   when "Tor Browser"
     {
       :grep_monitor_expr => 'users:(("firefox\.real"',
-      :socksport => 9150,
-      :controller => true,
+      :socksport         => 9150,
+      :controller        => true,
     }
   when "SSH"
     {
       :grep_monitor_expr => 'users:(("\(nc\|ssh\)"',
-      :socksport => 9050
+      :socksport         => 9050
     }
   when "whois"
     {
       :grep_monitor_expr => 'users:(("whois"',
-      :socksport => 9050
+      :socksport         => 9050
     }
   else
     raise "Unknown application '#{application}' for the stream isolation tests"

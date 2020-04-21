@@ -652,7 +652,7 @@ Then /^only the expected files are present on the persistence partition on USB d
   disk = {
     path: $vm.storage.disk_path(name),
     opts: {
-      format: $vm.storage.disk_format(name),
+      format:   $vm.storage.disk_format(name),
       readonly: true
     }
   }
@@ -708,17 +708,17 @@ end
 def iuk_changes(version)
   changes = [
     {
-      filesystem: :rootfs,
-      path: 'some_new_file',
-      status: :added,
+      filesystem:  :rootfs,
+      path:        'some_new_file',
+      status:      :added,
       new_content: <<-EOF
 Some content
       EOF
     },
     {
-      filesystem: :rootfs,
-      path: 'etc/amnesia/version',
-      status: :modified,
+      filesystem:  :rootfs,
+      path:        'etc/amnesia/version',
+      status:      :modified,
       new_content: <<-EOF
 #{version} - 20380119
 ffffffffffffffffffffffffffffffffffffffff
@@ -728,9 +728,9 @@ live-config: 4.0.4-1
       EOF
     },
     {
-      filesystem: :rootfs,
-      path: 'etc/os-release',
-      status: :modified,
+      filesystem:  :rootfs,
+      path:        'etc/os-release',
+      status:      :modified,
       new_content: <<-EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="#{version}"
@@ -738,18 +738,18 @@ TAILS_VERSION_ID="#{version}"
     },
     {
       filesystem: :rootfs,
-      path: 'usr/share/common-licenses/BSD',
-      status: :removed
+      path:       'usr/share/common-licenses/BSD',
+      status:     :removed
     },
     {
       filesystem: :rootfs,
-      path: 'usr/share/doc/tor',
-      status: :removed
+      path:       'usr/share/doc/tor',
+      status:     :removed
     },
     {
       filesystem: :medium,
-      path: 'utils/linux/syslinux',
-      status: :removed
+      path:       'utils/linux/syslinux',
+      status:     :removed
     }
   ]
 
@@ -759,22 +759,22 @@ TAILS_VERSION_ID="#{version}"
   when '2.3~testoverlayfs'
     changes + [
       {
-        filesystem: :rootfs,
-        path: 'some_new_file_2.3',
-        status: :added,
+        filesystem:  :rootfs,
+        path:        'some_new_file_2.3',
+        status:      :added,
         new_content: <<-EOF
 Some content 2.3
         EOF
       },
       {
         filesystem: :rootfs,
-        path: 'usr/share/common-licenses/MPL-1.1',
-        status: :removed
+        path:       'usr/share/common-licenses/MPL-1.1',
+        status:     :removed
       },
       {
         filesystem: :medium,
-        path: 'utils/mbr/mbr.bin',
-        status: :removed
+        path:       'utils/mbr/mbr.bin',
+        status:     :removed
       }
     ]
   else

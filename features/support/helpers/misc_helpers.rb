@@ -143,7 +143,7 @@ def retry_tor(recovery_proc = nil, &block)
   end
 
   retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
-               :recovery_proc => tor_recovery_proc,
+               :recovery_proc  => tor_recovery_proc,
                :operation_name => 'Tor operation', &block)
 end
 
@@ -354,9 +354,9 @@ end
 def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   opts ||= {}
   ruby_type_to_dbus_type = {
-    String => 'string',
+    String  => 'string',
     # XXX:Stretch: drop the Fixnum line once we stop supporting Stretch
-    Fixnum => 'int32',
+    Fixnum  => 'int32',
     Integer => 'int32',
   }
   typed_args = args.map do |arg|

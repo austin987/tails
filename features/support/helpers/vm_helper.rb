@@ -118,8 +118,8 @@ class VM
     adjustment = (time - Time.now).to_i
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     clock_rexml_element = domain_rexml.elements['domain'].add_element('clock')
-    clock_rexml_element.add_attributes('offset' => 'variable',
-                                       'basis' => 'utc',
+    clock_rexml_element.add_attributes('offset'     => 'variable',
+                                       'basis'      => 'utc',
                                        'adjustment' => adjustment.to_s)
     update(domain_rexml.to_s)
   end

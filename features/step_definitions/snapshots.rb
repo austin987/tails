@@ -1,27 +1,27 @@
 def checkpoints
   {
-    'tails-greeter' => {
-      :description => "I have started Tails from DVD without network and stopped at Tails Greeter's login screen",
+    'tails-greeter'                              => {
+      :description       => "I have started Tails from DVD without network and stopped at Tails Greeter's login screen",
       :parent_checkpoint => nil,
-      :steps => [
+      :steps             => [
         'the network is unplugged',
         'I start the computer',
         'the computer boots Tails'
       ],
     },
 
-    'no-network-logged-in' => {
-      :description => "I have started Tails from DVD without network and logged in",
+    'no-network-logged-in'                       => {
+      :description       => "I have started Tails from DVD without network and logged in",
       :parent_checkpoint => "tails-greeter",
-      :steps => [
+      :steps             => [
         'I log in to a new session',
       ],
     },
 
-    'with-network-logged-in' => {
-      :description => "I have started Tails from DVD and logged in and the network is connected",
+    'with-network-logged-in'                     => {
+      :description       => "I have started Tails from DVD and logged in and the network is connected",
       :parent_checkpoint => "no-network-logged-in",
-      :steps => [
+      :steps             => [
         'the network is plugged',
         'Tor is ready',
         'all notifications have disappeared',
@@ -29,32 +29,32 @@ def checkpoints
       ],
     },
 
-    'no-network-bridge-mode' => {
-      :temporary => true,
-      :description => "I have started Tails from DVD without network and logged in with bridge mode enabled",
+    'no-network-bridge-mode'                     => {
+      :temporary         => true,
+      :description       => "I have started Tails from DVD without network and logged in with bridge mode enabled",
       :parent_checkpoint => "tails-greeter",
-      :steps => [
+      :steps             => [
         'I enable the specific Tor configuration option',
         'I log in to a new session',
         'all notifications have disappeared',
       ],
     },
 
-    'no-network-logged-in-sudo-passwd' => {
-      :temporary => true,
-      :description => "I have started Tails from DVD without network and logged in with an administration password",
+    'no-network-logged-in-sudo-passwd'           => {
+      :temporary         => true,
+      :description       => "I have started Tails from DVD without network and logged in with an administration password",
       :parent_checkpoint => "tails-greeter",
-      :steps => [
+      :steps             => [
         'I set an administration password',
         'I log in to a new session',
       ],
     },
 
-    'with-network-logged-in-sudo-passwd' => {
-      :temporary => true,
-      :description => "I have started Tails from DVD and logged in with an administration password and the network is connected",
+    'with-network-logged-in-sudo-passwd'         => {
+      :temporary         => true,
+      :description       => "I have started Tails from DVD and logged in with an administration password and the network is connected",
       :parent_checkpoint => "no-network-logged-in-sudo-passwd",
-      :steps => [
+      :steps             => [
         'the network is plugged',
         'Tor is ready',
         'all notifications have disappeared',
@@ -62,10 +62,10 @@ def checkpoints
       ],
     },
 
-    'usb-install-tails-greeter' => {
-      :description => "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen",
+    'usb-install-tails-greeter'                  => {
+      :description       => "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen",
       :parent_checkpoint => nil,
-      :steps => [
+      :steps             => [
         'I create a 7200 MiB disk named "__internal"',
         'I plug USB drive "__internal"',
         'I write the Tails USB image to disk "__internal"',
@@ -78,18 +78,18 @@ def checkpoints
       ],
     },
 
-    'usb-install-logged-in' => {
-      :description => "I have started Tails without network from a USB drive without a persistent partition and logged in",
+    'usb-install-logged-in'                      => {
+      :description       => "I have started Tails without network from a USB drive without a persistent partition and logged in",
       :parent_checkpoint => 'usb-install-tails-greeter',
-      :steps => [
+      :steps             => [
         'I log in to a new session',
       ],
     },
 
     'usb-install-with-persistence-tails-greeter' => {
-      :description => "I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
+      :description       => "I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
       :parent_checkpoint => 'usb-install-logged-in',
-      :steps => [
+      :steps             => [
         'I create a persistent partition',
         'a Tails persistence partition exists on USB drive "__internal"',
         'I shutdown Tails and wait for the computer to power off',
@@ -101,10 +101,10 @@ def checkpoints
       ],
     },
 
-    'usb-install-with-persistence-logged-in' => {
-      :description => "I have started Tails without network from a USB drive with a persistent partition enabled and logged in",
+    'usb-install-with-persistence-logged-in'     => {
+      :description       => "I have started Tails without network from a USB drive with a persistent partition enabled and logged in",
       :parent_checkpoint => 'usb-install-with-persistence-tails-greeter',
-      :steps => [
+      :steps             => [
         'I enable persistence',
         'I log in to a new session',
         'all persistence presets are enabled',

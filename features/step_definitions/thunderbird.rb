@@ -229,6 +229,6 @@ Then /^my Thunderbird inbox is non-empty$/ do
                                         roleName: 'entry')
                    .parent.parent.child(roleName: 'table')
   visible_messages = message_list.children(recursive: false,
-                                           roleName: 'table row')
+                                           roleName:  'table row')
   assert(visible_messages.size > 0)
 end

@@ -64,14 +64,14 @@ def xul_application_info(application)
     raise "Invalid browser or XUL application: #{application}"
   end
   return {
-    :user => user,
-    :cmd_regex => cmd_regex,
-    :chroot => chroot,
-    :new_tab_button_image => new_tab_button_image,
-    :address_bar_image => address_bar_image,
+    :user                        => user,
+    :cmd_regex                   => cmd_regex,
+    :chroot                      => chroot,
+    :new_tab_button_image        => new_tab_button_image,
+    :address_bar_image           => address_bar_image,
     :browser_reload_button_image => browser_reload_button_image,
-    :browser_stop_button_image => browser_stop_button_image,
-    :unused_tbb_libs => unused_tbb_libs,
+    :browser_stop_button_image   => browser_stop_button_image,
+    :unused_tbb_libs             => unused_tbb_libs,
   }
 end
 
@@ -135,8 +135,8 @@ def page_has_loaded_in_the_Tor_Browser(page_titles, language)
         .map  { |page_title| "#{page_title} - #{browser_name}" }
         .any? { |page_title| page_title == frame.name }
     } and
-    @torbrowser.child(reload_action, roleName: 'push button',
-                      showingOnly: true)
+    @torbrowser.child(reload_action, roleName:    'push button',
+                                     showingOnly: true)
   }
 end
 
