@@ -470,7 +470,7 @@ class VM
 
   def remote_shell_is_up?
     msg = 'hello?'
-    Timeout::timeout(3) do
+    Timeout.timeout(3) do
       execute_successfully("echo '#{msg}'").stdout.chomp == msg
     end
   rescue
@@ -667,7 +667,7 @@ class VM
     # different type of snapshots.
     potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)
     if File.exist?(potential_ram_only_snapshot_path)
-      Libvirt::Domain::restore(@virt, potential_ram_only_snapshot_path)
+      Libvirt::Domain.restore(@virt, potential_ram_only_snapshot_path)
       @domain = @virt.lookup_domain_by_name(@domain_name)
     else
       begin

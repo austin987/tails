@@ -106,8 +106,8 @@ class VMStorage
     else
       old_vol.delete
     end
-    uid = Etc::getpwnam("libvirt-qemu").uid
-    gid = Etc::getgrnam("libvirt-qemu").gid
+    uid = Etc.getpwnam("libvirt-qemu").uid
+    gid = Etc.getgrnam("libvirt-qemu").gid
     vol_xml = REXML::Document.new(File.read("#{@xml_path}/volume.xml"))
     vol_xml.elements['volume/name'].text = name
     size_b = convert_to_bytes(options[:size].to_f, options[:unit])

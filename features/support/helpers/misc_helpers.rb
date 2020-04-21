@@ -47,7 +47,7 @@ def try_for(timeout, **options)
   unique_timeout_exception = Class.new(UniqueTryForTimeoutError)
   attempts = 0
   start_time = Time.now
-  Timeout::timeout(timeout, unique_timeout_exception) do
+  Timeout.timeout(timeout, unique_timeout_exception) do
     loop do
       begin
         attempts += 1

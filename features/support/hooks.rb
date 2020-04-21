@@ -171,7 +171,7 @@ BeforeFeature('@product') do
   end
 
   if not($started_first_product_feature)
-    $virt = Libvirt::open("qemu:///system")
+    $virt = Libvirt.open("qemu:///system")
     VM.remove_all_snapshots if !KEEP_SNAPSHOTS
     $vmnet = VMNet.new($virt, VM_XML_PATH)
     $vmstorage = VMStorage.new($virt, VM_XML_PATH)

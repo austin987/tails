@@ -553,7 +553,7 @@ def domain_name
 end
 
 def clean_up_builder_vms
-  $virt = Libvirt::open("qemu:///system")
+  $virt = Libvirt.open("qemu:///system")
 
   clean_up_domain = Proc.new do |domain|
     next if domain.nil?
@@ -622,7 +622,7 @@ end
 
 desc "Remove all libvirt volumes named tails-builder-* (run at your own risk!)"
 task :clean_up_libvirt_volumes do
-  $virt = Libvirt::open("qemu:///system")
+  $virt = Libvirt.open("qemu:///system")
   begin
     pool = $virt.lookup_storage_pool_by_name('default')
   rescue Libvirt::RetrieveError
@@ -747,7 +747,7 @@ namespace :basebox do
   def clean_up_basebox(box)
     run_vagrant('box', 'remove', '--force', box)
     begin
-      $virt = Libvirt::open("qemu:///system")
+      $virt = Libvirt.open("qemu:///system")
       $virt
         .lookup_storage_pool_by_name('default')
         .lookup_volume_by_name("#{box}_vagrant_box_image_0.img")
