@@ -371,7 +371,7 @@ class ImageBumpingScreen
 
   screen_methods = Screen.instance_methods - Object.instance_methods
   overrides = [:find, :exists, :wait, :find_any, :exists_any,
-               :wait_any, :hover, :click]
+               :wait_any, :hover, :click,]
   screen_methods.each do |m|
     if overrides.include?(m)
       define_method(m) do |*args, **opts|

@@ -22,7 +22,7 @@ class ChatBot
       "#{GIT_DIR}/features/scripts/otr-bot.py",
       @account,
       @password,
-      @otr_key_file.path
+      @otr_key_file.path,
     ]
     if @opts["connect_server"]
       cmd += ["--connect-server", @opts["connect_server"]]

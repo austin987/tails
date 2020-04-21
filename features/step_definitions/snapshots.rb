@@ -6,7 +6,7 @@ def checkpoints
       :steps             => [
         'the network is unplugged',
         'I start the computer',
-        'the computer boots Tails'
+        'the computer boots Tails',
       ],
     },
 

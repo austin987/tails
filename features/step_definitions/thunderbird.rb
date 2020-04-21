@@ -23,7 +23,7 @@ When /^I start Thunderbird$/ do
     # When we generate a random subject line it may contain one of the
     # keywords that will make Thunderbird show an extra prompt when trying
     # to send an email. Let's disable this feature.
-    'pref("mail.compose.attachment_reminder", false);'
+    'pref("mail.compose.attachment_reminder", false);',
   ]
   workaround_pref_lines.each do |line|
     $vm.file_append('/etc/thunderbird/pref/thunderbird.js', line)

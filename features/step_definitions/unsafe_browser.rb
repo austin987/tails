@@ -12,7 +12,7 @@ def supported_torbrowser_languages
     first, second = line.sub('-', '_').split(':')
     candidates = ["#{first}_#{second}.UTF-8", "#{first}_#{second}.utf8",
                   "#{first}.UTF-8", "#{first}.utf8",
-                  "#{first}_#{second}", first]
+                  "#{first}_#{second}", first,]
     when_not_found = Proc.new { raise "Could not find a locale for '#{line}'" }
     candidates.find(when_not_found) do |candidate|
       $vm.directory_exist?("/usr/lib/locale/#{candidate}")

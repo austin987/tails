@@ -19,7 +19,7 @@ module OpenCV
     end
     p = popen_wait(
       [env, @python, "#{GIT_DIR}/features/scripts/opencv_match_template.py",
-       screen, image, sensitivity.to_s, show_match.to_s],
+       screen, image, sensitivity.to_s, show_match.to_s,],
       err: [:child, :out]
     )
     out = p.readlines.join("\n")

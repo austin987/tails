@@ -750,7 +750,7 @@ def iuk_changes(version)
       filesystem: :medium,
       path:       'utils/linux/syslinux',
       status:     :removed,
-    }
+    },
   ]
 
   case version
@@ -775,7 +775,7 @@ def iuk_changes(version)
         filesystem: :medium,
         path:       'utils/mbr/mbr.bin',
         status:     :removed,
-      }
+      },
     ]
   else
     raise "Test suite implementation error: unsupported version #{version}"

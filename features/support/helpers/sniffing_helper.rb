@@ -29,7 +29,7 @@ class Sniffer
         "--immediate-mode",
         "-i", @vmnet.bridge_name,
         "-w", @pcap_file,
-        :err => ["/dev/null", "w"]
+        :err => ["/dev/null", "w"],
       ]
     )
     @pid = job.pid

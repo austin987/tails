@@ -57,7 +57,7 @@ loop do
                     "git",
                     sanitize_filename(describe_git_head,
                                       :replacement => '-'),
-                    current_short_commit
+                    current_short_commit,
                   ].reject(&:empty?).join("_") + "-" +
                   random_alnum_string(6)
   if not(File.exist?(ARTIFACTS_DIR))
@@ -79,7 +79,7 @@ MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
     ["cupsd",    "*", "631"],
-    ["dhclient", "0.0.0.0", "68"]
+    ["dhclient", "0.0.0.0", "68"],
   ]
 # OpenDNS
 SOME_DNS_SERVER = "208.67.222.222"

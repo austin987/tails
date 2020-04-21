@@ -210,7 +210,7 @@ When /^I join some empty multi-user chat$/ do
   # that it is empty. We'll also deal with the *potential* "Create New
   # Room" prompt that Pidgin shows for some server configurations.
   images = ["PidginCreateNewRoomPrompt.png",
-            "PidginChat1UserInRoom.png"]
+            "PidginChat1UserInRoom.png",]
   image_found, = @screen.wait_any(images, 30)
   if image_found == "PidginCreateNewRoomPrompt.png"
     @screen.click("PidginCreateNewRoomAcceptDefaultsButton.png")
