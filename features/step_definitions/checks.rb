@@ -95,13 +95,13 @@ Then /^the VirtualBox guest modules are available$/ do
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
-   if $language == 'German'
-     expected_title = 'Tails - Hilfe & Support'
-     expected_heading = 'Die Dokumentation durchsuchen'
-   else
-     expected_title = 'Tails - Support'
-     expected_heading = 'Search the documentation'
-   end
+  if $language == 'German'
+    expected_title = 'Tails - Hilfe & Support'
+    expected_heading = 'Die Dokumentation durchsuchen'
+  else
+    expected_title = 'Tails - Support'
+    expected_heading = 'Search the documentation'
+  end
    step "\"#{expected_title}\" has loaded in the Tor Browser"
    if $language == 'German'
      browser_name = 'Tor-Browser'
