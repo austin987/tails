@@ -109,7 +109,7 @@ When /^I prepare the Additional Software upgrade process to fail$/  do
 DPkg::Pre-Invoke {
   "ls -1 -v /var/cache/apt/archives/cowsay*.deb | tail -n 1 | xargs rm";
 };
-EOF
+  EOF
   $vm.file_overwrite('/etc/apt/apt.conf.d/00failingDPKGhook', failing_dpkg_hook)
   # Tell the upgrade service check step not to run
   $vm.execute_successfully("touch #{ASP_STATE_DIR}/doomed_to_fail")

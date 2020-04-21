@@ -850,7 +850,7 @@ Given /^a web server is running on the LAN$/ do
     res.body = "#{web_server_hello_msg}"
   end
   server.start
-EOF
+  EOF
   add_extra_allowed_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
   try_for(10, :msg => "It seems the LAN web server failed to start") do

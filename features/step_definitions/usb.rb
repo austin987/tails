@@ -13,7 +13,7 @@ def get_persistence_presets_config(skip_links = false)
   foreach my $atom (Tails::Persistence::Configuration::Presets->new()->atoms) {
     say $atom->destination, ":", join(",", @{$atom->options});
   }
-SCRIPT
+  SCRIPT
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way
   script.delete!("\n")
@@ -74,7 +74,7 @@ def persistent_presets_ui_settings
       ),
     ));
   }
-SCRIPT
+  SCRIPT
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way
   script.delete!("\n")
@@ -762,7 +762,7 @@ TAILS_VERSION_ID="#{version}"
         status: :added,
         new_content: <<-EOF
 Some content 2.3
-      EOF
+        EOF
       },
       {
         filesystem: :rootfs,

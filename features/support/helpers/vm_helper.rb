@@ -592,7 +592,7 @@ class VM
   <description>Snapshot for #{name}</description>
 #{disks_xml}
   </domainsnapshot>
-EOF
+    EOF
   end
 
   def VM.ram_only_snapshot_path(name)

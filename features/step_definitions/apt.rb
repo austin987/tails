@@ -34,7 +34,7 @@ When /^I configure APT to use non-onion sources$/ do
   s{sgvtcaew4bxjd7ln[.]onion}{security.debian.org};
   s{sdscoq7snqtznauu[.]onion}{deb.torproject.org};
   s{jenw7xbd6tf7vfhp[.]onion}{deb.tails.boum.org};
-EOF
+  EOF
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way
   script.delete!("\n")
