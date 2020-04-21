@@ -257,7 +257,7 @@ task :parse_build_options do
     when /cachewebsite(?:=([a-z]+))?/
       value = $1
       if is_release?
-        $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
+        warn "Building a release ⇒ ignoring #{opt} build option"
         ENV['TAILS_WEBSITE_CACHE'] = '0'
       else
         value = 'yes' if value.nil?
@@ -273,7 +273,7 @@ task :parse_build_options do
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
       if is_release?
-        $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
+        warn "Building a release ⇒ ignoring #{opt} build option"
         ENV['MKSQUASHFS_OPTIONS'] = nil
       else
         ENV['MKSQUASHFS_OPTIONS'] = '-comp xz -no-exports'
@@ -321,7 +321,7 @@ task :ensure_clean_repository do
   git_status = `git status --porcelain`
   unless git_status.empty?
     if ENV['TAILS_BUILD_IGNORE_CHANGES']
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         You have uncommitted changes in the Git repository. They will
         be ignored for the upcoming build:
@@ -329,7 +329,7 @@ task :ensure_clean_repository do
 
       END_OF_MESSAGE
     else
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         You have uncommitted changes in the Git repository. Due to limitations
         of the build system, you need to commit them before building Tails:
@@ -371,7 +371,7 @@ task :validate_http_proxy do
 
     if proxy_host.nil?
       ENV['TAILS_PROXY'] = nil
-      $stderr.puts 'Ignoring invalid HTTP proxy.'
+      warn 'Ignoring invalid HTTP proxy.'
       return
     end
 
@@ -381,9 +381,9 @@ task :validate_http_proxy do
             'to fail. Aborting.'
     end
 
-    $stderr.puts "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
+    warn "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
   else
-    $stderr.puts 'No HTTP proxy set.'
+    warn 'No HTTP proxy set.'
   end
 end
 
@@ -459,7 +459,7 @@ task :build => [
 ] do
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         The virtual machine is not currently set with enough memory to
         perform an in-memory build. Either remove the `ram` option from
@@ -473,7 +473,7 @@ task :build => [
 
     if ENV['TAILS_BUILD_CPUS'] \
        && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         The virtual machine is currently running with #{current_vm_cpus}
         virtual CPU(s). In order to change that number, you need to
@@ -514,7 +514,7 @@ def retrieve_artifacts(missing_ok: false)
   if artifacts.empty?
     msg = 'No build artifacts were found!'
     if missing_ok
-      $stderr.puts msg
+      warn msg
       return
     else
       raise msg
@@ -523,7 +523,7 @@ def retrieve_artifacts(missing_ok: false)
   user = vagrant_ssh_config('User')
   hostname = vagrant_ssh_config('HostName')
   key_file = vagrant_ssh_config('IdentityFile')
-  $stderr.puts 'Retrieving artifacts from Vagrant build box.'
+  warn 'Retrieving artifacts from Vagrant build box.'
   run_vagrant_ssh(
     "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
   )
@@ -716,7 +716,7 @@ namespace :basebox do
   task :create do
     next if has_box?
 
-    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+    warn <<-END_OF_MESSAGE.gsub(/^      /, '')
 
       This is the first time we are using this Vagrant base box so we
       will have to bootstrap by building it from scratch. This will

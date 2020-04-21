@@ -314,12 +314,12 @@ class ImageBumpingScreen
 
     message = "Failed to find #{image}"
     notify_user(message)
-    STDERR.puts("Screen: #{message}, entering interactive image bumping mode")
+    warn("Screen: #{message}, entering interactive image bumping mode")
     # Ring the ASCII bell for a helpful notification in most terminal
     # emulators.
     STDOUT.write "\a"
     loop do
-      STDERR.puts(
+      warn(
         "\n" +
         "a: Automatic bump\n" +
         "r: Retry image (pro tip: manually update the image first!)\n" +
@@ -331,10 +331,10 @@ class ImageBumpingScreen
       case c
       when 'a'
         [0.80, 0.70, 0.60, 0.50, 0.40, 0.30].each do |sensitivity|
-          STDERR.puts "Trying with sensitivity #{sensitivity}..."
+          warn "Trying with sensitivity #{sensitivity}..."
           p = @screen.match_screen(image, sensitivity, true)
           if p
-            STDERR.puts 'Found match! Accept? (y/n)'
+            warn 'Found match! Accept? (y/n)'
             loop do
               c = STDIN.getch
               if c == 'y'
@@ -348,13 +348,13 @@ class ImageBumpingScreen
             break if c == 3.chr # Ctrl+C => 3
           end
         end
-        STDERR.puts 'Failed to automatically bump image'
+        warn 'Failed to automatically bump image'
       when 'r'
         p = @screen.match_screen(image, opts[:sensitivity], true)
         if p.nil?
-          STDERR.puts 'Failed to find image'
+          warn 'Failed to find image'
         else
-          STDERR.puts 'Found match! Accept? (y/n)'
+          warn 'Found match! Accept? (y/n)'
           c = STDIN.getch
           return p if c == 'y'
         end

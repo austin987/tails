@@ -120,8 +120,8 @@ def canonicalize_relationship(orig_entry)
   end
   return entry
 rescue Exception => e
-  STDERR.puts 'Problematic entry:'
-  STDERR.puts YAML.dump([orig_entry])
+  warn 'Problematic entry:'
+  warn YAML.dump([orig_entry])
   STDERR.puts
   raise e
 end
@@ -277,6 +277,6 @@ if impacted_docs.size > 0
   puts result
 end
 if options['skip-packages']
-  STDERR.puts 'Warning! The --skip-packages option makes this ' +
+  warn 'Warning! The --skip-packages option makes this ' +
               'report incomplete!'
 end

@@ -323,13 +323,13 @@ end
 def pause(message = 'Paused')
   notify_user(message)
   STDERR.puts
-  STDERR.puts message
+  warn message
   # Ring the ASCII bell for a helpful notification in most terminal
   # emulators.
   STDOUT.write "\a"
   STDERR.puts
   loop do
-    STDERR.puts 'Return/q: Continue; d: Debugging REPL'
+    warn 'Return/q: Continue; d: Debugging REPL'
     c = STDIN.getch
     case c
     when 'q', "\r", 3.chr # Ctrl+C => 3
