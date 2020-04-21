@@ -337,7 +337,7 @@ def pause(message = "Paused")
     when "q", "\r", 3.chr # Ctrl+C => 3
       return
     when "d"
-      binding.pry(quiet: true)
+      binding.pry(quiet: true) # rubocop:disable Lint/Debugger
     end
   end
 end

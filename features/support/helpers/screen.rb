@@ -364,7 +364,7 @@ class ImageBumpingScreen
       when 'q', 3.chr # Ctrl+C => 3
         raise ImageBumpFailed
       when 'd'
-        binding.pry(quiet: true)
+        binding.pry(quiet: true) # rubocop:disable Lint/Debugger
       end
     end
   end
