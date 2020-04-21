@@ -30,7 +30,7 @@ Given /^Tails ([[:alnum:].-]+) has been tagged$/ do |version|
 end
 
 Given /^Tails ([[:alnum:].]+) has not been released yet$/ do |version|
-  !File.exists? ".git/refs/tags/#{version}"
+  !File.exist? ".git/refs/tags/#{version}"
 end
 
 Given /^the last version mentioned in debian\/changelog is ([[:alnum:]~.]+)$/ do |version|

@@ -10,10 +10,10 @@ DEFAULTS_CONFIG_FILE = "#{CONFIG_DIR}/defaults.yml"
 LOCAL_CONFIG_FILE = "#{CONFIG_DIR}/local.yml"
 LOCAL_CONFIG_DIRS_FILES_GLOB = "#{CONFIG_DIR}/*.d/*.yml"
 
-assert File.exists?(DEFAULTS_CONFIG_FILE)
+assert File.exist?(DEFAULTS_CONFIG_FILE)
 $config = YAML.load(File.read(DEFAULTS_CONFIG_FILE))
 config_files = Dir.glob(LOCAL_CONFIG_DIRS_FILES_GLOB).sort
-config_files.insert(0, LOCAL_CONFIG_FILE) if File.exists?(LOCAL_CONFIG_FILE)
+config_files.insert(0, LOCAL_CONFIG_FILE) if File.exist?(LOCAL_CONFIG_FILE)
 config_files.each do |config_file|
   yaml_struct = YAML.load(File.read(config_file)) || Hash.new
   if not(yaml_struct.instance_of?(Hash))

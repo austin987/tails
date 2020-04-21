@@ -16,7 +16,7 @@ def fatal_system(str, *args)
 end
 
 def git_exists?
-  File.exists? '.git'
+  File.exist? '.git'
 end
 
 def create_git

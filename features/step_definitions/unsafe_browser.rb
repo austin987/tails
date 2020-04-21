@@ -95,7 +95,7 @@ Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" 
   # Use localized image for languages that have a translated version
   # of the Unsafe Browser homepage.
   when /\A([a-z]+)/
-    if File.exists?("#{OPENCV_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
+    if File.exist?("#{OPENCV_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
       start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
     else
       start_page_image = "UnsafeBrowserStartPage.png"

@@ -48,6 +48,6 @@ class Display
     FileUtils.rm_f(target)
     popen_wait(['import', '-quality', '100%', '-window', 'root', target])
     assert($?.success?)
-    assert(File.exists?(target))
+    assert(File.exist?(target))
   end
 end
