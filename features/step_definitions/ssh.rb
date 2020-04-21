@@ -81,7 +81,6 @@ Given /^an SSH server is running on the LAN$/ do
 end
 
 When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
-
   case location
   when 'Internet'
     read_and_validate_ssh_config "SSH"

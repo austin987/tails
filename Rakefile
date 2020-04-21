@@ -440,7 +440,6 @@ end
 
 desc 'Build Tails'
 task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'ensure_correct_permissions', 'vm:up', 'ensure_clean_home_directory'] do
-
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
@@ -681,7 +680,6 @@ namespace :vm do
 end
 
 namespace :basebox do
-
   desc 'Create and import the base box unless already done'
   task :create do
     next if has_box?
