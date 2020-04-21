@@ -334,8 +334,6 @@ def deactivate_and_activate_pidgin_account(account)
   step "I close Pidgin's account manager window"
 end
 
-
-
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
   reconnect_button = 'PidginReconnect.png'

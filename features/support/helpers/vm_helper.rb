@@ -55,7 +55,6 @@ class VMNet
   end
 end
 
-
 class VM
 
   attr_reader :domain, :domain_name, :display, :vmnet, :storage

@@ -145,8 +145,6 @@ Then /^MAT can clean some sample PNG file$/ do
   end
 end
 
-
-
 Then /^AppArmor is enabled$/ do
   assert($vm.execute("aa-status").success?, "AppArmor is not enabled")
 end
