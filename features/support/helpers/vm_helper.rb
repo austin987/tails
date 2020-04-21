@@ -399,9 +399,11 @@ class VM
     end
     if type == 'UEFI'
       domain_xml = REXML::Document.new(@domain.xml_desc)
-      domain_xml.elements['domain/os'].add_element(REXML::Document.new(
-                                                     '<loader>/usr/share/ovmf/OVMF.fd</loader>'
-      ))
+      domain_xml.elements['domain/os'].add_element(
+        REXML::Document.new(
+          '<loader>/usr/share/ovmf/OVMF.fd</loader>'
+        )
+      )
       update(domain_xml.to_s)
     else
       raise "unsupported OS loader type"

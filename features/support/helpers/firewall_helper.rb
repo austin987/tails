@@ -31,7 +31,7 @@ def pcap_connections_helper(pcap_file, **opts)
       else
         raise FirewallAssertionFailedError.new(
           'Found something that is not an ethernet packet'
-              )
+        )
       end
     end
     sport = nil
@@ -61,7 +61,7 @@ def pcap_connections_helper(pcap_file, **opts)
     else
       raise FirewallAssertionFailedError.new(
         "Found something that cannot be parsed"
-            )
+      )
     end
 
     next if opts[:ignore_dhcp] &&

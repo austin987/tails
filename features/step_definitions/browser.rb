@@ -164,7 +164,7 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
     end
     native_libs = $vm.execute_successfully(
       "find /usr/lib /lib -name \"#{lib_name}\""
-                     ).stdout.split
+    ).stdout.split
     for native_lib in native_libs do
       if /\W#{native_lib}$"/.match firefox_pmap_info
         unwanted_native_libs << lib_name
@@ -181,7 +181,9 @@ end
 
 Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
   info = xul_application_info(application)
-  pid = $vm.execute_successfully("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").stdout.chomp
+  pid = $vm.execute_successfully(
+    "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
+  ).stdout.chomp
   assert(/\A\d+\z/.match(pid), "It seems like #{application} is not running")
   xul_app_shared_lib_check(pid, info[:chroot], info[:unused_tbb_libs])
 end

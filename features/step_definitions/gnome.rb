@@ -2,7 +2,7 @@ Then /^there is no screenshot in the live user's Pictures directory$/ do
   pictures_directory = "/home/#{LIVE_USER}/Pictures"
   assert($vm.execute(
     "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
-        ).stdout.empty?,
+  ).stdout.empty?,
          "Existing screenshots were found in the live user's Pictures directory.")
 end
 
