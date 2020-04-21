@@ -25,7 +25,7 @@ end
 
 # It's forbidden to throw this exception (or subclasses) in anything
 # but try_for() below. Just don't use it anywhere else!
-class UniqueTryForTimeoutError < Exception
+class UniqueTryForTimeoutError < RuntimeError
 end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with
