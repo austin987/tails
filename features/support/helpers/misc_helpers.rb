@@ -390,6 +390,7 @@ def ffmpeg
       return 'ffmpeg'
     end
 end
+
 # This is IO.popen() that ensures that we wait() for the subprocess to
 # finish. Please use this instead IO.popen() when running a subprocess
 # inside a try_for() or other Timeout::timeout() block!
