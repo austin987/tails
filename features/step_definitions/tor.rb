@@ -332,7 +332,6 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
   @screen.wait('TorLauncherBridgeList.png', 10).click
   @bridge_hosts = []
-  chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
   bridge_dirs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
   )

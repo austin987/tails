@@ -102,7 +102,7 @@ def try_for(timeout, **options)
   # that for an arbitrary large stack of try_for:s, any of the unique
   # exceptions will be caught only by the try_for instance it is
   # unique to, and all try_for:s in between will ignore it.
-rescue unique_timeout_exception => e
+rescue unique_timeout_exception
   msg = options[:msg] || 'try_for() timeout expired'
   exc_class = options[:exception] || Timeout::Error
   if last_exception

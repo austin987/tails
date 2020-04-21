@@ -153,7 +153,6 @@ module Dogtail
     # arguments constructing a GenericPredicate to use as parameter.
     def children(*args)
       non_predicates = [:recursive, :showingOnly]
-      findChildren_opts = []
       findChildren_opts_hash = Hash.new
       if args.last.class == Hash
         args_hash = args.last

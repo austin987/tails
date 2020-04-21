@@ -77,7 +77,6 @@ def ensure_chutney_is_running
 
     # We have to sanity check that all nodes are running because
     # `chutney start` will return success even if some nodes fail.
-    running, total = 0, -1
     status = chutney_cmd.call('status')
     match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
     assert_not_nil(match, "Chutney's status did not contain the expected " +

@@ -116,7 +116,7 @@ class VMStorage
     vol_xml.elements['volume/target/path'].text = "#{@pool_path}/#{name}"
     vol_xml.elements['volume/target/permissions/owner'].text = uid.to_s
     vol_xml.elements['volume/target/permissions/group'].text = gid.to_s
-    vol = @pool.create_volume_xml(vol_xml.to_s)
+    @pool.create_volume_xml(vol_xml.to_s)
     @pool.refresh
   end
 
