@@ -50,7 +50,7 @@ When /^I update APT using apt$/ do
     $vm.execute('rm -rf /var/lib/apt/lists/*')
   end
   retry_tor(recovery_proc) do
-    Timeout::timeout(15*60) do
+    Timeout::timeout(15 * 60) do
       $vm.execute_successfully("echo #{@sudo_password} | " +
                                "sudo -S apt update", :user => LIVE_USER)
     end
@@ -58,7 +58,7 @@ When /^I update APT using apt$/ do
 end
 
 def wait_for_package_installation(package)
-  try_for(2*60) do
+  try_for(2 * 60) do
     $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
   end
 end
@@ -71,7 +71,7 @@ Then /^I install "(.+)" using apt$/ do |package|
     $vm.execute("apt purge #{package}")
   end
   retry_tor(recovery_proc) do
-    Timeout::timeout(3*60) do
+    Timeout::timeout(3 * 60) do
       $vm.execute("echo #{@sudo_password} | " +
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
                   :user  => LIVE_USER,
@@ -82,7 +82,7 @@ Then /^I install "(.+)" using apt$/ do |package|
 end
 
 def wait_for_package_removal(package)
-  try_for(3*60) do
+  try_for(3 * 60) do
     # Once purged, a package is removed from the installed package status database
     # and "dpkg -s" returns a non-zero exit code
     !$vm.execute("dpkg -s #{package}").success?
@@ -149,7 +149,7 @@ When /^I update APT using Synaptic$/ do
   retry_tor(recovery_proc) do
     @synaptic.button('Reload').click
     sleep 10 # It might take some time before APT starts downloading
-    try_for(15*60, :msg => "Took too much time to download the APT data") {
+    try_for(15 * 60, :msg => "Took too much time to download the APT data") {
       !$vm.has_process?("/usr/lib/apt/methods/tor+http")
     }
     assert_raise(Dogtail::Failure) do
@@ -183,7 +183,7 @@ Then /^I install "(.+)" using Synaptic$/ do |package_name|
     apply_prompt = nil
     try_for(60) { apply_prompt = @synaptic.dialog('Summary'); true }
     apply_prompt.button('Apply').click
-    try_for(4*60) do
+    try_for(4 * 60) do
       @synaptic.child('Changes applied', roleName: 'frame', recursive: false)
       true
     end

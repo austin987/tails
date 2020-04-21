@@ -68,7 +68,7 @@ end
 
 def click_mid_right_edge(pattern, **opts)
   m = @screen.find(pattern, **opts)
-  @screen.click(m.x + m.w, m.y + m.h/2)
+  @screen.click(m.x + m.w, m.y + m.h / 2)
 end
 
 When /^I create my XMPP account$/ do
@@ -99,11 +99,11 @@ end
 Then /^Pidgin automatically enables my XMPP account$/ do
   account = xmpp_account("Tails_account")
   jid = account["username"] + '@' + account["domain"]
-  try_for(3*60) do
+  try_for(3 * 60) do
     pidgin_account_connected?(jid, 'prpl-jabber')
   end
   $vm.focus_window('Buddy List')
-  @screen.wait("PidginAvailableStatus.png", 60*3)
+  @screen.wait("PidginAvailableStatus.png", 60 * 3)
 end
 
 Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
@@ -127,7 +127,7 @@ When /^I start a conversation with my friend$/ do
   # friend, given it's the only subscribed user that's online, which
   # we assume.
   r = @screen.find("PidginFriendOnline.png")
-  x = r.x + r.w/2
+  x = r.x + r.w / 2
   y = r.y + r.h
   @screen.click(x, y, double: true)
   # Since Pidgin sets the window name to the contact, we have no good
@@ -241,14 +241,14 @@ def configured_pidgin_accounts
   xml.elements.each("account/account") do |e|
     account = e.elements["name"].text
     account_name, network = account.split("@")
-    protocol  = e.elements["protocol"].text
-    port      = e.elements["settings/setting[@name='port']"].text
-    username_element  = e.elements["settings/setting[@name='username']"]
+    protocol = e.elements["protocol"].text
+    port = e.elements["settings/setting[@name='port']"].text
+    username_element = e.elements["settings/setting[@name='username']"]
     realname_elemenet = e.elements["settings/setting[@name='realname']"]
     if username_element
-      nickname  = username_element.text
+      nickname = username_element.text
     else
-      nickname  = nil
+      nickname = nil
     end
     if realname_elemenet
       real_name = realname_elemenet.text

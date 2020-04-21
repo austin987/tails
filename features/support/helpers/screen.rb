@@ -14,7 +14,7 @@ class Match
   end
 
   def middle
-    [@x + @w/2, @y + @h/2]
+    [@x + @w / 2, @y + @h / 2]
   end
 
   def hover(**opts)
@@ -226,7 +226,7 @@ class Screen
       codes += code
     end
     $vm.domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX,
-                        (opts[:holdtime]*1000).to_i, codes)
+                        (opts[:holdtime] * 1000).to_i, codes)
     sleep(opts[:delay])
     return nil
   end
@@ -265,7 +265,7 @@ class Screen
   end
 
   def hide_cursor
-    hover(@w - 1, @h/2)
+    hover(@w - 1, @h / 2)
   end
 
   def click(*args, **opts)

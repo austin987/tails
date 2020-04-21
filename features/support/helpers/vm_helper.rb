@@ -476,7 +476,7 @@ class VM
   end
 
   def host_to_guest_time_sync
-    host_time= DateTime.now.strftime("%s").to_s
+    host_time = DateTime.now.strftime("%s").to_s
     execute("date -s '@#{host_time}'").success?
   end
 
@@ -495,7 +495,7 @@ class VM
   end
 
   def select_virtual_desktop(desktop_number, user = LIVE_USER)
-    assert(desktop_number >= 0 && desktop_number <=3,
+    assert(desktop_number >= 0 && desktop_number <= 3,
            "Only values between 0 and 1 are valid virtual desktop numbers")
     execute_successfully(
       "xdotool set_desktop '#{desktop_number}'",

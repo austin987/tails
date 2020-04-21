@@ -501,7 +501,7 @@ def retrieve_artifacts(missing_ok: false)
       raise msg
     end
   end
-  user     = vagrant_ssh_config('User')
+  user = vagrant_ssh_config('User')
   hostname = vagrant_ssh_config('HostName')
   key_file = vagrant_ssh_config('IdentityFile')
   $stderr.puts "Retrieving artifacts from Vagrant build box."
@@ -742,7 +742,7 @@ namespace :basebox do
     boxes.sort! { |a, b| basebox_date(a) <=> basebox_date(b) }
     boxes.pop
     boxes.each do |box|
-      if basebox_date(box) < Date.today - 365.0/2.0
+      if basebox_date(box) < Date.today - 365.0 / 2.0
         clean_up_basebox(box)
       end
     end

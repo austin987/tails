@@ -43,7 +43,7 @@ Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
   guest_time = Time.rfc2822(guest_time_str)
   host_time = Time.now
   diff = (host_time - guest_time).abs
-  assert(diff < max_diff_mins.to_i*60,
+  assert(diff < max_diff_mins.to_i * 60,
          "The guest's clock is off by #{diff} seconds (#{guest_time})")
   puts "Time was #{diff} seconds off"
 end
@@ -58,7 +58,7 @@ Then /^the system clock is just past Tails' source date$/ do
   diff = system_time - source_time # => in seconds
   # Half an hour should be enough to boot Tails on any reasonable
   # hardware and VM setup.
-  max_diff = 30*60
+  max_diff = 30 * 60
   assert(diff > 0,
          "The system time (#{system_time}) is before the Tails " +
          "source date (#{source_time})")

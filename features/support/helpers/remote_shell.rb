@@ -14,7 +14,7 @@ module RemoteShell
   class Timeout < ServerFailure
   end
 
-  DEFAULT_TIMEOUT = 20*60
+  DEFAULT_TIMEOUT = 20 * 60
 
   # Counter providing unique id:s for each communicate() call.
   @@request_id ||= 0
@@ -103,7 +103,7 @@ module RemoteShell
       opts[:user] ||= "root"
       show_code = code.chomp
       if show_code["\n"]
-        show_code = "\n" + show_code.lines.map { |l| " "*4 + l.chomp } .join("\n")
+        show_code = "\n" + show_code.lines.map { |l| " " * 4 + l.chomp } .join("\n")
       end
       debug_log("executing Python as #{opts[:user]}: #{show_code}")
       ret = RemoteShell.communicate(

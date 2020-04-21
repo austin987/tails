@@ -7,7 +7,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click(@screen.w - 1, @screen.h/2)
+  @screen.click(@screen.w - 1, @screen.h / 2)
   sleep 1
 end
 
@@ -556,7 +556,7 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  try_for(3*60) do
+  try_for(3 * 60) do
     if mode == 'restarts'
       @screen.find('TailsGreeter.png')
       true

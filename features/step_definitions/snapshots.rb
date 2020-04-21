@@ -118,8 +118,8 @@ def checkpoints
 end
 
 def reach_checkpoint(name)
-  scenario_indent = " "*4
-  step_indent = " "*6
+  scenario_indent = " " * 4
+  step_indent = " " * 6
 
   step "a computer"
   if VM.snapshot_exists?(name)

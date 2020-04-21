@@ -50,10 +50,10 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   grep.close
   File.delete dump
   # Pattern is 16 bytes long
-  patterns_b = patterns*16
+  patterns_b = patterns * 16
   patterns_m = convert_to_MiB(patterns_b, 'b')
-  coverage = patterns_b.to_f/reference_memory_b
-  puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
+  coverage = patterns_b.to_f / reference_memory_b
+  puts "Pattern coverage: #{"%.3f" % (coverage * 100)}% (#{patterns_m} MiB " +
        "out of #{reference_memory_m} MiB reference memory)"
   return coverage
 end
@@ -147,8 +147,8 @@ Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = expected_coverage.to_f / 100
   assert(coverage > min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " +
-         "has the pattern, but more than #{"%.3f" % (min_coverage*100)}% " +
+         "#{"%.3f" % (coverage * 100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " +
+         "has the pattern, but more than #{"%.3f" % (min_coverage * 100)}% " +
          "was expected")
 end
 
@@ -157,8 +157,8 @@ Then(/^patterns cover at least (\d+) MiB in the guest's memory$/) do |expected_p
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = 1
   assert(coverage >= min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
-         "has the pattern, but more than #{"%.3f" % (min_coverage*100)}% " +
+         "#{"%.3f" % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
+         "has the pattern, but more than #{"%.3f" % (min_coverage * 100)}% " +
          "was expected")
 end
 
@@ -167,8 +167,8 @@ Then(/^patterns cover less than (\d+) MiB in the guest's memory$/) do |expected_
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   max_coverage = 1
   assert(coverage < max_coverage,
-         "#{"%.3f" % (coverage*100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
-         "has the pattern, but less than #{"%.3f" % (max_coverage*100)}% " +
+         "#{"%.3f" % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
+         "has the pattern, but less than #{"%.3f" % (max_coverage * 100)}% " +
          "was expected")
 end
 
@@ -180,8 +180,8 @@ Then /^I find very few patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram(@free_mem_before_fill_b)
   max_coverage = 0.008
   assert(coverage < max_coverage,
-         "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
-         "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
+         "#{"%.3f" % (coverage * 100)}% of the free memory still has the " +
+         "pattern, but less than #{"%.3f" % (max_coverage * 100)}% was expected")
 end
 
 When /^I wait for Tails to finish wiping the memory$/ do
