@@ -328,11 +328,7 @@ end
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
   if scenario.passed?
-    allowed_nodes = if @bridge_hosts
-                      @bridge_hosts
-                    else
-                      allowed_hosts_under_tor_enforcement
-                    end
+    allowed_nodes = @bridge_hosts || allowed_hosts_under_tor_enforcement
     assert_all_connections(@tor_leaks_sniffer.pcap_file) do |c|
       allowed_nodes.include?({ address: c.daddr, port: c.dport })
     end
