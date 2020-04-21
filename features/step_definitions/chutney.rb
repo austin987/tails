@@ -82,7 +82,7 @@ def ensure_chutney_is_running
     match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
     assert_not_nil(match, "Chutney's status did not contain the expected " +
                           "string listing the number of running nodes")
-    running, total = match[1,2].map { |x| x.to_i }
+    running, total = match[1, 2].map { |x| x.to_i }
     assert_equal(
       total, running, "Chutney is only running #{running}/#{total} nodes"
     )

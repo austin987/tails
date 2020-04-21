@@ -336,7 +336,7 @@ end
 
 # Converts dbus-send replies into a suitable Ruby value
 def dbus_send_ret_conv(ret)
-  type, val = /^\s*(\S+)\s+(.+)$/m.match(ret)[1,2]
+  type, val = /^\s*(\S+)\s+(.+)$/m.match(ret)[1, 2]
   case type
   when 'string'
     # Unquote

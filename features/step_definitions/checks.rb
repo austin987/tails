@@ -179,7 +179,7 @@ Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce
   assert_equal(mode, get_apparmor_status(pid))
 end
 
-Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
+Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process, mode|
   status = get_seccomp_status(process)
   if mode == 'strict'
     assert_equal(1, status, "#{process} not confined with Seccomp in strict mode")
