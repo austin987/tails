@@ -111,7 +111,8 @@ module Dogtail
         'False'
       elsif v.class == String
         "'#{v}'"
-      elsif [Fixnum, Float].include?(v.class)
+      # XXX:Stretch: drop the Fixnum line once we stop supporting Stretch
+      elsif [Fixnum, Integer, Float].include?(v.class) # rubocop:disable Lint/UnifiedInteger
         v.to_s
       else
         raise "#{self.class.name} does not know how to handle argument type " \
