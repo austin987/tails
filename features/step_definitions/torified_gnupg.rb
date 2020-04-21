@@ -97,7 +97,7 @@ When /^the GnuPG fetch is successful$/ do
 end
 
 When /^the Seahorse operation is successful$/ do
-  !@screen.exists('GnomeCloseButton.png')
+  assert(!@screen.exists('GnomeCloseButton.png'))
   $vm.has_process?('seahorse')
 end
 
