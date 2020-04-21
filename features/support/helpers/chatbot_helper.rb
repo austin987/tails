@@ -21,9 +21,9 @@ class ChatBot
 
     cmd = [
       "#{GIT_DIR}/features/scripts/otr-bot.py",
-           @account,
-           @password,
-           @otr_key_file.path
+      @account,
+      @password,
+      @otr_key_file.path
     ]
     cmd += ["--connect-server", @opts["connect_server"]] if @opts["connect_server"]
     cmd += ["--auto-join"] + @opts["auto_join"] if @opts["auto_join"]
