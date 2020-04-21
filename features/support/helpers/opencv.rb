@@ -2,7 +2,6 @@ class OpenCVInternalError < StandardError
 end
 
 module OpenCV
-
   if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
     @python = 'python2.7'
   else
@@ -33,5 +32,4 @@ module OpenCV
       raise OpenCVInternalError.new(out)
     end
   end
-
 end

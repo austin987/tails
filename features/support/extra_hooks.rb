@@ -128,7 +128,6 @@ module ExtraFormatters
       @io.flush
     end
   end
-
 end
 
 module Cucumber
