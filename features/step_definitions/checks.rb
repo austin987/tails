@@ -102,18 +102,18 @@ Then /^the support documentation page opens in Tor Browser$/ do
     expected_title = 'Tails - Support'
     expected_heading = 'Search the documentation'
   end
-   step "\"#{expected_title}\" has loaded in the Tor Browser"
-   if $language == 'German'
-     browser_name = 'Tor-Browser'
-   else
-     browser_name = 'Tor Browser'
-   end
-   try_for(60) {
-     @torbrowser
-       .child(expected_title + " - #{browser_name}", roleName: 'frame')
-       .children(roleName: 'heading')
-       .any? { |heading| heading.text == expected_heading }
-   }
+  step "\"#{expected_title}\" has loaded in the Tor Browser"
+  if $language == 'German'
+    browser_name = 'Tor-Browser'
+  else
+    browser_name = 'Tor Browser'
+  end
+  try_for(60) {
+    @torbrowser
+      .child(expected_title + " - #{browser_name}", roleName: 'frame')
+      .children(roleName: 'heading')
+      .any? { |heading| heading.text == expected_heading }
+  }
 end
 
 Given /^I plug and mount a USB drive containing a sample PNG$/ do
