@@ -773,7 +773,7 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
 end
 
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
-  should_work = should_work == 'can' ? true : false
+  should_work = should_work == 'can'
   @screen.press('ctrl', 's')
   @screen.wait('Gtk3SaveFileDialog.png', 10)
   if output_dir == 'persistent Tor Browser'
