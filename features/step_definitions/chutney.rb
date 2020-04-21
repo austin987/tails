@@ -200,7 +200,7 @@ def chutney_onionservice_redir(remote_address, remote_port)
     # '--collect',
     '/usr/bin/redir',
     "#{local_address}:#{local_port}",
-    "#{remote_address}:#{remote_port}",
+    "#{remote_address}:#{remote_port}"
   )
   add_after_scenario_hook { kill_redir.call }
   return $chutney_onionservice_job

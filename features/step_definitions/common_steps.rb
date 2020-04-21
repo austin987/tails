@@ -334,7 +334,7 @@ Given /^the Tails desktop is ready$/ do
   # We need to enable the accessibility toolkit for dogtail.
   $vm.execute_successfully(
     'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
-    :user => LIVE_USER,
+    :user => LIVE_USER
   )
 end
 
