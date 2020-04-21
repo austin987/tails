@@ -12,7 +12,7 @@ end
 
 def thunderbird_inbox
   folder_view = thunderbird_main.child($config['Icedove']['address'],
-                                   roleName: 'table row').parent
+                                       roleName: 'table row').parent
   folder_view.children(roleName: 'table row', recursive: false).find do |e|
     e.name.match(/^Inbox( .*)?$/)
   end
@@ -127,7 +127,7 @@ end
 
 When /^I fetch my email$/ do
   account = thunderbird_main.child($config['Icedove']['address'],
-                               roleName: 'table row')
+                                   roleName: 'table row')
   account.click
   thunderbird_frame = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
 
@@ -210,7 +210,7 @@ Then /^I can find the email I sent to myself in my inbox$/ do
   retry_tor(recovery_proc) do
     thunderbird_inbox.click
     filter = thunderbird_main.child('Filter these messages <Ctrl+Shift+K>',
-                                roleName: 'entry')
+                                    roleName: 'entry')
     filter.typeText(@subject)
     hit_counter = thunderbird_main.child('1 message')
     inbox_view = hit_counter.parent

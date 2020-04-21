@@ -4,7 +4,7 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
 
   recovery_proc = Proc.new do
     $vm.execute("rm -rf /home/#{LIVE_USER}/#{repo_directory}",
-                             :user => LIVE_USER)
+                :user => LIVE_USER)
     step 'I kill the process "git"'
     @screen.type('clear')
     @screen.press("Return")

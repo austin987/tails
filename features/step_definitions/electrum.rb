@@ -50,7 +50,7 @@ end
 When /^I follow the Electrum wizard to create a new bitcoin wallet$/ do
   electrum_wizard.button('Next').click
   electrum_wizard.child('What kind of wallet do you want to create?',
-                         roleName: 'panel')
+                        roleName: 'panel')
   electrum_wizard.child('Standard wallet', roleName: 'radio button').click
   electrum_wizard.button('Next').click
   electrum_wizard.child('Keystore', roleName: 'label')

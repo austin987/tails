@@ -16,8 +16,8 @@ Then /^Tails has no disk swap enabled$/ do
          "Disk swapping is enabled according to /proc/swaps:\n" + swap_info)
   mem_info = $vm.execute_successfully("grep '^Swap' /proc/meminfo").stdout
   assert(mem_info.match(/^SwapTotal:\s+0 kB$/),
-             "Disk swapping is enabled according to /proc/meminfo:\n" +
-             mem_info)
+         "Disk swapping is enabled according to /proc/meminfo:\n" +
+         mem_info)
 end
 
 Given /^I create an?( (\d+) ([[:alpha:]]+))? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |with_size, size, unit, parttype, has_label, label, fstype, is_encrypted, luks_password, name|

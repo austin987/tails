@@ -73,8 +73,8 @@ Then /^I install "(.+)" using apt$/ do |package|
     Timeout::timeout(3*60) do
       $vm.execute("echo #{@sudo_password} | " +
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
-                               :user => LIVE_USER,
-                               :spawn => true)
+                  :user => LIVE_USER,
+                  :spawn => true)
       wait_for_package_installation(package)
     end
   end
@@ -91,8 +91,8 @@ end
 Then /^I uninstall "(.+)" using apt$/ do |package|
   $vm.execute_successfully("echo #{@sudo_password} | " +
                                "sudo -S apt -y purge #{package}",
-                               :user => LIVE_USER,
-                               :spawn => true)
+                           :user => LIVE_USER,
+                           :spawn => true)
   wait_for_package_removal(package)
 end
 

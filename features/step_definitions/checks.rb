@@ -49,9 +49,9 @@ Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
   assert_equal(0, unexpected.size,
-         "live user in unexpected groups #{unexpected}")
+               "live user in unexpected groups #{unexpected}")
   assert_equal(0, missing.size,
-         "live user not in expected groups #{missing}")
+               "live user not in expected groups #{missing}")
 end
 
 Then /^the live user owns its home dir and it has normal permissions$/ do
