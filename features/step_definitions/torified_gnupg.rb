@@ -82,7 +82,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
     @gnupg_recv_key_res = $vm.execute_successfully(
       "timeout 120 gpg --batch --recv-key '#{@fetched_openpgp_keyid}'",
       :user => LIVE_USER
-)
+    )
     if @gnupg_recv_key_res.failure?
       raise "Fetching keys with the GnuPG CLI failed with:\n" +
             "#{@gnupg_recv_key_res.stdout}\n" +
@@ -168,7 +168,7 @@ Then /^I synchronize keys in Seahorse$/ do
     check_for_seahorse_error
     raise OpenPGPKeyserverCommunicationError.new(
       'Seahorse crashed with a segfault.'
-) unless $vm.has_process?('seahorse')
+    ) unless $vm.has_process?('seahorse')
   end
 end
 
@@ -181,7 +181,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     # upon.
     if $vm.execute_successfully(
       "gpg --batch --list-keys '#{keyid}'", :user => LIVE_USER
-) ||
+    ) ||
       @screen.exists('GnomeCloseButton.png')
       true
     end

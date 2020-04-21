@@ -13,7 +13,7 @@ def udev_watchdog_monitored_device
   monitored_device =
     $vm.execute_successfully(
       "readlink -f /dev/block/'#{monitored_device_id}'"
-).stdout.chomp
+    ).stdout.chomp
   return monitored_device
 end
 
