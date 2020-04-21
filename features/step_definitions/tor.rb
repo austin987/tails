@@ -1,4 +1,4 @@
-def iptables_chains_parse(iptables, table = "filter", &block)
+def iptables_chains_parse(iptables, table = "filter")
   assert(block_given?)
   cmd = "#{iptables}-save -c -t #{table} | iptables-xml"
   xml_str = $vm.execute_successfully(cmd).stdout

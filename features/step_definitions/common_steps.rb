@@ -427,7 +427,7 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ 
   else
     raise "Unsupported page: #{page}"
   end
-  page_has_loaded_in_the_Tor_Browser(titles, $language)
+  page_has_loaded_in_the_Tor_Browser(titles)
 end
 
 When /^I request a new identity using Torbutton$/ do
