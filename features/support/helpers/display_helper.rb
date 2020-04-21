@@ -1,4 +1,3 @@
-
 class Display
 
   def initialize(domain, x_display)
