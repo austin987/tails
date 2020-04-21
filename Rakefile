@@ -465,8 +465,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
       abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
     end
 
-    exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
-                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+    exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }
+                   .collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
 
     begin
       retrieved_artifacts = false
