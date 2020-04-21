@@ -109,8 +109,8 @@ When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (
 end
 
 Given /^I delete the "([^"]+)" subkey from the live user's public keyring$/ do |subkeyid|
-    $vm.execute("gpg --batch --delete-keys '#{subkeyid}!'",
-                :user => LIVE_USER).success?
+  $vm.execute("gpg --batch --delete-keys '#{subkeyid}!'",
+              :user => LIVE_USER).success?
 end
 
 When /^I start Seahorse( via the OpenPGP Applet)?$/ do |withgpgapplet|
@@ -149,7 +149,7 @@ Then /^I synchronize keys in Seahorse$/ do
     if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
       @screen.exists('GnomeCloseButton.png')  || \
       !$vm.has_process?('seahorse')
-        true
+      true
     end
   end
 

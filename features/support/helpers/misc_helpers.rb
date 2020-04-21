@@ -384,11 +384,11 @@ def dbus_send(*args, **opts)
 end
 
 def ffmpeg
-    if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
-      return 'avconv'
-    else
-      return 'ffmpeg'
-    end
+  if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
+    return 'avconv'
+  else
+    return 'ffmpeg'
+  end
 end
 
 # This is IO.popen() that ensures that we wait() for the subprocess to
