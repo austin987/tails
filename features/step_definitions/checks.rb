@@ -114,7 +114,7 @@ Then /^the support documentation page opens in Tor Browser$/ do
        .children(roleName: 'heading')
        .any? { |heading| heading.text == expected_heading }
    }
- end
+end
 
 Given /^I plug and mount a USB drive containing a sample PNG$/ do
   @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))

@@ -167,7 +167,7 @@ Then /^I synchronize keys in Seahorse$/ do
     check_for_seahorse_error
     raise OpenPGPKeyserverCommunicationError.new(
       'Seahorse crashed with a segfault.') unless $vm.has_process?('seahorse')
-   end
+  end
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)?$/ do |keyid, withgpgapplet|

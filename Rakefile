@@ -699,7 +699,7 @@ namespace :basebox do
     box_path = "#{box_dir}/#{box_name}.box"
     run_vagrant('box', 'add', '--name', box_name, box_path)
     File.delete(box_path)
-    end
+  end
 
   def basebox_date(box)
     Date.parse(/^tails-builder-[^-]+-[^-]+-(\d{8})/.match(box)[1])
