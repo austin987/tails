@@ -31,9 +31,9 @@ def create_git
   File.open('debian/changelog', 'w') do |changelog|
     changelog.write(<<~END_OF_CHANGELOG)
       tails (0) stable; urgency=low
-      
+
         * First release.
-      
+
        -- Tails developers <tails@boum.org>  Mon, 30 Jan 2012 01:00:00 +0000
     END_OF_CHANGELOG
   end
