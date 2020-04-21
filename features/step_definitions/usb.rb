@@ -452,7 +452,7 @@ def parse_udisksctl_info(input)
   input.chomp.split("\n").each do |line|
     case line
     when /^\/org\/freedesktop\/UDisks2\/block_devices\//
-      # no-op, ignore first line = device
+      true
     when /^  (org\.freedesktop\.UDisks2\..+):$/
       section = Regexp.last_match(1)
       tree[section] = {}
