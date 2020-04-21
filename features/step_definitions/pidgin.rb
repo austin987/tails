@@ -399,8 +399,7 @@ Then /^Pidgin has the expected persistent accounts configured$/ do
   assert(current_accounts <=> @persistent_pidgin_accounts,
          "Currently configured Pidgin accounts do not match the persistent ones:\n" +
          "Current:\n#{current_accounts}\n" +
-         "Persistent:\n#{@persistent_pidgin_accounts}"
-        )
+         "Persistent:\n#{@persistent_pidgin_accounts}")
 end
 
 Then /^Pidgin has the expected persistent OTR keys$/ do

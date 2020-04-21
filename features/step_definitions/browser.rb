@@ -199,10 +199,12 @@ end
 Then /^the (.*) runs as the expected user$/ do |browser|
   info = xul_application_info(browser)
   assert_vmcommand_success($vm.execute(
-                             "pgrep --full --exact '#{info[:cmd_regex]}'"),
+                             "pgrep --full --exact '#{info[:cmd_regex]}'"
+),
                            "The #{browser} is not running")
   assert_vmcommand_success($vm.execute(
-                             "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
+                             "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
+),
                            "The #{browser} is not running as the #{info[:user]} user")
 end
 

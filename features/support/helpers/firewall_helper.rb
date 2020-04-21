@@ -108,7 +108,8 @@ def assert_all_connections(pcap_file, **opts, &block)
   unless bad.empty?
     raise FirewallAssertionFailedError.new(
       "Unexpected connections were made:\n" +
-      bad.map { |e| "  #{e}" } .join("\n"))
+      bad.map { |e| "  #{e}" } .join("\n")
+)
   end
 end
 

@@ -29,7 +29,8 @@ When /^I bump the (hardware clock's|system) time with "([^"]+)"$/ do |clock_type
     new_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
   end
   expected_time_lower_bound = DateTime.parse(
-    cmd_helper(["date", "-d", "#{old_time} #{timediff}"])).to_time
+    cmd_helper(["date", "-d", "#{old_time} #{timediff}"])
+).to_time
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= new_time &&
          new_time <= expected_time_upper_bound,
@@ -88,7 +89,8 @@ end
 Then /^the hardware clock is still off by "([^"]+)"$/ do |timediff|
   hwclock = DateTime.parse($vm.execute_successfully("hwclock -r").stdout.chomp).to_time
   expected_time_lower_bound = DateTime.parse(
-    cmd_helper(["date", "-d", "now #{timediff}"])).to_time - max_time_drift
+    cmd_helper(["date", "-d", "now #{timediff}"])
+).to_time - max_time_drift
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= hwclock &&
          hwclock <= expected_time_upper_bound,

@@ -12,7 +12,8 @@ def udev_watchdog_monitored_device
   monitored_device_id = $vm.file_content('/sys' + monitored_out + '/dev').chomp
   monitored_device =
     $vm.execute_successfully(
-      "readlink -f /dev/block/'#{monitored_device_id}'").stdout.chomp
+      "readlink -f /dev/block/'#{monitored_device_id}'"
+).stdout.chomp
   return monitored_device
 end
 
