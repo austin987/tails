@@ -227,7 +227,7 @@ end
 
 def cmd_helper(cmd, env = {})
   if cmd.instance_of?(Array)
-    cmd << {:err => [:child, :out]}
+    cmd << { :err => [:child, :out] }
   elsif cmd.instance_of?(String)
     cmd += " 2>&1"
   end

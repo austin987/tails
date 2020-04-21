@@ -135,7 +135,7 @@ def read_relationship_file_as_impact_map(relationship_file)
   relationships.map { |e| canonicalize_relationship(e) } .each do |entry|
     entry['pages'].each do |page|
       source_files = entry.clone.delete_if { |k, _| k == 'pages' }
-      impact_map.deep_merge({page => source_files})
+      impact_map.deep_merge({ page => source_files })
     end
   end
   return impact_map
@@ -201,7 +201,7 @@ def find_impacted_docs(impact_map,
           reasons = changed_files.map do |path|
             "Changes in source file: #{path}"
           end
-          impacted_docs.deep_merge({page_path => reasons})
+          impacted_docs.deep_merge({ page_path => reasons })
         end
       end
       package_globs.each do |package_glob|
@@ -232,7 +232,7 @@ def find_impacted_docs(impact_map,
                             .compact.join(', ')
           "Updated package: #{package} (#{package_changes})"
         end
-        impacted_docs.deep_merge({page_path => reasons}) unless reasons.empty?
+        impacted_docs.deep_merge({ page_path => reasons }) unless reasons.empty?
       end
     end
   end

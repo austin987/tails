@@ -138,7 +138,7 @@ def add_extra_allowed_host(ipaddr, port)
 end
 
 BeforeFeature('@product') do |feature|
-  images = {'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG}
+  images = { 'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG }
   images.each { |type, path|
     if path.nil?
       raise "No Tails #{type} image specified, and none could be found in the " +

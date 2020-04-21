@@ -283,7 +283,7 @@ class Screen
     elsif opts[:repeat] > 2
       action = "#{action} (repeat: #{opts[:repeat]})"
     end
-    button = {1 => 'left', 2 => 'middle', 3 => 'right'}[opts[:button]]
+    button = { 1 => 'left', 2 => 'middle', 3 => 'right' }[opts[:button]]
     debug_log("Mouse: #{action} #{button} button at (#{x}, #{y})") if opts[:log]
     xdotool('click', '--repeat', opts[:repeat], opts[:button])
     return [x, y]

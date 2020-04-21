@@ -68,7 +68,7 @@ class CommandError < StandardError
     opts[:stderr] ||= nil
     @status = opts[:status]
     @stderr = opts[:stderr]
-    super(message % {status: @status, stderr: @stderr})
+    super(message % { status: @status, stderr: @stderr })
   end
 end
 
