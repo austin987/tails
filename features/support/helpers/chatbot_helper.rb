@@ -20,11 +20,11 @@ class ChatBot
     cmd_helper(["mv", "#{@otr_key_file.path}3", @otr_key_file.path])
 
     cmd = [
-           "#{GIT_DIR}/features/scripts/otr-bot.py",
+      "#{GIT_DIR}/features/scripts/otr-bot.py",
            @account,
            @password,
            @otr_key_file.path
-          ]
+    ]
     cmd += ["--connect-server", @opts["connect_server"]] if @opts["connect_server"]
     cmd += ["--auto-join"] + @opts["auto_join"] if @opts["auto_join"]
     cmd += ["--log-file", DEBUG_LOG_PSEUDO_FIFO]

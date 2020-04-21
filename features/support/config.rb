@@ -74,7 +74,7 @@ LIBVIRT_NETWORK_UUID = "f2305af3-2a64-4f16-afe6-b9dbf02a597e"
 MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
-   ["cupsd",    "*", "631"],
+    ["cupsd",    "*", "631"],
    ["dhclient", "0.0.0.0", "68"]
   ]
 # OpenDNS
