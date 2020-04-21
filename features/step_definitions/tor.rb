@@ -76,11 +76,11 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
       not(["DROP", "REJECT", "LOG"].include?(action.name))
     end
     is_maybe_accepted &&
-    (
-      # nil => match all interfaces according to iptables-xml
-      out_iface.nil? ||
-      ((out_iface.text == 'lo') == (out_iface.attribute('invert').to_s == '1'))
-    )
+      (
+        # nil => match all interfaces according to iptables-xml
+        out_iface.nil? ||
+        ((out_iface.text == 'lo') == (out_iface.attribute('invert').to_s == '1'))
+      )
   end
   uids = Set.new
   allowed_output.each do |rule|
@@ -139,10 +139,10 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
         dns_redirected_to_tor_dns_port = (udp_destination_port == dns_port) &&
                                          (redir_port == tor_dns_port)
         redirect &&
-        (
-         (destination == tor_onion_addr_space && redirected_to_trans_port) ||
-         (destination == loopback_address && dns_redirected_to_tor_dns_port)
-       )
+          (
+           (destination == tor_onion_addr_space && redirected_to_trans_port) ||
+           (destination == loopback_address && dns_redirected_to_tor_dns_port)
+         )
       end
       bad_rules = rules - good_rules
       assert(bad_rules.empty?,
@@ -168,9 +168,9 @@ Then /^the firewall is configured to block all external IPv6 traffic$/ do
         rule.elements["actions/#{target}"]
       end \
       ||
-      ["s", "d"].all? do |x|
-        try_xml_element_text(rule, "conditions/match/#{x}") == ip6_loopback
-      end
+        ["s", "d"].all? do |x|
+          try_xml_element_text(rule, "conditions/match/#{x}") == ip6_loopback
+        end
     end
     bad_rules = rules - good_rules
     assert(bad_rules.empty?,
@@ -216,7 +216,7 @@ Then /^the untorified connection fails$/ do
   when "TCP"
     expected_in_stderr = "Connection refused"
     conn_failed = !@conn_res.success? &&
-      @conn_res.stderr.chomp.end_with?(expected_in_stderr)
+                  @conn_res.stderr.chomp.end_with?(expected_in_stderr)
   when "UDP", "ICMP"
     conn_failed = !@conn_res.success?
   end

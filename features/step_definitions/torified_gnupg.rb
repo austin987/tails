@@ -148,8 +148,8 @@ Then /^I synchronize keys in Seahorse$/ do
     # try_for loop below by returning "true" when there's something we can act
     # upon.
     if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
-      @screen.exists('GnomeCloseButton.png') || \
-      !$vm.has_process?('seahorse')
+       @screen.exists('GnomeCloseButton.png') || \
+       !$vm.has_process?('seahorse')
       true
     end
   end
@@ -182,7 +182,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     if $vm.execute_successfully(
       "gpg --batch --list-keys '#{keyid}'", :user => LIVE_USER
     ) ||
-      @screen.exists('GnomeCloseButton.png')
+       @screen.exists('GnomeCloseButton.png')
       true
     end
   end
