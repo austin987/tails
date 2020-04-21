@@ -188,7 +188,7 @@ def chutney_onionservice_redir(remote_address, remote_port)
     end
   end
   kill_redir.call
-  local_address, local_port, _ = chutney_onionservice_info
+  local_address, local_port, = chutney_onionservice_info
   $chutney_onionservice_job = fatal_system(
     '/usr/bin/systemd-run',
     bus,

@@ -96,7 +96,7 @@ def git_helper(*args)
   status = 0
   stdout = ''
   begin
-    stdout, _ = capture_command('auto/scripts/utils.sh', *args)
+    stdout, = capture_command('auto/scripts/utils.sh', *args)
   rescue CommandError => e
     status = e.status
   end
@@ -152,7 +152,7 @@ def current_vm_cpus
 end
 
 def vm_state
-  out, _ = capture_vagrant('status')
+  out, = capture_vagrant('status')
   status_line = out.split("\n")[2]
   if    status_line['not created']
     return :not_created
