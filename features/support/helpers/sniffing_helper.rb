@@ -17,7 +17,7 @@ class Sniffer
     @name = name
     @vmnet = vmnet
     pcap_name = sanitize_filename("#{name}.pcap")
-    @pcap_file = "#{$config["TMPDIR"]}/#{pcap_name}"
+    @pcap_file = "#{$config['TMPDIR']}/#{pcap_name}"
   end
 
   def capture

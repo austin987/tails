@@ -2,7 +2,7 @@ require 'resolv'
 require 'uri'
 
 Given /^I create sample videos$/ do
-  @video_dir_on_host = "#{$config["TMPDIR"]}/video_dir"
+  @video_dir_on_host = "#{$config['TMPDIR']}/video_dir"
   FileUtils.mkdir_p(@video_dir_on_host)
   add_after_scenario_hook { FileUtils.rm_r(@video_dir_on_host) }
   fatal_system("#{ffmpeg} -loop 1 -t 30 -f image2 " +

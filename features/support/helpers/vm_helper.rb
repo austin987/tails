@@ -616,7 +616,7 @@ class VM
   end
 
   def self.ram_only_snapshot_path(name)
-    return "#{$config["TMPDIR"]}/#{name}-snapshot.memstate"
+    return "#{$config['TMPDIR']}/#{name}-snapshot.memstate"
   end
 
   def save_snapshot(name)
@@ -705,7 +705,7 @@ class VM
   end
 
   def self.remove_all_snapshots
-    Dir.glob("#{$config["TMPDIR"]}/*-snapshot.memstate").each do |file|
+    Dir.glob("#{$config['TMPDIR']}/*-snapshot.memstate").each do |file|
       File.delete(file)
     end
     old_domain = $virt.lookup_domain_by_name(LIBVIRT_DOMAIN_NAME)

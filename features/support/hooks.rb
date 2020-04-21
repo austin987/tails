@@ -50,11 +50,11 @@ AfterConfiguration do |config|
 
   if File.exist?($config['TMPDIR'])
     if !File.directory?($config['TMPDIR'])
-      raise "Temporary directory '#{$config["TMPDIR"]}' exists but is not a " +
+      raise "Temporary directory '#{$config['TMPDIR']}' exists but is not a " +
             'directory'
     end
     if !File.owned?($config['TMPDIR'])
-      raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
+      raise "Temporary directory '#{$config['TMPDIR']}' must be owned by the " +
             'current user'
     end
     FileUtils.chmod(0755, $config['TMPDIR'])
@@ -258,18 +258,18 @@ After('@product') do |scenario|
     exception_name = scenario.exception.class.name
     case exception_name
     when 'FirewallAssertionFailedError'
-      Dir.glob("#{$config["TMPDIR"]}/*.pcap").each do |pcap_file|
+      Dir.glob("#{$config['TMPDIR']}/*.pcap").each do |pcap_file|
         save_failure_artifact('Network capture', pcap_file)
       end
     when 'TorBootstrapFailure'
-      save_failure_artifact('Tor logs', "#{$config["TMPDIR"]}/log.tor")
+      save_failure_artifact('Tor logs', "#{$config['TMPDIR']}/log.tor")
       chutney_logs = sanitize_filename(
         "#{elapsed}_#{scenario.name}_chutney-data"
       )
       FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
-      FileUtils.rm(Dir.glob("#{$config["TMPDIR"]}/chutney-data/**/control"))
+      FileUtils.rm(Dir.glob("#{$config['TMPDIR']}/chutney-data/**/control"))
       FileUtils.copy_entry(
-        "#{$config["TMPDIR"]}/chutney-data",
+        "#{$config['TMPDIR']}/chutney-data",
         "#{ARTIFACTS_DIR}/#{chutney_logs}"
       )
       info_log
@@ -278,7 +278,7 @@ After('@product') do |scenario|
         "#{ARTIFACTS_DIR}/#{chutney_logs}"
       )
     when 'TimeSyncingError'
-      save_failure_artifact('Htpdate logs', "#{$config["TMPDIR"]}/log.htpdate")
+      save_failure_artifact('Htpdate logs', "#{$config['TMPDIR']}/log.htpdate")
     end
     # Note that the remote shell isn't necessarily running at all
     # times a scenario can fail (and a scenario failure could very

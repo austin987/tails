@@ -97,7 +97,7 @@ class Screen
   end
 
   def match_screen(image, sensitivity, show_image)
-    screenshot = "#{$config["TMPDIR"]}/screenshot.png"
+    screenshot = "#{$config['TMPDIR']}/screenshot.png"
     $vm.display.screenshot(screenshot)
     return OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
                                 screenshot, sensitivity, show_image)
@@ -338,7 +338,7 @@ class ImageBumpingScreen
             loop do
               c = STDIN.getch
               if c == 'y'
-                FileUtils.cp("#{$config["TMPDIR"]}/last_opencv_match.png",
+                FileUtils.cp("#{$config['TMPDIR']}/last_opencv_match.png",
                              "#{OPENCV_IMAGE_PATH}/#{image}")
                 return p
               elsif c == 'n' || c == 3.chr # Ctrl+C => 3

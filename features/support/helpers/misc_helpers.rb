@@ -192,7 +192,7 @@ def wait_until_tor_is_working
   end
 rescue Timeout::Error
   # Save Tor logs before erroring out
-  File.open("#{$config["TMPDIR"]}/log.tor", 'w') do |file|
+  File.open("#{$config['TMPDIR']}/log.tor", 'w') do |file|
     $vm.execute(
       'journalctl --no-pager -u tor@default.service > /tmp/tor.journal'
     )

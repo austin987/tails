@@ -379,7 +379,7 @@ Given /^the time has synced$/ do
       try_for(300) { $vm.execute("test -e #{file}").success? }
     end
   rescue
-    File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') do |file|
+    File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |file|
       file.write($vm.execute('cat /var/log/htpdate.log').stdout)
     end
     raise TimeSyncingError.new('Time syncing failed')
@@ -925,7 +925,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_te
       true
     end
   rescue Timeout::Error, Test::Unit::AssertionFailedError => e
-    raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
+    raise e, "AppArmor has #{anti_test ? '' : 'not '}denied the operation"
   end
 end
 
