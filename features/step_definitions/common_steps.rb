@@ -654,7 +654,7 @@ When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, ti
 end
 
 When /^the file "([^"]+)" does not exist$/ do |file|
-  assert(!($vm.file_exist?(file)))
+  assert(!$vm.file_exist?(file))
 end
 
 When /^the directory "([^"]+)" exists$/ do |directory|
@@ -662,7 +662,7 @@ When /^the directory "([^"]+)" exists$/ do |directory|
 end
 
 When /^the directory "([^"]+)" does not exist$/ do |directory|
-  assert(!($vm.directory_exist?(directory)))
+  assert(!$vm.directory_exist?(directory))
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
