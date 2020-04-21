@@ -343,7 +343,7 @@ class VM
     dev = File.basename(dev)
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
-      if /^#{e.elements['target'].attribute('dev').to_s}/.match(dev)
+      if /^#{e.elements['target'].attribute('dev')}/.match(dev)
         return File.basename(e.elements['source'].attribute('file').to_s)
       end
     end

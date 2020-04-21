@@ -228,7 +228,7 @@ module Dogtail
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
-        method_call = "#{method.to_s}(#{args_str})"
+        method_call = "#{method}(#{args_str})"
         Node.new("#{@var}.#{method_call}", **@opts)
       end
     end
@@ -253,7 +253,7 @@ module Dogtail
     TREE_API_NODE_SEARCHES.each do |method|
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
-        method_call = "#{method.to_s}(#{args_str})"
+        method_call = "#{method}(#{args_str})"
         Node.new("#{@var}.#{method_call}", **@opts)
       end
     end
@@ -261,7 +261,7 @@ module Dogtail
     TREE_API_NODE_ACTIONS.each do |method|
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
-        method_call = "#{method.to_s}(#{args_str})"
+        method_call = "#{method}(#{args_str})"
         run("#{@var}.#{method_call}")
       end
     end

@@ -101,7 +101,7 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
           assert(expected_uids.include?(uid),
                  "The following rule allows uid #{uid} to access the " +
                  "network, but we only expect uids #{expected_uids.to_a} " +
-                 "(#{users_str}) to have such access:\n#{rule.to_s}")
+                 "(#{users_str}) to have such access:\n#{rule}")
         end
       elsif action.name == "call" && action.elements[1].name == "lan"
         lan_subnets = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
@@ -110,13 +110,13 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
                "#{destination} which may not be a private subnet:\n" +
                rule.to_s)
       else
-        raise "Unexpected iptables OUTPUT chain rule:\n#{rule.to_s}"
+        raise "Unexpected iptables OUTPUT chain rule:\n#{rule}"
       end
     end
   end
   uids_not_found = expected_uids - uids
   assert(uids_not_found.empty?,
-         "Couldn't find rules allowing uids #{uids_not_found.to_a.to_s} " \
+         "Couldn't find rules allowing uids #{uids_not_found.to_a} " \
          "access to the network")
 end
 

@@ -62,7 +62,7 @@ AfterConfiguration do |config|
     begin
       FileUtils.mkdir_p($config["TMPDIR"])
     rescue Errno::EACCES => e
-      raise "Cannot create temporary directory: #{e.to_s}"
+      raise "Cannot create temporary directory: #{e}"
     end
   end
 end
