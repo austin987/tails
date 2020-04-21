@@ -137,7 +137,7 @@ def add_extra_allowed_host(ipaddr, port)
   @extra_allowed_hosts << { address: ipaddr, port: port }
 end
 
-BeforeFeature('@product') do |feature|
+BeforeFeature('@product') do
   images = { 'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG }
   images.each { |type, path|
     if path.nil?

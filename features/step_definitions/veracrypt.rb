@@ -281,7 +281,7 @@ When /^I lock the currently opened VeraCrypt (volume|file container)$/ do |suppo
   )
 end
 
-Then /^the VeraCrypt (volume|file container) has been unmounted and locked$/ do |support|
+Then /^the VeraCrypt (?:volume|file container) has been unmounted and locked$/ do
   assert(!$vm.execute("ls /media/amnesia/*/GPL-3").success?)
   assert(!$vm.execute('ls /dev/mapper/tcrypt-*').success?)
 end

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do |locale|
+When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
   @screen.type(["Tab"], ["Return"])
 end

@@ -286,7 +286,7 @@ end
 def random_string_from_set(set, min_len, max_len)
   len = (min_len..max_len).to_a.sample
   len ||= min_len
-  (0..len - 1).map { |n| set.sample }.join
+  (0..len - 1).map { set.sample }.join
 end
 
 def random_alpha_string(min_len, max_len = 0)

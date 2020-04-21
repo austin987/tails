@@ -112,7 +112,7 @@ RSpec::Matchers.define :have_tagged_snapshot do |tag|
   end
 end
 
-RSpec::Matchers.define :have_time_based_snapshot do |tag|
+RSpec::Matchers.define :have_time_based_snapshot do
   match do |string|
     # e.g.: `http://time-based.snapshots.deb.tails.boum.org/debian/2016060602`
     %r{^http://time\-based\.snapshots\.deb\.tails\.boum\.org/[^/]+/\d+}

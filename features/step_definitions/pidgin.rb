@@ -108,7 +108,7 @@ end
 
 Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
   account = xmpp_account("Friend_account", ["otr_key"])
-  bot_opts = account.select { |k, v| ["connect_server"].include?(k) }
+  bot_opts = account.select { |k, _| ["connect_server"].include?(k) }
   if join_chat
     bot_opts["auto_join"] = [@chat_room_jid]
   end
@@ -390,7 +390,7 @@ Then /^I take note of the configured Pidgin accounts$/ do
   @persistent_pidgin_accounts = configured_pidgin_accounts
 end
 
-Then /^I take note of the OTR key for Pidgin's "([^"]+)" account$/ do |account_name|
+Then /^I take note of the OTR key for Pidgin's "(?:[^"]+)" account$/ do
   @persistent_pidgin_otr_keys = pidgin_otr_keys
 end
 
