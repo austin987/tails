@@ -13,7 +13,7 @@ class SSHServer
     # 'hack' to prevent ssh-keygen from prompting to overwrite the file
     File.delete(@sshd_key_file.path)
     cmd_helper(
-      ['ssh-keygen', '-t', 'rsa', '-N', '', '-f', (@sshd_key_file.path).to_s]
+      ['ssh-keygen', '-t', 'rsa', '-N', '', '-f', @sshd_key_file.path.to_s]
     )
     @sshd_key_file.close
 
