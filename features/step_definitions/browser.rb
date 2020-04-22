@@ -113,7 +113,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
 end
 
-def page_has_loaded_in_the_Tor_Browser(page_titles)
+def page_has_loaded_in_the_tor_browser(page_titles)
   if page_titles.class == String
     page_titles = [page_titles]
   end
@@ -143,7 +143,7 @@ end
 # This step is limited to the Tor Browser due to #7502 since dogtail
 # uses the same interface.
 Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
-  page_has_loaded_in_the_Tor_Browser(title)
+  page_has_loaded_in_the_tor_browser(title)
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|

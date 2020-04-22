@@ -223,7 +223,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
   end
 end
 
-def disable_IPv6_for_dirmngr
+def disable_ipv6_for_dirmngr
   # When dirmngr connects to the Onion service run by Chutney, the
   # isotester redirects the connection to keys.openpgp.org:11371 over
   # IPv4 (see setup_onion_keyserver), and then keys.openpgp.org
@@ -255,7 +255,7 @@ Given /^GnuPG is configured to use a non-Onion keyserver$/ do
     "sed -i 's|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " +
     "'#{dirmngr_conf}'"
   )
-  disable_IPv6_for_dirmngr
+  disable_ipv6_for_dirmngr
   # Ensure dirmngr picks up the changes we made to its configuration
   restart_dirmngr
 end

@@ -11,7 +11,7 @@ $veracrypt_volume_name = 'veracrypt'
 $veracrypt_pim = '1'
 $veracrypt_basic_container_with_pim = "#{MISC_FILES_DIR}/container_with_pim.hc"
 
-def veracrypt_volume_size_in_Nautilus(**options)
+def veracrypt_volume_size_in_nautilus(**options)
   if options[:isHidden]
     '52 MB'
   else
@@ -21,7 +21,7 @@ def veracrypt_volume_size_in_Nautilus(**options)
   end
 end
 
-def veracrypt_volume_size_in_GNOME_Disks(**options)
+def veracrypt_volume_size_in_gnome_disks(**options)
   options[:needsPim] ?
     '410 KB'
   : '105 MB'
@@ -169,7 +169,7 @@ end
 When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disks$/ do |support|
   step 'I start "Disks" via GNOME Activities Overview'
   disks = Dogtail::Application.new('gnome-disks')
-  size = veracrypt_volume_size_in_GNOME_Disks(
+  size = veracrypt_volume_size_in_gnome_disks(
     :isHidden => @veracrypt_is_hidden,
     :needsPim => @veracrypt_needs_pim
   )
@@ -265,7 +265,7 @@ end
 When /^I open this VeraCrypt volume in GNOME Files$/ do
   $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
   Dogtail::Application.new('nautilus').window(
-    veracrypt_volume_size_in_Nautilus(
+    veracrypt_volume_size_in_nautilus(
       :isHidden => @veracrypt_is_hidden,
       :needsPim => @veracrypt_needs_pim
     ) + ' Volume'

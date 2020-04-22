@@ -427,7 +427,7 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ 
   else
     raise "Unsupported page: #{page}"
   end
-  page_has_loaded_in_the_Tor_Browser(titles)
+  page_has_loaded_in_the_tor_browser(titles)
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -1022,7 +1022,7 @@ def share_host_files(files)
   mount_dir
 end
 
-def mount_USB_drive(disk, **fs_options)
+def mount_usb_drive(disk, **fs_options)
   fs_options[:encrypted] ||= false
   @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
   dev = $vm.disk_dev(disk)
@@ -1060,7 +1060,7 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
     fs_options[:encrypted] = true
     fs_options[:password] = /encrypted with password "([^"]+)"/.match(fs)[1]
   end
-  mount_dir = mount_USB_drive(disk, **fs_options)
+  mount_dir = mount_usb_drive(disk, **fs_options)
   @tmp_filesystem_size_b = convert_to_bytes(
     avail_space_in_mountpoint_kB(mount_dir),
     'KB'
@@ -1068,7 +1068,7 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
 end
 
 When(/^I mount the USB drive again$/) do
-  mount_USB_drive(@tmp_filesystem_disk, **@tmp_filesystem_options)
+  mount_usb_drive(@tmp_filesystem_disk, **@tmp_filesystem_options)
 end
 
 When(/^I umount the USB drive$/) do
