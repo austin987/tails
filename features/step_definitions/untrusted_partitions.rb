@@ -39,7 +39,7 @@ Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"
               end
              ),
     opts: {
-      format: 'raw',
+      format:   'raw',
       readonly: true,
     },
   }

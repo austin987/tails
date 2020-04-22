@@ -144,7 +144,7 @@ def retry_tor(recovery_proc = nil, &block)
   end
 
   retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
-               recovery_proc: tor_recovery_proc,
+               recovery_proc:  tor_recovery_proc,
                operation_name: 'Tor operation', &block)
 end
 

@@ -62,14 +62,14 @@ def xul_application_info(application)
     raise "Invalid browser or XUL application: #{application}"
   end
   {
-    user: user,
-    cmd_regex: cmd_regex,
-    chroot: chroot,
-    new_tab_button_image: new_tab_button_image,
-    address_bar_image: address_bar_image,
+    user:                        user,
+    cmd_regex:                   cmd_regex,
+    chroot:                      chroot,
+    new_tab_button_image:        new_tab_button_image,
+    address_bar_image:           address_bar_image,
     browser_reload_button_image: browser_reload_button_image,
-    browser_stop_button_image: browser_stop_button_image,
-    unused_tbb_libs: unused_tbb_libs,
+    browser_stop_button_image:   browser_stop_button_image,
+    unused_tbb_libs:             unused_tbb_libs,
   }
 end
 
