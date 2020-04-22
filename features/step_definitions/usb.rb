@@ -1,5 +1,3 @@
-# coding: utf-8
-
 # Returns a hash that for each persistence preset the running Tails is aware of,
 # for each of the corresponding configuration lines,
 # maps the source to the destination.

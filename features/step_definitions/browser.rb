@@ -1,5 +1,3 @@
-# coding: utf-8
-
 When /^I start the Unsafe Browser(?: through the GNOME menu)?$/ do
   step 'I start "Unsafe Browser" via GNOME Activities Overview'
 end

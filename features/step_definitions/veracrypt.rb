@@ -1,5 +1,3 @@
-# coding: utf-8
-
 require 'English'
 require 'expect'
 require 'pty'

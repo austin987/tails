@@ -1,5 +1,3 @@
-# coding: utf-8
-
 require 'fileutils'
 
 def post_vm_start_hook
