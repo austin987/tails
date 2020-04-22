@@ -37,7 +37,7 @@ end
 
 Given /^the last version mentioned in debian\/changelog is ([[:alnum:]~.]+)$/ do |version|
   last = `dpkg-parsechangelog | awk '/^Version: / { print $2 }'`.strip
-  raise StandardError.new('dpkg-parsechangelog failed.') if $CHILD_STATUS != 0
+  raise StandardError, 'dpkg-parsechangelog failed.' if $CHILD_STATUS != 0
 
   if last != version
     fatal_system "debchange -v '#{version}' 'New upstream release'"
@@ -100,7 +100,7 @@ end
 
 When /^I successfully run "?([[:alnum:] -]+)"?$/ do |command|
   @output = `#{File.expand_path("../../../auto/scripts/#{command}", __FILE__)}`
-  raise StandardError.new("#{command} failed. Exit code: #{$CHILD_STATUS}") if $CHILD_STATUS != 0
+  raise StandardError, "#{command} failed. Exit code: #{$CHILD_STATUS}" if $CHILD_STATUS != 0
 end
 
 When /^I run "?([[:alnum:] -]+)"?$/ do |command|

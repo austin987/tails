@@ -31,7 +31,7 @@ module OpenCV
     when 1
       return nil
     else
-      raise OpenCVInternalError.new(out)
+      raise OpenCVInternalError, out
     end
   end
 end

@@ -29,9 +29,7 @@ def pcap_connections_helper(pcap_file, **opts)
         # packetfu cannot parse RARP, see #16825.
         next
       else
-        raise FirewallAssertionFailedError.new(
-          'Found something that is not an ethernet packet'
-        )
+        raise FirewallAssertionFailedError, 'Found something that is not an ethernet packet'
       end
     end
     sport = nil
@@ -59,9 +57,7 @@ def pcap_connections_helper(pcap_file, **opts)
       ip_packet = PacketFu::ARPPacket.parse(p)
       protocol = 'arp'
     else
-      raise FirewallAssertionFailedError.new(
-        'Found something that cannot be parsed'
-      )
+      raise FirewallAssertionFailedError, 'Found something that cannot be parsed'
     end
 
     next if opts[:ignore_dhcp] &&
@@ -106,10 +102,8 @@ def assert_all_connections(pcap_file, **opts, &block)
   good = all.find_all(&block)
   bad = all - good
   unless bad.empty?
-    raise FirewallAssertionFailedError.new(
-      "Unexpected connections were made:\n" +
+    raise FirewallAssertionFailedError, "Unexpected connections were made:\n" +
       bad.map { |e| "  #{e}" } .join("\n")
-    )
   end
 end
 

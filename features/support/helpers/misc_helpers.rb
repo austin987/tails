@@ -110,7 +110,7 @@ rescue unique_timeout_exception
     msg += "\nLast ignored exception was: " +
            "#{last_exception.class}: #{last_exception}"
   end
-  raise exc_class.new(msg)
+  raise exc_class, msg
 end
 
 class TorFailure < StandardError
@@ -172,11 +172,9 @@ def retry_action(max_retries, options = {}, &block)
         options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
-        raise MaxRetriesFailure.new(
-          "#{options[:operation_name]} failed (despite retrying " +
+        raise MaxRetriesFailure, "#{options[:operation_name]} failed (despite retrying " +
           "#{max_retries} times) with\n" +
           "#{e.class}: #{e.message}"
-        )
       end
     end
   end
@@ -200,7 +198,7 @@ rescue Timeout::Error
     file.write($vm.file_content('/tmp/tor.journal'))
     file.write($vm.file_content('/var/log/tor/log'))
   end
-  raise TorBootstrapFailure.new('Tor failed to bootstrap')
+  raise TorBootstrapFailure, 'Tor failed to bootstrap'
 end
 
 def convert_bytes_mod(unit)

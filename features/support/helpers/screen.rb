@@ -118,7 +118,7 @@ class Screen
     debug_log("Screen: trying to find #{image}") if opts[:log]
     p = match_screen(image, opts[:sensitivity], false)
     if p.nil?
-      raise FindFailed.new("cannot find #{image} on the screen")
+      raise FindFailed, "cannot find #{image} on the screen"
     end
 
     m = Match.new(image, self, *p)
@@ -133,7 +133,7 @@ class Screen
       return real_find(pattern, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
-    raise FindFailed.new("cannot find #{pattern} on the screen")
+    raise FindFailed, "cannot find #{pattern} on the screen"
   end
 
   def find(pattern, **opts)
@@ -158,7 +158,7 @@ class Screen
     debug_log("Screen: #{pattern} has vanished") if opts[:log]
     return nil
   rescue Timeout::Error
-    raise FindFailed.new("can still find #{pattern} on the screen")
+    raise FindFailed, "can still find #{pattern} on the screen"
   end
 
   def find_any(patterns, **opts)
@@ -175,8 +175,8 @@ class Screen
       end
     end
     # If we've reached this point, none of the patterns could be found.
-    raise FindFailed.new("can not find any of the patterns #{patterns} " +
-                        'on the screen')
+    raise FindFailed, "can not find any of the patterns #{patterns} " +
+                        'on the screen'
   end
 
   def exists_any(*args, **opts)
@@ -192,8 +192,8 @@ class Screen
       return find_any(patterns, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
-    raise FindFailed.new("can not find any of the patterns #{patterns} " +
-                         'on the screen')
+    raise FindFailed, "can not find any of the patterns #{patterns} " +
+                         'on the screen'
   end
 
   def press(*sequence, **opts)

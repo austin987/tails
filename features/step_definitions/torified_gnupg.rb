@@ -11,9 +11,7 @@ end
 
 def check_for_seahorse_error
   if @screen.exists('GnomeCloseButton.png')
-    raise OpenPGPKeyserverCommunicationError.new(
-      "Found GnomeCloseButton.png' on the screen"
-    )
+    raise OpenPGPKeyserverCommunicationError, "Found GnomeCloseButton.png' on the screen"
   end
 end
 
@@ -166,9 +164,7 @@ Then /^I synchronize keys in Seahorse$/ do
       change_of_status?
     end
     check_for_seahorse_error
-    raise OpenPGPKeyserverCommunicationError.new(
-      'Seahorse crashed with a segfault.'
-    ) unless $vm.has_process?('seahorse')
+    raise OpenPGPKeyserverCommunicationError, 'Seahorse crashed with a segfault.' unless $vm.has_process?('seahorse')
   end
 end
 

@@ -37,9 +37,9 @@ module RemoteShell
           if status != 'success'
             if (status == 'error') && (rest.class == Array) && (rest.size == 1)
               msg = rest.first
-              raise ServerFailure.new(msg.to_s)
+              raise ServerFailure, msg.to_s
             else
-              raise ServerFailure.new("Uncaught exception: #{status}: #{rest}")
+              raise ServerFailure, "Uncaught exception: #{status}: #{rest}"
             end
           end
           return rest
@@ -147,7 +147,7 @@ module RemoteShell
       debug_log("opening file #{path} in '#{mode}' mode")
       ret = RemoteShell.communicate(vm, 'file_' + mode, path, *args, **opts)
       if ret.size != 1
-        raise ServerFailure.new("expected 1 value but got #{ret.size}")
+        raise ServerFailure, "expected 1 value but got #{ret.size}"
       end
 
       debug_log("#{mode} complete")

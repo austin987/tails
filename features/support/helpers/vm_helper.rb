@@ -454,7 +454,7 @@ class VM
     begin
       assert_vmcommand_success(p)
     rescue Test::Unit::AssertionFailedError => e
-      raise ExecutionFailedInVM.new(e)
+      raise ExecutionFailedInVM, e
     end
     return p
   end
