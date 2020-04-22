@@ -167,7 +167,7 @@ Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   pkts = ip4tables_packet_counter_sum(:tables => ['OUTPUT'], :uid => uid)
   case sent
   when ''
-    assert(pkts > 0, 'Packets have not gone out to the internet.')
+    assert(pkts.positive?, 'Packets have not gone out to the internet.')
   when 'not'
     assert_equal(pkts, 0, 'Packets have gone out to the internet.')
   end

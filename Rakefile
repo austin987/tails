@@ -101,7 +101,7 @@ def git_helper(*args)
     status = e.status
   end
   if question
-    return status == 0
+    return status.zero?
   else
     return stdout.chomp
   end

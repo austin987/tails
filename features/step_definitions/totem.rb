@@ -61,7 +61,7 @@ Then /^I can watch a WebM video over HTTPs$/ do
     # for our current needs. We'll improve it if/as needed.
     addr.class == Resolv::IPv4 && addr.to_s.start_with?('192.168.')
   end
-  if rfc1918_ips.count > 0
+  if rfc1918_ips.count.positive?
     disable_tor_reject_internal_addresses
   end
   rfc1918_ips.each do |ip|

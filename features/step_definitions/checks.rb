@@ -151,7 +151,7 @@ Then /^AppArmor is enabled$/ do
 end
 
 Then /^some AppArmor profiles are enforced$/ do
-  assert($vm.execute('aa-status --enforced').stdout.chomp.to_i > 0,
+  assert($vm.execute('aa-status --enforced').stdout.chomp.to_i.positive?,
          'No AppArmor profile is enforced')
 end
 

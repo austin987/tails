@@ -59,7 +59,7 @@ Then /^the system clock is just past Tails' source date$/ do
   # Half an hour should be enough to boot Tails on any reasonable
   # hardware and VM setup.
   max_diff = 30 * 60
-  assert(diff > 0,
+  assert(diff.positive?,
          "The system time (#{system_time}) is before the Tails " +
          "source date (#{source_time})")
 

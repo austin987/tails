@@ -82,7 +82,7 @@ module RemoteShell
     end
 
     def success?
-      return @returncode == 0
+      return @returncode.zero?
     end
 
     def failure?
