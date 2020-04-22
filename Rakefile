@@ -548,7 +548,7 @@ def domain_name
 end
 
 def clean_up_builder_vms
-  $virt = Libvirt.open('qemu:///system')
+  libvirt = Libvirt.open('qemu:///system')
 
   clean_up_domain = proc do |domain|
     next if domain.nil?
@@ -556,7 +556,7 @@ def clean_up_builder_vms
     domain.destroy if domain.active?
     domain.undefine
     begin
-      $virt
+      libvirt
         .lookup_storage_pool_by_name('default')
         .lookup_volume_by_name("#{domain.name}.img")
         .delete
@@ -566,7 +566,7 @@ def clean_up_builder_vms
   end
 
   # Let's ensure that the VM we are about to create is cleaned up ...
-  previous_domain = $virt.list_all_domains.find { |d| d.name == domain_name }
+  previous_domain = libvirt.list_all_domains.find { |d| d.name == domain_name }
   if previous_domain && previous_domain.active?
     begin
       run_vagrant_ssh('mountpoint -q /var/cache/apt-cacher-ng')
@@ -595,7 +595,7 @@ def clean_up_builder_vms
       old_domain_uuid =
         open('vagrant/.vagrant/machines/default/libvirt/id', 'r') { |f| f.read }
         .strip
-      $virt.lookup_domain_by_uuid(old_domain_uuid)
+      libvirt.lookup_domain_by_uuid(old_domain_uuid)
     rescue Errno::ENOENT, Libvirt::RetrieveError
       # Expected if we don't have vagrant/.vagrant, or if the VM was
       # undefined for other reasons (e.g. manually).
@@ -612,14 +612,14 @@ def clean_up_builder_vms
   #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/746
   FileUtils.rm_rf('vagrant/.vagrant')
 ensure
-  $virt.close
+  libvirt.close
 end
 
 desc 'Remove all libvirt volumes named tails-builder-* (run at your own risk!)'
 task :clean_up_libvirt_volumes do
-  $virt = Libvirt.open('qemu:///system')
+  libvirt = Libvirt.open('qemu:///system')
   begin
-    pool = $virt.lookup_storage_pool_by_name('default')
+    pool = libvirt.lookup_storage_pool_by_name('default')
   rescue Libvirt::RetrieveError
     # Expected if the pool does not exist
   else
@@ -633,7 +633,7 @@ task :clean_up_libvirt_volumes do
       end
     end
   ensure
-    $virt.close
+    libvirt.close
   end
 end
 
@@ -742,15 +742,15 @@ namespace :basebox do
   def clean_up_basebox(box)
     run_vagrant('box', 'remove', '--force', box)
     begin
-      $virt = Libvirt.open('qemu:///system')
-      $virt
+      libvirt = Libvirt.open('qemu:///system')
+      libvirt
         .lookup_storage_pool_by_name('default')
         .lookup_volume_by_name("#{box}_vagrant_box_image_0.img")
         .delete
     rescue Libvirt::RetrieveError
       # Expected if the pool or disk does not exist
     ensure
-      $virt.close
+      libvirt.close
     end
   end
 
