@@ -1,5 +1,5 @@
 def shipped_openpgp_keys
-  shipped_gpg_keys = $vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', :user => LIVE_USER).stdout
+  shipped_gpg_keys = $vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', user: LIVE_USER).stdout
   openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
   openpgp_fingerprints
 end
@@ -26,7 +26,7 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
     cmd = 'apt-key adv'
     user = 'root'
   end
-  shipped_sig_key_info = $vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", :user => user).stdout
+  shipped_sig_key_info = $vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", user: user).stdout
   m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
   if m
     expiration_date = Date.parse(m[1])
@@ -132,12 +132,12 @@ Then /^MAT can clean some sample PNG file$/ do
     assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'", user: LIVE_USER).success?,
            'The comment is not present in the PNG')
     check_before = $vm.execute_successfully("mat2 --show '#{png_on_guest}'",
-                                            :user => LIVE_USER).stdout
+                                            user: LIVE_USER).stdout
     assert(check_before.include?("Metadata for #{png_on_guest}"),
            "MAT failed to see that '#{png_on_host}' is dirty")
-    $vm.execute_successfully("mat2 '#{png_on_guest}'", :user => LIVE_USER)
+    $vm.execute_successfully("mat2 '#{png_on_guest}'", user: LIVE_USER)
     check_after = $vm.execute_successfully("mat2 --show '#{cleaned_png_on_guest}'",
-                                           :user => LIVE_USER).stdout
+                                           user: LIVE_USER).stdout
     assert(check_after.include?('No metadata found'),
            "MAT failed to clean '#{png_on_host}'")
     assert($vm.execute(raw_check_cmd + " '#{cleaned_png_on_guest}'", user: LIVE_USER).failure?,

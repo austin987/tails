@@ -168,8 +168,8 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   step 'I start "Disks" via GNOME Activities Overview'
   disks = Dogtail::Application.new('gnome-disks')
   size = veracrypt_volume_size_in_gnome_disks(
-    :isHidden => @veracrypt_is_hidden,
-    :needsPim => @veracrypt_needs_pim
+    isHidden: @veracrypt_is_hidden,
+    needsPim: @veracrypt_needs_pim
   )
   case support
   when 'volume'
@@ -237,7 +237,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   # outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)
   @screen.press('alt', 'u') # "Unlock" button
-  try_for(10, :msg => 'Failed to mount the unlocked volume') do
+  try_for(10, msg: 'Failed to mount the unlocked volume') do
     begin
       unlocked_volume = disks.child("#{size} VeraCrypt/TrueCrypt", roleName: 'panel', showingOnly: true)
       unlocked_volume.click
@@ -255,7 +255,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       false
     end
   end
-  try_for(10, :msg => '/media/amnesia/*/GPL-3 does not exist') do
+  try_for(10, msg: '/media/amnesia/*/GPL-3 does not exist') do
     $vm.execute_successfully('ls /media/amnesia/*/GPL-3')
   end
 end
@@ -264,8 +264,8 @@ When /^I open this VeraCrypt volume in GNOME Files$/ do
   $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
   Dogtail::Application.new('nautilus').window(
     veracrypt_volume_size_in_nautilus(
-      :isHidden => @veracrypt_is_hidden,
-      :needsPim => @veracrypt_needs_pim
+      isHidden: @veracrypt_is_hidden,
+      needsPim: @veracrypt_needs_pim
     ) + ' Volume'
   )
 end
@@ -273,12 +273,12 @@ end
 When /^I lock the currently opened VeraCrypt (volume|file container)$/ do |support|
   $vm.execute_successfully(
     'udisksctl unmount --block-device /dev/mapper/tcrypt-*',
-    :user => LIVE_USER
+    user: LIVE_USER
   )
   device = support == 'volume' ? '/dev/sda' : '/dev/loop1'
   $vm.execute_successfully(
     "udisksctl lock --block-device #{device}",
-    :user => LIVE_USER
+    user: LIVE_USER
   )
 end
 

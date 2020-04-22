@@ -56,7 +56,7 @@ loop do
                   [
                     'git',
                     sanitize_filename(describe_git_head,
-                                      :replacement => '-'),
+                                      replacement: '-'),
                     current_short_commit,
                   ].reject(&:empty?).join('_') + '-' +
                   random_alnum_string(6)

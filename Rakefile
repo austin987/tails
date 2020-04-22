@@ -108,7 +108,7 @@ end
 # Runs the vagrant command, letting stdout/stderr through. Throws an
 # exception unless the vagrant command succeeds.
 def run_vagrant(*args)
-  run_command('vagrant', *args, :chdir => './vagrant')
+  run_command('vagrant', *args, chdir: './vagrant')
 rescue CommandError => e
   raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " \
                              "status #{e.status}")
@@ -117,7 +117,7 @@ end
 # Runs the vagrant command, not letting stdout/stderr through, and
 # returns [stdout, stderr, Process::Status].
 def capture_vagrant(*args)
-  capture_command('vagrant', *args, :chdir => './vagrant')
+  capture_command('vagrant', *args, chdir: './vagrant')
 rescue CommandError => e
   raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " \
                              "status #{e.status}: #{e.stderr}")
@@ -356,7 +356,7 @@ def remove_artifacts
   end
 end
 
-task :ensure_clean_home_directory => ['vm:up'] do
+task ensure_clean_home_directory: ['vm:up'] do
   remove_artifacts
 end
 
@@ -388,7 +388,7 @@ task :validate_git_state do
   end
 end
 
-task :setup_environment => ['validate_git_state'] do
+task setup_environment: ['validate_git_state'] do
   ENV['GIT_COMMIT'] ||= git_helper('git_current_commit')
   ENV['GIT_REF'] ||= git_helper('git_current_head_name')
   if on_jenkins?
@@ -441,7 +441,7 @@ task :ensure_correct_permissions do
 end
 
 desc 'Build Tails'
-task :build => [
+task build: [
   'parse_build_options',
   'ensure_clean_repository',
   'maybe_clean_up_builder_vms',
@@ -488,10 +488,10 @@ task :build => [
       retrieved_artifacts = false
       run_vagrant_ssh("#{exported_env} build-tails")
     rescue VagrantCommandError
-      retrieve_artifacts(:missing_ok => true)
+      retrieve_artifacts(missing_ok: true)
       retrieved_artifacts = true
     ensure
-      retrieve_artifacts(:missing_ok => false) unless retrieved_artifacts
+      retrieve_artifacts(missing_ok: false) unless retrieved_artifacts
       clean_up_builder_vms unless $keep_running
     end
   ensure
@@ -658,11 +658,11 @@ task :test do
 end
 
 desc 'Clean up all build related files'
-task :clean_all => ['vm:destroy', 'basebox:clean_all']
+task clean_all: ['vm:destroy', 'basebox:clean_all']
 
 namespace :vm do
   desc 'Start the build virtual machine'
-  task :up => [
+  task up: [
     'parse_build_options',
     'validate_http_proxy',
     'setup_environment',
@@ -691,7 +691,7 @@ namespace :vm do
   end
 
   desc 'Re-run virtual machine setup'
-  task :provision => [
+  task provision: [
     'parse_build_options',
     'validate_http_proxy',
     'setup_environment',

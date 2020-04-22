@@ -9,7 +9,7 @@ class Display
   def active?
     p = IO.popen(['xprop', '-display', @x_display,
                   '-name', "#{@domain} (1) - Virt Viewer",
-                  :err => ['/dev/null', 'w'],])
+                  err: ['/dev/null', 'w'],])
     Process.wait(p.pid)
     $CHILD_STATUS.success?
   end
@@ -21,7 +21,7 @@ class Display
                             '--connect', 'qemu:///system',
                             '--display', @x_display,
                             @domain,
-                            :err => ['/dev/null', 'w'],])
+                            err: ['/dev/null', 'w'],])
     # We wait for the display to be active to not lose actions
     # (e.g. key presses) that come immediately after starting (or
     # restoring) a vm

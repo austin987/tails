@@ -161,7 +161,7 @@ end
 
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   uid = $vm.execute_successfully('id -u clearnet').stdout.chomp.to_i
-  pkts = ip4tables_packet_counter_sum(:tables => ['OUTPUT'], :uid => uid)
+  pkts = ip4tables_packet_counter_sum(tables: ['OUTPUT'], uid: uid)
   case sent
   when ''
     assert(pkts.positive?, 'Packets have not gone out to the internet.')

@@ -23,7 +23,7 @@ def xul_application_info(application)
   when 'Tor Browser'
     user = LIVE_USER
     binary = $vm.execute_successfully(
-      'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
+      'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
     ).stdout.chomp
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ''
@@ -33,7 +33,7 @@ def xul_application_info(application)
   when 'Unsafe Browser'
     user = 'clearnet'
     binary = $vm.execute_successfully(
-      'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
+      'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
     ).stdout.chomp
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = '/var/lib/unsafe-browser/chroot'
@@ -44,10 +44,10 @@ def xul_application_info(application)
     user = 'tor-launcher'
     # We do not enable AppArmor confinement for the Tor Launcher.
     binary = $vm.execute_successfully(
-      'echo ${TBB_INSTALL}/firefox-unconfined', :libs => 'tor-browser'
+      'echo ${TBB_INSTALL}/firefox-unconfined', libs: 'tor-browser'
     ).stdout.chomp
     tor_launcher_install = $vm.execute_successfully(
-      'echo ${TOR_LAUNCHER_INSTALL}', :libs => 'tor-browser'
+      'echo ${TOR_LAUNCHER_INSTALL}', libs: 'tor-browser'
     ).stdout.chomp
     cmd_regex = "#{binary}\s+-app #{tor_launcher_install}/application\.ini.*"
     chroot = ''
@@ -62,14 +62,14 @@ def xul_application_info(application)
     raise "Invalid browser or XUL application: #{application}"
   end
   {
-    :user                        => user,
-    :cmd_regex                   => cmd_regex,
-    :chroot                      => chroot,
-    :new_tab_button_image        => new_tab_button_image,
-    :address_bar_image           => address_bar_image,
-    :browser_reload_button_image => browser_reload_button_image,
-    :browser_stop_button_image   => browser_stop_button_image,
-    :unused_tbb_libs             => unused_tbb_libs,
+    user: user,
+    cmd_regex: cmd_regex,
+    chroot: chroot,
+    new_tab_button_image: new_tab_button_image,
+    address_bar_image: address_bar_image,
+    browser_reload_button_image: browser_reload_button_image,
+    browser_stop_button_image: browser_stop_button_image,
+    unused_tbb_libs: unused_tbb_libs,
   }
 end
 
@@ -153,7 +153,7 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
   absent_tbb_libs = []
   unwanted_native_libs = []
   tbb_libs = $vm.execute_successfully("ls -1 #{chroot}${TBB_INSTALL}/*.so",
-                                      :libs => 'tor-browser').stdout.split
+                                      libs: 'tor-browser').stdout.split
   firefox_pmap_info = $vm.execute("pmap --show-path #{pid}").stdout
   for lib in tbb_libs do
     lib_name = File.basename lib
@@ -188,7 +188,7 @@ end
 
 Then /^the (.*) chroot is torn down$/ do |browser|
   info = xul_application_info(browser)
-  try_for(30, :msg => "The #{browser} chroot '#{info[:chroot]}' was " \
+  try_for(30, msg: "The #{browser} chroot '#{info[:chroot]}' was " \
                       'not removed') do
     !$vm.execute("test -d '#{info[:chroot]}'").success?
   end

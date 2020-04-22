@@ -200,7 +200,7 @@ When /^I join some empty multi-user chat$/ do
   @screen.press('ctrl', 'a')
   @screen.press('ctrl', 'c')
   conference_server =
-    $vm.execute_successfully('xclip -o', :user => LIVE_USER).stdout.chomp
+    $vm.execute_successfully('xclip -o', user: LIVE_USER).stdout.chomp
   @chat_room_jid = chat_room + '@' + conference_server
 
   @screen.click('PidginJoinChatButton.png')

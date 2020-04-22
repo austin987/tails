@@ -212,7 +212,7 @@ Before('@product') do |scenario|
                         '-c:v', 'libx264',
                         '-y',
                         @video_path,
-                        :err => ['/dev/null', 'w'],])
+                        err: ['/dev/null', 'w'],])
     @video_capture_pid = capture.pid
   end
   if $config['IMAGE_BUMPING_MODE']

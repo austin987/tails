@@ -38,7 +38,7 @@ EOF
   $vm.file_overwrite(recipe_path, gpg_key_recipie)
   $vm.execute("chown #{LIVE_USER}:#{LIVE_USER} #{recipe_path}")
   c = $vm.execute("gpg --batch --gen-key < #{recipe_path}",
-                  :user => LIVE_USER)
+                  user: LIVE_USER)
   assert(c.success?, "Failed to generate OpenPGP key:\n#{c.stderr}")
 end
 

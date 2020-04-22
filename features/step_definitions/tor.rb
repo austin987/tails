@@ -208,7 +208,7 @@ When /^I open an untorified (TCP|UDP|ICMP) connection to (\S*)(?: on port (\d+))
     cmd = "ping -c 5 #{host}"
     user = 'root'
   end
-  @conn_res = $vm.execute(cmd, :user => user)
+  @conn_res = $vm.execute(cmd, user: user)
 end
 
 Then /^the untorified connection fails$/ do
@@ -246,34 +246,34 @@ def stream_isolation_info(application)
   case application
   when 'htpdate'
     {
-      :grep_monitor_expr => 'users:(("curl"',
-      :socksport         => 9062,
+      grep_monitor_expr: 'users:(("curl"',
+      socksport: 9062,
     }
   when 'tails-security-check'
     {
-      :grep_monitor_expr => 'users:(("tails-security-"',
-      :socksport         => 9062,
+      grep_monitor_expr: 'users:(("tails-security-"',
+      socksport: 9062,
     }
   when 'tails-upgrade-frontend-wrapper'
     {
-      :grep_monitor_expr => 'users:(("tails-iuk-get-u"',
-      :socksport         => 9062,
+      grep_monitor_expr: 'users:(("tails-iuk-get-u"',
+      socksport: 9062,
     }
   when 'Tor Browser'
     {
-      :grep_monitor_expr => 'users:(("firefox\.real"',
-      :socksport         => 9150,
-      :controller        => true,
+      grep_monitor_expr: 'users:(("firefox\.real"',
+      socksport: 9150,
+      controller: true,
     }
   when 'SSH'
     {
-      :grep_monitor_expr => 'users:(("\(nc\|ssh\)"',
-      :socksport         => 9050,
+      grep_monitor_expr: 'users:(("\(nc\|ssh\)"',
+      socksport: 9050,
     }
   when 'whois'
     {
-      :grep_monitor_expr => 'users:(("whois"',
-      :socksport         => 9050,
+      grep_monitor_expr: 'users:(("whois"',
+      socksport: 9050,
     }
   else
     raise "Unknown application '#{application}' for the stream isolation tests"
@@ -309,7 +309,7 @@ end
 
 And /^I re-run tails-security-check$/ do
   $vm.execute_successfully('systemctl --user restart tails-security-check.service',
-                           :user => LIVE_USER)
+                           user: LIVE_USER)
 end
 
 And /^I re-run htpdate$/ do
@@ -320,7 +320,7 @@ And /^I re-run htpdate$/ do
 end
 
 And /^I re-run tails-upgrade-frontend-wrapper$/ do
-  $vm.execute_successfully('tails-upgrade-frontend-wrapper', :user => LIVE_USER)
+  $vm.execute_successfully('tails-upgrade-frontend-wrapper', user: LIVE_USER)
 end
 
 When /^the Tor Launcher autostarts$/ do

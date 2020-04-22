@@ -23,30 +23,30 @@ end
 
 Given /^I create an?( (\d+) ([[:alpha:]]+))? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |with_size, size, unit, parttype, has_label, label, fstype, is_encrypted, luks_password, name|
   opts = {}
-  opts.merge!(:label => label) if has_label
-  opts.merge!(:luks_password => luks_password) if is_encrypted
-  opts.merge!(:size => size) if with_size
-  opts.merge!(:unit => unit) if with_size
+  opts.merge!(label: label) if has_label
+  opts.merge!(luks_password: luks_password) if is_encrypted
+  opts.merge!(size: size) if with_size
+  opts.merge!(unit: unit) if with_size
   $vm.storage.disk_mkpartfs(name, parttype, fstype, **opts)
 end
 
 Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"$/ do |old, type, name|
   src_disk = {
-    :path => (if old == ''
+    path: (if old == ''
                 type == 'ISO' ? TAILS_ISO : TAILS_IMG
               else
                 type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG
               end
              ),
-    :opts => {
-      :format   => 'raw',
-      :readonly => true,
+    opts: {
+      format: 'raw',
+      readonly: true,
     },
   }
   dest_disk = {
-    :path => $vm.storage.disk_path(name),
-    :opts => {
-      :format => $vm.storage.disk_format(name),
+    path: $vm.storage.disk_path(name),
+    opts: {
+      format: $vm.storage.disk_format(name),
     },
   }
   $vm.storage.guestfs_disk_helper(src_disk, dest_disk) do |g, src_disk_handle, dest_disk_handle|

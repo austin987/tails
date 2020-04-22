@@ -40,7 +40,7 @@ end
 
 Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on the LAN)?$/ do |server_type, lan|
   $vm.execute_successfully("install -m 0700 -d '/home/#{LIVE_USER}/.ssh/'",
-                           :user => LIVE_USER)
+                           user: LIVE_USER)
   if server_type == 'Git' || lan
     secret_key = $config['Unsafe_SSH_private_key']
     public_key = $config['Unsafe_SSH_public_key']
@@ -51,11 +51,11 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on
   end
 
   $vm.execute_successfully("echo '#{secret_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'",
-                           :user => LIVE_USER)
+                           user: LIVE_USER)
   $vm.execute_successfully("echo '#{public_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'",
-                           :user => LIVE_USER)
+                           user: LIVE_USER)
   $vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*",
-                           :user => LIVE_USER)
+                           user: LIVE_USER)
 end
 
 Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do

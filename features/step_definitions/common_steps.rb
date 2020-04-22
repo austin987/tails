@@ -76,7 +76,7 @@ end
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
   raise 'Tails is not running' unless $vm.running?
 
-  try_for(20, :msg => "Drive '#{name}' is not detected by Tails") do
+  try_for(20, msg: "Drive '#{name}' is not detected by Tails") do
     $vm.disk_detected?(name)
   end
 end
@@ -327,12 +327,12 @@ Given /^the Tails desktop is ready$/ do
   # waiting for an image for a very long time.
   $vm.execute_successfully(
     'gsettings set org.gnome.desktop.session idle-delay 0',
-    :user => LIVE_USER
+    user: LIVE_USER
   )
   # We need to enable the accessibility toolkit for dogtail.
   $vm.execute_successfully(
     'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
-    :user => LIVE_USER
+    user: LIVE_USER
   )
 end
 
@@ -534,14 +534,14 @@ Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
 end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
-  try_for(time.to_i, :msg => "Process '#{process}' is not running after " \
+  try_for(time.to_i, msg: "Process '#{process}' is not running after " \
                              "waiting for #{time} seconds") do
     $vm.process_running?(process)
   end
 end
 
 Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |process, time|
-  try_for(time.to_i, :msg => "Process '#{process}' is still running after " \
+  try_for(time.to_i, msg: "Process '#{process}' is still running after " \
                              "waiting for #{time} seconds") do
     !$vm.process_running?(process)
   end
@@ -549,7 +549,7 @@ end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
   $vm.execute("killall #{process}")
-  try_for(10, :msg => "Process '#{process}' could not be killed") do
+  try_for(10, msg: "Process '#{process}' could not be killed") do
     !$vm.process_running?(process)
   end
 end
@@ -646,7 +646,7 @@ When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, ti
   timeout = 10 if timeout.nil?
   try_for(
     timeout.to_i,
-    :msg => "The file #{file} does not exist after #{timeout} seconds"
+    msg: "The file #{file} does not exist after #{timeout} seconds"
   ) do
     $vm.file_exist?(file)
   end
@@ -665,7 +665,7 @@ When /^the directory "([^"]+)" does not exist$/ do |directory|
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
-  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", :user => user)
+  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", user: user)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
@@ -750,7 +750,7 @@ Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
 end
 
 def pulseaudio_sink_inputs
-  pa_info = $vm.execute_successfully('pacmd info', :user => LIVE_USER).stdout
+  pa_info = $vm.execute_successfully('pacmd info', user: LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
   sink_inputs_line.match(/^\d+/)[0].to_i
 end
@@ -792,7 +792,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   # so we have to remove it before typing it into the arget filename entry widget.
   @screen.type(output_file.sub(/[.]html$/, ''), ['Return'])
   if should_work
-    try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") do
+    try_for(20, msg: "The page was not saved to #{output_dir}/#{output_file}") do
       $vm.file_exist?("#{output_dir}/#{output_file}")
     end
   else
@@ -823,7 +823,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # If you try to unite them, make sure this does not break the tests
   # that use either.
   @screen.wait('TorBrowserPrintButton.png', 10).click
-  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") do
+  try_for(30, msg: "The page was not printed to #{output_dir}/#{output_file}") do
     $vm.file_exist?("#{output_dir}/#{output_file}")
   end
 end
@@ -856,7 +856,7 @@ Given /^a web server is running on the LAN$/ do
   EOF
   add_extra_allowed_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
-  try_for(10, :msg => 'It seems the LAN web server failed to start') do
+  try_for(10, msg: 'It seems the LAN web server failed to start') do
     Process.kill(0, proc.pid) == 1
   end
 
@@ -873,9 +873,9 @@ Given /^a web server is running on the LAN$/ do
   # more consistent result, so let's rely on that instead. Note that
   # this forces us to capture traffic *after* this step in case
   # accessing this server matters, like when testing the Tor Browser..
-  try_for(30, :msg => 'Something is wrong with the LAN web server') do
+  try_for(30, msg: 'Something is wrong with the LAN web server') do
     msg = $vm.execute_successfully("curl #{@web_server_url}",
-                                   :user => LIVE_USER).stdout.chomp
+                                   user: LIVE_USER).stdout.chomp
     web_server_hello_msg == msg
   end
 end

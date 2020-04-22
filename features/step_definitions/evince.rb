@@ -14,7 +14,7 @@ Then /^I can print the current document to "([^"]+)"$/ do |output_file|
   @screen.press('ctrl', 'v')
   @screen.press('Return')
   @screen.wait('Gtk3PrintButton.png', 10).click
-  try_for(10, :msg => "The document was not printed to #{output_file}") do
+  try_for(10, msg: "The document was not printed to #{output_file}") do
     $vm.file_exist?(output_file)
   end
 end

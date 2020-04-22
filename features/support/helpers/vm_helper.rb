@@ -474,7 +474,7 @@ class VM
   end
 
   def wait_until_remote_shell_is_up(timeout = 90)
-    try_for(timeout, :msg => 'Remote shell seems to be down') do
+    try_for(timeout, msg: 'Remote shell seems to be down') do
       remote_shell_is_up?
     end
   end
@@ -503,7 +503,7 @@ class VM
            'Only values between 0 and 1 are valid virtual desktop numbers')
     execute_successfully(
       "xdotool set_desktop '#{desktop_number}'",
-      :user => user
+      user: user
     )
   end
 
@@ -511,7 +511,7 @@ class VM
     do_focus = lambda do
       execute_successfully(
         "xdotool search --name '#{window_title}' windowactivate --sync",
-        :user => user
+        user: user
       )
     end
 
@@ -586,11 +586,11 @@ class VM
 
   def set_clipboard(text)
     execute_successfully("echo -n '#{text}' | xsel --input --clipboard",
-                         :user => LIVE_USER)
+                         user: LIVE_USER)
   end
 
   def get_clipboard
-    execute_successfully('xsel --output --clipboard', :user => LIVE_USER).stdout
+    execute_successfully('xsel --output --clipboard', user: LIVE_USER).stdout
   end
 
   def internal_snapshot_xml(name)

@@ -52,7 +52,7 @@ When /^I update APT using apt$/ do
   retry_tor(recovery_proc) do
     Timeout.timeout(15 * 60) do
       $vm.execute_successfully("echo #{@sudo_password} | " \
-                               'sudo -S apt update', :user => LIVE_USER)
+                               'sudo -S apt update', user: LIVE_USER)
     end
   end
 end
@@ -74,8 +74,8 @@ Then /^I install "(.+)" using apt$/ do |package|
     Timeout.timeout(3 * 60) do
       $vm.execute("echo #{@sudo_password} | " \
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
-                  :user  => LIVE_USER,
-                  :spawn => true)
+                  user: LIVE_USER,
+                  spawn: true)
       wait_for_package_installation(package)
     end
   end
@@ -92,8 +92,8 @@ end
 Then /^I uninstall "(.+)" using apt$/ do |package|
   $vm.execute_successfully("echo #{@sudo_password} | " \
                                "sudo -S apt -y purge #{package}",
-                           :user  => LIVE_USER,
-                           :spawn => true)
+                           user: LIVE_USER,
+                           spawn: true)
   wait_for_package_removal(package)
 end
 
@@ -149,7 +149,7 @@ When /^I update APT using Synaptic$/ do
   retry_tor(recovery_proc) do
     @synaptic.button('Reload').click
     sleep 10 # It might take some time before APT starts downloading
-    try_for(15 * 60, :msg => 'Took too much time to download the APT data') do
+    try_for(15 * 60, msg: 'Took too much time to download the APT data') do
       !$vm.process_running?('/usr/lib/apt/methods/tor+http')
     end
     assert_raise(Dogtail::Failure) do

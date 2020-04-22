@@ -128,7 +128,7 @@ def force_new_tor_circuit
     # We sleep an extra second to avoid tight timings.
     sleep interval - elapsed + 1 if elapsed.positive? && elapsed < interval
   end
-  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+  $vm.execute_successfully('tor_control_send "signal NEWNYM"', libs: 'tor')
   $__last_newnym = Time.now
 end
 
@@ -144,8 +144,8 @@ def retry_tor(recovery_proc = nil, &block)
   end
 
   retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
-               :recovery_proc  => tor_recovery_proc,
-               :operation_name => 'Tor operation', &block)
+               recovery_proc: tor_recovery_proc,
+               operation_name: 'Tor operation', &block)
 end
 
 def retry_action(max_retries, options = {}, &block)
@@ -233,7 +233,7 @@ end
 
 def cmd_helper(cmd, env = {})
   if cmd.instance_of?(Array)
-    cmd << { :err => [:child, :out] }
+    cmd << { err: [:child, :out] }
   elsif cmd.instance_of?(String)
     cmd += ' 2>&1'
   end
