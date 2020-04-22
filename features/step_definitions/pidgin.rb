@@ -18,7 +18,7 @@ def xmpp_account(account_name, required_options = [])
   return account
 end
 
-def wait_and_focus(img, time = 10, window)
+def wait_and_focus(img, window, time = 10)
   begin
     @screen.wait(img, time)
   rescue FindFailed
@@ -431,18 +431,18 @@ end
 
 Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
-  wait_and_focus('PidginCertificateAddHostnameDialog.png', 10, 'Certificate Import')
+  wait_and_focus('PidginCertificateAddHostnameDialog.png', 'Certificate Import', 10)
   @screen.type('XXX test XXX', ['Return'])
-  wait_and_focus('PidginCertificateTestItem.png', 10, 'Certificate Manager')
+  wait_and_focus('PidginCertificateTestItem.png', 'Certificate Manager', 10)
 end
 
 Then /^I cannot add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
-  wait_and_focus('PidginCertificateImportFailed.png', 10, 'Import Error')
+  wait_and_focus('PidginCertificateImportFailed.png', 'Import Error', 10)
 end
 
 When /^I close Pidgin's certificate manager$/ do
-  wait_and_focus('PidginCertificateManagerDialog.png', 10, 'Certificate Manager')
+  wait_and_focus('PidginCertificateManagerDialog.png', 'Certificate Manager', 10)
   @screen.press('Escape')
   # @screen.wait('PidginCertificateManagerClose.png', 10).click
   @screen.wait_vanish('PidginCertificateManagerDialog.png', 10)
