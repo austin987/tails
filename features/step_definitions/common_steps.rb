@@ -466,7 +466,8 @@ end
 Given /^all notifications have disappeared$/ do
   # These magic coordinates always locates GNOME's clock in the top
   # bar, which when clicked opens the calendar.
-  x, y = 512, 10
+  x = 512
+  y = 10
   gnome_shell = Dogtail::Application.new('gnome-shell')
   retry_action(10, recovery_proc: Proc.new { @screen.press('Escape') }) do
     @screen.click(x, y)

@@ -157,7 +157,8 @@ module RemoteShell
     attr_reader :vm, :path
 
     def initialize(vm, path)
-      @vm, @path = vm, path
+      @vm = vm
+      @path = path
     end
 
     def read()
