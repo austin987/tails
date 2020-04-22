@@ -502,7 +502,7 @@ Then /^the boot device has safe access rights$/ do
     dev_group = $vm.execute("stat -c %G #{dev}").stdout.chomp
     dev_perms = $vm.execute("stat -c %a #{dev}").stdout.chomp
     assert_equal('root', dev_owner)
-    assert(dev_group == 'disk' || dev_group == 'root',
+    assert(['disk', 'root'].include?(dev_group),
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " \
            "'disk' or 'root'.")
     assert_equal('660', dev_perms)

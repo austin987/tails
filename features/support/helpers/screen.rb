@@ -342,7 +342,7 @@ class ImageBumpingScreen
               FileUtils.cp("#{$config['TMPDIR']}/last_opencv_match.png",
                            "#{OPENCV_IMAGE_PATH}/#{image}")
               return p
-            elsif c == 'n' || c == 3.chr # Ctrl+C => 3
+            elsif ['n', 3.chr].include?(c) # Ctrl+C => 3
               break
             end
           end

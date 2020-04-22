@@ -643,7 +643,7 @@ end
 
 desc 'Test Tails'
 task :test do
-  args = ARGV.drop_while { |x| x == 'test' || x == '--' }
+  args = ARGV.drop_while { |x| ['test', '--'].include?(x) }
   if on_jenkins?
     args += ['--'] unless args.include? '--'
     unless releasing?
