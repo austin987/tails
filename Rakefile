@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'date'
+require 'English'
 require 'libvirt'
 require 'open3'
 require 'rbconfig'

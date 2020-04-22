@@ -1,3 +1,5 @@
+require 'English'
+
 Given /^Tails ([[:alnum:]~.]+) has been released$/ do |version|
   create_git unless git_exists?
 

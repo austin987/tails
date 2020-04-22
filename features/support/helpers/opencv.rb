@@ -1,3 +1,5 @@
+require 'English'
+
 class OpenCVInternalError < StandardError
 end
 

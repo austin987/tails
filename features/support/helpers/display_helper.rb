@@ -1,3 +1,5 @@
+require 'English'
+
 class Display
   def initialize(domain, x_display)
     @domain = domain
