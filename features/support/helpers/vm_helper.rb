@@ -699,7 +699,7 @@ class VM
 
     old_domain = $virt.lookup_domain_by_name(LIBVIRT_DOMAIN_NAME)
     snapshot = old_domain.lookup_snapshot_by_name(name)
-    return snapshot != nil
+    return !snapshot.nil?
   rescue Libvirt::RetrieveError
     return false
   end
