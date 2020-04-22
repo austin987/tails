@@ -34,7 +34,7 @@ Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"
   src_disk = {
     path: (if old == ''
              type == 'ISO' ? TAILS_ISO : TAILS_IMG
-              else
+           else
                 type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG
               end
           ),
