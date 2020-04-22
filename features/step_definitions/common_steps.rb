@@ -36,7 +36,7 @@ def post_snapshot_restore_hook(snapshot_name)
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  if $vm.has_network?
+  if $vm.connected_to_network?
     if $vm.execute('systemctl --quiet is-active tor@default.service').success?
       $vm.execute('systemctl stop tor@default.service')
       $vm.host_to_guest_time_sync
@@ -70,13 +70,13 @@ end
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   $vm.plug_drive(name, bus.downcase)
   sleep 1
-  if $vm.is_running?
+  if $vm.running?
     step "drive \"#{name}\" is detected by Tails"
   end
 end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
-  raise 'Tails is not running' unless $vm.is_running?
+  raise 'Tails is not running' unless $vm.running?
 
   try_for(20, :msg => "Drive '#{name}' is not detected by Tails") do
     $vm.disk_detected?(name)
@@ -93,7 +93,7 @@ end
 
 Given /^the network connection is ready(?: within (\d+) seconds)?$/ do |timeout|
   timeout ||= 30
-  try_for(timeout.to_i) { $vm.has_network? }
+  try_for(timeout.to_i) { $vm.connected_to_network? }
 end
 
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
@@ -114,7 +114,7 @@ Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
 end
 
 When /^I start the computer$/ do
-  assert(!$vm.is_running?,
+  assert(!$vm.running?,
          'Trying to start a VM that is already running')
   $vm.start
   post_vm_start_hook
@@ -180,7 +180,7 @@ Given /^I start Tails from a freshly installed USB drive with an administration 
 end
 
 When /^I power off the computer$/ do
-  assert($vm.is_running?,
+  assert($vm.running?,
          'Trying to power off an already powered off VM')
   $vm.power_off
 end
@@ -529,30 +529,30 @@ end
 
 Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
   if not_running
-    assert(!$vm.has_process?(process), "Process '#{process}' is running")
+    assert(!$vm.process_running?(process), "Process '#{process}' is running")
   else
-    assert($vm.has_process?(process), "Process '#{process}' is not running")
+    assert($vm.process_running?(process), "Process '#{process}' is not running")
   end
 end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
   try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
                              "waiting for #{time} seconds") do
-    $vm.has_process?(process)
+    $vm.process_running?(process)
   end
 end
 
 Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |process, time|
   try_for(time.to_i, :msg => "Process '#{process}' is still running after " +
                              "waiting for #{time} seconds") do
-    !$vm.has_process?(process)
+    !$vm.process_running?(process)
   end
 end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
   $vm.execute("killall #{process}")
   try_for(10, :msg => "Process '#{process}' could not be killed") do
-    !$vm.has_process?(process)
+    !$vm.process_running?(process)
   end
 end
 
@@ -562,7 +562,7 @@ Then /^Tails eventually (shuts down|restarts)$/ do |mode|
       @screen.find('TailsGreeter.png')
       true
     else
-      !$vm.is_running?
+      !$vm.running?
     end
   end
 end
@@ -636,7 +636,7 @@ When /^I start and focus GNOME Terminal$/ do
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
-  if !$vm.has_process?('gnome-terminal-server')
+  if !$vm.process_running?('gnome-terminal-server')
     step 'I start and focus GNOME Terminal'
   else
     @screen.wait('GnomeTerminalWindow.png', 20).click
@@ -671,7 +671,7 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
-def is_persistent?(app)
+def persistent?(app)
   conf = get_persistence_presets_config(true)[app.to_s]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
   c.success? && (c.stdout.chomp != 'overlay')
@@ -680,9 +680,9 @@ end
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   case enabled
   when ''
-    assert(is_persistent?(app), 'Persistence should be enabled.')
+    assert(persistent?(app), 'Persistence should be enabled.')
   when 'not '
-    assert(!is_persistent?(app), 'Persistence should not be enabled.')
+    assert(!persistent?(app), 'Persistence should not be enabled.')
   end
 end
 

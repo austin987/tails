@@ -156,7 +156,7 @@ Then /^some AppArmor profiles are enforced$/ do
 end
 
 def get_seccomp_status(process)
-  assert($vm.has_process?(process), "Process #{process} not running.")
+  assert($vm.process_running?(process), "Process #{process} not running.")
   pid = $vm.pidof(process)[0]
   status = $vm.file_content("/proc/#{pid}/status")
   status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
@@ -174,7 +174,7 @@ def get_apparmor_status(pid)
 end
 
 Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
-  assert($vm.has_process?(process), "Process #{process} not running.")
+  assert($vm.process_running?(process), "Process #{process} not running.")
   pid = $vm.pidof(process)[0]
   assert_equal(mode, get_apparmor_status(pid))
 end

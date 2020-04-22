@@ -97,7 +97,7 @@ end
 
 When /^the Seahorse operation is successful$/ do
   assert(!@screen.exists('GnomeCloseButton.png'))
-  $vm.has_process?('seahorse')
+  $vm.process_running?('seahorse')
 end
 
 When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|
@@ -135,8 +135,8 @@ end
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = proc do
     setup_onion_keyserver
-    if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
-      step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
+    if @screen.exists('GnomeCloseButton.png') || !$vm.process_running?('seahorse')
+      step 'I kill the process "seahorse"' if $vm.process_running?('seahorse')
       debug_log('Restarting Seahorse.')
       start_or_restart_seahorse
     end
@@ -148,7 +148,7 @@ Then /^I synchronize keys in Seahorse$/ do
     # upon.
     if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
        @screen.exists('GnomeCloseButton.png') || \
-       !$vm.has_process?('seahorse')
+       !$vm.process_running?('seahorse')
       true
     end
   end
@@ -165,7 +165,7 @@ Then /^I synchronize keys in Seahorse$/ do
       change_of_status?
     end
     check_for_seahorse_error
-    unless $vm.has_process?('seahorse')
+    unless $vm.process_running?('seahorse')
       raise OpenPGPKeyserverCommunicationError,
             'Seahorse crashed with a segfault.'
     end

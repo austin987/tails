@@ -189,7 +189,7 @@ def enough_free_memory_for_ram_build?
   end
 end
 
-def is_release?
+def releasing?
   git_helper('git_on_a_tag?')
 end
 
@@ -203,7 +203,7 @@ def system_cpus
   end
 end
 
-ENV['TAILS_WEBSITE_CACHE'] = is_release? ? '0' : '1'
+ENV['TAILS_WEBSITE_CACHE'] = releasing? ? '0' : '1'
 
 task :parse_build_options do
   options = []
@@ -213,7 +213,7 @@ task :parse_build_options do
   # Default to build using the in-VM proxy
   options << 'vmproxy'
   # Default to fast compression on development branches
-  options << 'fastcomp' unless is_release?
+  options << 'fastcomp' unless releasing?
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
   options << "cpus=#{cpus}" if cpus
@@ -253,7 +253,7 @@ task :parse_build_options do
       ENV['TAILS_OFFLINE_MODE'] = '1'
     when /cachewebsite(?:=([a-z]+))?/
       value = Regexp.last_match(1)
-      if is_release?
+      if releasing?
         warn "Building a release ⇒ ignoring #{opt} build option"
         ENV['TAILS_WEBSITE_CACHE'] = '0'
       else
@@ -269,7 +269,7 @@ task :parse_build_options do
       end
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
-      if is_release?
+      if releasing?
         warn "Building a release ⇒ ignoring #{opt} build option"
         ENV['MKSQUASHFS_OPTIONS'] = nil
       else
@@ -395,7 +395,7 @@ task :setup_environment => ['validate_git_state'] do
   ENV['GIT_REF'] ||= git_helper('git_current_head_name')
   if on_jenkins?
     jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(%r{^origin/}, '')
-    if !is_release? && jenkins_branch != ENV['GIT_REF']
+    if !releasing? && jenkins_branch != ENV['GIT_REF']
       raise "We expected to build the Git ref '#{ENV['GIT_REF']}', " \
             "but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"
     end
@@ -541,7 +541,7 @@ def retrieve_artifacts(missing_ok: false)
   run_command(*fetch_command)
 end
 
-def has_box?
+def box?
   !capture_vagrant('box', 'list').grep(/^#{box_name}\s+\(libvirt,/).empty?
 end
 
@@ -648,7 +648,7 @@ task :test do
   args = ARGV.drop_while { |x| x == 'test' || x == '--' }
   if on_jenkins?
     args += ['--'] unless args.include? '--'
-    unless is_release?
+    unless releasing?
       args += ['--tag', '~@fragile']
     end
     base_branch = git_helper('base_branch')
@@ -711,7 +711,7 @@ end
 namespace :basebox do
   desc 'Create and import the base box unless already done'
   task :create do
-    next if has_box?
+    next if box?
 
     warn <<-END_OF_MESSAGE.gsub(/^      /, '')
 

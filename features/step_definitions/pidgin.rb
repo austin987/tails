@@ -473,7 +473,7 @@ end
 
 Then /^Pidgin's D-Bus interface is not available$/ do
   # Pidgin must be running to expose the interface
-  assert($vm.has_process?('pidgin'))
+  assert($vm.process_running?('pidgin'))
   # Let's first ensure it would work if not explicitly blocked.
   # Note: that the method we pick here doesn't really matter
   # (`PurpleAccountsGetAll` felt like a convenient choice since it

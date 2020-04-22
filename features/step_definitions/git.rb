@@ -17,7 +17,7 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
       step 'I verify the SSH fingerprint for the Git repository'
     end
     try_for(180, :msg => 'Git process took too long') do
-      !$vm.has_process?('/usr/bin/git')
+      !$vm.process_running?('/usr/bin/git')
     end
     Dogtail::Application.new('gnome-terminal-server')
                         .child('Terminal', roleName: 'terminal')

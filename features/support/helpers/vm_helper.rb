@@ -113,7 +113,7 @@ class VM
   end
 
   def set_hardware_clock(time)
-    assert(!is_running?, 'The hardware clock cannot be set when the ' +
+    assert(!running?, 'The hardware clock cannot be set when the ' +
                              'VM is running')
     assert(time.instance_of?(Time), "Argument must be of type 'Time'")
     adjustment = (time - Time.now).to_i
@@ -136,7 +136,7 @@ class VM
     domain_xml
       .elements['domain/devices/interface/link']
       .attributes['state'] = state
-    if is_running?
+    if running?
       @domain.update_device(
         domain_xml.elements['domain/devices/interface'].to_s
       )
@@ -154,7 +154,7 @@ class VM
   end
 
   def set_boot_device(dev)
-    if is_running?
+    if running?
       raise 'boot settings can only be set for inactive vms'
     end
 
@@ -164,7 +164,7 @@ class VM
   end
 
   def add_cdrom_device
-    if is_running?
+    if running?
       raise "Can't attach a CDROM device to a running domain"
     end
 
@@ -179,7 +179,7 @@ class VM
   end
 
   def remove_cdrom_device
-    if is_running?
+    if running?
       raise "Can't detach a CDROM device to a running domain"
     end
 
@@ -229,7 +229,7 @@ class VM
   end
 
   def set_cdrom_boot(image)
-    if is_running?
+    if running?
       raise 'boot settings can only be set for inactive vms'
     end
 
@@ -251,7 +251,7 @@ class VM
   end
 
   def plug_device(xml)
-    if is_running?
+    if running?
       @domain.attach_device(xml.to_s)
     else
       domain_xml = REXML::Document.new(@domain.xml_desc)
@@ -362,7 +362,7 @@ class VM
   end
 
   def set_disk_boot(name, type)
-    if is_running?
+    if running?
       raise 'boot settings can only be set for inactive vms'
     end
 
@@ -383,7 +383,7 @@ class VM
   # XXX-9p: Shares don't work together with snapshot save+restore. See
   # XXX-9p in common_steps.rb for more information.
   def add_share(source, tag)
-    if is_running?
+    if running?
       raise 'shares can only be added to inactive vms'
     end
 
@@ -410,7 +410,7 @@ class VM
   end
 
   def set_os_loader(type)
-    if is_running?
+    if running?
       raise 'boot settings can only be set for inactive vms'
     end
 
@@ -427,7 +427,7 @@ class VM
     end
   end
 
-  def is_running?
+  def running?
     @domain.active?
   rescue StandardError
     false
@@ -484,13 +484,13 @@ class VM
     execute("date -s '@#{host_time}'").success?
   end
 
-  def has_network?
+  def connected_to_network?
     nmcli_info = execute('nmcli device show eth0').stdout
     has_ipv4_addr = %r{^IP4.ADDRESS(\[\d+\])?:\s*([0-9./]+)$}.match(nmcli_info)
     network_link_state == 'up' && has_ipv4_addr
   end
 
-  def has_process?(process)
+  def process_running?(process)
     execute("pidof -x -o '%PPID' " + process).success?
   end
 
@@ -657,7 +657,7 @@ class VM
 
   def restore_snapshot(name)
     debug_log("Restoring snapshot '#{name}'...")
-    @domain.destroy if is_running?
+    @domain.destroy if running?
     @display.stop if @display && @display.active?
     # See comment in save_snapshot() for details on why we use two
     # different type of snapshots.
@@ -711,18 +711,18 @@ class VM
   end
 
   def start
-    return if is_running?
+    return if running?
 
     @domain.create
     @display.start
   end
 
   def reset
-    @domain.reset if is_running?
+    @domain.reset if running?
   end
 
   def power_off
-    @domain.destroy if is_running?
+    @domain.destroy if running?
     @display.stop
   end
 

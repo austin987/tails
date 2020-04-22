@@ -97,7 +97,7 @@ When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
   step 'process "ssh" is not running'
 
   recovery_proc = proc do
-    step 'I kill the process "ssh"' if $vm.has_process?('ssh')
+    step 'I kill the process "ssh"' if $vm.process_running?('ssh')
     step 'I run "clear" in GNOME Terminal'
   end
 

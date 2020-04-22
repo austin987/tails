@@ -6,7 +6,7 @@ def looks_like_dhcp_packet?(eth_packet, protocol, sport, dport, ip_packet)
     ip_packet && ip_packet.ip_daddr == '255.255.255.255'
 end
 
-def is_rarp_packet?(packet)
+def rarp_packet?(packet)
   # Details: https://www.netometer.com/qa/rarp.html#A13
   packet.force_encoding('UTF-8').start_with?(
     "\xFF\xFF\xFF\xFF\xFF\xFFRT\x00\xAC\xDD\xEE\x805\x00\x01\b\x00\x06"
@@ -25,7 +25,7 @@ def pcap_connections_helper(pcap_file, **opts)
     if PacketFu::EthPacket.can_parse?(p)
       eth_packet = PacketFu::EthPacket.parse(p)
     else
-      if is_rarp_packet?(p)
+      if rarp_packet?(p)
         # packetfu cannot parse RARP, see #16825.
         next
       else

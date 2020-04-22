@@ -648,7 +648,7 @@ Then /^the expected persistent dotfile is present in the filesystem$/ do
 end
 
 Then /^only the expected files are present on the persistence partition on USB drive "([^"]+)"$/ do |name|
-  assert(!$vm.is_running?)
+  assert(!$vm.running?)
   disk = {
     path: $vm.storage.disk_path(name),
     opts: {
@@ -953,7 +953,7 @@ Then /^(?:no|only the (.+)) SquashFS delta is installed$/ do |version|
 end
 
 Then /^the label of the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
-  assert($vm.is_running?)
+  assert($vm.running?)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
   check_disk_integrity(name, disk_dev, 'gpt')
@@ -961,7 +961,7 @@ Then /^the label of the system partition on "([^"]+)" is "([^"]+)"$/ do |name, l
 end
 
 Then /^the system partition on "([^"]+)" is an EFI system partition$/ do |name|
-  assert($vm.is_running?)
+  assert($vm.running?)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
   check_disk_integrity(name, disk_dev, 'gpt')

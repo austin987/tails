@@ -150,13 +150,13 @@ When /^I update APT using Synaptic$/ do
     @synaptic.button('Reload').click
     sleep 10 # It might take some time before APT starts downloading
     try_for(15 * 60, :msg => 'Took too much time to download the APT data') do
-      !$vm.has_process?('/usr/lib/apt/methods/tor+http')
+      !$vm.process_running?('/usr/lib/apt/methods/tor+http')
     end
     assert_raise(Dogtail::Failure) do
       @synaptic.child(roleName: 'dialog', recursive: false)
                .child('Error', roleName: 'icon', retry: false)
     end
-    unless $vm.has_process?('synaptic')
+    unless $vm.process_running?('synaptic')
       raise 'Synaptic process vanished, did it segfault again?'
     end
   end
