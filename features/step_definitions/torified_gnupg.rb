@@ -102,7 +102,7 @@ When /^the Seahorse operation is successful$/ do
 end
 
 When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|
-  delay = 10 unless delay
+  delay ||= 10
   try_for(delay.to_i, :msg => "The '#{keyid}' key is not in the live user's public keyring") do
     $vm.execute("gpg --batch --list-keys '#{keyid}'",
                 :user => LIVE_USER).success?
