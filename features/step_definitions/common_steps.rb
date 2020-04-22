@@ -19,7 +19,7 @@ def post_snapshot_restore_hook(snapshot_name)
   # seems virt-viewer's auto-resolution feature moves the Greeter's
   # window outside of the visible screen.
   if snapshot_name.end_with?('tails-greeter')
-    if !@screen.exists('TailsGreeter.png')
+    unless @screen.exists('TailsGreeter.png')
       $vm.execute_successfully("env $(tr '\\0' '\\n' < /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ | grep -E '(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') sudo -u Debian-gdm xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0")
     end
   end
@@ -354,7 +354,7 @@ Given /^Tor is ready$/ do
   step 'the time has synced'
   # When we test for ASP upgrade failure the following tests would fail,
   # so let's skip them in this case.
-  if !$vm.file_exist?('/run/live-additional-software/doomed_to_fail')
+  unless $vm.file_exist?('/run/live-additional-software/doomed_to_fail')
     step 'the Additional Software upgrade service has started'
     begin
       try_for(30) { $vm.execute('systemctl is-system-running').success? }
@@ -758,7 +758,7 @@ end
 
 When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) seconds)$/ do |nb, wait_time|
   nb = 0 if nb == 'no'
-  sleep wait_time.to_i if !wait_time.nil?
+  sleep wait_time.to_i unless wait_time.nil?
   assert_equal(nb.to_i, pulseaudio_sink_inputs)
 end
 

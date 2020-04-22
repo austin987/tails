@@ -16,7 +16,7 @@ config_files = Dir.glob(LOCAL_CONFIG_DIRS_FILES_GLOB).sort
 config_files.insert(0, LOCAL_CONFIG_FILE) if File.exist?(LOCAL_CONFIG_FILE)
 config_files.each do |config_file|
   yaml_struct = YAML.load(File.read(config_file)) || Hash.new
-  if not(yaml_struct.instance_of?(Hash))
+  unless yaml_struct.instance_of?(Hash)
     raise "Local configuration file '#{config_file}' is malformed"
   end
 
@@ -60,7 +60,7 @@ loop do
                     current_short_commit,
                   ].reject(&:empty?).join('_') + '-' +
                   random_alnum_string(6)
-  if not(File.exist?(ARTIFACTS_DIR))
+  unless File.exist?(ARTIFACTS_DIR)
     FileUtils.mkdir_p(ARTIFACTS_DIR)
     break
   end

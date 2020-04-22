@@ -9,10 +9,10 @@ end
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
   apt_sources.chomp.each_line do |line|
-    next if !line.start_with? 'deb'
+    next unless line.start_with? 'deb'
 
     source_host = URI(line.split[1]).host
-    if !hosts.include?(source_host)
+    unless hosts.include?(source_host)
       raise "Bad APT source '#{line}'"
     end
   end
@@ -156,7 +156,7 @@ When /^I update APT using Synaptic$/ do
       @synaptic.child(roleName: 'dialog', recursive: false)
                .child('Error', roleName: 'icon', retry: false)
     end
-    if !$vm.has_process?('synaptic')
+    unless $vm.has_process?('synaptic')
       raise 'Synaptic process vanished, did it segfault again?'
     end
   end

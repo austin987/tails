@@ -164,7 +164,7 @@ module Dogtail
         end
       end
       findChildren_opts = ''
-      if !findChildren_opts_hash.empty?
+      unless findChildren_opts_hash.empty?
         findChildren_opts = ', '
         + self.class.args_to_s([findChildren_opts_hash])
       end

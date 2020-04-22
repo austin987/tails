@@ -651,7 +651,7 @@ task :test do
   args = ARGV.drop_while { |x| x == 'test' || x == '--' }
   if on_jenkins?
     args += ['--'] unless args.include? '--'
-    if not(is_release?)
+    unless is_release?
       args += ['--tag', '~@fragile']
     end
     base_branch = git_helper('base_branch')

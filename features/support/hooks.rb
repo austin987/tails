@@ -38,7 +38,7 @@ AfterConfiguration do |config|
   # The &-intersection is specified to keep the element ordering of
   # the *left* operand.
   intersection = prioritized_features & feature_files
-  if not intersection.empty?
+  unless intersection.empty?
     feature_files -= intersection
     feature_files = intersection + feature_files
     config.define_singleton_method(:feature_files) { feature_files }
@@ -49,11 +49,11 @@ AfterConfiguration do |config|
   $started_first_product_feature = false
 
   if File.exist?($config['TMPDIR'])
-    if !File.directory?($config['TMPDIR'])
+    unless File.directory?($config['TMPDIR'])
       raise "Temporary directory '#{$config['TMPDIR']}' exists but is not a " +
             'directory'
     end
-    if !File.owned?($config['TMPDIR'])
+    unless File.owned?($config['TMPDIR'])
       raise "Temporary directory '#{$config['TMPDIR']}' must be owned by the " +
             'current user'
     end
@@ -149,7 +149,7 @@ BeforeFeature('@product') do
       # become unreadable for the live user inside the guest in the
       # host-to-guest share used for some tests.
 
-      if !File.world_readable?(path)
+      unless File.world_readable?(path)
         if File.owned?(path)
           File.chmod(0644, path)
         else
@@ -163,16 +163,16 @@ BeforeFeature('@product') do
       raise "The specified Tails #{type} image '#{path}' does not exist"
     end
   end
-  if !File.exist?(OLD_TAILS_ISO)
+  unless File.exist?(OLD_TAILS_ISO)
     raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
   end
-  if !File.exist?(OLD_TAILS_IMG)
+  unless File.exist?(OLD_TAILS_IMG)
     raise "The specified old Tails IMG image '#{OLD_TAILS_IMG}' does not exist"
   end
 
-  if not($started_first_product_feature)
+  unless $started_first_product_feature
     $virt = Libvirt.open('qemu:///system')
-    VM.remove_all_snapshots if !KEEP_SNAPSHOTS
+    VM.remove_all_snapshots unless KEEP_SNAPSHOTS
     $vmnet = VMNet.new($virt, VM_XML_PATH)
     $vmstorage = VMStorage.new($virt, VM_XML_PATH)
     $started_first_product_feature = true

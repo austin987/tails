@@ -195,7 +195,7 @@ def find_impacted_docs(impact_map,
         # Git::Diff#path() alters the object so it cannot be used for a
         # successive call for another path.
         source_path_diff = git_diff.clone.path(source_path)
-        if !source_path_diff.empty?
+        unless source_path_diff.empty?
           changed_files = source_path_diff.map { |file| file.path }
           reasons = changed_files.map do |path|
             "Changes in source file: #{path}"
@@ -258,7 +258,7 @@ impacted_docs = find_impacted_docs(
   old_manifest, new_manifest
 )
 
-if !impacted_docs.empty?
+unless impacted_docs.empty?
   result =
     impacted_docs
     .sort

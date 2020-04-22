@@ -159,7 +159,7 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
   firefox_pmap_info = $vm.execute("pmap --show-path #{pid}").stdout
   for lib in tbb_libs do
     lib_name = File.basename lib
-    if not /\W#{lib}$/.match firefox_pmap_info
+    unless /\W#{lib}$/.match firefox_pmap_info
       absent_tbb_libs << lib_name
     end
     native_libs = $vm.execute_successfully(

@@ -6,7 +6,7 @@ def ensure_chutney_is_running
   # Ensure that a fresh chutney instance is running, and that it will
   # be cleaned upon exit. We only do it once, though, since the same
   # setup can be used throughout the same test suite run.
-  if not($chutney_initialized)
+  unless $chutney_initialized
     chutney_listen_address = $vmnet.bridge_ip_addr
     chutney_script = "#{chutney_src_dir}/chutney"
     assert(

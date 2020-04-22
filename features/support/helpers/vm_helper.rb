@@ -213,7 +213,7 @@ class VM
       'Call to virDomainUpdateDeviceFlags failed: internal error: unable to ' +
       "execute QEMU command 'eject': (Tray of device '.*' is not open|" +
       "Device '.*' is locked)"
-    raise e if not(Regexp.new(acceptable_error).match(e.to_s))
+    raise e unless Regexp.new(acceptable_error).match(e.to_s)
   end
 
   def set_cdrom_image(image)
@@ -234,7 +234,7 @@ class VM
     end
 
     domain_rexml = REXML::Document.new(@domain.xml_desc)
-    if not domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+    unless domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
       add_cdrom_device
     end
     set_cdrom_image(image)
@@ -368,7 +368,7 @@ class VM
       raise 'boot settings can only be set for inactive vms'
     end
 
-    plug_drive(name, type) if not(disk_plugged?(name))
+    plug_drive(name, type) unless disk_plugged?(name)
     set_boot_device('hd')
     # XXX:Stretch: since our isotesters upgraded QEMU from
     # 2.5+dfsg-4~bpo8+1 to 2.6+dfsg-3.1~bpo8+1 it seems we must remove
@@ -443,7 +443,7 @@ class VM
     if options[:libs]
       libs = options[:libs]
       options.delete(:libs)
-      libs = [libs] if not(libs.methods.include? :map)
+      libs = [libs] unless libs.methods.include? :map
       cmds = libs.map do |lib_name|
         ". /usr/local/lib/tails-shell-library/#{lib_name}.sh"
       end

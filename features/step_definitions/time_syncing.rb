@@ -69,7 +69,7 @@ Then /^the system clock is just past Tails' source date$/ do
     systemd_has_adjusted_time = $vm.execute(
       "journalctl | grep 'System time before build time, advancing clock'"
     ).success?
-    if !systemd_has_adjusted_time
+    unless systemd_has_adjusted_time
       raise(
         "The system time (#{system_time}) is more than #{max_diff} seconds " +
         "past the source date (#{source_time}) and systemd was not involved"

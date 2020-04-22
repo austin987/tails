@@ -2,7 +2,7 @@
 # this differently.
 
 begin
-  if not(Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?))
+  unless Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?)
     require 'cucumber/core/gherkin/tag_expression'
     class Cucumber::Core::Ast::Feature
       # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
@@ -45,7 +45,7 @@ def AfterFeature(*tag_expressions, &block)
 end
 
 require 'cucumber/formatter/console'
-if not($at_exit_print_artifacts_dir_patching_done)
+unless $at_exit_print_artifacts_dir_patching_done
   module Cucumber::Formatter::Console
     if method_defined?(:print_stats)
       alias old_print_stats print_stats
@@ -154,6 +154,6 @@ AfterConfiguration do |config|
     ['ExtraFormatters::PrettyDebug', "#{ARTIFACTS_DIR}/debug.log"],
   ]
   extra_hooks.each do |hook|
-    config.formats << hook if not(config.formats.include?(hook))
+    config.formats << hook unless config.formats.include?(hook)
   end
 end

@@ -31,7 +31,7 @@ class VMStorage
     unless @pool
       pool_xml.elements['pool/target/path'].text = @pool_path
       @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
-      if not(Dir.exist?(@pool_path))
+      unless Dir.exist?(@pool_path)
         # We'd like to use @pool.build, which will just create the
         # @pool_path directory, but it does so with root:root as owner
         # (at least with libvirt 1.2.21-2). libvirt itself can handle

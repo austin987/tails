@@ -37,7 +37,7 @@ def page_meta_date_is_ok?(path)
     meta_date_line = matches.first
     m = meta_date_post_re.match(meta_date_line)
     meta_date = m['date']
-    if not(rfc2822_date?(meta_date))
+    unless rfc2822_date?(meta_date)
       warn "#{path}: 'meta date' directive contains non-rfc2822 " +
            "date: #{meta_date}"
       success = false
@@ -66,7 +66,7 @@ def po_file_meta_date_is_ok?(path)
       success = false
     elsif m['date']
       meta_date = m['date']
-      if not(rfc2822_date?(meta_date))
+      unless rfc2822_date?(meta_date)
         warn "#{path}: 'meta date' msgstr contains non-rfc2822 " +
              "date: #{meta_date}"
         success = false
