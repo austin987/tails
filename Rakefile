@@ -255,7 +255,7 @@ task :parse_build_options do
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     when /cachewebsite(?:=([a-z]+))?/
-      value = $1
+      value = Regexp.last_match(1)
       if is_release?
         warn "Building a release ⇒ ignoring #{opt} build option"
         ENV['TAILS_WEBSITE_CACHE'] = '0'
@@ -282,16 +282,16 @@ task :parse_build_options do
       ENV['MKSQUASHFS_OPTIONS'] = nil
     # Virtual hardware settings
     when /machinetype=([a-zA-Z0-9_.-]+)/
-      ENV['TAILS_BUILD_MACHINE_TYPE'] = $1
+      ENV['TAILS_BUILD_MACHINE_TYPE'] = Regexp.last_match(1)
     when /cpus=(\d+)/
-      ENV['TAILS_BUILD_CPUS'] = $1
+      ENV['TAILS_BUILD_CPUS'] = Regexp.last_match(1)
     when /cpumodel=([a-zA-Z0-9_-]+)/
-      ENV['TAILS_BUILD_CPU_MODEL'] = $1
+      ENV['TAILS_BUILD_CPU_MODEL'] = Regexp.last_match(1)
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
     when /dateoffset=([-+]\d+)/
-      ENV['TAILS_DATE_OFFSET'] = $1
+      ENV['TAILS_DATE_OFFSET'] = Regexp.last_match(1)
     # Developer convenience features
     when 'keeprunning'
       $keep_running = true
