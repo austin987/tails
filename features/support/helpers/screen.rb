@@ -192,7 +192,7 @@ class Screen
       return find_any(patterns, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
-    raise FindFailed, "can not find any of the patterns #{patterns} " +
+    raise FindFailed, "can not find any of the patterns #{patterns} " \
                       'on the screen'
   end
 
@@ -320,11 +320,11 @@ class ImageBumpingScreen
     STDOUT.write "\a"
     loop do
       warn(
-        "\n" +
-        "a: Automatic bump\n" +
-        "r: Retry image (pro tip: manually update the image first!)\n" +
-        "i: Ignore this image for the remaining of the run\n" +
-        "d: Debugging REPL\n" +
+        "\n" \
+        "a: Automatic bump\n" \
+        "r: Retry image (pro tip: manually update the image first!)\n" \
+        "i: Ignore this image for the remaining of the run\n" \
+        "d: Debugging REPL\n" \
         'q: Abort (to the FindFailed exception)'
       )
       c = STDIN.getch

@@ -44,7 +44,7 @@ module RemoteShell
           end
           return rest
         else
-          debug_log('Dropped out-of-order remote shell response: ' +
+          debug_log('Dropped out-of-order remote shell response: ' \
                     "got id #{response_id} but expected id #{id}")
         end
       end
@@ -90,7 +90,7 @@ module RemoteShell
     end
 
     def to_s
-      "Return status: #{@returncode}\n" +
+      "Return status: #{@returncode}\n" \
         "STDOUT:\n" +
         @stdout +
         "STDERR:\n" +
@@ -132,7 +132,7 @@ module RemoteShell
     end
 
     def to_s
-      "Exception: #{@exception}\n" +
+      "Exception: #{@exception}\n" \
         "STDOUT:\n" +
         @stdout +
         "STDERR:\n" +

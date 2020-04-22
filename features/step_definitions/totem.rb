@@ -5,10 +5,10 @@ Given /^I create sample videos$/ do
   @video_dir_on_host = "#{$config['TMPDIR']}/video_dir"
   FileUtils.mkdir_p(@video_dir_on_host)
   add_after_scenario_hook { FileUtils.rm_r(@video_dir_on_host) }
-  fatal_system("#{ffmpeg} -loop 1 -t 30 -f image2 " +
-               "-i 'features/images/USBTailsLogo.png' " +
-               '-an -vcodec libx264 -y ' +
-               '-filter:v "crop=in_w-mod(in_w\,2):in_h-mod(in_h\,2)" ' +
+  fatal_system("#{ffmpeg} -loop 1 -t 30 -f image2 " \
+               "-i 'features/images/USBTailsLogo.png' " \
+               '-an -vcodec libx264 -y ' \
+               '-filter:v "crop=in_w-mod(in_w\,2):in_h-mod(in_h\,2)" ' \
                "'#{@video_dir_on_host}/video.mp4' >/dev/null 2>&1")
 end
 

@@ -51,7 +51,7 @@ end
 Then /^the system clock is just past Tails' source date$/ do
   system_time_str = $vm.execute_successfully('date').to_s
   system_time = DateTime.parse(system_time_str).to_time
-  source_time_cmd = 'sed -n -e "1s/^.* - \([0-9]\+\)$/\1/p;q" ' +
+  source_time_cmd = 'sed -n -e "1s/^.* - \([0-9]\+\)$/\1/p;q" ' \
                     '/etc/amnesia/version'
   source_time_str = $vm.execute_successfully(source_time_cmd).to_s
   source_time = DateTime.parse(source_time_str).to_time
@@ -60,7 +60,7 @@ Then /^the system clock is just past Tails' source date$/ do
   # hardware and VM setup.
   max_diff = 30 * 60
   assert(diff.positive?,
-         "The system time (#{system_time}) is before the Tails " +
+         "The system time (#{system_time}) is before the Tails " \
          "source date (#{source_time})")
 
   if diff <= max_diff
@@ -71,7 +71,7 @@ Then /^the system clock is just past Tails' source date$/ do
     ).success?
     unless systemd_has_adjusted_time
       raise(
-        "The system time (#{system_time}) is more than #{max_diff} seconds " +
+        "The system time (#{system_time}) is more than #{max_diff} seconds " \
         "past the source date (#{source_time}) and systemd was not involved"
       )
     end

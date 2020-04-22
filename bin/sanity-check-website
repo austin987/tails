@@ -15,7 +15,7 @@ Encoding.default_internal = Encoding::UTF_8
 GIT_DIR = `git rev-parse --show-toplevel`
 assert_equal(
   0, $CHILD_STATUS.exitstatus,
-  "Failed to find Tails' Git root; this command must be run " +
+  "Failed to find Tails' Git root; this command must be run " \
   'inside Tails Git repo'
 )
 
@@ -31,7 +31,7 @@ def page_meta_date_is_ok?(path)
   content_lines = File.new(path).read.split("\n")
   matches = content_lines.grep(meta_date_post_re)
   if matches.size != 1
-    warn "#{path}: has #{matches.size} well-formed 'meta date' " +
+    warn "#{path}: has #{matches.size} well-formed 'meta date' " \
          'directives (must be 1)'
     success = false
   else
@@ -39,7 +39,7 @@ def page_meta_date_is_ok?(path)
     m = meta_date_post_re.match(meta_date_line)
     meta_date = m['date']
     unless rfc2822_date?(meta_date)
-      warn "#{path}: 'meta date' directive contains non-rfc2822 " +
+      warn "#{path}: 'meta date' directive contains non-rfc2822 " \
            "date: #{meta_date}"
       success = false
     end
@@ -68,7 +68,7 @@ def po_file_meta_date_is_ok?(path)
     elsif m['date']
       meta_date = m['date']
       unless rfc2822_date?(meta_date)
-        warn "#{path}: 'meta date' msgstr contains non-rfc2822 " +
+        warn "#{path}: 'meta date' msgstr contains non-rfc2822 " \
              "date: #{meta_date}"
         success = false
       end

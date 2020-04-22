@@ -38,7 +38,7 @@ end
 Then /^the live user has been setup by live\-boot$/ do
   assert($vm.execute('test -e /var/lib/live/config/user-setup').success?,
          'live-boot failed its user-setup')
-  actual_username = $vm.execute('. /etc/live/config/username.conf; ' +
+  actual_username = $vm.execute('. /etc/live/config/username.conf; ' \
                                 'echo $LIVE_USERNAME').stdout.chomp
   assert_equal(LIVE_USER, actual_username)
 end
@@ -76,7 +76,7 @@ Then /^no unexpected services are listening for network connections$/ do
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
       if SERVICES_EXPECTED_ON_ALL_IFACES.include?([proc, laddr, lport]) ||
          SERVICES_EXPECTED_ON_ALL_IFACES.include?([proc, laddr, '*'])
-        puts "Service '#{proc}' is listening on #{laddr}:#{lport} " +
+        puts "Service '#{proc}' is listening on #{laddr}:#{lport} " \
              'but has an exception'
       else
         raise "Unexpected service '#{proc}' listening on #{laddr}:#{lport}"
@@ -127,7 +127,7 @@ Then /^MAT can clean some sample PNG file$/ do
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
     cleaned_png_on_guest = "/home/#{LIVE_USER}/#{png_name}".sub(/[.]png$/, '.cleaned.png')
     step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
-    raw_check_cmd = 'grep --quiet --fixed-strings --text ' +
+    raw_check_cmd = 'grep --quiet --fixed-strings --text ' \
                     "'Created with GIMP'"
     assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'", user: LIVE_USER).success?,
            'The comment is not present in the PNG')

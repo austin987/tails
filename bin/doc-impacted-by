@@ -52,13 +52,13 @@ def parse_argv!
     end
 
     opts.on('-f PATH', '--relationship-file=PATH',
-            'Use a custom PATH for the doc-source relationship description ' +
-            "file (default: #{File.basename(DEFAULT_RELATIONSHIP_FILE)} in " +
+            'Use a custom PATH for the doc-source relationship description ' \
+            "file (default: #{File.basename(DEFAULT_RELATIONSHIP_FILE)} in " \
             'the Git root)') do |path|
       options['relationship-file'] = path
     end
 
-    opts.on('-s', '--skip-packages', 'Skip looking at packages, ' +
+    opts.on('-s', '--skip-packages', 'Skip looking at packages, ' \
                                      'only look at Git') do
       options['skip-packages'] = true
     end
@@ -156,7 +156,7 @@ def find_impacted_docs(impact_map,
   # something like `git.object(new_commit).path('wiki/src')` but the
   # Git module we use seem to not support listing files at a certain
   # commit.
-  git_cmd_wiki_files = 'git ls-tree -r --full-tree ' +
+  git_cmd_wiki_files = 'git ls-tree -r --full-tree ' \
                        "--name-only #{new_commit} -- wiki/src"
   doc_pages = `#{git_cmd_wiki_files}`.chomp.split("\n")
   assert_equal(0, $CHILD_STATUS.exitstatus, 'Error: `git ls-tree` failed')
@@ -183,8 +183,8 @@ def find_impacted_docs(impact_map,
       when 'files'
         file_paths = source
       else
-        raise "Unknown field '#{type}' in impact map; this should not " +
-              'happen, and probably means canonicalize_relationship() ' +
+        raise "Unknown field '#{type}' in impact map; this should not " \
+              'happen, and probably means canonicalize_relationship() ' \
               'is buggy'
       end
     end
@@ -218,7 +218,7 @@ def find_impacted_docs(impact_map,
           new = new_manifest[package]
           assert_not_equal(
             old, new,
-            "'#{package}' has identical data in both manifests so it is " +
+            "'#{package}' has identical data in both manifests so it is " \
             'a bug that we ended up here'
           )
           package_changes = old_manifest[package]
@@ -276,6 +276,6 @@ unless impacted_docs.empty?
   puts result
 end
 if options['skip-packages']
-  warn 'Warning! The --skip-packages option makes this ' +
+  warn 'Warning! The --skip-packages option makes this ' \
        'report incomplete!'
 end

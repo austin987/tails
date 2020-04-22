@@ -171,9 +171,9 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
   end
   absent_tbb_libs -= expected_absent_tbb_libs
   assert(absent_tbb_libs.empty? && unwanted_native_libs.empty?,
-         'The loaded shared libraries for the firefox process are not the ' +
-         "way we expect them.\n" +
-         "Expected TBB libs that are absent: #{absent_tbb_libs}\n" +
+         'The loaded shared libraries for the firefox process are not the ' \
+         "way we expect them.\n" \
+         "Expected TBB libs that are absent: #{absent_tbb_libs}\n" \
          "Native libs that we don't want: #{unwanted_native_libs}")
 end
 

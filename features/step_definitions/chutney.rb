@@ -52,9 +52,9 @@ def ensure_chutney_is_running
         chutney_cmd.call('start')
       rescue Test::Unit::AssertionFailedError
         if File.directory?(env['CHUTNEY_DATA_DIR'])
-          raise 'You are running with --keep-snapshots but Chutney failed ' +
-                'to start with its current data directory. To recover you ' +
-                "likely want to delete '#{env['CHUTNEY_DATA_DIR']}' and " +
+          raise 'You are running with --keep-snapshots but Chutney failed ' \
+                'to start with its current data directory. To recover you ' \
+                "likely want to delete '#{env['CHUTNEY_DATA_DIR']}' and " \
                 'all test suite snapshots and then start over.'
         else
           chutney_cmd.call('configure')
@@ -80,7 +80,7 @@ def ensure_chutney_is_running
     # `chutney start` will return success even if some nodes fail.
     status = chutney_cmd.call('status')
     match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
-    assert_not_nil(match, "Chutney's status did not contain the expected " +
+    assert_not_nil(match, "Chutney's status did not contain the expected " \
                           'string listing the number of running nodes')
     running, total = match[1, 2].map(&:to_i)
     assert_equal(

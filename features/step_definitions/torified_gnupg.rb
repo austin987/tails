@@ -83,7 +83,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
       :user => LIVE_USER
     )
     if @gnupg_recv_key_res.failure?
-      raise "Fetching keys with the GnuPG CLI failed with:\n" +
+      raise "Fetching keys with the GnuPG CLI failed with:\n" \
             "#{@gnupg_recv_key_res.stdout}\n" +
             @gnupg_recv_key_res.stderr.to_s
     end
@@ -252,7 +252,7 @@ Given /^GnuPG is configured to use a non-Onion keyserver$/ do
   )
   # ... before replacing it
   $vm.execute_successfully(
-    "sed -i 's|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " +
+    "sed -i 's|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " \
     "'#{dirmngr_conf}'"
   )
   disable_ipv6_for_dirmngr

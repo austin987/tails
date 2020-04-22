@@ -97,7 +97,7 @@ class VM
 
   def real_mac(alias_name)
     REXML::Document.new(@domain.xml_desc)
-                   .elements["domain/devices/interface[@type='network']/" +
+                   .elements["domain/devices/interface[@type='network']/" \
                              "alias[@name='#{alias_name}']"]
                    .parent.elements['mac'].attributes['address'].to_s
   end
@@ -113,7 +113,7 @@ class VM
   end
 
   def set_hardware_clock(time)
-    assert(!running?, 'The hardware clock cannot be set when the ' +
+    assert(!running?, 'The hardware clock cannot be set when the ' \
                              'VM is running')
     assert(time.instance_of?(Time), "Argument must be of type 'Time'")
     adjustment = (time - Time.now).to_i
@@ -210,8 +210,8 @@ class VM
     # While the CD-ROM is removed successfully we still get this
     # error, so let's ignore it.
     acceptable_error =
-      'Call to virDomainUpdateDeviceFlags failed: internal error: unable to ' +
-      "execute QEMU command 'eject': (Tray of device '.*' is not open|" +
+      'Call to virDomainUpdateDeviceFlags failed: internal error: unable to ' \
+      "execute QEMU command 'eject': (Tray of device '.*' is not open|" \
       "Device '.*' is locked)"
     raise e unless Regexp.new(acceptable_error).match(e.to_s)
   end
@@ -670,9 +670,9 @@ class VM
         potential_internal_snapshot = @domain.lookup_snapshot_by_name(name)
         @domain.revert_to_snapshot(potential_internal_snapshot)
       rescue Guestfs::Error, Libvirt::RetrieveError
-        raise "The (internal nor external) snapshot #{name} may be known " +
-              'by libvirt but it cannot be restored. ' +
-              "To investigate, use 'virsh snapshot-list TailsToaster'. " +
+        raise "The (internal nor external) snapshot #{name} may be known " \
+              'by libvirt but it cannot be restored. ' \
+              "To investigate, use 'virsh snapshot-list TailsToaster'. " \
               "To clean up old dangling snapshots, use 'virsh snapshot-delete'."
       end
     end

@@ -18,7 +18,7 @@ Test::Unit.run = true
 include Test::Unit::Assertions
 
 def assert_vmcommand_success(p, msg = nil) # rubocop:disable Naming/MethodParameterName
-  assert(p.success?, msg.nil? ? "Command failed: #{p.cmd}\n" + \
+  assert(p.success?, msg.nil? ? "Command failed: #{p.cmd}\n" \
                                 "error code: #{p.returncode}\n" \
                                 "stderr: #{p.stderr}" : \
                                 msg)
@@ -61,13 +61,13 @@ def try_for(timeout, **options)
         else
           elapsed = elapsed.ceil(2)
         end
-        debug_log("try_for: attempt #{attempts} (#{elapsed}s elapsed " +
+        debug_log("try_for: attempt #{attempts} (#{elapsed}s elapsed " \
                   "of #{timeout}s)...") if options[:log]
         if yield
           debug_log('try_for: success!') if options[:log]
           return
         end
-        debug_log('try_for: failed by code block ' +
+        debug_log('try_for: failed by code block ' \
                   'returning failure') if options[:log]
       rescue NameError, UniqueTryForTimeoutError => e
         # NameError most likely means typos, and hiding that is rarely
@@ -79,7 +79,7 @@ def try_for(timeout, **options)
         # block. Well we save the last exception so we can print it in
         # case of a timeout.
         last_exception = e
-        debug_log('try_for: failed with exception: ' +
+        debug_log('try_for: failed with exception: ' \
                   "#{last_exception.class}: #{last_exception}") if options[:log]
       end
       sleep options[:delay]
@@ -107,7 +107,7 @@ rescue unique_timeout_exception
   msg = options[:msg] || 'try_for() timeout expired'
   exc_class = options[:exception] || Timeout::Error
   if last_exception
-    msg += "\nLast ignored exception was: " +
+    msg += "\nLast ignored exception was: " \
            "#{last_exception.class}: #{last_exception}"
   end
   raise exc_class, msg
@@ -156,7 +156,7 @@ def retry_action(max_retries, options = {}, &block)
   retries = 1
   loop do
     begin
-      debug_log("retry_action: trying #{options[:operation_name]} (attempt " +
+      debug_log("retry_action: trying #{options[:operation_name]} (attempt " \
                 "#{retries} of #{max_retries})...")
       block.call
       debug_log('retry_action: success!')
@@ -167,14 +167,14 @@ def retry_action(max_retries, options = {}, &block)
       raise e
     rescue Exception => e
       if retries <= max_retries
-        debug_log("retry_action: #{options[:operation_name]} failed with " +
+        debug_log("retry_action: #{options[:operation_name]} failed with " \
                   "exception: #{e.class}: #{e.message}")
         options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
         raise MaxRetriesFailure,
-              "#{options[:operation_name]} failed (despite retrying " +
-              "#{max_retries} times) with\n" +
+              "#{options[:operation_name]} failed (despite retrying " \
+              "#{max_retries} times) with\n" \
               "#{e.class}: #{e.message}"
       end
     end
@@ -372,7 +372,7 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
     "#{type}:#{arg}"
   end
   $vm.execute(
-    "dbus-send --print-reply --dest=#{service} #{object_path} " +
+    "dbus-send --print-reply --dest=#{service} #{object_path} " \
     "    #{method} #{typed_args.join(' ')}",
     **opts
   )

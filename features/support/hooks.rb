@@ -50,11 +50,11 @@ AfterConfiguration do |config|
 
   if File.exist?($config['TMPDIR'])
     unless File.directory?($config['TMPDIR'])
-      raise "Temporary directory '#{$config['TMPDIR']}' exists but is not a " +
+      raise "Temporary directory '#{$config['TMPDIR']}' exists but is not a " \
             'directory'
     end
     unless File.owned?($config['TMPDIR'])
-      raise "Temporary directory '#{$config['TMPDIR']}' must be owned by the " +
+      raise "Temporary directory '#{$config['TMPDIR']}' must be owned by the " \
             'current user'
     end
     FileUtils.chmod(0o755, $config['TMPDIR'])
@@ -78,7 +78,7 @@ After do
 end
 
 BeforeFeature('@product', '@source') do |feature|
-  raise "Feature #{feature.file} is tagged both @product and @source, " +
+  raise "Feature #{feature.file} is tagged both @product and @source, " \
         'which is an impossible combination'
 end
 
@@ -118,7 +118,7 @@ def save_journal(path)
   end
   save_failure_artifact('Systemd journal', "#{path}/systemd.journal")
 rescue Exception => e
-  info_log('Exception thrown while trying to save the journal: ' +
+  info_log('Exception thrown while trying to save the journal: ' \
            "#{e.class.name}: #{e}")
 end
 
@@ -141,7 +141,7 @@ BeforeFeature('@product') do
   images = { 'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG }
   images.each do |type, path|
     if path.nil?
-      raise "No Tails #{type} image specified, and none could be found " +
+      raise "No Tails #{type} image specified, and none could be found " \
             'in the current directory'
     end
     if File.exist?(path)
@@ -153,9 +153,9 @@ BeforeFeature('@product') do
         if File.owned?(path)
           File.chmod(0o644, path)
         else
-          raise "warning: the Tails #{type} image must be world readable " +
-                'or be owned by the current user to be available inside ' +
-                'the guest VM via host-to-guest shares, which is required ' +
+          raise "warning: the Tails #{type} image must be world readable " \
+                'or be owned by the current user to be available inside ' \
+                'the guest VM via host-to-guest shares, which is required ' \
                 'by some tests'
         end
       end
@@ -301,7 +301,7 @@ After('@product') do |scenario|
     end
     if $config['INTERACTIVE_DEBUGGING']
       pause(
-        "Scenario failed: #{scenario.name}. " +
+        "Scenario failed: #{scenario.name}. " \
         "The error was: #{scenario.exception.class.name}: #{scenario.exception}"
       )
     end

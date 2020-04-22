@@ -171,7 +171,7 @@ checkpoints.each do |name, desc|
     begin
       reach_checkpoint(name)
     rescue Exception => e
-      debug_log("    Generated snapshot step failed with exception:\n" +
+      debug_log("    Generated snapshot step failed with exception:\n" \
                 "      #{e.class}: #{e}\n", color: :red, timestamp: false)
       raise e
     end

@@ -534,14 +534,14 @@ Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
 end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
-  try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
+  try_for(time.to_i, :msg => "Process '#{process}' is not running after " \
                              "waiting for #{time} seconds") do
     $vm.process_running?(process)
   end
 end
 
 Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |process, time|
-  try_for(time.to_i, :msg => "Process '#{process}' is still running after " +
+  try_for(time.to_i, :msg => "Process '#{process}' is still running after " \
                              "waiting for #{time} seconds") do
     !$vm.process_running?(process)
   end
@@ -610,7 +610,7 @@ Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]
     raise "Unsupported version '#{version}'"
   else
     $vm.execute_successfully(
-      "nmcli connection add con-name #{con_name} " + \
+      "nmcli connection add con-name #{con_name} " \
       'type ethernet autoconnect yes ifname eth0'
     )
   end
@@ -910,14 +910,14 @@ end
 When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_test, profile, file|
   assert(@apparmor_profile_monitoring_start &&
          @apparmor_profile_monitoring_start[profile],
-         "It seems the profile '#{profile}' isn't being monitored by the " +
+         "It seems the profile '#{profile}' isn't being monitored by the " \
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
   begin
     try_for(10, delay: 1) do
       audit_log = $vm.execute(
-        'journalctl --full --no-pager ' +
-        "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
+        'journalctl --full --no-pager ' \
+        "--since='#{@apparmor_profile_monitoring_start[profile]}' " \
         "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
       ).stdout.chomp
       assert(audit_log.empty? == (anti_test ? true : false))
@@ -948,8 +948,8 @@ end
 
 Given /^Tails is fooled to think it is running version (.+)$/ do |version|
   $vm.execute_successfully(
-    'sed -i ' +
-    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
+    'sed -i ' \
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " \
     '/etc/os-release'
   )
 end
@@ -1004,7 +1004,7 @@ def share_host_files(files)
   disk_size = size_of_shared_disk_for(files)
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
-  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
+  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " \
        "filesystem on disk \"#{disk}\""
   $vm.storage.guestfs_disk_helper(disk) do |g, _|
     partition = g.list_partitions().first
@@ -1030,7 +1030,7 @@ def mount_usb_drive(disk, **fs_options)
     assert_not_nil(password)
     luks_mapping = "#{disk}_unlocked"
     $vm.execute_successfully(
-      "echo #{password} | " +
+      "echo #{password} | " \
       "cryptsetup luksOpen #{partition} #{luks_mapping}"
     )
     $vm.execute_successfully(
@@ -1049,7 +1049,7 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
   disk_size = convert_to_bytes(size_MiB.to_i, 'MiB')
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
-  step "I create a gpt partition labeled \"#{disk}\" with " +
+  step "I create a gpt partition labeled \"#{disk}\" with " \
        "an #{fs} on disk \"#{disk}\""
   step "I plug USB drive \"#{disk}\""
   fs_options = {}

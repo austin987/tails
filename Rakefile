@@ -74,7 +74,7 @@ end
 def run_command(*args)
   Process.wait Kernel.spawn(*args)
   if $CHILD_STATUS.exitstatus != 0
-    raise CommandError.new("command #{args} failed with exit status " +
+    raise CommandError.new("command #{args} failed with exit status " \
                            '%{status}', status: $CHILD_STATUS.exitstatus)
   end
 end
@@ -82,7 +82,7 @@ end
 def capture_command(*args)
   stdout, stderr, proc_status = Open3.capture3(*args)
   if proc_status.exitstatus != 0
-    raise CommandError.new("command #{args} failed with exit status " +
+    raise CommandError.new("command #{args} failed with exit status " \
                            '%{status}: %{stderr}',
                            stderr: stderr, status: proc_status.exitstatus)
   end
@@ -110,7 +110,7 @@ end
 def run_vagrant(*args)
   run_command('vagrant', *args, :chdir => './vagrant')
 rescue CommandError => e
-  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
+  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " \
                              "status #{e.status}")
 end
 
@@ -119,7 +119,7 @@ end
 def capture_vagrant(*args)
   capture_command('vagrant', *args, :chdir => './vagrant')
 rescue CommandError => e
-  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
+  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " \
                              "status #{e.status}: #{e.stderr}")
 end
 
@@ -342,8 +342,8 @@ end
 
 def list_artifacts
   user = vagrant_ssh_config('User')
-  stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " +
-                                        "-name 'tails-amd64-*' " +
+  stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " \
+                                        "-name 'tails-amd64-*' " \
                                         '-o -name tails-build-env.list').first
   stdout.split("\n")
 rescue VagrantCommandError
@@ -403,8 +403,8 @@ task :setup_environment => ['validate_git_state'] do
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     next unless ENV[var].empty?
 
-    raise "Variable '#{var}' is empty, which should not be possible: " +
-          "either validate_git_state is buggy or the 'origin' remote " +
+    raise "Variable '#{var}' is empty, which should not be possible: " \
+          "either validate_git_state is buggy or the 'origin' remote " \
           'does not point to the official Tails Git repository.'
   end
 end

@@ -395,8 +395,8 @@ end
 Then /^Pidgin has the expected persistent accounts configured$/ do
   current_accounts = configured_pidgin_accounts
   assert(current_accounts <=> @persistent_pidgin_accounts,
-         "Currently configured Pidgin accounts do not match the persistent ones:\n" +
-         "Current:\n#{current_accounts}\n" +
+         "Currently configured Pidgin accounts do not match the persistent ones:\n" \
+         "Current:\n#{current_accounts}\n" \
          "Persistent:\n#{@persistent_pidgin_accounts}")
 end
 

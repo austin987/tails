@@ -53,7 +53,7 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   patterns_b = patterns * 16
   patterns_m = convert_to_MiB(patterns_b, 'b')
   coverage = patterns_b.to_f / reference_memory_b
-  puts "Pattern coverage: #{'%.3f' % (coverage * 100)}% (#{patterns_m} MiB " +
+  puts "Pattern coverage: #{'%.3f' % (coverage * 100)}% (#{patterns_m} MiB " \
        "out of #{reference_memory_m} MiB reference memory)"
   coverage
 end
@@ -113,7 +113,7 @@ def assert_filesystem_is_full(mountpoint)
   avail_space = avail_space_in_mountpoint_kB(mountpoint)
   assert_equal(
     0, avail_space,
-    "#{avail_space} kB is still free on #{mountpoint}," +
+    "#{avail_space} kB is still free on #{mountpoint}," \
     'while this filesystem was expected to be full'
   )
 end
@@ -147,8 +147,8 @@ Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = expected_coverage.to_f / 100
   assert(coverage > min_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " +
-         "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " +
+         "#{'%.3f' % (coverage * 100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " \
+         "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " \
          'was expected')
 end
 
@@ -157,8 +157,8 @@ Then(/^patterns cover at least (\d+) MiB in the guest's memory$/) do |expected_p
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = 1
   assert(coverage >= min_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
-         "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " +
+         "#{'%.3f' % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " \
+         "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " \
          'was expected')
 end
 
@@ -167,8 +167,8 @@ Then(/^patterns cover less than (\d+) MiB in the guest's memory$/) do |expected_
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   max_coverage = 1
   assert(coverage < max_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
-         "has the pattern, but less than #{'%.3f' % (max_coverage * 100)}% " +
+         "#{'%.3f' % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " \
+         "has the pattern, but less than #{'%.3f' % (max_coverage * 100)}% " \
          'was expected')
 end
 
@@ -180,7 +180,7 @@ Then /^I find very few patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram(@free_mem_before_fill_b)
   max_coverage = 0.008
   assert(coverage < max_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the free memory still has the " +
+         "#{'%.3f' % (coverage * 100)}% of the free memory still has the " \
          "pattern, but less than #{'%.3f' % (max_coverage * 100)}% was expected")
 end
 
@@ -199,8 +199,8 @@ When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) fil
     raise 'This should not happen'
   end
   $vm.execute_successfully(
-    "for i in $(seq 1 #{pattern_nb}) ; do " +
-    "   echo wipe_didnt_work >> '#{dest_file}' ; " +
+    "for i in $(seq 1 #{pattern_nb}) ; do " \
+    "   echo wipe_didnt_work >> '#{dest_file}' ; " \
     'done'
   )
 end

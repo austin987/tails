@@ -118,8 +118,8 @@ When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( 
       $veracrypt_basic_container_with_pim
     )
     $vm.execute_successfully(
-      'mv ' +
-      "'#{@veracrypt_shared_dir_in_guest}/#{File.basename($veracrypt_basic_container_with_pim)}' " +
+      'mv ' \
+      "'#{@veracrypt_shared_dir_in_guest}/#{File.basename($veracrypt_basic_container_with_pim)}' " \
       "'#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
     )
   else

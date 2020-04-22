@@ -99,14 +99,14 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
           uid = owner.text.to_i
           uids << uid
           assert(expected_uids.include?(uid),
-                 "The following rule allows uid #{uid} to access the " +
-                 "network, but we only expect uids #{expected_uids.to_a} " +
+                 "The following rule allows uid #{uid} to access the " \
+                 "network, but we only expect uids #{expected_uids.to_a} " \
                  "(#{users_str}) to have such access:\n#{rule}")
         end
       elsif action.name == 'call' && action.elements[1].name == 'lan'
         lan_subnets = ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']
         assert(lan_subnets.include?(destination),
-               "The following lan-targeted rule's destination is " +
+               "The following lan-targeted rule's destination is " \
                "#{destination} which may not be a private subnet:\n" +
                rule.to_s)
       else
@@ -146,11 +146,11 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
       end
       bad_rules = rules - good_rules
       assert(bad_rules.empty?,
-             "The NAT table's OUTPUT chain contains some unexpected " +
+             "The NAT table's OUTPUT chain contains some unexpected " \
              "rules:\n#{bad_rules}")
     else
       assert(rules.empty?,
-             "The NAT table contains unexpected rules for the #{name} " +
+             "The NAT table contains unexpected rules for the #{name} " \
              "chain:\n#{rules}")
     end
   end
@@ -283,9 +283,9 @@ end
 When /^I monitor the network connections of (.*)$/ do |application|
   @process_monitor_log = '/tmp/ss.log'
   info = stream_isolation_info(application)
-  $vm.spawn('while true; do ' +
-            "  ss -taupen | grep '#{info[:grep_monitor_expr]}'; " +
-            '  sleep 0.1; ' +
+  $vm.spawn('while true; do ' \
+            "  ss -taupen | grep '#{info[:grep_monitor_expr]}'; " \
+            '  sleep 0.1; ' \
             "done > #{@process_monitor_log}")
 end
 
@@ -375,7 +375,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
 end
 
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
-  assert_not_nil(@bridge_hosts, 'No bridges has been configured via the ' +
+  assert_not_nil(@bridge_hosts, 'No bridges has been configured via the ' \
                  "'I configure some ... bridges in Tor Launcher' step")
   assert_all_connections(@sniffer.pcap_file) do |c|
     @bridge_hosts.include?({ address: c.daddr, port: c.dport })
