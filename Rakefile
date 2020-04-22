@@ -650,7 +650,7 @@ task :test do
       args += ['--tag', '~@fragile']
     end
     base_branch = git_helper('base_branch')
-    if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}") then
+    if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}")
       args += ['--tag', '@doc']
     end
   end
