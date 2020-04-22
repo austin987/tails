@@ -762,7 +762,7 @@ When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) secon
 end
 
 When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
-  image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
+  image = 'Desktop' + launcher.split.map(&:capitalize) .join + '.png'
   info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do

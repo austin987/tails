@@ -593,7 +593,7 @@ def clean_up_builder_vms
   old_domain =
     begin
       old_domain_uuid =
-        open('vagrant/.vagrant/machines/default/libvirt/id', 'r') { |f| f.read }
+        open('vagrant/.vagrant/machines/default/libvirt/id', 'r', &:read)
         .strip
       libvirt.lookup_domain_by_uuid(old_domain_uuid)
     rescue Errno::ENOENT, Libvirt::RetrieveError

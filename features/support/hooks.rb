@@ -72,7 +72,7 @@ end
 
 After do
   if @after_scenario_hooks
-    @after_scenario_hooks.each { |block| block.call }
+    @after_scenario_hooks.each(&:call)
   end
   @after_scenario_hooks = []
 end

@@ -293,7 +293,7 @@ def random_alpha_string(min_len, max_len = 0)
 end
 
 def random_alnum_string(min_len, max_len = 0)
-  alnum_set = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a.map { |n| n.to_s }
+  alnum_set = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a.map(&:to_s)
   random_string_from_set(alnum_set, min_len, max_len)
 end
 

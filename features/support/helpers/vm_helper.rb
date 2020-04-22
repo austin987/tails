@@ -705,7 +705,7 @@ class VM
       File.delete(file)
     end
     old_domain = $virt.lookup_domain_by_name(LIBVIRT_DOMAIN_NAME)
-    old_domain.list_all_snapshots.each { |snapshot| snapshot.delete }
+    old_domain.list_all_snapshots.each(&:delete)
   rescue Libvirt::RetrieveError
     # No such domain, so no snapshots either.
   end

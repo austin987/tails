@@ -6,7 +6,7 @@ Given /^Tails ([[:alnum:]~.]+) has been released$/ do |version|
   old_branch = current_branch
 
   fatal_system 'git checkout --quiet stable'
-  old_entries = File.open('debian/changelog') { |f| f.read }
+  old_entries = File.open('debian/changelog', &:read)
   File.open('debian/changelog', 'w') do |changelog|
     changelog.write(<<~END_OF_CHANGELOG)
       tails (#{version}) stable; urgency=low

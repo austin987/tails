@@ -82,7 +82,7 @@ Then /^I see that only the (.+) add-on(?:s are| is) enabled in Thunderbird$/ do 
     @thunderbird_addons
     .child('Enigmail', roleName: 'label')
     .parent.parent.children(roleName: 'list item', recursive: false)
-    .map { |item| item.name }
+    .map(&:name)
   expected_addons.each do |addon|
     result = actual_addons.find { |e| e.start_with?(addon) }
     assert_not_nil(result)

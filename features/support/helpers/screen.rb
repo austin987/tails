@@ -92,7 +92,7 @@ class Screen
   end
 
   def xdotool(*args)
-    out = cmd_helper(['xdotool'] + args.map { |x| x.to_s })
+    out = cmd_helper(['xdotool'] + args.map(&:to_s))
     assert(out.empty?, "xdotool reported an error:\n" + out)
   end
 
