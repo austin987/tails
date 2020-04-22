@@ -216,19 +216,19 @@ def convert_bytes_mod(unit)
   else
     raise "invalid memory unit '#{unit}'"
   end
-  return mod
+  mod
 end
 
 def convert_to_bytes(size, unit)
-  return (size * convert_bytes_mod(unit)).to_i
+  (size * convert_bytes_mod(unit)).to_i
 end
 
 def convert_to_MiB(size, unit)
-  return (size * convert_bytes_mod(unit) / (2**20)).to_i
+  (size * convert_bytes_mod(unit) / (2**20)).to_i
 end
 
 def convert_from_bytes(size, unit)
-  return size.to_f / convert_bytes_mod(unit).to_f
+  size.to_f / convert_bytes_mod(unit).to_f
 end
 
 def cmd_helper(cmd, env = {})
@@ -259,7 +259,7 @@ def all_tor_hosts
       end
     end
   end
-  return nodes
+  nodes
 end
 
 def allowed_hosts_under_tor_enforcement
@@ -278,7 +278,7 @@ def get_free_space(machine, path)
     raise "Unsupported machine type #{machine} passed."
   end
   output = free.split("\n").last
-  return output.match(/[^\s]\s+[0-9]+\s+[0-9]+\s+([0-9]+)\s+.*/)[1].chomp.to_i
+  output.match(/[^\s]\s+[0-9]+\s+[0-9]+\s+([0-9]+)\s+.*/)[1].chomp.to_i
 end
 
 def random_string_from_set(set, min_len, max_len)
@@ -395,9 +395,9 @@ end
 
 def ffmpeg
   if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
-    return 'avconv'
+    'avconv'
   else
-    return 'ffmpeg'
+    'ffmpeg'
   end
 end
 
@@ -407,7 +407,7 @@ end
 def popen_wait(*args, **opts)
   p = IO.popen(*args, **opts)
   Process.wait(p.pid)
-  return p
+  p
 ensure
   # If popen is run inside a Timeout::timeout() block we might abort
   # while the subprocess is still running and before the above wait()

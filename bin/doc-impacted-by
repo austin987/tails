@@ -69,7 +69,7 @@ def parse_argv!
   req_nr_parameters = options['skip-packages'] ? 2 : 4
   assert_equal(req_nr_parameters, parameters.size,
                "You must pass exactly #{req_nr_parameters} parameters")
-  return [options, parameters]
+  [options, parameters]
 end
 
 # From a .build-manifest, from its list of packages, generate a
@@ -119,7 +119,7 @@ def canonicalize_relationship(orig_entry)
 
     entry[field] = entry[field].arrayify
   end
-  return entry
+  entry
 rescue Exception => e
   warn 'Problematic entry:'
   warn YAML.dump([orig_entry])
@@ -139,7 +139,7 @@ def read_relationship_file_as_impact_map(relationship_file)
       impact_map.deep_merge({ page => source_files })
     end
   end
-  return impact_map
+  impact_map
 end
 
 # Given the "documentation impact map" and the "old" and "new" state,
@@ -236,7 +236,7 @@ def find_impacted_docs(impact_map,
       end
     end
   end
-  return impacted_docs
+  impacted_docs
 end
 
 # Main

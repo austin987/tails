@@ -14,7 +14,7 @@ def udev_watchdog_monitored_device
     $vm.execute_successfully(
       "readlink -f /dev/block/'#{monitored_device_id}'"
     ).stdout.chomp
-  return monitored_device
+  monitored_device
 end
 
 Given /^udev-watchdog is monitoring the correct device$/ do
@@ -22,11 +22,11 @@ Given /^udev-watchdog is monitoring the correct device$/ do
 end
 
 def used_ram_in_MiB
-  return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
+  $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
 end
 
 def detected_ram_in_MiB
-  return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
+  $vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
 def pattern_coverage_in_guest_ram(reference_memory_b)
@@ -55,7 +55,7 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   coverage = patterns_b.to_f / reference_memory_b
   puts "Pattern coverage: #{'%.3f' % (coverage * 100)}% (#{patterns_m} MiB " +
        "out of #{reference_memory_m} MiB reference memory)"
-  return coverage
+  coverage
 end
 
 Given /^I prepare Tails for memory erasure tests$/ do
@@ -104,7 +104,7 @@ When /^I kill the allocating process$/ do
 end
 
 def avail_space_in_mountpoint_kB(mountpoint)
-  return $vm.execute_successfully(
+  $vm.execute_successfully(
     "df --output=avail '#{mountpoint}'"
   ).stdout.split("\n")[1].to_i
 end

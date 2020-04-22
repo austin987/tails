@@ -66,7 +66,7 @@ end
 
 def get_free_tcp_port
   server = TCPServer.new('127.0.0.1', 0)
-  return server.addr[1]
+  server.addr[1]
 ensure
   server.close
 end

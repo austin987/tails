@@ -53,7 +53,7 @@ def current_branch
   cmd = 'git rev-parse --symbolic-full-name --abbrev-ref HEAD'.split
   branch = cmd_helper(cmd).strip
   assert_not_equal('HEAD', branch, "We are in 'detached HEAD' state")
-  return branch
+  branch
 end
 
 # In order: if git HEAD is tagged, return its name; if a branch is

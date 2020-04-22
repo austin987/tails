@@ -27,9 +27,9 @@ module OpenCV
     out = p.readlines.join("\n")
     case $CHILD_STATUS.exitstatus
     when 0
-      return out.chomp.split.map { |s| s.to_i }
+      out.chomp.split.map { |s| s.to_i }
     when 1
-      return nil
+      nil
     else
       raise OpenCVInternalError, out
     end

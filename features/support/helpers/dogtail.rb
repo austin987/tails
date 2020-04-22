@@ -85,7 +85,7 @@ module Dogtail
         raise Failure, "The Dogtail script raised: #{c.exception}"
       end
 
-      return c
+      c
     end
 
     def child?(*args)
@@ -97,9 +97,9 @@ module Dogtail
     def exist?
       run('dogtail.config.searchCutoffCount = 0')
       run(@find_code)
-      return true
+      true
     rescue
-      return false
+      false
     ensure
       run('dogtail.config.searchCutoffCount = 20')
     end
@@ -177,7 +177,7 @@ module Dogtail
         "print(len(#{nodes_var}))",
       ]
       size = run(find_script_lines).stdout.chomp.to_i
-      return size.times.map do |i|
+      size.times.map do |i|
         Node.new("#{nodes_var}[#{i}]", **@opts)
       end
     end

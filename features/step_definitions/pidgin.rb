@@ -15,7 +15,7 @@ def xmpp_account(account_name, required_options = [])
       EOF
     )
   end
-  return account
+  account
 end
 
 def wait_and_focus(img, window, time = 10)
@@ -263,7 +263,7 @@ def configured_pidgin_accounts
     }
   end
 
-  return accounts
+  accounts
 end
 
 def chan_image(account, channel, image)
@@ -275,18 +275,18 @@ def chan_image(account, channel, image)
       },
     },
   }
-  return images[account][channel][image] + '.png'
+  images[account][channel][image] + '.png'
 end
 
 def default_chan(account)
   chans = {
     'conference.riseup.net' => 'tails',
   }
-  return chans[account]
+  chans[account]
 end
 
 def pidgin_otr_keys
-  return $vm.file_content("/home/#{LIVE_USER}/.purple/otr.private_key")
+  $vm.file_content("/home/#{LIVE_USER}/.purple/otr.private_key")
 end
 
 When /^I open Pidgin's account manager window$/ do

@@ -24,7 +24,7 @@ def iptables_rules_parse(iptables, chain, table)
   iptables_chains_parse(iptables, table) do |name, _, rules|
     return rules if name == chain
   end
-  return nil
+  nil
 end
 
 def iptables_rules(chain, table = 'filter')
@@ -46,7 +46,7 @@ def ip4tables_packet_counter_sum(**filters)
       pkts += rule.attribute('packet-count').to_s.to_i
     end
   end
-  return pkts
+  pkts
 end
 
 def try_xml_element_text(element, xpath, default = nil)

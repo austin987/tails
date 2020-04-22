@@ -75,7 +75,7 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
         end
       end
     end
-    return mozilla_uris_counter
+    mozilla_uris_counter
   end
 
   mozilla_uris_counter = check_bookmarks_helper(dump['children'])

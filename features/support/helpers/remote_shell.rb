@@ -71,7 +71,7 @@ module RemoteShell
       debug_log("Remote shell: #{type}ing as #{opts[:user]}: #{cmd}")
       ret = RemoteShell.communicate(vm, 'sh_' + type, opts[:user], cmd, **opts)
       debug_log("Remote shell: #{type} returned: #{ret}") unless opts[:spawn]
-      return ret
+      ret
     end
 
     attr_reader :cmd, :returncode, :stdout, :stderr
@@ -82,11 +82,11 @@ module RemoteShell
     end
 
     def success?
-      return @returncode.zero?
+      @returncode.zero?
     end
 
     def failure?
-      return !success?
+      !success?
     end
 
     def to_s
@@ -113,7 +113,7 @@ module RemoteShell
         vm, 'python_execute', opts[:user], code, **opts
       )
       debug_log('execution complete')
-      return ret
+      ret
     end
 
     attr_reader :code, :exception, :stdout, :stderr
@@ -124,11 +124,11 @@ module RemoteShell
     end
 
     def success?
-      return @exception.nil?
+      @exception.nil?
     end
 
     def failure?
-      return !success?
+      !success?
     end
 
     def to_s
@@ -151,7 +151,7 @@ module RemoteShell
       end
 
       debug_log("#{mode} complete")
-      return ret.first
+      ret.first
     end
 
     attr_reader :vm, :path

@@ -63,7 +63,7 @@ def xul_application_info(application)
   else
     raise "Invalid browser or XUL application: #{application}"
   end
-  return {
+  {
     :user                        => user,
     :cmd_regex                   => cmd_regex,
     :chroot                      => chroot,

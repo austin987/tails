@@ -31,7 +31,7 @@ def create_veracrypt_keyfile()
   keyfile = Tempfile.create('veracrypt-keyfile', $config['TMPDIR'])
   keyfile << 'asdf'
   keyfile.close
-  return keyfile.path
+  keyfile.path
 end
 
 def reply_prompt(r_f, w_f, prompt_re, answer)

@@ -99,7 +99,7 @@ class Screen
   def match_screen(image, sensitivity, show_image)
     screenshot = "#{$config['TMPDIR']}/screenshot.png"
     $vm.display.screenshot(screenshot)
-    return OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
+    OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
                                 screenshot, sensitivity, show_image)
   ensure
     FileUtils.rm_f(screenshot)
@@ -123,7 +123,7 @@ class Screen
 
     m = Match.new(image, self, *p)
     debug_log("Screen: found #{image} at (#{m.middle.join(', ')})")
-    return m
+    m
   end
 
   def wait(pattern, timeout, **opts)
@@ -143,7 +143,7 @@ class Screen
 
   def exists(pattern, **opts)
     opts[:log] = true if opts[:log].nil?
-    return !!find(pattern, **opts)
+    !!find(pattern, **opts)
   rescue FindFailed
     debug_log("cannot find #{pattern} on the screen") if opts[:log]
     false
@@ -156,7 +156,7 @@ class Screen
       !exists(pattern, **opts.clone.update(log: false))
     end
     debug_log("Screen: #{pattern} has vanished") if opts[:log]
-    return nil
+    nil
   rescue Timeout::Error
     raise FindFailed, "can still find #{pattern} on the screen"
   end
@@ -180,7 +180,7 @@ class Screen
   end
 
   def exists_any(*args, **opts)
-    return !!find_any(*args, **opts)
+    !!find_any(*args, **opts)
   rescue FindFailed
     false
   end
@@ -230,7 +230,7 @@ class Screen
     $vm.domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX,
                         (opts[:holdtime] * 1000).to_i, codes)
     sleep(opts[:delay])
-    return nil
+    nil
   end
 
   def type(*args)
@@ -246,7 +246,7 @@ class Screen
         raise("Unsupported type: #{arg.class}")
       end
     end
-    return nil
+    nil
   end
 
   def hover(*args, **opts)
@@ -263,7 +263,7 @@ class Screen
     end
     debug_log("Mouse: moving to (#{x}, #{y})") if opts[:log]
     xdotool('mousemove', x, y)
-    return [x, y]
+    [x, y]
   end
 
   def hide_cursor
@@ -288,7 +288,7 @@ class Screen
     button = { 1 => 'left', 2 => 'middle', 3 => 'right' }[opts[:button]]
     debug_log("Mouse: #{action} #{button} button at (#{x}, #{y})") if opts[:log]
     xdotool('click', '--repeat', opts[:repeat], opts[:button])
-    return [x, y]
+    [x, y]
   end
 end
 

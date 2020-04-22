@@ -754,7 +754,7 @@ end
 def pulseaudio_sink_inputs
   pa_info = $vm.execute_successfully('pacmd info', :user => LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
-  return sink_inputs_line.match(/^\d+/)[0].to_i
+  sink_inputs_line.match(/^\d+/)[0].to_i
 end
 
 When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) seconds)$/ do |nb, wait_time|
@@ -997,7 +997,7 @@ def size_of_shared_disk_for(files)
   disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
   # Let's add some extra space for filesystem overhead etc.
   disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.15).ceil].max
-  return disk_size
+  disk_size
 end
 
 def share_host_files(files)
@@ -1019,7 +1019,7 @@ def share_host_files(files)
   partition = dev + '1'
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
-  return mount_dir
+  mount_dir
 end
 
 def mount_USB_drive(disk, **fs_options)
@@ -1044,7 +1044,7 @@ def mount_USB_drive(disk, **fs_options)
   @tmp_filesystem_disk = disk
   @tmp_filesystem_options = fs_options
   @tmp_filesystem_partition = partition
-  return @tmp_usb_drive_mount_dir
+  @tmp_usb_drive_mount_dir
 end
 
 When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|

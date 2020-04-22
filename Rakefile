@@ -88,7 +88,7 @@ def capture_command(*args)
                            '%{status}: %{stderr}',
                            stderr: stderr, status: proc_status.exitstatus)
   end
-  return stdout, stderr
+  [stdout, stderr]
 end
 
 def git_helper(*args)
@@ -102,9 +102,9 @@ def git_helper(*args)
     status = e.status
   end
   if question
-    return status.zero?
+    status.zero?
   else
-    return stdout.chomp
+    stdout.chomp
   end
 end
 
@@ -156,11 +156,11 @@ def vm_state
   out, = capture_vagrant('status')
   status_line = out.split("\n")[2]
   if    status_line['not created']
-    return :not_created
+    :not_created
   elsif status_line['shutoff']
-    return :poweroff
+    :poweroff
   elsif status_line['running']
-    return :running
+    :running
   else
     raise 'could not determine VM state'
   end
@@ -353,7 +353,7 @@ def list_artifacts
                                         '-o -name tails-build-env.list').first
   stdout.split("\n")
 rescue VagrantCommandError
-  return Array.new
+  Array.new
 end
 
 def remove_artifacts

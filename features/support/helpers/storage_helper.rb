@@ -140,7 +140,7 @@ class VMStorage
   def disk_format(name)
     vol = @pool.lookup_volume_by_name(name)
     vol_xml = REXML::Document.new(vol.xml_desc)
-    return vol_xml.elements['volume/target/format'].attributes['type']
+    vol_xml.elements['volume/target/format'].attributes['type']
   end
 
   def disk_path(name)

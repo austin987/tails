@@ -245,7 +245,7 @@ class VM
     domain_xml.elements.each('domain/devices/disk') do |e|
       ret << e.elements['target'].attribute('dev').to_s
     end
-    return ret
+    ret
   end
 
   def plug_device(xml)
@@ -305,15 +305,15 @@ class VM
         next
       end
     end
-    return nil
+    nil
   end
 
   def disk_rexml_desc(name)
     xml = disk_xml_desc(name)
     if xml
-      return REXML::Document.new(xml)
+      REXML::Document.new(xml)
     else
-      return nil
+      nil
     end
   end
 
@@ -334,7 +334,7 @@ class VM
 
   def disk_dev(name)
     (rexml = disk_rexml_desc(name)) || (return nil)
-    return '/dev/' + rexml.elements['disk/target'].attribute('dev').to_s
+    '/dev/' + rexml.elements['disk/target'].attribute('dev').to_s
   end
 
   def disk_name(dev)
@@ -349,16 +349,16 @@ class VM
   end
 
   def udisks_disk_dev(name)
-    return disk_dev(name).gsub('/dev/', '/org/freedesktop/UDisks/devices/')
+    disk_dev(name).gsub('/dev/', '/org/freedesktop/UDisks/devices/')
   end
 
   def disk_detected?(name)
     (dev = disk_dev(name)) || (return false)
-    return execute("test -b #{dev}").success?
+    execute("test -b #{dev}").success?
   end
 
   def disk_plugged?(name)
-    return !disk_xml_desc(name).nil?
+    !disk_xml_desc(name).nil?
   end
 
   def set_disk_boot(name, type)
@@ -406,7 +406,7 @@ class VM
     domain_xml.elements.each('domain/devices/filesystem') do |e|
       list << e.elements['target'].attribute('dir').to_s
     end
-    return list
+    list
   end
 
   def set_os_loader(type)
@@ -428,9 +428,9 @@ class VM
   end
 
   def is_running?
-    return @domain.active?
+    @domain.active?
   rescue
-    return false
+    false
   end
 
   def execute(cmd, **options)
@@ -446,7 +446,7 @@ class VM
       cmds << cmd
       cmd = cmds.join(' && ')
     end
-    return RemoteShell::ShellCommand.new(self, cmd, **options)
+    RemoteShell::ShellCommand.new(self, cmd, **options)
   end
 
   def execute_successfully(*args, **options)
@@ -456,12 +456,12 @@ class VM
     rescue Test::Unit::AssertionFailedError => e
       raise ExecutionFailedInVM, e
     end
-    return p
+    p
   end
 
   def spawn(cmd, **options)
     options[:spawn] = true
-    return execute(cmd, **options)
+    execute(cmd, **options)
   end
 
   def remote_shell_is_up?
@@ -491,11 +491,11 @@ class VM
   end
 
   def has_process?(process)
-    return execute("pidof -x -o '%PPID' " + process).success?
+    execute("pidof -x -o '%PPID' " + process).success?
   end
 
   def pidof(process)
-    return execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
+    execute("pidof -x -o '%PPID' " + process).stdout.chomp.split
   end
 
   def select_virtual_desktop(desktop_number, user = LIVE_USER)
@@ -564,7 +564,7 @@ class VM
   def file_open(path)
     f = RemoteShell::File.new(self, path)
     yield f if block_given?
-    return f
+    f
   end
 
   def file_content(paths)
@@ -602,7 +602,7 @@ class VM
         "      <disk name='#{dev}' snapshot='#{snapshot_type}'></disk>\n"
     end
     disks_xml += '    </disks>'
-    return <<~EOF
+    <<~EOF
       <domainsnapshot>
         <name>#{name}</name>
         <description>Snapshot for #{name}</description>
@@ -612,7 +612,7 @@ class VM
   end
 
   def self.ram_only_snapshot_path(name)
-    return "#{$config['TMPDIR']}/#{name}-snapshot.memstate"
+    "#{$config['TMPDIR']}/#{name}-snapshot.memstate"
   end
 
   def save_snapshot(name)
@@ -695,9 +695,9 @@ class VM
 
     old_domain = $virt.lookup_domain_by_name(LIBVIRT_DOMAIN_NAME)
     snapshot = old_domain.lookup_snapshot_by_name(name)
-    return !snapshot.nil?
+    !snapshot.nil?
   rescue Libvirt::RetrieveError
-    return false
+    false
   end
 
   def self.remove_all_snapshots

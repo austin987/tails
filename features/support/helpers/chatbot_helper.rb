@@ -55,6 +55,6 @@ class ChatBot
       end
     end
     assert_equal(1, ret, "This shouldn't happen")
-    return true
+    true
   end
 end

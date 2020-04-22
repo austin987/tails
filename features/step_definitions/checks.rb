@@ -1,7 +1,7 @@
 def shipped_openpgp_keys
   shipped_gpg_keys = $vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', :user => LIVE_USER).stdout
   openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
-  return openpgp_fingerprints
+  openpgp_fingerprints
 end
 
 Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) months$/ do |months|
@@ -159,7 +159,7 @@ def get_seccomp_status(process)
   assert($vm.has_process?(process), "Process #{process} not running.")
   pid = $vm.pidof(process)[0]
   status = $vm.file_content("/proc/#{pid}/status")
-  return status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
+  status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
 end
 
 def get_apparmor_status(pid)
@@ -167,9 +167,9 @@ def get_apparmor_status(pid)
   if apparmor_status.include?(')')
     # matches something like     /usr/sbin/cupsd (enforce)
     # and only returns what's in the parentheses
-    return apparmor_status.match(/[^\s]+\s+\((.+)\)$/)[1].chomp
+    apparmor_status.match(/[^\s]+\s+\((.+)\)$/)[1].chomp
   else
-    return apparmor_status
+    apparmor_status
   end
 end
 
