@@ -175,7 +175,7 @@ Then /^the firewall is configured to block all external IPv6 traffic$/ do
     bad_rules = rules - good_rules
     assert(bad_rules.empty?,
            "The IPv6 table's #{name} chain contains some unexpected rules:\n" +
-           (bad_rules.map(&:to_s)).join("\n"))
+           bad_rules.map(&:to_s).join("\n"))
   end
 end
 
