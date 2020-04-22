@@ -2,7 +2,7 @@ def gedit
   @gedit ||= Dogtail::Application.new('gedit')
 end
 
-def gedit_text_buffer()
+def gedit_text_buffer
   gedit
     .child(roleName: 'frame',       showingOnly: true)
     .child(roleName: 'scroll pane', showingOnly: true)

@@ -266,7 +266,7 @@ module Dogtail
       end
     end
 
-    def right_click()
+    def right_click
       method_call = "click(button=#{RIGHT_CLICK})"
       run("#{@var}.#{method_call}")
     end

@@ -27,7 +27,7 @@ def veracrypt_volume_size_in_gnome_disks(**options)
   : '105 MB'
 end
 
-def create_veracrypt_keyfile()
+def create_veracrypt_keyfile
   keyfile = Tempfile.create('veracrypt-keyfile', $config['TMPDIR'])
   keyfile << 'asdf'
   keyfile.close

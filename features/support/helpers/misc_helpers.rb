@@ -119,7 +119,7 @@ end
 class MaxRetriesFailure < StandardError
 end
 
-def force_new_tor_circuit()
+def force_new_tor_circuit
   debug_log('Forcing new Tor circuit...')
   # Tor rate limits NEWNYM to at most one per 10 second period.
   interval = 10
