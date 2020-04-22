@@ -334,6 +334,7 @@ class ImageBumpingScreen
           warn "Trying with sensitivity #{sensitivity}..."
           p = @screen.match_screen(image, sensitivity, true)
           next unless p
+
           warn 'Found match! Accept? (y/n)'
           loop do
             c = STDIN.getch

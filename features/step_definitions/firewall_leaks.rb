@@ -11,6 +11,7 @@ Given(/^I disable Tails' firewall$/) do
     next unless !line[/Chain (INPUT|OUTPUT|FORWARD) \(policy ACCEPT/] &&
        !line[/pkts[[:blank:]]+bytes[[:blank:]]+target/] &&
        !line.empty?
+
     raise "The Tails firewall was not successfully disabled:\n#{iptables}"
   end
 end
