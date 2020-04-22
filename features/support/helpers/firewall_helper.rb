@@ -79,11 +79,11 @@ def pcap_connections_helper(pcap_file, **opts)
     begin
       packet_info[:saddr] = ip_packet.ip_saddr
       packet_info[:daddr] = ip_packet.ip_daddr
-    rescue NoMethodError, NameError
+    rescue NameError
       begin
         packet_info[:saddr] = ip_packet.ipv6_saddr
         packet_info[:daddr] = ip_packet.ipv6_daddr
-      rescue NoMethodError, NameError
+      rescue NameError
         puts "We were hit by #11508. PacketFu bug? Packet info: #{ip_packet}"
         packet_info[:saddr] = nil
         packet_info[:daddr] = nil
