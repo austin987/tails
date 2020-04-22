@@ -100,7 +100,10 @@ end
 
 When /^I successfully run "?([[:alnum:] -]+)"?$/ do |command|
   @output = `#{File.expand_path("../../../auto/scripts/#{command}", __FILE__)}`
-  raise StandardError, "#{command} failed. Exit code: #{$CHILD_STATUS}" if $CHILD_STATUS != 0
+  if $CHILD_STATUS != 0
+    raise StandardError,
+          "#{command} failed. Exit code: #{$CHILD_STATUS}"
+  end
 end
 
 When /^I run "?([[:alnum:] -]+)"?$/ do |command|

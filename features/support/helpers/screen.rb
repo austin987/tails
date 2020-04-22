@@ -175,8 +175,8 @@ class Screen
       end
     end
     # If we've reached this point, none of the patterns could be found.
-    raise FindFailed, "can not find any of the patterns #{patterns} " +
-                        'on the screen'
+    raise FindFailed,
+          "can not find any of the patterns #{patterns} on the screen"
   end
 
   def exists_any(*args, **opts)
@@ -193,7 +193,7 @@ class Screen
     end
   rescue Timeout::Error
     raise FindFailed, "can not find any of the patterns #{patterns} " +
-                         'on the screen'
+                      'on the screen'
   end
 
   def press(*sequence, **opts)

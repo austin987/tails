@@ -172,9 +172,10 @@ def retry_action(max_retries, options = {}, &block)
         options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
-        raise MaxRetriesFailure, "#{options[:operation_name]} failed (despite retrying " +
-          "#{max_retries} times) with\n" +
-          "#{e.class}: #{e.message}"
+        raise MaxRetriesFailure,
+              "#{options[:operation_name]} failed (despite retrying " +
+              "#{max_retries} times) with\n" +
+              "#{e.class}: #{e.message}"
       end
     end
   end
