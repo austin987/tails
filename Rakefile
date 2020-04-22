@@ -27,7 +27,7 @@ require 'uri'
 require_relative 'vagrant/lib/tails_build_settings'
 
 # Path to the directory which holds our Vagrantfile
-VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
+VAGRANT_PATH = File.expand_path('vagrant', __dir__)
 
 # Branches that are considered 'stable' (used to select SquashFS compression)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
