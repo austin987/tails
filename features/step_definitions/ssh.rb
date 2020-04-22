@@ -7,7 +7,7 @@ def assert_not_ipaddr(str)
   end
 end
 
-def read_and_validate_ssh_config srv_type
+def read_and_validate_ssh_config(srv_type)
   conf = $config[srv_type]
   begin
     required_settings = ['private_key', 'public_key', 'username', 'hostname']
