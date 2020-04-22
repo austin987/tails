@@ -116,7 +116,7 @@ When /^I configure Tails to use a simulated Tor network$/ do
   # abstraction impractical and it's better that we avoid it an go
   # with the more explicit, step-based approach.
 
-  assert(!($vm.execute('service tor status').success?),
+  assert(!$vm.execute('service tor status').success?,
          'Running this step when Tor is running is probably not intentional')
   ensure_chutney_is_running
   # Most of these lines are taken from chutney's client template.

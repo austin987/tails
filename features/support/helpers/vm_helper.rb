@@ -113,7 +113,7 @@ class VM
   end
 
   def set_hardware_clock(time)
-    assert(!(is_running?), 'The hardware clock cannot be set when the ' +
+    assert(!is_running?, 'The hardware clock cannot be set when the ' +
                              'VM is running')
     assert(time.instance_of?(Time), "Argument must be of type 'Time'")
     adjustment = (time - Time.now).to_i
@@ -360,7 +360,7 @@ class VM
   end
 
   def disk_plugged?(name)
-    return !(disk_xml_desc(name).nil?)
+    return !disk_xml_desc(name).nil?
   end
 
   def set_disk_boot(name, type)

@@ -388,7 +388,7 @@ task :validate_http_proxy do
 end
 
 task :validate_git_state do
-  if git_helper('git_in_detached_head?') && !(git_helper('git_on_a_tag?'))
+  if git_helper('git_in_detached_head?') && !git_helper('git_on_a_tag?')
     raise 'We are in detached head but the current commit is not tagged'
   end
 end
@@ -398,7 +398,7 @@ task :setup_environment => ['validate_git_state'] do
   ENV['GIT_REF'] ||= git_helper('git_current_head_name')
   if on_jenkins?
     jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(/^origin\//, '')
-    if !(is_release?) && jenkins_branch != ENV['GIT_REF']
+    if !is_release? && jenkins_branch != ENV['GIT_REF']
       raise "We expected to build the Git ref '#{ENV['GIT_REF']}', " \
             "but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"
     end
@@ -458,7 +458,7 @@ task :build => [
   'ensure_clean_home_directory',
 ] do
   begin
-    if ENV['TAILS_RAM_BUILD'] && !(enough_free_memory_for_ram_build?)
+    if ENV['TAILS_RAM_BUILD'] && !enough_free_memory_for_ram_build?
       warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         The virtual machine is not currently set with enough memory to
@@ -545,7 +545,7 @@ def retrieve_artifacts(missing_ok: false)
 end
 
 def has_box?
-  !(capture_vagrant('box', 'list').grep(/^#{box_name}\s+\(libvirt,/).empty?)
+  !capture_vagrant('box', 'list').grep(/^#{box_name}\s+\(libvirt,/).empty?
 end
 
 def domain_name

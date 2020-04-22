@@ -38,10 +38,10 @@ end
 def ip4tables_packet_counter_sum(**filters)
   pkts = 0
   ip4tables_chains do |name, _, rules|
-    next if filters[:tables] && !(filters[:tables].include?(name))
+    next if filters[:tables] && !filters[:tables].include?(name)
 
     rules.each do |rule|
-      next if filters[:uid] && !((rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"]))
+      next if filters[:uid] && !rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"]
 
       pkts += rule.attribute('packet-count').to_s.to_i
     end
@@ -51,7 +51,7 @@ end
 
 def try_xml_element_text(element, xpath, default = nil)
   node = element.elements[xpath]
-  node.nil? || !(node.has_text?) ? default : node.text
+  node.nil? || !node.has_text? ? default : node.text
 end
 
 Then /^the firewall's policy is to (.+) all IPv4 traffic$/ do |expected_policy|
@@ -73,7 +73,7 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
   allowed_output = iptables_rules('OUTPUT').find_all do |rule|
     out_iface = rule.elements['conditions/match/o']
     is_maybe_accepted = rule.get_elements('actions/*').find do |action|
-      !(['DROP', 'REJECT', 'LOG'].include?(action.name))
+      !['DROP', 'REJECT', 'LOG'].include?(action.name)
     end
     is_maybe_accepted &&
       (

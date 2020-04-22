@@ -153,7 +153,7 @@ class Screen
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for #{pattern} to vanish") if opts[:log]
     try_for(timeout, delay: 0, log: false) do
-      !(exists(pattern, **opts.clone.update(log: false)))
+      !exists(pattern, **opts.clone.update(log: false))
     end
     debug_log("Screen: #{pattern} has vanished") if opts[:log]
     return nil
