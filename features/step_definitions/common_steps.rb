@@ -62,7 +62,13 @@ end
 
 Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) (?:([[:alpha:]]+) )?disk named "([^"]+)"$/ do |temporary, size, unit, type, name|
   type ||= "qcow2"
-  $vm.storage.create_new_disk(name, size: size, unit: unit, type: type)
+  begin
+    $vm.storage.create_new_disk(name, size: size, unit: unit, type: type)
+  rescue NoSpaceLeftError => e
+    cmd = "du -ah \"#{$config['TMPDIR']}\" | sort -hr | head -n20"
+    info_log("#{cmd}\n" + `#{cmd}`)
+    raise e
+  end
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
 end
 
