@@ -398,7 +398,7 @@ task :setup_environment => ['validate_git_state'] do
   ENV['GIT_COMMIT'] ||= git_helper('git_current_commit')
   ENV['GIT_REF'] ||= git_helper('git_current_head_name')
   if on_jenkins?
-    jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(/^origin\//, '')
+    jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(%r{^origin/}, '')
     if !is_release? && jenkins_branch != ENV['GIT_REF']
       raise "We expected to build the Git ref '#{ENV['GIT_REF']}', " \
             "but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"

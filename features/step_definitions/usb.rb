@@ -451,7 +451,7 @@ def parse_udisksctl_info(input)
   key = nil
   input.chomp.split("\n").each do |line|
     case line
-    when /^\/org\/freedesktop\/UDisks2\/block_devices\//
+    when %r{^/org/freedesktop/UDisks2/block_devices/}
       true
     when /^  (org\.freedesktop\.UDisks2\..+):$/
       section = Regexp.last_match(1)
@@ -550,7 +550,7 @@ Then /^all persistence configuration files have safe access rights$/ do
       assert_equal('tails-persistence-setup', file_owner)
       assert_equal('tails-persistence-setup', file_group)
       case f
-      when /.*\/live-additional-software.conf$/
+      when %r{.*/live-additional-software.conf$}
         assert_equal('644', file_perms)
       else
         assert_equal('600', file_perms)

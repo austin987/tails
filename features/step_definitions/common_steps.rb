@@ -1094,7 +1094,7 @@ end
 # so that $FILE is put in place (obviously this depends on that no
 # extra steps are needed to make $FILE's changes go "live").
 When /^I upload "([^"]*)" to "([^"]*)"$/ do |source, destination|
-  [source, destination].each { |s| s.sub!(/\/*$/, '') }
+  [source, destination].each { |s| s.sub!(%r{/*$}, '') }
   Dir.glob(source).each do |path|
     if File.directory?(path)
       new_destination = "#{destination}/#{File.basename(path)}"

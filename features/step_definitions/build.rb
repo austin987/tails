@@ -35,7 +35,7 @@ Given /^Tails ([[:alnum:].]+) has not been released yet$/ do |version|
   !File.exist? ".git/refs/tags/#{version}"
 end
 
-Given /^the last version mentioned in debian\/changelog is ([[:alnum:]~.]+)$/ do |version|
+Given %r{^the last version mentioned in debian/changelog is ([[:alnum:]~.]+)$} do |version|
   last = `dpkg-parsechangelog | awk '/^Version: / { print $2 }'`.strip
   raise StandardError, 'dpkg-parsechangelog failed.' if $CHILD_STATUS != 0
 
@@ -44,12 +44,12 @@ Given /^the last version mentioned in debian\/changelog is ([[:alnum:]~.]+)$/ do
   end
 end
 
-Given /^the last versions mentioned in debian\/changelog are ([[:alnum:]~.]+) and ([[:alnum:]~.]+)$/ do |version_a, version_b|
+Given %r{^the last versions mentioned in debian/changelog are ([[:alnum:]~.]+) and ([[:alnum:]~.]+)$} do |version_a, version_b|
   step "the last version mentioned in debian/changelog is #{version_a}"
   step "the last version mentioned in debian/changelog is #{version_b}"
 end
 
-Given(/^no frozen APT snapshot is encoded in config\/APT_snapshots\.d$/) do
+Given(%r{^no frozen APT snapshot is encoded in config/APT_snapshots\.d$}) do
   ['debian', 'debian-security', 'torproject'].map do |origin|
     File.open("config/APT_snapshots.d/#{origin}/serial", 'w+') do |serial|
       serial.write("latest\n")
@@ -57,7 +57,7 @@ Given(/^no frozen APT snapshot is encoded in config\/APT_snapshots\.d$/) do
   end
 end
 
-Given(/^frozen APT snapshots are encoded in config\/APT_snapshots\.d$/) do
+Given(%r{^frozen APT snapshots are encoded in config/APT_snapshots\.d$}) do
   ['debian', 'torproject'].map do |origin|
     File.open("config/APT_snapshots.d/#{origin}/serial", 'w+') do |serial|
       serial.write("2016060602\n")
@@ -81,7 +81,7 @@ Given %r{I am working on the ([[:alnum:]./_-]+) base branch$} do |branch|
   end
 end
 
-Given %r{^I checkout the ([[:alnum:]~.-]+) tag$} do |tag|
+Given /^I checkout the ([[:alnum:]~.-]+) tag$/ do |tag|
   create_git unless git_exists?
   fatal_system "git checkout --quiet #{tag}"
 end
@@ -124,12 +124,12 @@ Then /^I should not see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
   @output.should_not have_suite(suite)
 end
 
-Given(/^the config\/APT_overlays\.d directory is empty$/) do
+Given(%r{^the config/APT_overlays\.d directory is empty$}) do
   Dir.glob('config/APT_overlays.d/*').empty? \
   || raise('config/APT_overlays.d/ is not empty')
 end
 
-Given(/^config\/APT_overlays\.d contains ['"]?([[:alnum:].-]+)['"]?$/) do |suite|
+Given(%r{^config/APT_overlays\.d contains ['"]?([[:alnum:].-]+)['"]?$}) do |suite|
   FileUtils.touch("config/APT_overlays.d/#{suite}")
 end
 
@@ -137,15 +137,15 @@ Then(/^it should fail$/) do
   assert_not_equal(0, @exit_code)
 end
 
-Given(/^the (config\/base_branch) file does not exist$/) do |file|
+Given(%r{^the (config/base_branch) file does not exist$}) do |file|
   File.delete(file)
 end
 
-Given(/^the (config\/APT_overlays\.d) directory does not exist$/) do |dir|
+Given(%r{^the (config/APT_overlays\.d) directory does not exist$}) do |dir|
   Dir.rmdir(dir)
 end
 
-Given(/^the config\/base_branch file is empty$/) do
+Given(%r{^the config/base_branch file is empty$}) do
   File.truncate('config/base_branch', 0)
 end
 

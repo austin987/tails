@@ -1,5 +1,5 @@
 When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
-  repo_directory = /[\S]+\/([\S]+)(\.git)?$/.match(repo)[1]
+  repo_directory = %r{[\S]+/([\S]+)(\.git)?$}.match(repo)[1]
   assert(!$vm.directory_exist?("/home/#{LIVE_USER}/#{repo_directory}"))
 
   recovery_proc = Proc.new do
@@ -12,7 +12,7 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
 
   retry_tor(recovery_proc) do
     step "I run \"git clone #{repo}\" in GNOME Terminal"
-    m = /^(https?|git):\/\//.match(repo)
+    m = %r{^(https?|git)://}.match(repo)
     unless m
       step 'I verify the SSH fingerprint for the Git repository'
     end

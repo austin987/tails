@@ -486,7 +486,7 @@ class VM
 
   def has_network?
     nmcli_info = execute('nmcli device show eth0').stdout
-    has_ipv4_addr = /^IP4.ADDRESS(\[\d+\])?:\s*([0-9.\/]+)$/.match(nmcli_info)
+    has_ipv4_addr = %r{^IP4.ADDRESS(\[\d+\])?:\s*([0-9./]+)$}.match(nmcli_info)
     network_link_state == 'up' && has_ipv4_addr
   end
 
