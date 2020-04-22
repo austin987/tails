@@ -165,8 +165,8 @@ def find_impacted_docs(impact_map,
   new_packages = new_manifest.keys
   removed_packages = old_packages - new_packages
   introduced_packages = new_packages - old_packages
-  updated_packages = (new_packages & old_packages).select do |package|
-    old_manifest[package] != new_manifest[package]
+  updated_packages = (new_packages & old_packages).reject do |package|
+    old_manifest[package] == new_manifest[package]
   end
 
   impacted_docs = {}
