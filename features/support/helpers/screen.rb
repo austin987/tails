@@ -100,7 +100,7 @@ class Screen
     screenshot = "#{$config['TMPDIR']}/screenshot.png"
     $vm.display.screenshot(screenshot)
     OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
-                                screenshot, sensitivity, show_image)
+                         screenshot, sensitivity, show_image)
   ensure
     FileUtils.rm_f(screenshot)
   end
