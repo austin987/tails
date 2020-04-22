@@ -59,9 +59,9 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
   try_for(10) { $vm.file_exist?(chroot_path) }
   dump = JSON.load($vm.file_content(chroot_path))
 
-  def check_bookmarks_helper(a)
+  def check_bookmarks_helper(bookmarks_children)
     mozilla_uris_counter = 0
-    a.each do |h|
+    bookmarks_children.each do |h|
       h.each_pair do |k, v|
         if k == 'children'
           mozilla_uris_counter += check_bookmarks_helper(v)

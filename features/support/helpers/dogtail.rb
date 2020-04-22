@@ -104,19 +104,19 @@ module Dogtail
       run('dogtail.config.searchCutoffCount = 20')
     end
 
-    def self.value_to_s(v)
-      if v == true
+    def self.value_to_s(value)
+      if value == true
         'True'
-      elsif v == false
+      elsif value == false
         'False'
-      elsif v.class == String
-        "'#{v}'"
+      elsif value.class == String
+        "'#{value}'"
       # XXX:Stretch: drop the Fixnum line once we stop supporting Stretch
-      elsif [Fixnum, Integer, Float].include?(v.class) # rubocop:disable Lint/UnifiedInteger
+      elsif [Fixnum, Integer, Float].include?(value.class) # rubocop:disable Lint/UnifiedInteger
         v.to_s
       else
         raise "#{self.class.name} does not know how to handle argument type " \
-              "'#{v.class}'"
+              "'#{value.class}'"
       end
     end
 

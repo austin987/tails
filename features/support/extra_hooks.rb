@@ -91,7 +91,7 @@ module ExtraFormatters
   # anything. We only use it do hook into the correct events so we can
   # add our extra hooks.
   class ExtraHooks
-    def initialize(runtime, io, options)
+    def initialize(runtime, io, options) # rubocop:disable Naming/MethodParameterName
       # We do not care about any of the arguments.
       # XXX: We should be able to just have `*args` for the arguments
       # in the prototype, but since moving to cucumber 2.4 that breaks
@@ -117,7 +117,7 @@ module ExtraFormatters
 
   # The pretty formatter with debug logging mixed into its output.
   class PrettyDebug < Cucumber::Formatter::Pretty
-    def initialize(runtime, io, options)
+    def initialize(runtime, io, options) # rubocop:disable Naming/MethodParameterName
       super(runtime, io, options)
       $debug_log_fns ||= []
       $debug_log_fns << method(:debug_log)

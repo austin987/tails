@@ -1,9 +1,9 @@
 require 'socket'
 
-def assert_not_ipaddr(s)
-  err_msg = "'#{s}' looks like a LAN IP address."
+def assert_not_ipaddr(str)
+  err_msg = "'#{str}' looks like a LAN IP address."
   assert_raise(IPAddr::InvalidAddressError, err_msg) do
-    IPAddr.new(s)
+    IPAddr.new(str)
   end
 end
 

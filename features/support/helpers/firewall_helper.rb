@@ -6,11 +6,11 @@ def looks_like_dhcp_packet?(eth_packet, protocol, sport, dport, ip_packet)
     ip_packet && ip_packet.ip_daddr == '255.255.255.255'
 end
 
-def is_rarp_packet?(p)
+def is_rarp_packet?(packet)
   # Details: https://www.netometer.com/qa/rarp.html#A13
-  p.force_encoding('UTF-8').start_with?(
+  packet.force_encoding('UTF-8').start_with?(
     "\xFF\xFF\xFF\xFF\xFF\xFFRT\x00\xAC\xDD\xEE\x805\x00\x01\b\x00\x06"
-  ) && (p[19] == "\x03" || p[19] == "\x04")
+  ) && (packet[19] == "\x03" || packet[19] == "\x04")
 end
 
 # Returns the unique edges (based on protocol, source/destination
