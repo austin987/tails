@@ -181,10 +181,10 @@ Then /^I install "(.+)" using Synaptic$/ do |package_name|
     package_entry.doubleClick
     @synaptic.button('Apply').click
     apply_prompt = nil
-    try_for(60) {
+    try_for(60) do
       apply_prompt = @synaptic.dialog('Summary')
       true
-    }
+    end
     apply_prompt.button('Apply').click
     try_for(4 * 60) do
       @synaptic.child('Changes applied', roleName: 'frame', recursive: false)
