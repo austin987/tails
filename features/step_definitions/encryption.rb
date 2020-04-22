@@ -57,8 +57,8 @@ end
 
 def maybe_deal_with_pinentry
 
-    deal_with_pinentry
-  rescue Dogtail::Failure
+  deal_with_pinentry
+rescue Dogtail::Failure
     # The passphrase was cached or we wasn't prompted at all (e.g. when
     # only encrypting to a public key)
 

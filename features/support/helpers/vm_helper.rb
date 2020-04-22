@@ -27,10 +27,10 @@ class VMNet
   # suite runs that weren't properly cleaned up (e.g. aborted).
   def destroy_and_undefine
 
-      old_net = @virt.lookup_network_by_name(@net_name)
-      old_net.destroy if old_net.active?
-      old_net.undefine
-    rescue
+    old_net = @virt.lookup_network_by_name(@net_name)
+    old_net.destroy if old_net.active?
+    old_net.undefine
+  rescue
 
   end
 
@@ -431,9 +431,9 @@ class VM
 
   def is_running?
 
-      return @domain.active?
-    rescue
-      return false
+    return @domain.active?
+  rescue
+    return false
 
   end
 

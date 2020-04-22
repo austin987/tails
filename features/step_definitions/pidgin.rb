@@ -20,10 +20,10 @@ end
 
 def wait_and_focus(img, window, time = 10)
 
-    @screen.wait(img, time)
-  rescue FindFailed
-    $vm.focus_window(window)
-    @screen.wait(img, time)
+  @screen.wait(img, time)
+rescue FindFailed
+  $vm.focus_window(window)
+  @screen.wait(img, time)
 
 end
 
