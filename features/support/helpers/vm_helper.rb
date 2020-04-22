@@ -26,12 +26,10 @@ class VMNet
   # We lookup by name so we also catch networks from previous test
   # suite runs that weren't properly cleaned up (e.g. aborted).
   def destroy_and_undefine
-
     old_net = @virt.lookup_network_by_name(@net_name)
     old_net.destroy if old_net.active?
     old_net.undefine
   rescue
-
   end
 
   def update(xml)
@@ -430,11 +428,9 @@ class VM
   end
 
   def is_running?
-
     return @domain.active?
   rescue
     return false
-
   end
 
   def execute(cmd, **options)
