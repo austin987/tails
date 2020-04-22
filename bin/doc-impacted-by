@@ -32,7 +32,7 @@ class Array
 end
 
 def parse_argv!
-  options = Hash.new
+  options = {}
   opt_parser = OptionParser.new do |opts|
     opts.banner = 'Usage: [OPTION]... COMMITISH1 COMMITISH2 MANIFEST1 MANIFEST2'
     opts.separator ''
@@ -131,7 +131,7 @@ end
 # map", a Hash which maps all documentation pages to the sources it is
 # impacted by.
 def read_relationship_file_as_impact_map(relationship_file)
-  impact_map = Hash.new
+  impact_map = {}
   relationships = YAML.load(File.read(relationship_file))
   relationships.map { |e| canonicalize_relationship(e) } .each do |entry|
     entry['pages'].each do |page|
@@ -171,7 +171,7 @@ def find_impacted_docs(impact_map,
     old_manifest[package] != new_manifest[package]
   end
 
-  impacted_docs = Hash.new
+  impacted_docs = {}
   impact_map.each do |page, sources|
     file_paths = []
     package_globs = []
@@ -247,8 +247,8 @@ old_commit, new_commit, old_manifest_path, new_manifest_path = parameters
 
 impact_map = read_relationship_file_as_impact_map(relationship_file)
 if options['skip-packages']
-  old_manifest = Hash.new
-  new_manifest = Hash.new
+  old_manifest = {}
+  new_manifest = {}
 else
   old_manifest = read_package_manifest_file_as_package_map(old_manifest_path)
   new_manifest = read_package_manifest_file_as_package_map(new_manifest_path)

@@ -19,7 +19,7 @@ def pcap_connections_helper(pcap_file, **opts)
   opts[:ignore_dhcp] = true unless opts.key?(:ignore_dhcp)
   opts[:ignore_arp] = true unless opts.key?(:ignore_arp)
   opts[:ignore_sources] ||= [$vm.vmnet.bridge_mac]
-  connections = Array.new
+  connections = []
   packets = PacketFu::PcapFile.new.file_to_array(:filename => pcap_file)
   packets.each do |p|
     if PacketFu::EthPacket.can_parse?(p)

@@ -349,7 +349,7 @@ def list_artifacts
                                         '-o -name tails-build-env.list').first
   stdout.split("\n")
 rescue VagrantCommandError
-  Array.new
+  []
 end
 
 def remove_artifacts

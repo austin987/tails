@@ -905,7 +905,7 @@ Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
   guest_time = $vm.execute_successfully(
     'date +"%Y-%m-%d %H:%M:%S"'
   ).stdout.chomp
-  @apparmor_profile_monitoring_start ||= Hash.new
+  @apparmor_profile_monitoring_start ||= {}
   @apparmor_profile_monitoring_start[profile] = guest_time
 end
 

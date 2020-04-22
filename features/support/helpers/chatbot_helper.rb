@@ -1,7 +1,7 @@
 require 'tempfile'
 
 class ChatBot
-  def initialize(account, password, otr_key, opts = Hash.new)
+  def initialize(account, password, otr_key, opts = {})
     @account = account
     @password = password
     @otr_key = otr_key

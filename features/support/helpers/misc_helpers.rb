@@ -248,7 +248,7 @@ def cmd_helper(cmd, env = {})
 end
 
 def all_tor_hosts
-  nodes = Array.new
+  nodes = []
   chutney_torrcs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*/torrc"
   )

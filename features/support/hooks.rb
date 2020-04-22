@@ -74,7 +74,7 @@ After do
   if @after_scenario_hooks
     @after_scenario_hooks.each { |block| block.call }
   end
-  @after_scenario_hooks = Array.new
+  @after_scenario_hooks = []
 end
 
 BeforeFeature('@product', '@source') do |feature|
@@ -103,7 +103,7 @@ end
 ####################
 
 def add_after_scenario_hook(&block)
-  @after_scenario_hooks ||= Array.new
+  @after_scenario_hooks ||= []
   @after_scenario_hooks << block
 end
 
@@ -199,7 +199,7 @@ end
 # we want this hook to always run first, so it must always be the
 # *first* Before hook matching @product listed in this file.
 Before('@product') do |scenario|
-  $failure_artifacts = Array.new
+  $failure_artifacts = []
   if $config['CAPTURE']
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"

@@ -232,7 +232,7 @@ Then /^I can see that my friend joined the multi-user chat$/ do
 end
 
 def configured_pidgin_accounts
-  accounts = Hash.new
+  accounts = {}
   xml = REXML::Document.new(
     $vm.file_content("/home/#{LIVE_USER}/.purple/accounts.xml")
   )

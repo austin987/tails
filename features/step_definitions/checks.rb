@@ -5,7 +5,7 @@ def shipped_openpgp_keys
 end
 
 Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) months$/ do |months|
-  invalid = Array.new
+  invalid = []
   shipped_openpgp_keys.each do |key|
     begin
       step "the shipped OpenPGP key #{key} will be valid for the next #{months} months"
