@@ -57,7 +57,7 @@ AfterConfiguration do |config|
       raise "Temporary directory '#{$config['TMPDIR']}' must be owned by the " +
             'current user'
     end
-    FileUtils.chmod(0755, $config['TMPDIR'])
+    FileUtils.chmod(0o755, $config['TMPDIR'])
   else
     begin
       FileUtils.mkdir_p($config['TMPDIR'])
@@ -151,7 +151,7 @@ BeforeFeature('@product') do
 
       unless File.world_readable?(path)
         if File.owned?(path)
-          File.chmod(0644, path)
+          File.chmod(0o644, path)
         else
           raise "warning: the Tails #{type} image must be world readable " +
                 'or be owned by the current user to be available inside ' +

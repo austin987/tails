@@ -42,7 +42,7 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
     File.delete(dump)
   end
   FileUtils.touch(dump)
-  FileUtils.chmod(0666, dump)
+  FileUtils.chmod(0o666, dump)
   $vm.domain.core_dump(dump)
   # Make sure to close after reading stdout, to avoid Zombies:
   grep = IO.popen(['grep', '--text', '-c', 'wipe_didnt_work', dump])
