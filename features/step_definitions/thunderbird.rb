@@ -120,7 +120,7 @@ def wait_for_thunderbird_progress_bar_to_vanish(thunderbird_frame)
       thunderbird_frame.child(roleName: 'status bar', retry: false)
                        .child(roleName: 'progress bar', retry: false)
       false
-    rescue
+    rescue StandardError
       true
     end
   end
@@ -146,7 +146,7 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
         # testing the password).
         thunderbird_wizard.button('Done').click
         false
-      rescue
+      rescue StandardError
         true
       end
     end

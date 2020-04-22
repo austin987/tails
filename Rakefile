@@ -168,7 +168,7 @@ def enough_free_host_memory_for_ram_build?
   begin
     usable_free_mem = `free`.split[12].to_i
     usable_free_mem > VM_MEMORY_FOR_RAM_BUILDS * 1024
-  rescue
+  rescue StandardError
     false
   end
 end
@@ -198,7 +198,7 @@ def system_cpus
 
   begin
     File.read('/proc/cpuinfo').scan(/^processor\s+:/).count
-  rescue
+  rescue StandardError
     nil
   end
 end

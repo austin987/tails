@@ -29,7 +29,7 @@ class VMNet
     old_net = @virt.lookup_network_by_name(@net_name)
     old_net.destroy if old_net.active?
     old_net.undefine
-  rescue
+  rescue StandardError
   end
 
   def update(xml)
@@ -89,7 +89,7 @@ class VM
       old_domain = @virt.lookup_domain_by_name(@domain_name)
       old_domain.destroy if old_domain.active?
       old_domain.undefine
-    rescue
+    rescue StandardError
     end
   end
 
@@ -301,7 +301,7 @@ class VM
            == @storage.disk_path(name)
           return e.to_s
         end
-      rescue
+      rescue StandardError
         next
       end
     end
@@ -427,7 +427,7 @@ class VM
 
   def is_running?
     @domain.active?
-  rescue
+  rescue StandardError
     false
   end
 
@@ -467,7 +467,7 @@ class VM
     Timeout.timeout(3) do
       execute_successfully("echo '#{msg}'").stdout.chomp == msg
     end
-  rescue
+  rescue StandardError
     false
   end
 
@@ -528,7 +528,7 @@ class VM
       sleep 5
       do_focus.call
     end
-  rescue
+  rescue StandardError
     # noop
   end
 

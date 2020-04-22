@@ -59,7 +59,7 @@ class VMStorage
     if was_not_active
       pool.destroy
     end
-  rescue
+  rescue StandardError
     # Some of the above operations can fail if the pool's path was
     # deleted by external means; let's ignore that.
   end

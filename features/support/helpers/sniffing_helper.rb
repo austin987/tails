@@ -38,7 +38,7 @@ class Sniffer
   def stop
     Process.kill('TERM', @pid)
     Process.wait(@pid)
-  rescue
+  rescue StandardError
     # noop
   end
 

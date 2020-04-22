@@ -90,7 +90,7 @@ module Dogtail
 
     def child?(*args)
       !!child(*args)
-    rescue
+    rescue StandardError
       false
     end
 
@@ -98,7 +98,7 @@ module Dogtail
       run('dogtail.config.searchCutoffCount = 0')
       run(@find_code)
       true
-    rescue
+    rescue StandardError
       false
     ensure
       run('dogtail.config.searchCutoffCount = 20')

@@ -51,7 +51,7 @@ class SSHServer
     begin
       Process.kill('TERM', @pid)
       Process.wait(@pid)
-    rescue
+    rescue StandardError
       # noop
     end
   end

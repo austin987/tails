@@ -43,7 +43,7 @@ def ensure_chutney_is_running
     begin
       cmd_helper(['pkill', '--full', '--exact',
                   "tor -f #{env['CHUTNEY_DATA_DIR']}/nodes/.*/torrc --quiet",])
-    rescue
+    rescue StandardError
     end
 
     if KEEP_SNAPSHOTS
@@ -183,7 +183,7 @@ def chutney_onionservice_redir(remote_address, remote_port)
       if system('/bin/systemctl', bus, '--quiet', 'is-active', redir_unit_name)
         system('/bin/systemctl', bus, 'stop', redir_unit_name)
       end
-    rescue
+    rescue StandardError
       # noop
     end
   end

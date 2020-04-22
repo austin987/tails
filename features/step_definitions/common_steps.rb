@@ -378,7 +378,7 @@ Given /^the time has synced$/ do
     ['/run/tordate/done', '/run/htpdate/success'].each do |file|
       try_for(300) { $vm.execute("test -e #{file}").success? }
     end
-  rescue
+  rescue StandardError
     File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |file|
       file.write($vm.execute('cat /var/log/htpdate.log').stdout)
     end
@@ -473,7 +473,7 @@ Given /^all notifications have disappeared$/ do
     @screen.click(x, y)
     begin
       gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
-    rescue
+    rescue StandardError
       # Ignore exceptions: there might be no notification to clear, in
       # which case there will be a "No Notifications" label instead of
       # a "Clear All" button.
