@@ -544,7 +544,7 @@ end
 Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |process, time|
   try_for(time.to_i, :msg => "Process '#{process}' is still running after " +
                              "waiting for #{time} seconds") do
-    not $vm.has_process?(process)
+    !$vm.has_process?(process)
   end
 end
 
@@ -607,7 +607,7 @@ Given /^the package "([^"]+)" is( not)? installed( after Additional Software has
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
-  if not version.empty?
+  if !version.empty?
     raise "Unsupported version '#{version}'"
   else
     $vm.execute_successfully(

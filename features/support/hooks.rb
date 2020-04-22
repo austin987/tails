@@ -306,7 +306,7 @@ After('@product') do |scenario|
       )
     end
   else
-    if @video_path && File.exist?(@video_path) && not($config['CAPTURE_ALL'])
+    if @video_path && File.exist?(@video_path) && !(($config['CAPTURE_ALL']))
       FileUtils.rm(@video_path)
     end
   end

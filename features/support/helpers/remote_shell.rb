@@ -86,7 +86,7 @@ module RemoteShell
     end
 
     def failure?
-      return not(success?)
+      return !(success?)
     end
 
     def to_s
@@ -128,7 +128,7 @@ module RemoteShell
     end
 
     def failure?
-      return not(success?)
+      return !(success?)
     end
 
     def to_s

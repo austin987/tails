@@ -39,7 +39,7 @@ Then /^no network device leaked the real MAC address$/ do
   macs = $vm.all_real_macs
   assert_all_connections(@sniffer.pcap_file) do |c|
     macs.all? do |mac|
-      not [c.mac_saddr, c.mac_daddr].include?(mac)
+      ![c.mac_saddr, c.mac_daddr].include?(mac)
     end
   end
 end
