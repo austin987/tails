@@ -305,10 +305,8 @@ After('@product') do |scenario|
         "The error was: #{scenario.exception.class.name}: #{scenario.exception}"
       )
     end
-  else
-    if @video_path && File.exist?(@video_path) && !(($config['CAPTURE_ALL']))
-      FileUtils.rm(@video_path)
-    end
+  elsif @video_path && File.exist?(@video_path) && !(($config['CAPTURE_ALL']))
+    FileUtils.rm(@video_path)
   end
   # If we don't shut down the system under testing it will continue to
   # run during the next scenario's Before hooks, which we have seen

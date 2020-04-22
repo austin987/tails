@@ -24,14 +24,12 @@ def pcap_connections_helper(pcap_file, **opts)
   packets.each do |p|
     if PacketFu::EthPacket.can_parse?(p)
       eth_packet = PacketFu::EthPacket.parse(p)
+    elsif rarp_packet?(p)
+      # packetfu cannot parse RARP, see #16825.
+      next
     else
-      if rarp_packet?(p)
-        # packetfu cannot parse RARP, see #16825.
-        next
-      else
-        raise FirewallAssertionFailedError,
-              'Found something that is not an ethernet packet'
-      end
+      raise FirewallAssertionFailedError,
+            'Found something that is not an ethernet packet'
     end
     sport = nil
     dport = nil

@@ -24,10 +24,8 @@ Then /^the (\d+)(?:st|nd|rd|th) network device has (its real|a spoofed) MAC addr
       if nic_real_mac == nic_current_mac
         raise "The MAC address was expected to be spoofed but wasn't"
       end
-    else
-      if nic_real_mac != nic_current_mac
-        raise 'The MAC address is spoofed but was expected to not be'
-      end
+    elsif nic_real_mac != nic_current_mac
+      raise 'The MAC address is spoofed but was expected to not be'
     end
   rescue Exception => e
     save_failure_artifact('Network capture', @sniffer.pcap_file)
