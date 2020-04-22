@@ -439,7 +439,7 @@ class VM
 
   def execute(cmd, **options)
     options[:user] ||= 'root'
-    options[:spawn] = false unless options.has_key?(:spawn)
+    options[:spawn] = false unless options.key?(:spawn)
     if options[:libs]
       libs = options[:libs]
       options.delete(:libs)

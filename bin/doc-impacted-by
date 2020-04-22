@@ -98,15 +98,15 @@ def canonicalize_relationship(orig_entry)
   }
   fields = field_abbreviations.values
   field_abbreviations.each do |short, long|
-    next unless entry.has_key?(short)
+    next unless entry.key?(short)
 
-    assert(!entry.has_key?(long),
+    assert(!entry.key?(long),
            "contains both '#{long}' and its abbreviation '#{short}'")
     v = entry[short]
     entry.delete(short)
     entry[long] = v
   end
-  assert(entry.has_key?('pages'),
+  assert(entry.key?('pages'),
          "lacks the obligatory 'pages' field")
   assert(entry.keys.size > 1,
          "entries with only a 'pages' field are meaningless")
@@ -114,7 +114,7 @@ def canonicalize_relationship(orig_entry)
   assert((entry.keys - fields).empty?,
          "contains invalid fields: #{entry.keys - fields}")
   fields.each do |field|
-    next unless entry.has_key?(field)
+    next unless entry.key?(field)
 
     entry[field] = entry[field].arrayify
   end

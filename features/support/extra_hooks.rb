@@ -72,7 +72,7 @@ def info_log(message = '', **options)
 end
 
 def debug_log(message, **options)
-  options[:timestamp] = true unless options.has_key?(:timestamp)
+  options[:timestamp] = true unless options.key?(:timestamp)
   if $debug_log_fns
     if options[:timestamp]
       # Force UTC so the local timezone difference vs UTC won't be

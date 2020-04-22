@@ -157,7 +157,7 @@ module Dogtail
       if args.last.class == Hash
         args_hash = args.last
         non_predicates.each do |opt|
-          if args_hash.has_key?(opt)
+          if args_hash.key?(opt)
             findChildren_opts_hash[opt] = args_hash[opt]
             args_hash.delete(opt)
           end

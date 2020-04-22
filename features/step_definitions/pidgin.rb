@@ -4,7 +4,7 @@ def xmpp_account(account_name, required_options = [])
     account = $config['Pidgin']['Accounts']['XMPP'][account_name]
     check_keys = ['username', 'domain', 'password'] + required_options
     for key in check_keys do
-      assert(account.has_key?(key))
+      assert(account.key?(key))
       assert_not_nil(account[key])
       assert(!account[key].empty?)
     end
@@ -188,7 +188,7 @@ When /^I join some empty multi-user chat$/ do
   @screen.wait('PidginJoinChatWindow.png', 10).click
   click_mid_right_edge('PidginJoinChatRoomLabel.png')
   account = xmpp_account('Tails_account')
-  if account.has_key?('chat_room') && \
+  if account.key?('chat_room') && \
      !account['chat_room'].nil? && \
      !account['chat_room'].empty?
     chat_room = account['chat_room']

@@ -12,7 +12,7 @@ def read_and_validate_ssh_config srv_type
   begin
     required_settings = ['private_key', 'public_key', 'username', 'hostname']
     required_settings.each do |key|
-      assert(conf.has_key?(key))
+      assert(conf.key?(key))
       assert_not_nil(conf[key])
       assert(!conf[key].empty?)
     end

@@ -66,7 +66,7 @@ module RemoteShell
     # application we want to interact with.
     def self.execute(vm, cmd, **opts)
       opts[:user] ||= 'root'
-      opts[:spawn] = false unless opts.has_key?(:spawn)
+      opts[:spawn] = false unless opts.key?(:spawn)
       type = opts[:spawn] ? 'spawn' : 'call'
       debug_log("Remote shell: #{type}ing as #{opts[:user]}: #{cmd}")
       ret = RemoteShell.communicate(vm, 'sh_' + type, opts[:user], cmd, **opts)
