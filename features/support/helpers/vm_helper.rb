@@ -312,8 +312,6 @@ class VM
     xml = disk_xml_desc(name)
     if xml
       REXML::Document.new(xml)
-    else
-      nil
     end
   end
 
