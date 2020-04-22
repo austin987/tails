@@ -406,11 +406,10 @@ task :setup_environment => ['validate_git_state'] do
 
   ENV['BASE_BRANCH_GIT_COMMIT'] ||= git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
-    if ENV[var].empty?
-      raise "Variable '#{var}' is empty, which should not be possible: " +
-            "either validate_git_state is buggy or the 'origin' remote " +
-            'does not point to the official Tails Git repository.'
-    end
+    next unless ENV[var].empty?
+    raise "Variable '#{var}' is empty, which should not be possible: " +
+          "either validate_git_state is buggy or the 'origin' remote " +
+          'does not point to the official Tails Git repository.'
   end
 end
 
@@ -629,12 +628,11 @@ task :clean_up_libvirt_volumes do
     # Expected if the pool does not exist
   else
     for disk in pool.list_volumes do
-      if /^tails-builder-/.match(disk)
-        begin
-          pool.lookup_volume_by_name(disk).delete
-        rescue Libvirt::RetrieveError
-          # Expected if the disk does not exist
-        end
+      next unless /^tails-builder-/.match(disk)
+      begin
+        pool.lookup_volume_by_name(disk).delete
+      rescue Libvirt::RetrieveError
+        # Expected if the disk does not exist
       end
     end
   ensure

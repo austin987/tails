@@ -195,13 +195,12 @@ def find_impacted_docs(impact_map,
         # Git::Diff#path() alters the object so it cannot be used for a
         # successive call for another path.
         source_path_diff = git_diff.clone.path(source_path)
-        unless source_path_diff.empty?
-          changed_files = source_path_diff.map { |file| file.path }
-          reasons = changed_files.map do |path|
-            "Changes in source file: #{path}"
-          end
-          impacted_docs.deep_merge({ page_path => reasons })
+        next if source_path_diff.empty?
+        changed_files = source_path_diff.map { |file| file.path }
+        reasons = changed_files.map do |path|
+          "Changes in source file: #{path}"
         end
+        impacted_docs.deep_merge({ page_path => reasons })
       end
       package_globs.each do |package_glob|
         reasons = []

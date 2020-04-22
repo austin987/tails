@@ -333,20 +333,19 @@ class ImageBumpingScreen
         [0.80, 0.70, 0.60, 0.50, 0.40, 0.30].each do |sensitivity|
           warn "Trying with sensitivity #{sensitivity}..."
           p = @screen.match_screen(image, sensitivity, true)
-          if p
-            warn 'Found match! Accept? (y/n)'
-            loop do
-              c = STDIN.getch
-              if c == 'y'
-                FileUtils.cp("#{$config['TMPDIR']}/last_opencv_match.png",
-                             "#{OPENCV_IMAGE_PATH}/#{image}")
-                return p
-              elsif c == 'n' || c == 3.chr # Ctrl+C => 3
-                break
-              end
+          next unless p
+          warn 'Found match! Accept? (y/n)'
+          loop do
+            c = STDIN.getch
+            if c == 'y'
+              FileUtils.cp("#{$config['TMPDIR']}/last_opencv_match.png",
+                           "#{OPENCV_IMAGE_PATH}/#{image}")
+              return p
+            elsif c == 'n' || c == 3.chr # Ctrl+C => 3
+              break
             end
-            break if c == 3.chr # Ctrl+C => 3
           end
+          break if c == 3.chr # Ctrl+C => 3
         end
         warn 'Failed to automatically bump image'
       when 'r'
