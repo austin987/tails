@@ -296,7 +296,7 @@ Then /^I see that (.+) is properly stream isolated(?: after (\d+) seconds)?$/ do
   expected_ports << 9051 if info[:controller]
   assert_not_nil(@process_monitor_log)
   log_lines = $vm.file_content(@process_monitor_log).split("\n")
-  assert(log_lines.size > 0,
+  assert(!log_lines.empty?,
          "Couldn't see any connection made by #{application} so " \
          'something is wrong')
   log_lines.each do |line|

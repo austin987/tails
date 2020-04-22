@@ -126,7 +126,7 @@ module Dogtail
     # into the parentheses of a Python function call.
     # Example: [42, {:foo => 'bar'}] => "42, foo = 'bar'"
     def self.args_to_s(args)
-      return '' if args.size == 0
+      return '' if args.empty?
 
       args_list = args
       args_hash = nil
@@ -164,7 +164,7 @@ module Dogtail
         end
       end
       findChildren_opts = ''
-      if findChildren_opts_hash.size > 0
+      if !findChildren_opts_hash.empty?
         findChildren_opts = ', '
         + self.class.args_to_s([findChildren_opts_hash])
       end
