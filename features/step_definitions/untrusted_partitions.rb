@@ -37,7 +37,7 @@ Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"
               else
                 type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG
               end
-             ),
+          ),
     opts: {
       format:   'raw',
       readonly: true,
