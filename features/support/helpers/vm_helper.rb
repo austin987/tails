@@ -30,6 +30,7 @@ class VMNet
     old_net.destroy if old_net.active?
     old_net.undefine
   rescue StandardError
+    # Nothing to clean up
   end
 
   def update(xml)
@@ -90,6 +91,7 @@ class VM
       old_domain.destroy if old_domain.active?
       old_domain.undefine
     rescue StandardError
+      # Nothing to clean up
     end
   end
 

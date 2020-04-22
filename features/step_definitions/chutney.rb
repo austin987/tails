@@ -44,6 +44,7 @@ def ensure_chutney_is_running
       cmd_helper(['pkill', '--full', '--exact',
                   "tor -f #{env['CHUTNEY_DATA_DIR']}/nodes/.*/torrc --quiet",])
     rescue StandardError
+      # Nothing to kill
     end
 
     if KEEP_SNAPSHOTS

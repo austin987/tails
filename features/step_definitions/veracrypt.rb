@@ -70,6 +70,7 @@ def create_veracrypt_volume(type, with_keyfile)
       reply_prompt(r_f, w_f, /^\s*Are you sure you want to proceed/, 'y')
       r_f.expect(/^All done!/)
     rescue Errno::EIO
+      # Handled by checking $CHILD_STATUS below
     ensure
       Process.wait pid
     end
@@ -85,6 +86,7 @@ def create_veracrypt_volume(type, with_keyfile)
                    @veracrypt_is_hidden ? $veracrypt_hidden_passphrase : $veracrypt_passphrase)
       r_f.expect(/^All ok!/)
     rescue Errno::EIO
+      # Handled by checking $CHILD_STATUS below
     ensure
       Process.wait pid
     end
