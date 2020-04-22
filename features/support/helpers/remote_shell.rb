@@ -124,7 +124,7 @@ module RemoteShell
     end
 
     def success?
-      return @exception == nil
+      return @exception.nil?
     end
 
     def failure?
