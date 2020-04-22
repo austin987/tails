@@ -89,7 +89,7 @@ module Dogtail
     end
 
     def child?(*args)
-      !!child(*args)
+      !child(*args).nil?
     rescue StandardError
       false
     end

@@ -114,7 +114,7 @@ Given /^I delete the "([^"]+)" subkey from the live user's public keyring$/ do |
 end
 
 When /^I start Seahorse( via the OpenPGP Applet)?$/ do |withgpgapplet|
-  @withgpgapplet = !!withgpgapplet
+  @withgpgapplet = !withgpgapplet.nil?
   start_or_restart_seahorse
 end
 

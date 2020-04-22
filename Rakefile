@@ -640,7 +640,7 @@ task :clean_up_libvirt_volumes do
 end
 
 def on_jenkins?
-  !!ENV['JENKINS_URL']
+  !ENV['JENKINS_URL'].nil?
 end
 
 desc 'Test Tails'
