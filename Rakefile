@@ -101,11 +101,7 @@ def git_helper(*args)
   rescue CommandError => e
     status = e.status
   end
-  if question
-    status.zero?
-  else
-    stdout.chomp
-  end
+  question ? status.zero? : stdout.chomp
 end
 
 class VagrantCommandError < CommandError
