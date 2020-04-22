@@ -56,12 +56,12 @@ def deal_with_pinentry
 end
 
 def maybe_deal_with_pinentry
-  begin
+  
     deal_with_pinentry
   rescue Dogtail::Failure
     # The passphrase was cached or we wasn't prompted at all (e.g. when
     # only encrypting to a public key)
-  end
+  
 end
 
 def gedit_copy_all_text

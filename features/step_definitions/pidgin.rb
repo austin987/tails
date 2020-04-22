@@ -19,12 +19,12 @@ def xmpp_account(account_name, required_options = [])
 end
 
 def wait_and_focus(img, window, time = 10)
-  begin
+  
     @screen.wait(img, time)
   rescue FindFailed
     $vm.focus_window(window)
     @screen.wait(img, time)
-  end
+  
 end
 
 # This method should always fail (except with the option
