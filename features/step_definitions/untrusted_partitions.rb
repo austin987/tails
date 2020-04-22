@@ -35,7 +35,7 @@ Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"
     path: (if old == ''
              type == 'ISO' ? TAILS_ISO : TAILS_IMG
            else
-                type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG
+             type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG
               end
           ),
     opts: {
