@@ -133,7 +133,7 @@ Then /^I enable key synchronization in Seahorse$/ do
 end
 
 Then /^I synchronize keys in Seahorse$/ do
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     setup_onion_keyserver
     if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
       step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
@@ -187,7 +187,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     end
   end
 
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     setup_onion_keyserver
     @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
     @screen.press('ctrl', 'w')

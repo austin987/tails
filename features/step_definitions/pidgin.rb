@@ -335,7 +335,7 @@ end
 Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   expected_channel_entry = chan_image(account, default_chan(account), 'roster')
   reconnect_button = 'PidginReconnect.png'
-  recovery_on_failure = Proc.new do
+  recovery_on_failure = proc do
     if @screen.exists('PidginReconnect.png')
       @screen.click('PidginReconnect.png')
     else

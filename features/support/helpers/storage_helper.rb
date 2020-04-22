@@ -199,7 +199,7 @@ class VMStorage
     assert(block_given?)
     g = Guestfs::Guestfs.new()
     g.set_trace(1)
-    message_callback = Proc.new do |event, _, message, _|
+    message_callback = proc do |event, _, message, _|
       debug_log("libguestfs: #{Guestfs.event_to_string(event)}: #{message}")
     end
     g.set_event_callback(message_callback,

@@ -45,7 +45,7 @@ When /^I configure APT to use non-onion sources$/ do
 end
 
 When /^I update APT using apt$/ do
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     step 'I kill the process "apt"'
     $vm.execute('rm -rf /var/lib/apt/lists/*')
   end
@@ -64,7 +64,7 @@ def wait_for_package_installation(package)
 end
 
 Then /^I install "(.+)" using apt$/ do |package|
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     step 'I kill the process "apt"'
     # We can't use execute_successfully here: the package might not be
     # installed at this point, and then "apt purge" would return non-zero.
@@ -142,7 +142,7 @@ When /^I start Synaptic$/ do
 end
 
 When /^I update APT using Synaptic$/ do
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     step 'I kill the process "synaptic"'
     step 'I start Synaptic'
   end
@@ -163,7 +163,7 @@ When /^I update APT using Synaptic$/ do
 end
 
 Then /^I install "(.+)" using Synaptic$/ do |package_name|
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     step 'I kill the process "synaptic"'
     # We can't use execute_successfully here: the package might not be
     # installed at this point, and then "apt purge" would return non-zero.

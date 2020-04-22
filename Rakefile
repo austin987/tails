@@ -556,7 +556,7 @@ end
 def clean_up_builder_vms
   $virt = Libvirt.open('qemu:///system')
 
-  clean_up_domain = Proc.new do |domain|
+  clean_up_domain = proc do |domain|
     next if domain.nil?
 
     domain.destroy if domain.active?

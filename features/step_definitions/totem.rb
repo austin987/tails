@@ -68,7 +68,7 @@ Then /^I can watch a WebM video over HTTPs$/ do
     add_extra_allowed_host(ip.to_s, 443)
   end
 
-  recovery_on_failure = Proc.new do
+  recovery_on_failure = proc do
     step 'I close Totem'
   end
   retry_tor(recovery_on_failure) do

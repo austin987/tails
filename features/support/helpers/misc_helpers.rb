@@ -138,7 +138,7 @@ end
 # given) and the intention with it is to bring us back to the state
 # expected by the block, so it can be retried.
 def retry_tor(recovery_proc = nil, &block)
-  tor_recovery_proc = Proc.new do
+  tor_recovery_proc = proc do
     force_new_tor_circuit
     recovery_proc.call if recovery_proc
   end

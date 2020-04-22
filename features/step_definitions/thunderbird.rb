@@ -207,7 +207,7 @@ When /^I send an email to myself$/ do
 end
 
 Then /^I can find the email I sent to myself in my inbox$/ do
-  recovery_proc = Proc.new { step 'I fetch my email' }
+  recovery_proc = proc { step 'I fetch my email' }
   retry_tor(recovery_proc) do
     thunderbird_inbox.click
     filter = thunderbird_main.child('Filter these messages <Ctrl+Shift+K>',

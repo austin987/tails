@@ -469,7 +469,7 @@ Given /^all notifications have disappeared$/ do
   x = 512
   y = 10
   gnome_shell = Dogtail::Application.new('gnome-shell')
-  retry_action(10, recovery_proc: Proc.new { @screen.press('Escape') }) do
+  retry_action(10, recovery_proc: proc { @screen.press('Escape') }) do
     @screen.click(x, y)
     begin
       gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click

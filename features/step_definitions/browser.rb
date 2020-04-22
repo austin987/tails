@@ -84,7 +84,7 @@ end
 When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   step "I open a new tab in the #{browser}"
   info = xul_application_info(browser)
-  open_address = Proc.new do
+  open_address = proc do
     @screen.click(info[:address_bar_image])
     # This static here since we have no reliable visual indicators
     # that we can watch to know when typing is "safe".
@@ -96,7 +96,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     @screen.press('ctrl', 'v')
     @screen.press('Return')
   end
-  recovery_on_failure = Proc.new do
+  recovery_on_failure = proc do
     @screen.press('Escape')
     @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_address.call
@@ -104,7 +104,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   if browser == 'Tor Browser'
     retry_method = method(:retry_tor)
   else
-    retry_method = Proc.new { |p, &b| retry_action(10, recovery_proc: p, &b) }
+    retry_method = proc { |p, &b| retry_action(10, recovery_proc: p, &b) }
   end
   open_address.call
   retry_method.call(recovery_on_failure) do
@@ -249,10 +249,10 @@ end
 Then /^I can listen to an Ogg audio track in Tor Browser$/ do
   test_url = 'https://archive.org/download/MussorgskyPicturesAtAnExhibitionorch.Ravel/09Mussorgsky_PicturesAtAnExhibition-LimogesTheMarketPlace.ogg'
   info = xul_application_info('Tor Browser')
-  open_test_url = Proc.new do
+  open_test_url = proc do
     step "I open the address \"#{test_url}\" in the Tor Browser"
   end
-  recovery_on_failure = Proc.new do
+  recovery_on_failure = proc do
     @screen.press('Escape')
     @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_test_url.call
@@ -267,10 +267,10 @@ end
 Then /^I can watch a WebM video in Tor Browser$/ do
   test_url = WEBM_VIDEO_URL
   info = xul_application_info('Tor Browser')
-  open_test_url = Proc.new do
+  open_test_url = proc do
     step "I open the address \"#{test_url}\" in the Tor Browser"
   end
-  recovery_on_failure = Proc.new do
+  recovery_on_failure = proc do
     @screen.press('Escape')
     @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_test_url.call

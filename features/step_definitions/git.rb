@@ -2,7 +2,7 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
   repo_directory = %r{[\S]+/([\S]+)(\.git)?$}.match(repo)[1]
   assert(!$vm.directory_exist?("/home/#{LIVE_USER}/#{repo_directory}"))
 
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     $vm.execute("rm -rf /home/#{LIVE_USER}/#{repo_directory}",
                 :user => LIVE_USER)
     step 'I kill the process "git"'

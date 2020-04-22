@@ -13,7 +13,7 @@ def supported_torbrowser_languages
     candidates = ["#{first}_#{second}.UTF-8", "#{first}_#{second}.utf8",
                   "#{first}.UTF-8", "#{first}.utf8",
                   "#{first}_#{second}", first,]
-    when_not_found = Proc.new { raise "Could not find a locale for '#{line}'" }
+    when_not_found = proc { raise "Could not find a locale for '#{line}'" }
     candidates.find(when_not_found) do |candidate|
       $vm.directory_exist?("/usr/lib/locale/#{candidate}")
     end

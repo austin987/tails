@@ -22,13 +22,13 @@ def ensure_chutney_is_running
       'CHUTNEY_START_TIME'     => '600',
     }
 
-    chutney_data_dir_cleanup = Proc.new do
+    chutney_data_dir_cleanup = proc do
       if File.directory?(env['CHUTNEY_DATA_DIR'])
         FileUtils.rm_r(env['CHUTNEY_DATA_DIR'])
       end
     end
 
-    chutney_cmd = Proc.new do |cmd|
+    chutney_cmd = proc do |cmd|
       debug_log("chutney: #{cmd}")
       Dir.chdir(chutney_src_dir) do
         cmd_helper([chutney_script, cmd, network_definition], env)
@@ -178,7 +178,7 @@ def chutney_onionservice_redir(remote_address, remote_port)
   else
     bus = '--user'
   end
-  kill_redir = Proc.new do
+  kill_redir = proc do
     begin
       if system('/bin/systemctl', bus, '--quiet', 'is-active', redir_unit_name)
         system('/bin/systemctl', bus, 'stop', redir_unit_name)
