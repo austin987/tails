@@ -48,6 +48,7 @@ def try_for(timeout, **options)
   unique_timeout_exception = Class.new(UniqueTryForTimeoutError)
   attempts = 0
   start_time = Time.now
+  # rubocop:disable Style/MultilineIfModifier
   Timeout.timeout(timeout, unique_timeout_exception) do
     loop do
       begin
@@ -85,6 +86,8 @@ def try_for(timeout, **options)
       sleep options[:delay]
     end
   end
+  # rubocop:enable Style/MultilineIfModifier
+
   # At this point the block above either succeeded and we'll return,
   # or we are throwing an exception. If the latter, we either have a
   # NameError that we'll not catch (and will any try_for below us in
