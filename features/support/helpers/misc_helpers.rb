@@ -15,7 +15,7 @@ require 'test/unit'
 Test::Unit.run = true
 
 # Make all the assert_* methods easily accessible in any context.
-include Test::Unit::Assertions
+include Test::Unit::Assertions # rubocop:disable Style/MixinUsage
 
 def assert_vmcommand_success(p, msg = nil) # rubocop:disable Naming/MethodParameterName
   assert(p.success?, msg.nil? ? "Command failed: #{p.cmd}\n" \
