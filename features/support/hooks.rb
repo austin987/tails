@@ -242,9 +242,11 @@ After('@product') do |scenario|
   end
   if scenario.failed?
     time_of_fail = Time.now - TIME_AT_START
+    # rubocop:disable Style/FormatStringToken
     secs = '%02d' % (time_of_fail % 60)
     mins = '%02d' % ((time_of_fail / 60) % 60)
     hrs  = '%02d' % (time_of_fail / (60 * 60))
+    # rubocop:enable Style/FormatStringToken
     elapsed = "#{hrs}:#{mins}:#{secs}"
     info_log("Scenario failed at time #{elapsed}")
     screenshot_path = sanitize_filename("#{scenario.name}.png")

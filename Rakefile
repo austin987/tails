@@ -75,15 +75,15 @@ def run_command(*args)
   Process.wait Kernel.spawn(*args)
   return if $CHILD_STATUS.exitstatus.zero?
 
-  raise CommandError.new("command #{args} failed with exit status " \
-                         '%{status}', status: $CHILD_STATUS.exitstatus)
+  raise CommandError.new("command #{args} failed with exit status %<status>s",
+                         status: $CHILD_STATUS.exitstatus)
 end
 
 def capture_command(*args)
   stdout, stderr, proc_status = Open3.capture3(*args)
   if proc_status.exitstatus != 0
     raise CommandError.new("command #{args} failed with exit status " \
-                           '%{status}: %{stderr}',
+                           '%<status>s: %<stderr>s',
                            stderr: stderr, status: proc_status.exitstatus)
   end
   [stdout, stderr]
