@@ -20,7 +20,7 @@ end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
   step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
-  step "I see and accept the Unsafe Browser start verification"
+  step 'I see and accept the Unsafe Browser start verification'
 end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
