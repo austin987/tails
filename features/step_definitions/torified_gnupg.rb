@@ -264,7 +264,7 @@ Given /^Seahorse is configured to use Chutney's onion keyserver$/ do
   setup_onion_keyserver unless @onion_keyserver_job
   _, _, onion_address, onion_port = chutney_onionservice_info
   # Validate the shipped configuration ...
-  @gnome_keyservers = YAML.load(
+  @gnome_keyservers = YAML.safe_load(
     $vm.execute_successfully(
       'gsettings get org.gnome.crypto.pgp keyservers',
       user: LIVE_USER
