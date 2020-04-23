@@ -184,11 +184,7 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" by clon
               action.capitalize
             end
     @installer.button(label).click
-    confirmation_label = if action == 'upgrade'
-                           'Upgrade'
-                         else
-                           'Install'
-                         end
+    confirmation_label = action == 'upgrade' ? 'Upgrade' : 'Install'
     @installer.child('Question',
                      roleName: 'alert').button(confirmation_label).click
     try_for(15 * 60, delay: 10) do
