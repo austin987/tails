@@ -65,7 +65,7 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
 end
 
 Then /^no unexpected services are listening for network connections$/ do
-  for line in $vm.execute_successfully('ss -ltupn').stdout.chomp.split("\n") do
+  $vm.execute_successfully('ss -ltupn').stdout.chomp.split("\n").each do |line|
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
     next unless ['tcp', 'udp'].include?(proto)
@@ -122,7 +122,7 @@ Given /^I plug and mount a USB drive containing a sample PNG$/ do
 end
 
 Then /^MAT can clean some sample PNG file$/ do
-  for png_on_host in Dir.glob("#{MISC_FILES_DIR}/*.png") do
+  Dir.glob("#{MISC_FILES_DIR}/*.png").each do |png_on_host|
     png_name = File.basename(png_on_host)
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
     cleaned_png_on_guest = "/home/#{LIVE_USER}/#{png_name}".sub(/[.]png$/, '.cleaned.png')

@@ -19,7 +19,7 @@ Given /^I plug and mount a USB drive containing sample videos$/ do
 end
 
 Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destination, user|
-  for video_on_host in Dir.glob("#{@video_dir_on_host}/*.mp4") do
+  Dir.glob("#{@video_dir_on_host}/*.mp4").each do |video_on_host|
     video_name = File.basename(video_on_host)
     src_on_guest = "#{@video_dir_on_guest}/#{video_name}"
     dst_on_guest = "#{destination}/#{video_name}"

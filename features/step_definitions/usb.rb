@@ -83,7 +83,7 @@ def persistent_presets_ui_settings
          "Got #{presets.size} persistence presets, " \
          'which is too few'
   presets_ui_settings = []
-  for line in presets
+  presets.each do |line|
     id, enabled, has_configuration_button = line.split(':')
     presets_ui_settings += [{
       'id'                       => id,
@@ -212,7 +212,7 @@ Given /^I enable all persistence presets$/ do
   presets = persistent_presets_ui_settings
   presets[0]['is_first'] = true
   debug_log("presets: #{presets}")
-  for setting in presets
+  presets.each do |setting|
     debug_log("on preset: #{setting}")
     tabs_to_select_switch  = 3 # previous switch -> separator -> row -> switch
     tabs_to_select_switch -= 1 if setting['is_first']
@@ -306,7 +306,7 @@ def tails_is_installed_helper(name, tails_root, loader)
   syslinux_files = $vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
   ignores = ['syslinux.cfg', 'exithelp.cfg', 'ldlinux.c32', 'ldlinux.sys']
-  for f in syslinux_files - ignores do
+  syslinux_files - ignores.each do |f|
     c = $vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " \
                     "'#{target_root}/syslinux/#{f}'")
     assert(c.success?, "USB drive '#{name}' has differences in " \
@@ -342,7 +342,7 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   # we've run tails-persistence-setup.
   c = $vm.execute("ls -1 --hide 'control' /dev/mapper/")
   if c.success?
-    for candidate in c.stdout.split("\n")
+    c.stdout.split("\n").each do |candidate|
       luks_info = $vm.execute("cryptsetup status '#{candidate}'")
       if luks_info.success? && luks_info.stdout.match("^\s+device:\s+#{dev}$")
         luks_dev = "/dev/mapper/#{candidate}"
@@ -408,11 +408,11 @@ Given /^all persistence presets(| from the old Tails version)(| but the first on
     expected_mounts = $remembered_persistence_mounts
   end
   mount = $vm.execute('mount').stdout.chomp
-  for _, dir in expected_mounts do
+  expected_mounts.each do |_, dir|
     assert(mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is not mounted")
   end
-  for dir in unexpected_mounts do
+  unexpected_mounts.each do |dir|
     assert(!mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is mounted")
   end
@@ -497,7 +497,7 @@ Then /^the boot device has safe access rights$/ do
     groups = $vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /, '').split(' ')
     [user, groups]
   end
-  for dev in devs do
+  devs.each do |dev|
     dev_owner = $vm.execute("stat -c %U #{dev}").stdout.chomp
     dev_group = $vm.execute("stat -c %G #{dev}").stdout.chomp
     dev_perms = $vm.execute("stat -c %a #{dev}").stdout.chomp
@@ -506,7 +506,7 @@ Then /^the boot device has safe access rights$/ do
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " \
            "'disk' or 'root'.")
     assert_equal('660', dev_perms)
-    for user, groups in all_users_with_groups do
+    all_users_with_groups.each do |user, groups|
       next if user == 'root'
 
       assert(!groups.include?(dev_group),

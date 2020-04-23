@@ -623,7 +623,7 @@ task :clean_up_libvirt_volumes do
   rescue Libvirt::RetrieveError
     # Expected if the pool does not exist
   else
-    for disk in pool.list_volumes do
+    pool.list_volumes.each do |disk|
       next unless /^tails-builder-/.match(disk)
 
       begin

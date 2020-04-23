@@ -596,7 +596,7 @@ class VM
   def internal_snapshot_xml(name)
     disk_devs = list_disk_devs
     disks_xml = "    <disks>\n"
-    for dev in disk_devs
+    disk_devs.each do |dev|
       snapshot_type = disk_type(dev) == 'qcow2' ? 'internal' : 'no'
       disks_xml +=
         "      <disk name='#{dev}' snapshot='#{snapshot_type}'></disk>\n"

@@ -3,7 +3,7 @@ def xmpp_account(account_name, required_options = [])
   begin
     account = $config['Pidgin']['Accounts']['XMPP'][account_name]
     check_keys = ['username', 'domain', 'password'] + required_options
-    for key in check_keys do
+    check_keys.each do |key|
       assert(account.key?(key))
       assert_not_nil(account[key])
       assert(!account[key].empty?)

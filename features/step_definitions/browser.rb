@@ -155,7 +155,7 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
   tbb_libs = $vm.execute_successfully("ls -1 #{chroot}${TBB_INSTALL}/*.so",
                                       libs: 'tor-browser').stdout.split
   firefox_pmap_info = $vm.execute("pmap --show-path #{pid}").stdout
-  for lib in tbb_libs do
+  tbb_libs.each do |lib|
     lib_name = File.basename lib
     unless /\W#{lib}$/.match firefox_pmap_info
       absent_tbb_libs << lib_name
@@ -163,7 +163,7 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
     native_libs = $vm.execute_successfully(
       "find /usr/lib /lib -name \"#{lib_name}\""
     ).stdout.split
-    for native_lib in native_libs do
+    native_libs.each do |native_lib|
       if /\W#{native_lib}$"/.match firefox_pmap_info
         unwanted_native_libs << lib_name
       end
