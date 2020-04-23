@@ -59,7 +59,7 @@ end
 
 Then /^drive "([^"]+)" is not mounted$/ do |name|
   dev = $vm.disk_dev(name)
-  assert(!$vm.execute("grep -qs '^#{dev}' /proc/mounts").success?,
+  assert($vm.execute("grep -qs '^#{dev}' /proc/mounts").failure?,
          "an untrusted partition from drive '#{name}' was automounted")
 end
 

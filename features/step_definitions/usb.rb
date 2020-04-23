@@ -338,7 +338,7 @@ end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
   data_part_dev = $vm.disk_dev(name) + '2'
-  assert(!$vm.execute("test -b #{data_part_dev}").success?,
+  assert($vm.execute("test -b #{data_part_dev}").failure?,
          "USB drive #{name} has a partition '#{data_part_dev}'")
 end
 
@@ -669,7 +669,7 @@ Then /^the expected persistent files(| created with the old Tails version) are p
       "Could not find expected file in persistent directory #{dir}"
     )
     assert(
-      !$vm.execute("test -e #{dir}/XXX_gone").success?,
+      $vm.execute("test -e #{dir}/XXX_gone").failure?,
       "Found file that should not have persisted in persistent directory #{dir}"
     )
   end
