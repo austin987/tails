@@ -45,8 +45,10 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
 end
 
 Then /^the live user has been setup by live\-boot$/ do
-  assert($vm.execute('test -e /var/lib/live/config/user-setup').success?,
-         'live-boot failed its user-setup')
+  assert_vmcommand_success(
+    $vm.execute('test -e /var/lib/live/config/user-setup'),
+    'live-boot failed its user-setup'
+  )
   actual_username = $vm.execute('. /etc/live/config/username.conf; ' \
                                 'echo $LIVE_USERNAME').stdout.chomp
   assert_equal(LIVE_USER, actual_username)
@@ -67,8 +69,10 @@ end
 
 Then /^the live user owns its home dir and it has normal permissions$/ do
   home = "/home/#{LIVE_USER}"
-  assert($vm.execute("test -d #{home}").success?,
-         "The live user's home doesn't exist or is not a directory")
+  assert_vmcommand_success(
+    $vm.execute("test -d #{home}"),
+    "The live user's home doesn't exist or is not a directory"
+  )
   owner = $vm.execute("stat -c %U:%G #{home}").stdout.chomp
   perms = $vm.execute("stat -c %a #{home}").stdout.chomp
   assert_equal("#{LIVE_USER}:#{LIVE_USER}", owner)
@@ -97,13 +101,13 @@ Then /^no unexpected services are listening for network connections$/ do
 end
 
 When /^Tails has booted a 64-bit kernel$/ do
-  assert($vm.execute("uname -r | grep -qs 'amd64$'").success?,
-         'Tails has not booted a 64-bit kernel.')
+  assert_vmcommand_success($vm.execute("uname -r | grep -qs 'amd64$'"),
+                           'Tails has not booted a 64-bit kernel.')
 end
 
 Then /^the VirtualBox guest modules are available$/ do
-  assert($vm.execute('modinfo vboxguest').success?,
-         'The vboxguest module is not available.')
+  assert_vmcommand_success($vm.execute('modinfo vboxguest'),
+                           'The vboxguest module is not available.')
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
@@ -138,9 +142,9 @@ Then /^MAT can clean some sample PNG file$/ do
          "as user \"#{LIVE_USER}\""
     raw_check_cmd = 'grep --quiet --fixed-strings --text ' \
                     "'Created with GIMP'"
-    assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'",
-                       user: LIVE_USER).success?,
-           'The comment is not present in the PNG')
+    assert_vmcommand_success($vm.execute(raw_check_cmd + " '#{png_on_guest}'",
+                                         user: LIVE_USER),
+                             'The comment is not present in the PNG')
     check_before = $vm.execute_successfully("mat2 --show '#{png_on_guest}'",
                                             user: LIVE_USER).stdout
     assert(check_before.include?("Metadata for #{png_on_guest}"),
@@ -160,7 +164,8 @@ Then /^MAT can clean some sample PNG file$/ do
 end
 
 Then /^AppArmor is enabled$/ do
-  assert($vm.execute('aa-status').success?, 'AppArmor is not enabled')
+  assert_vmcommand_success($vm.execute('aa-status'),
+                           'AppArmor is not enabled')
 end
 
 Then /^some AppArmor profiles are enforced$/ do

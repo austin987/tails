@@ -313,17 +313,19 @@ def tails_is_installed_helper(name, tails_root, loader)
   # We deal with these files separately
   ignores = ['syslinux.cfg', 'exithelp.cfg', 'ldlinux.c32', 'ldlinux.sys']
   (syslinux_files - ignores).each do |f|
-    c = $vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " \
-                    "'#{target_root}/syslinux/#{f}'")
-    assert(c.success?, "USB drive '#{name}' has differences in " \
-           "'/syslinux/#{f}'")
+    assert_vmcommand_success(
+      $vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " \
+                  "'#{target_root}/syslinux/#{f}'"),
+      "USB drive '#{name}' has differences in '/syslinux/#{f}'"
+    )
   end
 
   # The main .cfg is named differently vs isolinux
-  c = $vm.execute("diff -q '#{tails_root}/#{loader}/#{loader}.cfg' " \
-                  "'#{target_root}/syslinux/syslinux.cfg'")
-  assert(c.success?, "USB drive '#{name}' has differences in " \
-         "'/syslinux/syslinux.cfg'")
+  assert_vmcommand_success(
+    $vm.execute("diff -q '#{tails_root}/#{loader}/#{loader}.cfg' " \
+                "'#{target_root}/syslinux/syslinux.cfg'"),
+    "USB drive '#{name}' has differences in '/syslinux/syslinux.cfg'"
+  )
 
   $vm.execute("umount #{target_root}")
   $vm.execute('sync')
@@ -358,9 +360,11 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
     end
   end
   if luks_dev.nil?
-    c = $vm.execute("echo #{@persistence_password} | " \
-                    "cryptsetup luksOpen #{dev} #{name}")
-    assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
+    assert_vmcommand_success(
+      $vm.execute("echo #{@persistence_password} | " \
+                  "cryptsetup luksOpen #{dev} #{name}"),
+      "Couldn't open LUKS device '#{dev}' on  drive '#{name}'"
+    )
     luks_dev = "/dev/mapper/#{name}"
   end
 
@@ -373,9 +377,9 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 
   mount_dir = "/mnt/#{name}"
   $vm.execute("mkdir -p #{mount_dir}")
-  c = $vm.execute("mount '#{luks_dev}' #{mount_dir}")
-  assert(c.success?,
-         "Couldn't mount opened LUKS device '#{dev}' on drive '#{name}'")
+  assert_vmcommand_success($vm.execute("mount '#{luks_dev}' #{mount_dir}"),
+                           "Couldn't mount opened LUKS device '#{dev}' " \
+                           "on drive '#{name}'")
 
   $vm.execute("umount #{mount_dir}")
   $vm.execute('sync')
@@ -545,16 +549,16 @@ end
 
 Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
-    assert(
-      $vm.execute("test -e #{mountpoint}/persistence.conf").success?,
+    assert_vmcommand_success(
+      $vm.execute("test -e #{mountpoint}/persistence.conf"),
       "#{mountpoint}/persistence.conf does not exist, while it should"
     )
-    assert(
-      $vm.execute("test -e #{mountpoint}/persistence.conf.bak").success?,
+    assert_vmcommand_success(
+      $vm.execute("test -e #{mountpoint}/persistence.conf.bak"),
       "#{mountpoint}/persistence.conf.bak does not exist, while it should"
     )
-    assert(
-      $vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
+    assert_vmcommand_success(
+      $vm.execute("test ! -e #{mountpoint}/live-persistence.conf"),
       "#{mountpoint}/live-persistence.conf does exist, while it should not"
     )
     $vm.execute(
@@ -610,17 +614,19 @@ end
 When /^I write some files expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
-    assert($vm.execute("touch #{dir}/XXX_persist", user: owner).success?,
-           "Could not create file in persistent directory #{dir}")
+    assert_vmcommand_success(
+      $vm.execute("touch #{dir}/XXX_persist", user: owner),
+      "Could not create file in persistent directory #{dir}"
+    )
   end
 end
 
 When /^I write some dotfile expected to persist$/ do
-  assert(
+  assert_vmcommand_success(
     $vm.execute(
       'touch /live/persistence/TailsData_unlocked/dotfiles/.XXX_persist',
       user: LIVE_USER
-    ).success?,
+    ),
     'Could not create a file in the dotfiles persistence.'
   )
 end
@@ -628,16 +634,20 @@ end
 When /^I remove some files expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
-    assert($vm.execute("rm #{dir}/XXX_persist", user: owner).success?,
-           "Could not remove file in persistent directory #{dir}")
+    assert_vmcommand_success(
+      $vm.execute("rm #{dir}/XXX_persist", user: owner),
+      "Could not remove file in persistent directory #{dir}"
+    )
   end
 end
 
 When /^I write some files not expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
-    assert($vm.execute("touch #{dir}/XXX_gone", user: owner).success?,
-           "Could not create file in persistent directory #{dir}")
+    assert_vmcommand_success(
+      $vm.execute("touch #{dir}/XXX_gone", user: owner),
+      "Could not create file in persistent directory #{dir}"
+    )
   end
 end
 
@@ -654,8 +664,10 @@ Then /^the expected persistent files(| created with the old Tails version) are p
     expected_mounts = $remembered_persistence_mounts
   end
   expected_mounts.each do |_, dir|
-    assert($vm.execute("test -e #{dir}/XXX_persist").success?,
-           "Could not find expected file in persistent directory #{dir}")
+    assert_vmcommand_success(
+      $vm.execute("test -e #{dir}/XXX_persist"),
+      "Could not find expected file in persistent directory #{dir}"
+    )
     assert(
       !$vm.execute("test -e #{dir}/XXX_gone").success?,
       "Found file that should not have persisted in persistent directory #{dir}"
@@ -665,13 +677,14 @@ end
 
 Then /^the expected persistent dotfile is present in the filesystem$/ do
   expected_dirs = persistent_dirs
-  assert($vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist")
-            .success?,
-         'Could not find expected persistent dotfile link.')
-  assert(
+  assert_vmcommand_success(
+    $vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist"),
+    'Could not find expected persistent dotfile link.'
+  )
+  assert_vmcommand_success(
     $vm.execute(
       "test -e $(readlink -f #{expected_dirs['dotfiles']}/.XXX_persist)"
-    ).success?,
+    ),
     'Could not find expected persistent dotfile link target.'
   )
 end
@@ -725,8 +738,8 @@ When /^I delete the persistent partition$/ do
 end
 
 Then /^Tails has started in UEFI mode$/ do
-  assert($vm.execute('test -d /sys/firmware/efi').success?,
-         '/sys/firmware/efi does not exist')
+  assert_vmcommand_success($vm.execute('test -d /sys/firmware/efi'),
+                           '/sys/firmware/efi does not exist')
 end
 
 Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
