@@ -85,8 +85,7 @@ Feature: Installing Tails to a USB drive
     Then I power off the computer
     Given the computer is set to boot in UEFI mode
     When I start Tails from USB drive "__internal" with network unplugged and I login
-    Then the boot device has safe access rights
-    And Tails is running from USB drive "__internal"
+    Then Tails is running from USB drive "__internal"
     And the boot device has safe access rights
     And Tails has started in UEFI mode
 
