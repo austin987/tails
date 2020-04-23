@@ -235,7 +235,7 @@ def convert_to_MiB(size, unit)
 end
 
 def convert_from_bytes(size, unit)
-  size.to_f / convert_bytes_mod(unit).to_f
+  size.to_f / convert_bytes_mod(unit)
 end
 
 def cmd_helper(cmd, env = {})
