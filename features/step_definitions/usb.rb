@@ -306,7 +306,7 @@ def tails_is_installed_helper(name, tails_root, loader)
   syslinux_files = $vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
   # We deal with these files separately
   ignores = ['syslinux.cfg', 'exithelp.cfg', 'ldlinux.c32', 'ldlinux.sys']
-  syslinux_files - ignores.each do |f|
+  (syslinux_files - ignores).each do |f|
     c = $vm.execute("diff -q '#{tails_root}/#{loader}/#{f}' " \
                     "'#{target_root}/syslinux/#{f}'")
     assert(c.success?, "USB drive '#{name}' has differences in " \
@@ -338,6 +338,7 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   dev = $vm.disk_dev(name) + '2'
   check_part_integrity(name, dev, 'crypto', 'crypto_LUKS', 'TailsData')
 
+  luks_dev = nil
   # The LUKS container may already be opened, e.g. by udisks after
   # we've run tails-persistence-setup.
   c = $vm.execute("ls -1 --hide 'control' /dev/mapper/")
