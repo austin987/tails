@@ -173,7 +173,7 @@ class VMStorage
         g.part_disk(disk_handle, parttype)
       end
       g.part_set_name(disk_handle, 1, opts[:label]) if opts[:label]
-      primary_partition = g.list_partitions()[0]
+      primary_partition = g.list_partitions[0]
       if opts[:luks_password]
         g.luks_format(primary_partition, opts[:luks_password], 0)
         luks_mapping = File.basename(primary_partition) + '_unlocked'
@@ -190,14 +190,14 @@ class VMStorage
   def disk_mkswap(name, parttype)
     guestfs_disk_helper(name) do |g, disk_handle|
       g.part_disk(disk_handle, parttype)
-      primary_partition = g.list_partitions()[0]
+      primary_partition = g.list_partitions[0]
       g.mkswap(primary_partition)
     end
   end
 
   def guestfs_disk_helper(*disks)
     assert(block_given?)
-    g = Guestfs::Guestfs.new()
+    g = Guestfs::Guestfs.new
     g.set_trace(1)
     message_callback = proc do |event, _, message, _|
       debug_log("libguestfs: #{Guestfs.event_to_string(event)}: #{message}")
@@ -214,8 +214,8 @@ class VMStorage
         raise "cannot handle type '#{disk.class}'"
       end
     end
-    g.launch()
-    yield(g, *g.list_devices())
+    g.launch
+    yield(g, *g.list_devices)
   ensure
     g.close
   end

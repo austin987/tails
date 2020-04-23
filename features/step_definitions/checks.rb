@@ -191,7 +191,7 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
 end
 
 When /^I disable all networking in the Tails Greeter$/ do
-  open_greeter_additional_settings()
+  open_greeter_additional_settings
   @screen.wait('TailsGreeterNetworkConnection.png', 30).click
   @screen.wait('TailsGreeterDisableAllNetworking.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click

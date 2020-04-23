@@ -5,7 +5,7 @@ def all_ethernet_nics
 end
 
 When /^I disable MAC spoofing in Tails Greeter$/ do
-  open_greeter_additional_settings()
+  open_greeter_additional_settings
   @screen.wait('TailsGreeterMACSpoofing.png', 30).click
   @screen.wait('TailsGreeterDisableMACSpoofing.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click

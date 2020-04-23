@@ -45,7 +45,7 @@ def create_veracrypt_volume(type, with_keyfile)
   @veracrypt_needs_keyfile = with_keyfile
   step "I temporarily create a 100 MiB raw disk named \"#{$veracrypt_volume_name}\""
   disk_path = $vm.storage.disk_path($veracrypt_volume_name)
-  keyfile = create_veracrypt_keyfile()
+  keyfile = create_veracrypt_keyfile
   fatal_system "losetup -f '#{disk_path}'"
   loop_dev = `losetup -j '#{disk_path}'`.split(':').first
   tcplay_create_cmd = "tcplay --create --device='#{loop_dev}'" \
@@ -179,7 +179,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   when 'file container'
     gnome_shell = Dogtail::Application.new('gnome-shell')
     menu = gnome_shell.menu('Disks')
-    menu.click()
+    menu.click
     gnome_shell.child('Attach Disk Image…', roleName: 'label').click
     # Otherwise Disks is sometimes minimized, for some reason I don't understand
     sleep 2
@@ -214,13 +214,13 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   disks.child('', roleName: 'panel', description: 'Unlock selected encrypted partition').click
   unlock_dialog = disks.dialog('Set options to unlock')
   passphrase_field = unlock_dialog.child('', roleName: 'password text')
-  passphrase_field.grabFocus()
+  passphrase_field.grabFocus
   passphrase_field.typeText(
     @veracrypt_is_hidden ? $veracrypt_hidden_passphrase : $veracrypt_passphrase
   )
   if @veracrypt_needs_pim
     pim_field = unlock_dialog.child('PIM', roleName: 'label').labelee
-    pim_field.grabFocus()
+    pim_field.grabFocus
     pim_field.typeText($veracrypt_pim)
   end
   if @veracrypt_needs_keyfile
@@ -244,7 +244,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       # Move the focus down to the "Filesystem\n107 MB FAT" item (that Dogtail
       # is not able to find) using the 'Down' arrow, in order to display
       # the "Mount selected partition" button.
-      unlocked_volume.grabFocus()
+      unlocked_volume.grabFocus
       sleep 0.5 # otherwise the following key press is sometimes lost
       disks.pressKey('Down')
       disks.child('', roleName: 'panel', description: 'Mount selected partition', showingOnly: true).click

@@ -298,18 +298,18 @@ def open_greeter_additional_settings
 end
 
 Given /^I open Tails Greeter additional settings dialog$/ do
-  open_greeter_additional_settings()
+  open_greeter_additional_settings
 end
 
 Given /^I enable the specific Tor configuration option$/ do
-  open_greeter_additional_settings()
+  open_greeter_additional_settings
   @screen.wait('TailsGreeterNetworkConnection.png', 30).click
   @screen.wait('TailsGreeterSpecificTorConfiguration.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
 Given /^I set an administration password$/ do
-  open_greeter_additional_settings()
+  open_greeter_additional_settings
   @screen.wait('TailsGreeterAdminPassword.png', 20).click
   @screen.wait('TailsGreeterAdminPasswordDialog.png', 10)
   @screen.type(@sudo_password)
@@ -809,7 +809,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   @screen.press('ctrl', 'p')
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
   print_dialog.child('Print to File', 'table cell').click
-  print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click()
+  print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click
   # Yes, TorBrowserPrintFileDialog.png != Gtk3PrintFileDialog.png.
   # If you try to unite them, make sure this does not break the tests
   # that use either.
@@ -1007,7 +1007,7 @@ def share_host_files(files)
   step "I create a gpt partition labeled \"#{disk}\" with an ext4 " \
        "filesystem on disk \"#{disk}\""
   $vm.storage.guestfs_disk_helper(disk) do |g, _|
-    partition = g.list_partitions().first
+    partition = g.list_partitions.first
     g.mount(partition, '/')
     files.each { |f| g.upload(f, '/' + File.basename(f)) }
   end
