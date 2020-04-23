@@ -55,7 +55,7 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
   @screen.type(path, ['Return'])
   chroot_path = "#{info[:chroot]}/#{path}.json"
   try_for(10) { $vm.file_exist?(chroot_path) }
-  dump = JSON.load($vm.file_content(chroot_path))
+  dump = JSON.parse($vm.file_content(chroot_path))
 
   def check_bookmarks_helper(bookmarks_children)
     mozilla_uris_counter = 0

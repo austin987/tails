@@ -32,7 +32,7 @@ module RemoteShell
       socket.flush
       loop do
         line = socket.readline("\n").chomp("\n")
-        response_id, status, *rest = JSON.load(line)
+        response_id, status, *rest = JSON.parse(line)
         if response_id == id
           if status != 'success'
             if (status == 'error') && (rest.class == Array) && (rest.size == 1)
