@@ -842,7 +842,7 @@ Given /^a web server is running on the LAN$/ do
   # lot of complex cucumber stuff (like our hooks!) ending up in the
   # child process, breaking stuff in the parent process. After asking
   # some supposed ruby pros, I've settled on the following.
-  code = <<-EOF
+  code = <<-CODE
   require "webrick"
   STDOUT.reopen("/dev/null", "w")
   STDERR.reopen("/dev/null", "w")
@@ -853,7 +853,7 @@ Given /^a web server is running on the LAN$/ do
     res.body = "#{web_server_hello_msg}"
   end
   server.start
-  EOF
+  CODE
   add_extra_allowed_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
   try_for(10, msg: 'It seems the LAN web server failed to start') do
@@ -958,10 +958,10 @@ Given /^Tails is fooled to think that version (.+) was initially installed$/ do 
   initial_os_release_file =
     '/lib/live/mount/rootfs/filesystem.squashfs/etc/os-release'
   fake_os_release_file = $vm.execute_successfully('mktemp').stdout.chomp
-  fake_os_release_content = <<~EOF
+  fake_os_release_content = <<~OSRELEASE
     TAILS_PRODUCT_NAME="Tails"
     TAILS_VERSION_ID="#{version}"
-  EOF
+  OSRELEASE
   $vm.file_overwrite(fake_os_release_file, fake_os_release_content)
   $vm.execute_successfully("chmod a+r #{fake_os_release_file}")
   $vm.execute_successfully(

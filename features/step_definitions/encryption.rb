@@ -22,7 +22,7 @@ end
 Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |name, pwd|
   @passphrase = pwd
   @key_name = name
-  gpg_key_recipie = <<EOF
+  gpg_key_recipie = <<RECIPE
      Key-Type: RSA
      Key-Length: 4096
      Subkey-Type: RSA
@@ -33,7 +33,7 @@ Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |
      Expire-Date: 0
      Passphrase: #{pwd}
      %commit
-EOF
+RECIPE
   recipe_path = '/tmp/gpg_key_recipe'
   $vm.file_overwrite(recipe_path, gpg_key_recipie)
   $vm.execute("chown #{LIVE_USER}:#{LIVE_USER} #{recipe_path}")

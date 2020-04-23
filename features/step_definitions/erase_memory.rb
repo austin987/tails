@@ -79,7 +79,7 @@ When /^I start a process allocating (\d+) ([[:alpha:]]+) of memory with a known 
   fillram_script_path = '/tmp/fillram'
   @fillram_cmd = "python3 #{fillram_script_path}"
   fillram_done_path = fillram_script_path + '_done'
-  fillram_script = <<~EOF
+  fillram_script = <<~FILLRAM
     import math
     import time
     pattern = "wipe_didnt_work\\n"
@@ -90,7 +90,7 @@ When /^I start a process allocating (\d+) ([[:alpha:]]+) of memory with a known 
       f.write("done")
     time.sleep(365*24*60*60)
     print(buffer)
-  EOF
+  FILLRAM
   $vm.file_overwrite(fillram_script_path, fillram_script)
   $vm.spawn(@fillram_cmd)
   try_for(60) { $vm.file_exist?(fillram_done_path) }

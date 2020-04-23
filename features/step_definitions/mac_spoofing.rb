@@ -63,13 +63,13 @@ Given /^no network interface modules can be unloaded$/ do
   $vm.execute_successfully(
     "dpkg-divert --add --rename --divert '#{modprobe_divert}' /sbin/modprobe"
   )
-  fake_modprobe_wrapper = <<~EOF
+  fake_modprobe_wrapper = <<~WRAPPER
     #!/bin/sh
     if echo "${@}" | grep -q -- -r; then
         exit 1
     fi
     exec '#{modprobe_divert}' "${@}"
-  EOF
+  WRAPPER
   $vm.file_append('/sbin/modprobe', fake_modprobe_wrapper)
   $vm.execute_successfully('chmod a+rx /sbin/modprobe')
 end
@@ -108,7 +108,7 @@ When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wai
     device = 'pcnet'
   end
   debug_log("Hotplugging a '#{device}' network device")
-  xml = <<-EOF
+  xml = <<-XML
     <interface type='network'>
       <alias name='net1'/>
       <mac address='52:54:00:11:22:33'/>
@@ -116,7 +116,7 @@ When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wai
       <model type='#{device}'/>
       <link state='up'/>
     </interface>
-  EOF
+  XML
   $vm.plug_device(xml)
   if wait
     try_for(30) do

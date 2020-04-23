@@ -548,7 +548,7 @@ class VM
 
   def file_glob(expr)
     execute(
-      <<-EOF
+      <<-COMMAND
         bash -c '
           shopt -s globstar dotglob nullglob
           set -- #{expr}
@@ -557,7 +557,7 @@ class VM
             echo -ne "\\0"
             shift
           done'
-      EOF
+      COMMAND
     ).stdout.chomp.split("\0")
   end
 
@@ -602,13 +602,13 @@ class VM
         "      <disk name='#{dev}' snapshot='#{snapshot_type}'></disk>\n"
     end
     disks_xml += '    </disks>'
-    <<~EOF
+    <<~XML
       <domainsnapshot>
         <name>#{name}</name>
         <description>Snapshot for #{name}</description>
       #{disks_xml}
         </domainsnapshot>
-    EOF
+    XML
   end
 
   def self.ram_only_snapshot_path(name)

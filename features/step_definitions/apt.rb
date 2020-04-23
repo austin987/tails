@@ -28,14 +28,14 @@ Given /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
 end
 
 When /^I configure APT to use non-onion sources$/ do
-  script = <<-EOF
+  script = <<-SCRIPT
   use strict;
   use warnings FATAL => "all";
   s{vwakviie2ienjx6t[.]onion}{ftp.us.debian.org};
   s{sgvtcaew4bxjd7ln[.]onion}{security.debian.org};
   s{sdscoq7snqtznauu[.]onion}{deb.torproject.org};
   s{jenw7xbd6tf7vfhp[.]onion}{deb.tails.boum.org};
-  EOF
+  SCRIPT
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way
   script.delete!("\n")
@@ -99,11 +99,11 @@ end
 
 When /^I configure APT to prefer an old version of cowsay$/ do
   apt_source = 'deb tor+http://deb.tails.boum.org/ asp-test-upgrade-cowsay main'
-  apt_pref = <<~EOF
+  apt_pref = <<~PREF
     Package: cowsay
     Pin: release o=Tails,a=asp-test-upgrade-cowsay
     Pin-Priority: 999
-  EOF
+  PREF
   $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list', apt_source)
   $vm.file_overwrite('/etc/apt/preferences.d/asp-test-upgrade-cowsay', apt_pref)
 end

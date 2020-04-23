@@ -17,13 +17,13 @@ class SSHServer
     )
     @sshd_key_file.close
 
-    sshd_config = <<~EOF
+    sshd_config = <<~CONFIG
       Port #{@sshd_port}
       ListenAddress #{@sshd_host}
       UsePrivilegeSeparation no
       HostKey #{@sshd_key_file.path}
       Pidfile #{$config['TMPDIR']}/ssh.pid
-    EOF
+    CONFIG
 
     @sshd_config_file = Tempfile.new('sshd_config', $config['TMPDIR'])
     @sshd_config_file.write(sshd_config)
