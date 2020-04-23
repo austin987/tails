@@ -38,9 +38,11 @@ Then /^I am prompted to (configure Electrum|enter my Electrum wallet password)$/
   end
   case mode
   when 'configure Electrum'
-    expected = "This file does not exist.\nPress 'Next' to create this wallet, or choose another file."
+    expected = "This file does not exist.\n" \
+               "Press 'Next' to create this wallet, or choose another file."
   when 'enter my Electrum wallet password'
-    expected = "This file is encrypted.\nEnter your password or choose another file."
+    expected = "This file is encrypted.\n" \
+               'Enter your password or choose another file.'
   else
     raise 'Unsupported'
   end

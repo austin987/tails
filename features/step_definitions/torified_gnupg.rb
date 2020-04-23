@@ -23,7 +23,8 @@ end
 def start_or_restart_seahorse
   assert_not_nil(@withgpgapplet)
   if @withgpgapplet
-    seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
+    seahorse_menu_click_helper('GpgAppletIconNormal.png',
+                               'GpgAppletManageKeys.png')
   else
     step 'I start "Passwords and Keys" via GNOME Activities Overview'
   end
@@ -39,9 +40,11 @@ Then /^the key "([^"]+)" has (strictly less than|at least) (\d+) subkeys?$/ do |
   count = count_gpg_subkeys(key)
   case qualifier
   when 'strictly less than'
-    assert(count < num.to_i, "Expected strictly less than #{num} subkeys but found #{count}")
+    assert(count < num.to_i,
+           "Expected strictly less than #{num} subkeys but found #{count}")
   when 'at least'
-    assert(count >= num.to_i, "Expected at least #{num} subkeys but found #{count}")
+    assert(count >= num.to_i,
+           "Expected at least #{num} subkeys but found #{count}")
   else
     raise "Unknown operator #{qualifier} passed"
   end
@@ -102,7 +105,8 @@ end
 
 When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|
   delay ||= 10
-  try_for(delay.to_i, msg: "The '#{keyid}' key is not in the live user's public keyring") do
+  try_for(delay.to_i,
+          msg: "The '#{keyid}' key is not in the live user's public keyring") do
     $vm.execute("gpg --batch --list-keys '#{keyid}'",
                 user: LIVE_USER).success?
   end
@@ -125,7 +129,8 @@ end
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
   @screen.wait('SeahorseWindow.png', 10).click
-  seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
+  seahorse_menu_click_helper('GnomeEditMenu.png',
+                             'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait('SeahorsePreferences.png', 20)
   @screen.press('alt', 'p') # Option: "Publish keys to...".
   @screen.press('Down') # select HKP server
@@ -135,7 +140,8 @@ end
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = proc do
     setup_onion_keyserver
-    if @screen.exists('GnomeCloseButton.png') || !$vm.process_running?('seahorse')
+    if @screen.exists('GnomeCloseButton.png') \
+       || !$vm.process_running?('seahorse')
       step 'I kill the process "seahorse"' if $vm.process_running?('seahorse')
       debug_log('Restarting Seahorse.')
       start_or_restart_seahorse
@@ -235,7 +241,8 @@ def disable_ipv6_for_dirmngr
   # network that runs on our CI infrastructure, which is IPv4-only, so
   # that would fail. Therefore, let's ensure dirmngr only picks IPv4
   # addresses for keys.openpgp.org.
-  if $vm.execute("grep -F --line-regexp disable-ipv6 '#{dirmngr_conf}'").failure?
+  if $vm.execute("grep -F --line-regexp disable-ipv6 '#{dirmngr_conf}'")
+        .failure?
     $vm.file_append(dirmngr_conf, "disable-ipv6\n")
   end
 end
@@ -254,7 +261,9 @@ Given /^GnuPG is configured to use a non-Onion keyserver$/ do
   )
   # ... before replacing it
   $vm.execute_successfully(
-    "sed -i 's|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " \
+    'sed -i ' \
+    "'s|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|" \
+    "hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " \
     "'#{dirmngr_conf}'"
   )
   disable_ipv6_for_dirmngr
@@ -280,7 +289,8 @@ Given /^Seahorse is configured to use Chutney's onion keyserver$/ do
   )
   # ... before replacing it
   $vm.execute_successfully(
-    "gsettings set org.gnome.crypto.pgp keyservers \"['hkp://#{onion_address}:#{onion_port}']\"",
+    'gsettings set org.gnome.crypto.pgp keyservers ' \
+    "\"['hkp://#{onion_address}:#{onion_port}']\"",
     user: LIVE_USER
   )
 end

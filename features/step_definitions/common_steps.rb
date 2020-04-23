@@ -18,7 +18,14 @@ def post_snapshot_restore_hook(snapshot_name)
   # window outside of the visible screen.
   if snapshot_name.end_with?('tails-greeter')
     unless @screen.exists('TailsGreeter.png')
-      $vm.execute_successfully("env $(tr '\\0' '\\n' < /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ | grep -E '(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') sudo -u Debian-gdm xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0")
+      $vm.execute_successfully(
+        "env $(tr '\\0' '\\n' " \
+        '< /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ ' \
+        '| grep -E ' \
+        "'(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') " \
+        'sudo -u Debian-gdm ' \
+        "xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0"
+      )
     end
   end
 
@@ -166,7 +173,9 @@ Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I 
 end
 
 Given /^I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login$/ do
-  step "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen"
+  step 'I have started Tails without network from a USB drive ' \
+       'without a persistent partition ' \
+       "and stopped at Tails Greeter's login screen"
   step 'I set an administration password'
   step 'I log in to a new session'
   step 'the network is plugged'
@@ -401,7 +410,8 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   end
   step 'the Tor Browser has started'
   if offline
-    step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+    step 'the Tor Browser shows the ' \
+         '"The proxy server is refusing connections" error'
   end
 end
 
@@ -439,7 +449,8 @@ end
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   url = 'https://www.eff.org'
   step "I open the address \"#{url}\" in the Tor Browser"
-  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  step 'the Tor Browser shows the ' \
+       '"The proxy server is refusing connections" error'
   @screen.press('ctrl', 'd')
   @screen.wait('TorBrowserBookmarkPrompt.png', 10)
   @screen.type(url)
@@ -468,7 +479,8 @@ Given /^all notifications have disappeared$/ do
   retry_action(10, recovery_proc: proc { @screen.press('Escape') }) do
     @screen.click(x, y)
     begin
-      gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
+      gnome_shell.child('Clear All', roleName:    'push button',
+                                     showingOnly: true).click
     rescue StandardError
       # Ignore exceptions: there might be no notification to clear, in
       # which case there will be a "No Notifications" label instead of
@@ -610,7 +622,8 @@ Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]
   )
 
   try_for(10) do
-    nm_con_list = $vm.execute('nmcli --terse --fields NAME connection show').stdout
+    nm_con_list = $vm.execute('nmcli --terse --fields NAME connection show')
+                     .stdout
     nm_con_list.split("\n").include? con_name.to_s
   end
 end
@@ -618,7 +631,9 @@ end
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
   $vm.execute("nmcli connection up id #{con_name}")
   try_for(60) do
-    $vm.execute('nmcli --terse --fields NAME,STATE connection show').stdout.chomp.split("\n").include?("#{con_name}:activated")
+    $vm.execute(
+      'nmcli --terse --fields NAME,STATE connection show'
+    ).stdout.chomp.split("\n").include?("#{con_name}:activated")
   end
 end
 
@@ -760,7 +775,9 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
   info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
-    if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    if $vm.execute(
+      "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
+    ).failure?
       @screen.wait(image, 10).click(double: true)
     end
     step 'the Tor Browser has started'
@@ -784,11 +801,13 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   else
     @screen.type(output_dir + '/')
   end
-  # Only the part of the filename before the .html extension can be easily replaced
-  # so we have to remove it before typing it into the arget filename entry widget.
+  # Only the part of the filename before the .html extension can be easily
+  # replaced so we have to remove it before typing it into the arget filename
+  # entry widget.
   @screen.type(output_file.sub(/[.]html$/, ''), ['Return'])
   if should_work
-    try_for(20, msg: "The page was not saved to #{output_dir}/#{output_file}") do
+    try_for(20,
+            msg: "The page was not saved to #{output_dir}/#{output_file}") do
       $vm.file_exist?("#{output_dir}/#{output_file}")
     end
   else
@@ -819,7 +838,8 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # If you try to unite them, make sure this does not break the tests
   # that use either.
   @screen.wait('TorBrowserPrintButton.png', 10).click
-  try_for(30, msg: "The page was not printed to #{output_dir}/#{output_file}") do
+  try_for(30,
+          msg: "The page was not printed to #{output_dir}/#{output_file}") do
     $vm.file_exist?("#{output_dir}/#{output_file}")
   end
 end
@@ -908,7 +928,8 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_te
          @apparmor_profile_monitoring_start[profile],
          "It seems the profile '#{profile}' isn't being monitored by the " \
          "'I monitor the AppArmor log of ...' step")
-  audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
+  audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" ' \
+                     'name="%s"' % [profile, file]
   begin
     try_for(10, delay: 1) do
       audit_log = $vm.execute(
@@ -1068,7 +1089,8 @@ end
 When(/^I umount the USB drive$/) do
   $vm.execute_successfully("umount #{@tmp_usb_drive_mount_dir}")
   if @tmp_filesystem_options[:encrypted]
-    $vm.execute_successfully("cryptsetup luksClose #{@tmp_filesystem_disk}_unlocked")
+    $vm.execute_successfully('cryptsetup luksClose ' \
+                             "#{@tmp_filesystem_disk}_unlocked")
   end
 end
 

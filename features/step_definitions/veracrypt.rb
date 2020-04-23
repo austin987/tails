@@ -43,7 +43,7 @@ end
 def create_veracrypt_volume(type, with_keyfile)
   @veracrypt_is_hidden = (type == 'hidden')
   @veracrypt_needs_keyfile = with_keyfile
-  step "I temporarily create a 100 MiB raw disk named \"#{$veracrypt_volume_name}\""
+  step 'I temporarily create a 100 MiB raw disk named ' + $veracrypt_volume_name
   disk_path = $vm.storage.disk_path($veracrypt_volume_name)
   keyfile = create_veracrypt_keyfile
   fatal_system "losetup -f '#{disk_path}'"
@@ -72,7 +72,9 @@ def create_veracrypt_volume(type, with_keyfile)
     ensure
       Process.wait pid
     end
-    $CHILD_STATUS.exitstatus.zero? || raise("#{tcplay_create_cmd} exited with #{$CHILD_STATUS.exitstatus}")
+    $CHILD_STATUS.exitstatus.zero? || raise(
+      "#{tcplay_create_cmd} exited with #{$CHILD_STATUS.exitstatus}"
+    )
   end
   tcplay_map_cmd = "tcplay --map=veracrypt --device='#{loop_dev}'"
   tcplay_map_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
@@ -80,15 +82,23 @@ def create_veracrypt_volume(type, with_keyfile)
   PTY.spawn(tcplay_map_cmd) do |r_f, w_f, pid|
     begin
       w_f.sync = true
-      reply_prompt(r_f, w_f, /^Passphrase:\s/,
-                   @veracrypt_is_hidden ? $veracrypt_hidden_passphrase : $veracrypt_passphrase)
+      reply_prompt(
+        r_f, w_f, /^Passphrase:\s/,
+        if @veracrypt_is_hidden
+          $veracrypt_hidden_passphrase
+        else
+          $veracrypt_passphrase
+        end
+      )
       r_f.expect(/^All ok!/)
     rescue Errno::EIO
       # Handled by checking $CHILD_STATUS below
     ensure
       Process.wait pid
     end
-    $CHILD_STATUS.exitstatus.zero? || raise("#{tcplay_map_cmd} exited with #{$CHILD_STATUS.exitstatus}")
+    $CHILD_STATUS.exitstatus.zero? || raise(
+      "#{tcplay_map_cmd} exited with #{$CHILD_STATUS.exitstatus}"
+    )
   end
   fatal_system "mkfs.vfat '/dev/mapper/veracrypt' >/dev/null"
   Dir.mktmpdir('veracrypt-mountpoint', $config['TMPDIR']) do |mountpoint|
@@ -117,11 +127,10 @@ When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( 
     @veracrypt_shared_dir_in_guest = share_host_files(
       $veracrypt_basic_container_with_pim
     )
-    $vm.execute_successfully(
-      'mv ' \
-      "'#{@veracrypt_shared_dir_in_guest}/#{File.basename($veracrypt_basic_container_with_pim)}' " \
-      "'#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
-    )
+    src = "#{@veracrypt_shared_dir_in_guest}/" \
+          "#{File.basename($veracrypt_basic_container_with_pim)}"
+    dst = "#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}"
+    $vm.execute_successfully("mv '#{src}' '#{dst}'")
   else
     @veracrypt_needs_pim = false
     create_veracrypt_volume(type, with_options)
@@ -130,7 +139,8 @@ When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( 
     )
   end
   $vm.execute_successfully(
-    "chown #{LIVE_USER}:#{LIVE_USER} '#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
+    "chown #{LIVE_USER}:#{LIVE_USER} " \
+    "'#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
   )
 end
 
@@ -185,9 +195,12 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     gnome_shell.child('Attach Disk Image…', roleName: 'label').click
     # Otherwise Disks is sometimes minimized, for some reason I don't understand
     sleep 2
-    attach_dialog = disks.child('Select Disk Image to Attach', roleName: 'file chooser', showingOnly: true)
-    attach_dialog.child('Set up read-only loop device', roleName: 'check box').click
-    filter = attach_dialog.child('Disk Images (*.img, *.iso)', roleName: 'combo box')
+    attach_dialog = disks.child('Select Disk Image to Attach',
+                                roleName: 'file chooser', showingOnly: true)
+    attach_dialog.child('Set up read-only loop device',
+                        roleName: 'check box').click
+    filter = attach_dialog.child('Disk Images (*.img, *.iso)',
+                                 roleName: 'combo box')
     filter.click
     try_for(5) do
       begin
@@ -213,7 +226,8 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       end
     end
   end
-  disks.child('', roleName: 'panel', description: 'Unlock selected encrypted partition').click
+  disks.child('', roleName:    'panel',
+                  description: 'Unlock selected encrypted partition').click
   unlock_dialog = disks.dialog('Set options to unlock')
   passphrase_field = unlock_dialog.child('', roleName: 'password text')
   passphrase_field.grabFocus
@@ -243,7 +257,8 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   @screen.press('alt', 'u') # "Unlock" button
   try_for(10, msg: 'Failed to mount the unlocked volume') do
     begin
-      unlocked_volume = disks.child("#{size} VeraCrypt/TrueCrypt", roleName: 'panel', showingOnly: true)
+      unlocked_volume = disks.child("#{size} VeraCrypt/TrueCrypt",
+                                    roleName: 'panel', showingOnly: true)
       unlocked_volume.click
       # Move the focus down to the "Filesystem\n107 MB FAT" item (that Dogtail
       # is not able to find) using the 'Down' arrow, in order to display
@@ -251,7 +266,8 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       unlocked_volume.grabFocus
       sleep 0.5 # otherwise the following key press is sometimes lost
       disks.pressKey('Down')
-      disks.child('', roleName: 'panel', description: 'Mount selected partition', showingOnly: true).click
+      disks.child('', roleName: 'panel',
+description: 'Mount selected partition', showingOnly: true).click
       true
     rescue Dogtail::Failure
       # we probably did something too early, which triggered a Dogtail error

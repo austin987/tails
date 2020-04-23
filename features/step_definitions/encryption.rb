@@ -77,7 +77,8 @@ end
 
 def encrypt_sign_helper
   gedit_copy_all_text
-  seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
+  seahorse_menu_click_helper('GpgAppletIconNormal.png',
+                             'GpgAppletSignEncrypt.png')
   @screen.wait('GpgAppletChooseKeyWindow.png', 30).click
   # We don't have a good visual indicator for when we can continue without
   # keystrokes being lost.
@@ -142,7 +143,8 @@ end
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   gedit_copy_all_text
-  seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletEncryptPassphrase.png')
+  seahorse_menu_click_helper('GpgAppletIconNormal.png',
+                             'GpgAppletEncryptPassphrase.png')
   deal_with_pinentry # enter password
   deal_with_pinentry # confirm password
   gedit_paste_into_a_new_tab

@@ -41,7 +41,8 @@ def ip4tables_packet_counter_sum(**filters)
     next if filters[:tables] && !filters[:tables].include?(name)
 
     rules.each do |rule|
-      if filters[:uid] && !rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"]
+      if filters[:uid] &&
+         !rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"]
         next
       end
 
@@ -81,7 +82,9 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
       (
         # nil => match all interfaces according to iptables-xml
         out_iface.nil? ||
-        ((out_iface.text == 'lo') == (out_iface.attribute('invert').to_s == '1'))
+        ((out_iface.text == 'lo') \
+         == \
+         (out_iface.attribute('invert').to_s == '1'))
       )
   end
   uids = Set.new
@@ -137,7 +140,8 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
         destination = try_xml_element_text(rule, 'conditions/match/d')
         redir_port = try_xml_element_text(rule, 'actions/REDIRECT/to-ports')
         redirected_to_trans_port = redir_port == tor_trans_port
-        udp_destination_port = try_xml_element_text(rule, 'conditions/udp/dport')
+        udp_destination_port = try_xml_element_text(rule,
+                                                    'conditions/udp/dport')
         dns_redirected_to_tor_dns_port = (udp_destination_port == dns_port) &&
                                          (redir_port == tor_dns_port)
         redirect &&
@@ -310,8 +314,10 @@ Then /^I see that (.+) is properly stream isolated(?: after (\d+) seconds)?$/ do
 end
 
 And /^I re-run tails-security-check$/ do
-  $vm.execute_successfully('systemctl --user restart tails-security-check.service',
-                           user: LIVE_USER)
+  $vm.execute_successfully(
+    'systemctl --user restart tails-security-check.service',
+    user: LIVE_USER
+  )
 end
 
 And /^I re-run htpdate$/ do

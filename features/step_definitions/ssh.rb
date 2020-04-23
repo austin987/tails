@@ -50,10 +50,14 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on
     public_key = $config[server_type]['public_key']
   end
 
-  $vm.execute_successfully("echo '#{secret_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'",
-                           user: LIVE_USER)
-  $vm.execute_successfully("echo '#{public_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'",
-                           user: LIVE_USER)
+  $vm.execute_successfully(
+    "echo '#{secret_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa'",
+    user: LIVE_USER
+  )
+  $vm.execute_successfully(
+    "echo '#{public_key}' > '/home/#{LIVE_USER}/.ssh/id_rsa.pub'",
+    user: LIVE_USER
+  )
   $vm.execute_successfully("chmod 0600 '/home/#{LIVE_USER}/.ssh/'id*",
                            user: LIVE_USER)
 end

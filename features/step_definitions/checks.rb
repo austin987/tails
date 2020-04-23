@@ -1,6 +1,9 @@
 def shipped_openpgp_keys
-  shipped_gpg_keys = $vm.execute_successfully('gpg --batch --with-colons --fingerprint --list-key', user: LIVE_USER).stdout
-  openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
+  shipped_gpg_keys = $vm.execute_successfully(
+    'gpg --batch --with-colons --fingerprint --list-key', user: LIVE_USER
+  ).stdout
+  openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/)
+                                         .flatten
   openpgp_fingerprints
 end
 
@@ -8,13 +11,16 @@ Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) mont
   invalid = []
   shipped_openpgp_keys.each do |key|
     begin
-      step "the shipped OpenPGP key #{key} will be valid for the next #{months} months"
+      step "the shipped OpenPGP key #{key} will be valid " \
+           "for the next #{months} months"
     rescue Test::Unit::AssertionFailedError
       invalid << key
       next
     end
   end
-  assert(invalid.empty?, "The following key(s) will not be valid in #{months} months: #{invalid.join(', ')}")
+  assert(invalid.empty?,
+         'The following key(s) will not be valid ' \
+         "in #{months} months: #{invalid.join(', ')}")
 end
 
 Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be valid for the next (\d+) months$/ do |fingerprint, max_months|
@@ -26,12 +32,15 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
     cmd = 'apt-key adv'
     user = 'root'
   end
-  shipped_sig_key_info = $vm.execute_successfully("#{cmd} --batch --list-key #{fingerprint}", user: user).stdout
+  shipped_sig_key_info = $vm.execute_successfully(
+    "#{cmd} --batch --list-key #{fingerprint}", user: user
+  ).stdout
   m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
   if m
     expiration_date = Date.parse(m[1])
     assert((expiration_date << max_months.to_i) > DateTime.now,
-           "The shipped key #{fingerprint} will not be valid #{max_months} months from now.")
+           "The shipped key #{fingerprint} will not be valid " \
+           "#{max_months} months from now.")
   end
 end
 
@@ -45,7 +54,9 @@ end
 
 Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
   expected_groups = groups.split(' ') << LIVE_USER
-  actual_groups = $vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(/^#{LIVE_USER} : /, '').split(' ')
+  actual_groups = $vm.execute("groups #{LIVE_USER}").stdout.chomp.sub(
+    /^#{LIVE_USER} : /, ''
+  ).split(' ')
   unexpected = actual_groups - expected_groups
   missing = expected_groups - actual_groups
   assert_equal(0, unexpected.size,
@@ -121,22 +132,28 @@ Then /^MAT can clean some sample PNG file$/ do
   Dir.glob("#{MISC_FILES_DIR}/*.png").each do |png_on_host|
     png_name = File.basename(png_on_host)
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
-    cleaned_png_on_guest = "/home/#{LIVE_USER}/#{png_name}".sub(/[.]png$/, '.cleaned.png')
-    step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
+    cleaned_png_on_guest = "/home/#{LIVE_USER}/#{png_name}".sub(/[.]png$/,
+                                                                '.cleaned.png')
+    step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" " \
+         "as user \"#{LIVE_USER}\""
     raw_check_cmd = 'grep --quiet --fixed-strings --text ' \
                     "'Created with GIMP'"
-    assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'", user: LIVE_USER).success?,
+    assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'",
+                       user: LIVE_USER).success?,
            'The comment is not present in the PNG')
     check_before = $vm.execute_successfully("mat2 --show '#{png_on_guest}'",
                                             user: LIVE_USER).stdout
     assert(check_before.include?("Metadata for #{png_on_guest}"),
            "MAT failed to see that '#{png_on_host}' is dirty")
     $vm.execute_successfully("mat2 '#{png_on_guest}'", user: LIVE_USER)
-    check_after = $vm.execute_successfully("mat2 --show '#{cleaned_png_on_guest}'",
-                                           user: LIVE_USER).stdout
+    check_after = $vm.execute_successfully(
+      "mat2 --show '#{cleaned_png_on_guest}'",
+      user: LIVE_USER
+    ).stdout
     assert(check_after.include?('No metadata found'),
            "MAT failed to clean '#{png_on_host}'")
-    assert($vm.execute(raw_check_cmd + " '#{cleaned_png_on_guest}'", user: LIVE_USER).failure?,
+    assert($vm.execute(raw_check_cmd + " '#{cleaned_png_on_guest}'",
+                       user: LIVE_USER).failure?,
            'The comment is still present in the PNG')
     $vm.execute_successfully("rm '#{png_on_guest}'")
   end
@@ -178,9 +195,11 @@ end
 Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process, mode|
   status = get_seccomp_status(process)
   if mode == 'strict'
-    assert_equal(1, status, "#{process} not confined with Seccomp in strict mode")
+    assert_equal(1, status,
+                 "#{process} not confined with Seccomp in strict mode")
   elsif mode == 'filter'
-    assert_equal(2, status, "#{process} not confined with Seccomp in filter mode")
+    assert_equal(2, status,
+                 "#{process} not confined with Seccomp in filter mode")
   else
     raise "Unsupported mode #{mode} passed"
   end

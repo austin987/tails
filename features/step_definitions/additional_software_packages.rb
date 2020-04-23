@@ -51,9 +51,15 @@ Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |p
   try_for(30) do
     assert($vm.file_exist?(ASP_CONF), 'ASP configuration file not found')
     step 'all persistence configuration files have safe access rights'
-    $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
-    $vm.execute_successfully('ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages')
-    $vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?
+    $vm.execute_successfully(
+      "ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb"
+    )
+    $vm.execute_successfully(
+      'ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages'
+    )
+    $vm.execute(
+      "grep --line-regexp --fixed-strings #{package} #{ASP_CONF}"
+    ).success?
   end
 end
 
@@ -117,7 +123,9 @@ When /^I prepare the Additional Software upgrade process to fail$/ do
 end
 
 When /^I remove the "([^"]*)" deb files from the APT cache$/ do |package|
-  $vm.execute_successfully("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
+  $vm.execute_successfully(
+    "rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb"
+  )
 end
 
 Then /^I can open the Additional Software documentation from the notification$/ do
@@ -130,8 +138,16 @@ end
 Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and notices the persistence is locked$/ do |package|
   asp_logs = "#{ASP_STATE_DIR}/log"
   assert(!$vm.file_empty?(asp_logs))
-  try_for(120) { $vm.execute("grep -E '^.*New\spackages\smanually\sinstalled:\s.*#{package}.*$' #{asp_logs}").success? }
-  try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
+  try_for(120) do
+    $vm.execute(
+      "grep -E '^.*New\spackages\smanually\sinstalled:\s.*#{package}.*$' " \
+      "#{asp_logs}"
+    ).success?
+  end
+  try_for(60) do
+    $vm.file_content(asp_logs)
+       .include?('Warning: persistence storage is locked')
+  end
 end
 
 When /^I can open the Additional Software configuration window from the notification$/ do
@@ -143,5 +159,9 @@ end
 Then /^I can open the Additional Software log file from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Show Log', roleName: 'push button').click
-  try_for(60) { Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
+  try_for(60) do
+    Dogtail::Application.new('gedit').child(
+      "log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame'
+    )
+  end
 end

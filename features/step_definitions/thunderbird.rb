@@ -96,7 +96,8 @@ When /^I enter my email credentials into the autoconfiguration wizard$/ do
   name = address.split('@').first
   password = $config['Icedove']['password']
   thunderbird_wizard.child('Your name:', roleName: 'entry').typeText(name)
-  thunderbird_wizard.child('Email address:', roleName: 'entry').typeText(address)
+  thunderbird_wizard.child('Email address:',
+                           roleName: 'entry').typeText(address)
   thunderbird_wizard.child('Password:', roleName: 'entry').typeText(password)
   thunderbird_wizard.button('Continue').click
   # This button is shown if and only if a configuration has been found
@@ -130,7 +131,9 @@ When /^I fetch my email$/ do
   account = thunderbird_main.child($config['Icedove']['address'],
                                    roleName: 'table row')
   account.click
-  thunderbird_frame = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
+  thunderbird_frame = thunderbird_app.child(
+    "#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame'
+  )
 
   thunderbird_frame.child('Mail Toolbar', roleName: 'tool bar')
                    .button('Get Messages').click
@@ -186,7 +189,8 @@ When /^I select the autoconfiguration wizard's (IMAP|POP3) choice$/ do |protocol
 end
 
 When /^I send an email to myself$/ do
-  thunderbird_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
+  thunderbird_main.child('Mail Toolbar',
+                         roleName: 'tool bar').button('Write').click
   compose_window = thunderbird_app.child('Write: (no subject) - Thunderbird')
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
                 .typeText($config['Icedove']['address'])

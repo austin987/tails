@@ -2,11 +2,16 @@ def udev_watchdog_monitored_device
   ps_output = $vm.execute_successfully('ps -wweo cmd').stdout
   udev_watchdog_cmd = '/usr/local/sbin/udev-watchdog'
 
+  # rubocop:disable Layout/LineLength
   # The regex below looks for a line like the following:
   # /usr/local/sbin/udev-watchdog /devices/pci0000:00/0000:00:01.1/ata2/host1/target1:0:0/1:0:0:0/block/sr0 cd
   # We're only interested in the device itself, not in the type
-  ps_output_scan = ps_output.scan(/^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/)
-  assert_equal(ps_output_scan.count, 1, 'There should be one udev-watchdog running.')
+  # rubocop:enable Layout/LineLength
+  ps_output_scan = ps_output.scan(
+    /^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/
+  )
+  assert_equal(ps_output_scan.count, 1,
+               'There should be one udev-watchdog running.')
   monitored_out = ps_output_scan.flatten[0]
   assert_not_nil(monitored_out)
   monitored_device_id = $vm.file_content('/sys' + monitored_out + '/dev').chomp
@@ -22,11 +27,13 @@ Given /^udev-watchdog is monitoring the correct device$/ do
 end
 
 def used_ram_in_MiB
-  $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
+  $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'")
+     .stdout.chomp.to_i
 end
 
 def detected_ram_in_MiB
-  $vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
+  $vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'")
+     .stdout.chomp.to_i
 end
 
 def pattern_coverage_in_guest_ram(reference_memory_b)
@@ -68,7 +75,8 @@ Given /^I prepare Tails for memory erasure tests$/ do
   free_mem_before_fill_m = detected_ram_m - used_mem_before_fill_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 
-  ['initramfs-shutdown', 'memlockd', 'tails-shutdown-on-media-removal'].each do |srv|
+  ['initramfs-shutdown', 'memlockd',
+   'tails-shutdown-on-media-removal',].each do |srv|
     assert($vm.execute("systemctl status #{srv}.service").success?)
   end
 end
@@ -130,7 +138,8 @@ end
 
 When(/^I fill the USB drive with a known pattern$/) do
   $vm.execute_successfully(
-    "while echo wipe_didnt_work >> '#{@tmp_usb_drive_mount_dir}/file'; do true ; done"
+    "while echo wipe_didnt_work >> '#{@tmp_usb_drive_mount_dir}/file'; do " \
+    'true ; done'
   )
   assert_filesystem_is_full(@tmp_usb_drive_mount_dir)
 end
@@ -145,27 +154,30 @@ Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = expected_coverage.to_f / 100
   assert(coverage > min_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " \
+         "#{'%.3f' % (coverage * 100)}% of the test FS size " \
+         "(#{tmp_filesystem_size_MiB} MiB) " \
          "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " \
          'was expected')
 end
 
-Then(/^patterns cover at least (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
+Then /^patterns cover at least (\d+) MiB in the guest's memory$/ do |expected_patterns_MiB|
   reference_memory_b = convert_to_bytes(expected_patterns_MiB.to_i, 'MiB')
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = 1
   assert(coverage >= min_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " \
+         "#{'%.3f' % (coverage * 100)}% of the expected size " \
+         "(#{expected_patterns_MiB} MiB) " \
          "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " \
          'was expected')
 end
 
-Then(/^patterns cover less than (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
+Then /^patterns cover less than (\d+) MiB in the guest's memory$/ do |expected_patterns_MiB|
   reference_memory_b = convert_to_bytes(expected_patterns_MiB.to_i, 'MiB')
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   max_coverage = 1
   assert(coverage < max_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the expected size (#{expected_patterns_MiB} MiB) " \
+         "#{'%.3f' % (coverage * 100)}% of the expected size " \
+         "(#{expected_patterns_MiB} MiB) " \
          "has the pattern, but less than #{'%.3f' % (max_coverage * 100)}% " \
          'was expected')
 end
@@ -177,16 +189,18 @@ end
 Then /^I find very few patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram(@free_mem_before_fill_b)
   max_coverage = 0.008
-  assert(coverage < max_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the free memory still has the " \
-         "pattern, but less than #{'%.3f' % (max_coverage * 100)}% was expected")
+  assert(
+    coverage < max_coverage,
+    "#{'%.3f' % (coverage * 100)}% of the free memory still has the " \
+    "pattern, but less than #{'%.3f' % (max_coverage * 100)}% was expected"
+  )
 end
 
 When /^I wait for Tails to finish wiping the memory$/ do
   @screen.wait('MemoryWipeCompleted.png', 90)
 end
 
-When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) filesystem$/) do |size_MiB, fs|
+When /^I fill a (\d+) MiB file with a known pattern on the (persistent|root) filesystem$/ do |size_MiB, fs|
   pattern = "wipe_didnt_work\n"
   pattern_nb = (convert_to_bytes(size_MiB.to_i, 'MiB') / pattern.size).floor
   if fs == 'root'

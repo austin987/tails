@@ -5,7 +5,8 @@ end
 When /^I successfully start the Unsafe Browser$/ do
   step 'I start the Unsafe Browser'
   step 'I see and accept the Unsafe Browser start verification'
-  step 'I see the "Starting the Unsafe Browser..." notification after at most 60 seconds'
+  step 'I see the "Starting the Unsafe Browser..." notification ' \
+       'after at most 60 seconds'
   step 'the Unsafe Browser has started'
 end
 
@@ -25,7 +26,8 @@ def xul_application_info(application)
     binary = $vm.execute_successfully(
       'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
     ).stdout.chomp
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
+    cmd_regex = "#{binary} .* " \
+                "-profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ''
     browser_reload_button_image = 'TorBrowserReloadButton.png'
     browser_stop_button_image = 'TorBrowserStopButton.png'
@@ -35,7 +37,8 @@ def xul_application_info(application)
     binary = $vm.execute_successfully(
       'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
     ).stdout.chomp
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
+    cmd_regex = "#{binary} .* " \
+                "-profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = '/var/lib/unsafe-browser/chroot'
     browser_reload_button_image = 'UnsafeBrowserReloadButton.png'
     browser_stop_button_image = 'UnsafeBrowserStopButton.png'
@@ -57,7 +60,8 @@ def xul_application_info(application)
     browser_stop_button_image = nil
     # The standalone Tor Launcher uses fewer libs than the full
     # browser.
-    unused_tbb_libs.concat(['libfreebl3.so', 'libfreeblpriv3.so', 'libnssckbi.so', 'libsoftokn3.so'])
+    unused_tbb_libs.concat(['libfreebl3.so', 'libfreeblpriv3.so',
+                            'libnssckbi.so', 'libsoftokn3.so',])
   else
     raise "Invalid browser or XUL application: #{application}"
   end
@@ -192,14 +196,16 @@ end
 
 Then /^the (.*) runs as the expected user$/ do |browser|
   info = xul_application_info(browser)
-  assert_vmcommand_success($vm.execute(
-                             "pgrep --full --exact '#{info[:cmd_regex]}'"
-                           ),
-                           "The #{browser} is not running")
-  assert_vmcommand_success($vm.execute(
-                             "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
-                           ),
-                           "The #{browser} is not running as the #{info[:user]} user")
+  assert_vmcommand_success(
+    $vm.execute("pgrep --full --exact '#{info[:cmd_regex]}'"),
+    "The #{browser} is not running"
+  )
+  assert_vmcommand_success(
+    $vm.execute(
+      "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
+    ),
+    "The #{browser} is not running as the #{info[:user]} user"
+  )
 end
 
 When /^I download some file in the Tor Browser$/ do
@@ -235,7 +241,8 @@ end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   try_for(60) do
-    page = @torbrowser.child('Problem loading page - Tor Browser', roleName: 'frame')
+    page = @torbrowser.child('Problem loading page - Tor Browser',
+                             roleName: 'frame')
     page.children(roleName: 'heading').any? { |heading| heading.text == error }
   end
 end

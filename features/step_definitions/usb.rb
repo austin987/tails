@@ -137,7 +137,8 @@ end
 
 When /^I start Tails Installer$/ do
   @installer_log_path = '/tmp/tails-installer.log'
-  step "I run \"/usr/bin/tails-installer --verbose > #{@installer_log_path} 2>&1\" in GNOME Terminal"
+  command = "/usr/bin/tails-installer --verbose > #{@installer_log_path} 2>&1"
+  step "I run \"#{command}\" in GNOME Terminal"
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
   # Sometimes Dogtail will find the Installer and click its window
@@ -188,7 +189,8 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" by clon
                          else
                            'Install'
                          end
-    @installer.child('Question', roleName: 'alert').button(confirmation_label).click
+    @installer.child('Question',
+                     roleName: 'alert').button(confirmation_label).click
     try_for(15 * 60, delay: 10) do
       @installer
         .child('Information', roleName: 'alert')
@@ -268,7 +270,8 @@ def check_disk_integrity(name, dev, scheme)
          "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
 end
 
-def check_part_integrity(name, dev, usage, fs_type, part_label = nil, part_type = nil)
+def check_part_integrity(name, dev, usage, fs_type,
+                         part_label = nil, part_type = nil)
   info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
@@ -300,10 +303,13 @@ def tails_is_installed_helper(name, tails_root, loader)
   $vm.execute("mount #{part_dev} #{target_root}")
 
   c = $vm.execute("diff -qr '#{tails_root}/live' '#{target_root}/live'")
-  assert(c.success?,
-         "USB drive '#{name}' has differences in /live:\n#{c.stdout}\n#{c.stderr}")
+  assert(
+    c.success?,
+    "USB drive '#{name}' has differences in /live:\n#{c.stdout}\n#{c.stderr}"
+  )
 
-  syslinux_files = $vm.execute("ls -1 #{target_root}/syslinux").stdout.chomp.split
+  syslinux_files = $vm.execute("ls -1 #{target_root}/syslinux")
+                      .stdout.chomp.split
   # We deal with these files separately
   ignores = ['syslinux.cfg', 'exithelp.cfg', 'ldlinux.c32', 'ldlinux.sys']
   (syslinux_files - ignores).each do |f|
@@ -400,7 +406,9 @@ Given /^all persistence presets(| from the old Tails version)(| but the first on
     expected_mounts = persistent_mounts
     unless except_first.empty?
       first_expected_mount_source      = expected_mounts.keys[0]
-      first_expected_mount_destination = expected_mounts[first_expected_mount_source]
+      first_expected_mount_destination = expected_mounts[
+        first_expected_mount_source
+      ]
       expected_mounts.delete(first_expected_mount_source)
       unexpected_mounts = [first_expected_mount_destination]
     end
@@ -426,8 +434,9 @@ end
 def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  boot_dev_id = $vm.execute('udevadm info --device-id-of-file=/lib/live/mount/medium')
-                   .stdout.chomp
+  boot_dev_id = $vm.execute(
+    'udevadm info --device-id-of-file=/lib/live/mount/medium'
+  ).stdout.chomp
   boot_dev = $vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout.chomp
   boot_dev
 end
@@ -435,7 +444,8 @@ end
 def device_info(dev)
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  info = $vm.execute("udevadm info --query=property --name='#{dev}'").stdout.chomp
+  info = $vm.execute("udevadm info --query=property --name='#{dev}'")
+            .stdout.chomp
   info.split("\n").map { |e| e.split('=') } .to_h
 end
 
@@ -495,7 +505,8 @@ Then /^the boot device has safe access rights$/ do
   assert(!devs.empty?, 'Could not determine boot device')
   all_users = $vm.execute("cut -d':' -f1 /etc/passwd").stdout.chomp.split
   all_users_with_groups = all_users.collect do |user|
-    groups = $vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /, '').split(' ')
+    groups = $vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /,
+                                                            '').split(' ')
     [user, groups]
   end
   devs.each do |dev|
@@ -534,12 +545,18 @@ end
 
 Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
-    assert($vm.execute("test -e #{mountpoint}/persistence.conf").success?,
-           "#{mountpoint}/persistence.conf does not exist, while it should")
-    assert($vm.execute("test -e #{mountpoint}/persistence.conf.bak").success?,
-           "#{mountpoint}/persistence.conf.bak does not exist, while it should")
-    assert($vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
-           "#{mountpoint}/live-persistence.conf does exist, while it should not")
+    assert(
+      $vm.execute("test -e #{mountpoint}/persistence.conf").success?,
+      "#{mountpoint}/persistence.conf does not exist, while it should"
+    )
+    assert(
+      $vm.execute("test -e #{mountpoint}/persistence.conf.bak").success?,
+      "#{mountpoint}/persistence.conf.bak does not exist, while it should"
+    )
+    assert(
+      $vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
+      "#{mountpoint}/live-persistence.conf does exist, while it should not"
+    )
     $vm.execute(
       "ls -1 #{mountpoint}/persistence.conf* #{mountpoint}/live-*.conf"
     ).stdout.chomp.split.each do |f|
@@ -569,8 +586,10 @@ Then /^all persistent directories(| from the old Tails version) have safe access
     expected_dirs.each do |src, dest|
       full_src = "#{mountpoint}/#{src}"
       assert_vmcommand_success $vm.execute("test -d #{full_src}")
-      dir_perms = $vm.execute_successfully("stat -c %a '#{full_src}'").stdout.chomp
-      dir_owner = $vm.execute_successfully("stat -c %U '#{full_src}'").stdout.chomp
+      dir_perms = $vm.execute_successfully("stat -c %a '#{full_src}'")
+                     .stdout.chomp
+      dir_owner = $vm.execute_successfully("stat -c %U '#{full_src}'")
+                     .stdout.chomp
       if dest.start_with?("/home/#{LIVE_USER}")
         expected_perms = '700'
         expected_owner = LIVE_USER
@@ -597,9 +616,13 @@ When /^I write some files expected to persist$/ do
 end
 
 When /^I write some dotfile expected to persist$/ do
-  assert($vm.execute('touch /live/persistence/TailsData_unlocked/dotfiles/.XXX_persist',
-                     user: LIVE_USER).success?,
-         'Could not create a file in the dotfiles persistence.')
+  assert(
+    $vm.execute(
+      'touch /live/persistence/TailsData_unlocked/dotfiles/.XXX_persist',
+      user: LIVE_USER
+    ).success?,
+    'Could not create a file in the dotfiles persistence.'
+  )
 end
 
 When /^I remove some files expected to persist$/ do
@@ -633,17 +656,24 @@ Then /^the expected persistent files(| created with the old Tails version) are p
   expected_mounts.each do |_, dir|
     assert($vm.execute("test -e #{dir}/XXX_persist").success?,
            "Could not find expected file in persistent directory #{dir}")
-    assert(!$vm.execute("test -e #{dir}/XXX_gone").success?,
-           "Found file that should not have persisted in persistent directory #{dir}")
+    assert(
+      !$vm.execute("test -e #{dir}/XXX_gone").success?,
+      "Found file that should not have persisted in persistent directory #{dir}"
+    )
   end
 end
 
 Then /^the expected persistent dotfile is present in the filesystem$/ do
   expected_dirs = persistent_dirs
-  assert($vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist").success?,
+  assert($vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist")
+            .success?,
          'Could not find expected persistent dotfile link.')
-  assert($vm.execute("test -e $(readlink -f #{expected_dirs['dotfiles']}/.XXX_persist)").success?,
-         'Could not find expected persistent dotfile link target.')
+  assert(
+    $vm.execute(
+      "test -e $(readlink -f #{expected_dirs['dotfiles']}/.XXX_persist)"
+    ).success?,
+    'Could not find expected persistent dotfile link target.'
+  )
 end
 
 Then /^only the expected files are present on the persistence partition on USB drive "([^"]+)"$/ do |name|
@@ -676,8 +706,11 @@ Then /^only the expected files are present on the persistence partition on USB d
       # the translation of C types into Ruby types is glitchy.
       assert(g.exists("/#{dir}/XXX_persist") == 1,
              "Could not find expected file in persistent directory #{dir}")
-      assert(g.exists("/#{dir}/XXX_gone") != 1,
-             "Found file that should not have persisted in persistent directory #{dir}")
+      assert(
+        g.exists("/#{dir}/XXX_gone") != 1,
+        'Found file that should not have persisted in persistent directory ' +
+        dir
+      )
     end
     g.umount(mount_point)
     g.luks_close(luks_dev)
@@ -912,15 +945,18 @@ Then /^the Upgrader considers the system as up-to-date$/ do
       'systemctl --user status tails-upgrade-frontend.service',
       user: LIVE_USER
     )
+    up_to_date_regexp = 'tails-upgrade-frontend-wrapper\[[0-9]+\]: ' \
+                        'The system is up-to-date'
     $vm.execute_successfully(
-      "journalctl | grep -q -E 'tails-upgrade-frontend-wrapper\[[0-9]+\]: The system is up-to-date'"
+      "journalctl | grep -q -E '#{up_to_date_regexp}'"
     )
   end
 end
 
 def upgrader_trusted_signing_subkeys
   $vm.execute_successfully(
-    "sudo -u tails-upgrade-frontend gpg --batch --list-keys --with-colons '#{TAILS_SIGNING_KEY}'"
+    'sudo -u tails-upgrade-frontend ' \
+    'gpg --batch --list-keys --with-colons' + TAILS_SIGNING_KEY
   ).stdout.split("\n")
      .select { |line| /^sub:/.match(line) }
      .map { |line| line[/^sub:.:\d+:\d+:(?<subkeyid>[A-F0-9]+):/, 'subkeyid'] }
@@ -929,7 +965,8 @@ end
 Given /^the signing key used by the Upgrader is outdated$/ do
   upgrader_trusted_signing_subkeys.each do |subkeyid|
     $vm.execute_successfully(
-      "sudo -u tails-upgrade-frontend gpg --batch --yes --delete-keys '#{subkeyid}!'"
+      'sudo -u tails-upgrade-frontend ' \
+      "gpg --batch --yes --delete-keys '#{subkeyid}!'"
     )
   end
   assert_equal(0, upgrader_trusted_signing_subkeys.length)
@@ -976,12 +1013,18 @@ Then /^the FAT filesystem on the system partition on "([^"]+)" is at least (\d+)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
 
-  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
-  partition_size = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Partition']['Size'].to_i
+  udisks_info = $vm.execute_successfully(
+    "udisksctl info --block-device #{part_dev}"
+  ).stdout
+  partition_size = parse_udisksctl_info(udisks_info)[
+    'org.freedesktop.UDisks2.Partition'
+  ]['Size'].to_i
 
   # Partition size:
-  assert(partition_size >= wanted_size,
-         "FAT partition is too small: #{partition_size} is less than #{wanted_size}")
+  assert(
+    partition_size >= wanted_size,
+    "FAT partition is too small: #{partition_size} is less than #{wanted_size}"
+  )
 
   # -B 1 forces size to be expressed in bytes rather than (1K) blocks:
   fs_size = $vm.execute_successfully(
@@ -996,8 +1039,12 @@ Then /^the UUID of the FAT filesystem on the system partition on "([^"]+)" was r
   part_dev = disk_dev + '1'
 
   # Get the UUID from the block area:
-  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
-  fs_uuid = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Block']['IdUUID']
+  udisks_info = $vm.execute_successfully(
+    "udisksctl info --block-device #{part_dev}"
+  ).stdout
+  fs_uuid = parse_udisksctl_info(
+    udisks_info
+  )['org.freedesktop.UDisks2.Block']['IdUUID']
 
   static_uuid = 'A690-20D2'
   assert(fs_uuid != static_uuid,
@@ -1009,11 +1056,16 @@ Then /^the label of the FAT filesystem on the system partition on "([^"]+)" is "
   part_dev = disk_dev + '1'
 
   # Get FS label from the block area:
-  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
-  fs_label = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Block']['IdLabel']
+  udisks_info = $vm.execute_successfully(
+    "udisksctl info --block-device #{part_dev}"
+  ).stdout
+  fs_label = parse_udisksctl_info(
+    udisks_info
+  )['org.freedesktop.UDisks2.Block']['IdLabel']
 
   assert(label == fs_label,
-         "FS label on #{part_dev} is #{fs_label} instead of the expected #{label}")
+         "FS label on #{part_dev} is #{fs_label} " \
+         "instead of the expected #{label}")
 end
 
 Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
@@ -1021,17 +1073,22 @@ Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
   part_dev = disk_dev + '1'
 
   # Look at the flags from the partition area:
-  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
-  flags = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Partition']['Flags']
+  udisks_info = $vm.execute_successfully(
+    "udisksctl info --block-device #{part_dev}"
+  ).stdout
+  flags = parse_udisksctl_info(
+    udisks_info
+  )['org.freedesktop.UDisks2.Partition']['Flags']
 
   # See SYSTEM_PARTITION_FLAGS in create-usb-image-from-iso: 0xd000000000000005,
   # displayed in decimal (14987979559889010693) in udisksctl's output:
   expected_flags = 0xd000000000000005
   assert(flags == expected_flags.to_s,
-         "Got #{flags} as partition flags on #{part_dev} (for #{name}), instead of the expected #{expected_flags}")
+         "Got #{flags} as partition flags on #{part_dev} (for #{name}), " \
+         "instead of the expected #{expected_flags}")
 end
 
-Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do |size_in_MiB_of_destination_disk|
+Given /^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/ do |size_in_MiB_of_destination_disk|
   # GNOME Disks displays devices sizes in GB, with 1 decimal digit precision
   size_in_GB_of_destination_disk = convert_from_bytes(
     convert_to_bytes(size_in_MiB_of_destination_disk.to_i, 'MiB'),

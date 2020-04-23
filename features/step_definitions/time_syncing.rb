@@ -20,9 +20,13 @@ end
 When /^I bump the (hardware clock's|system) time with "([^"]+)"$/ do |clock_type, timediff|
   case clock_type
   when "hardware clock's"
-    old_time = DateTime.parse($vm.execute_successfully('hwclock -r').stdout).to_time
+    old_time = DateTime.parse(
+      $vm.execute_successfully('hwclock -r').stdout
+    ).to_time
     $vm.execute_successfully("hwclock --set --date 'now #{timediff}'")
-    new_time = DateTime.parse($vm.execute_successfully('hwclock -r').stdout).to_time
+    new_time = DateTime.parse(
+      $vm.execute_successfully('hwclock -r').stdout
+    ).to_time
   when 'system'
     old_time = DateTime.parse($vm.execute_successfully('date').stdout).to_time
     $vm.execute_successfully("date -s 'now #{timediff}'")
@@ -87,7 +91,9 @@ Then /^Tails' hardware clock is close to the host system's time$/ do
 end
 
 Then /^the hardware clock is still off by "([^"]+)"$/ do |timediff|
-  hwclock = DateTime.parse($vm.execute_successfully('hwclock -r').stdout.chomp).to_time
+  hwclock = DateTime.parse(
+    $vm.execute_successfully('hwclock -r').stdout.chomp
+  ).to_time
   expected_time_lower_bound = DateTime.parse(
     cmd_helper(['date', '-d', "now #{timediff}"])
   ).to_time - max_time_drift

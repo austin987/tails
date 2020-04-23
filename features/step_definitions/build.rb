@@ -49,7 +49,7 @@ Given %r{^the last versions mentioned in debian/changelog are ([[:alnum:]~.]+) a
   step "the last version mentioned in debian/changelog is #{version_b}"
 end
 
-Given(%r{^no frozen APT snapshot is encoded in config/APT_snapshots\.d$}) do
+Given %r{^no frozen APT snapshot is encoded in config/APT_snapshots\.d$} do
   ['debian', 'debian-security', 'torproject'].map do |origin|
     File.open("config/APT_snapshots.d/#{origin}/serial", 'w+') do |serial|
       serial.write("latest\n")
@@ -57,7 +57,7 @@ Given(%r{^no frozen APT snapshot is encoded in config/APT_snapshots\.d$}) do
   end
 end
 
-Given(%r{^frozen APT snapshots are encoded in config/APT_snapshots\.d$}) do
+Given %r{^frozen APT snapshots are encoded in config/APT_snapshots\.d$} do
   ['debian', 'torproject'].map do |origin|
     File.open("config/APT_snapshots.d/#{origin}/serial", 'w+') do |serial|
       serial.write("2016060602\n")
@@ -122,35 +122,35 @@ Then /^I should not see the ['"]?([[:alnum:].-]+)['"]? suite$/ do |suite|
   @output.should_not have_suite(suite)
 end
 
-Given(%r{^the config/APT_overlays\.d directory is empty$}) do
+Given %r{^the config/APT_overlays\.d directory is empty$} do
   Dir.glob('config/APT_overlays.d/*').empty? \
   || raise('config/APT_overlays.d/ is not empty')
 end
 
-Given(%r{^config/APT_overlays\.d contains ['"]?([[:alnum:].-]+)['"]?$}) do |suite|
+Given %r{^config/APT_overlays\.d contains ['"]?([[:alnum:].-]+)['"]?$} do |suite|
   FileUtils.touch("config/APT_overlays.d/#{suite}")
 end
 
-Then(/^it should fail$/) do
+Then /^it should fail$/ do
   assert_not_equal(0, @exit_code)
 end
 
-Given(%r{^the (config/base_branch) file does not exist$}) do |file|
+Given %r{^the (config/base_branch) file does not exist$} do |file|
   File.delete(file)
 end
 
-Given(%r{^the (config/APT_overlays\.d) directory does not exist$}) do |dir|
+Given %r{^the (config/APT_overlays\.d) directory does not exist$} do |dir|
   Dir.rmdir(dir)
 end
 
-Given(%r{^the config/base_branch file is empty$}) do
+Given %r{^the config/base_branch file is empty$} do
   File.truncate('config/base_branch', 0)
 end
 
-Then(/^I should see the ([[:alnum:].-]+) tagged snapshot$/) do |tag|
+Then /^I should see the ([[:alnum:].-]+) tagged snapshot$/ do |tag|
   @output.should have_tagged_snapshot(tag)
 end
 
-Then(/^I should see a time\-based snapshot$/) do
+Then /^I should see a time\-based snapshot$/ do
   @output.should have_time_based_snapshot
 end

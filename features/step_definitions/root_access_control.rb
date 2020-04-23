@@ -8,13 +8,15 @@ end
 Then /^I should not be able to run administration commands as the live user with the "([^"]*)" password$/ do |password|
   stderr = $vm.execute("echo #{password} | sudo -S whoami",
                        user: LIVE_USER).stderr
-  sudo_failed = stderr.include?('The administration password is disabled') || stderr.include?('is not allowed to execute')
+  sudo_failed = stderr.include?('The administration password is disabled') \
+                || stderr.include?('is not allowed to execute')
   assert(sudo_failed, 'The administration password is not disabled:' + stderr)
 end
 
 When /^running a command as root with pkexec requires PolicyKit administrator privileges$/ do
   action = 'org.freedesktop.policykit.exec'
-  action_details = $vm.execute("pkaction --verbose --action-id #{action}").stdout
+  action_details = $vm.execute("pkaction --verbose --action-id #{action}")
+                      .stdout
   assert(action_details[/\s+implicit any:\s+auth_admin$/],
          "Expected 'auth_admin' for 'any':\n#{action_details}")
   assert(action_details[/\s+implicit inactive:\s+auth_admin$/],

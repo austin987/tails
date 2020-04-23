@@ -57,7 +57,8 @@ end
 
 def wait_for_package_installation(package)
   try_for(2 * 60) do
-    $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
+    $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null " \
+                             "| grep -qs '^Status:.*installed$'")
   end
 end
 
@@ -71,7 +72,7 @@ Then /^I install "(.+)" using apt$/ do |package|
   retry_tor(recovery_proc) do
     Timeout.timeout(3 * 60) do
       $vm.execute("echo #{@sudo_password} | " \
-                               "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
+                  "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
                   user:  LIVE_USER,
                   spawn: true)
       wait_for_package_installation(package)
@@ -81,8 +82,8 @@ end
 
 def wait_for_package_removal(package)
   try_for(3 * 60) do
-    # Once purged, a package is removed from the installed package status database
-    # and "dpkg -s" returns a non-zero exit code
+    # Once purged, a package is removed from the installed package status
+    # database and "dpkg -s" returns a non-zero exit code
     !$vm.execute("dpkg -s #{package}").success?
   end
 end
@@ -102,7 +103,8 @@ When /^I configure APT to prefer an old version of cowsay$/ do
     Pin: release o=Tails,a=asp-test-upgrade-cowsay
     Pin-Priority: 999
   PREF
-  $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list', apt_source)
+  $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list',
+                     apt_source)
   $vm.file_overwrite('/etc/apt/preferences.d/asp-test-upgrade-cowsay', apt_pref)
 end
 
@@ -113,12 +115,17 @@ When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |
 end
 
 When /^I revert the APT tweaks that made it prefer an old version of cowsay$/ do
-  $vm.execute_successfully('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
+  $vm.execute_successfully(
+    'rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list ' \
+    '/etc/apt/preferences.d/asp-test-upgrade-cowsay'
+  )
 end
 
 When /^the installed version of package "([^"]*)" is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
   step 'the Additional Software installation service has started' if asp
-  current_version = $vm.execute_successfully("dpkg-query -W -f='${Version}' #{package}").stdout
+  current_version = $vm.execute_successfully(
+    "dpkg-query -W -f='${Version}' #{package}"
+  ).stdout
   if newer_than
     cmd_helper("dpkg --compare-versions '#{version}' lt '#{current_version}'")
   else

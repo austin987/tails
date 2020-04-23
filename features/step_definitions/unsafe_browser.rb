@@ -4,7 +4,9 @@ When /^I see and accept the Unsafe Browser start verification$/ do
 end
 
 def supported_torbrowser_languages
-  localization_descriptions = "#{Dir.pwd}/config/chroot_local-includes/usr/share/tails/browser-localization/descriptions"
+  localization_descriptions =
+    "#{Dir.pwd}/config/chroot_local-includes/" \
+    'usr/share/tails/browser-localization/descriptions'
   File.read(localization_descriptions).split("\n").map do |line|
     # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
     first, second = line.sub('-', '_').split(':')
@@ -19,7 +21,8 @@ def supported_torbrowser_languages
 end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
-  step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
+  step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" " \
+       'in GNOME Terminal'
   step 'I see and accept the Unsafe Browser start verification'
 end
 
@@ -36,7 +39,9 @@ Then /^the Unsafe Browser works in all supported languages$/ do
     step 'I close the Unsafe Browser'
     step 'the Unsafe Browser chroot is torn down'
   end
-  assert(failed.empty?, "Unsafe Browser failed to launch in the following locale(s): #{failed.join(', ')}")
+  assert(failed.empty?,
+         'Unsafe Browser failed to launch in the following locale(s): ' +
+         failed.join(', '))
 end
 
 Then /^the Unsafe Browser has no add-ons installed$/ do
@@ -108,7 +113,8 @@ end
 
 Then /^the Unsafe Browser has started(?: in the "([^"]+)" locale)?$/ do |locale|
   if locale
-    step "the Unsafe Browser shows a warning as its start page in the \"#{locale}\" locale"
+    step 'the Unsafe Browser shows a warning as its start page in the ' \
+         "\"#{locale}\" locale"
   else
     step 'the Unsafe Browser shows a warning as its start page'
   end
@@ -130,12 +136,15 @@ When /^I configure the Unsafe Browser to use a local proxy$/ do
   proxy_host = proxy[0]
   proxy_port = proxy[1]
 
-  debug_log("Configuring the Unsafe Browser to use a Tor SOCKS proxy (host=#{proxy_host}, port=#{proxy_port})")
+  debug_log('Configuring the Unsafe Browser to use a Tor SOCKS proxy ' \
+            "(host=#{proxy_host}, port=#{proxy_port})")
 
   prefs = '/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js'
   $vm.file_append(prefs, 'user_pref("network.proxy.type", 1);' + "\n")
-  $vm.file_append(prefs, "user_pref(\"network.proxy.socks\", \"#{proxy_host})\";\n")
-  $vm.file_append(prefs, "user_pref(\"network.proxy.socks_port\", #{proxy_port});\n")
+  $vm.file_append(prefs,
+                  "user_pref(\"network.proxy.socks\", \"#{proxy_host})\";\n")
+  $vm.file_append(prefs,
+                  "user_pref(\"network.proxy.socks_port\", #{proxy_port});\n")
 
   lib = '/usr/local/lib/tails-shell-library/chroot-browser.sh'
   $vm.execute_successfully("sed -i -E '/^\s*export TOR_TRANSPROXY=1/d' #{lib}")

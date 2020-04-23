@@ -49,7 +49,10 @@ Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"
       format: $vm.storage.disk_format(name),
     },
   }
-  $vm.storage.guestfs_disk_helper(src_disk, dest_disk) do |g, src_disk_handle, dest_disk_handle|
+  $vm.storage.guestfs_disk_helper(
+    src_disk,
+    dest_disk
+  ) do |g, src_disk_handle, dest_disk_handle|
     g.copy_device_to_device(src_disk_handle, dest_disk_handle, {})
   end
 end

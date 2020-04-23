@@ -341,7 +341,8 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       # conversation window. At worst, the test will still fail...
       close_pidgin_conversation_window(account)
     end
-    on_screen, = @screen.wait_any([expected_channel_entry, reconnect_button], 60)
+    on_screen, = @screen.wait_any([expected_channel_entry, reconnect_button],
+                                  60)
     unless on_screen == expected_channel_entry
       raise "Connecting to account #{account} failed."
     end
@@ -384,10 +385,12 @@ end
 
 Then /^Pidgin has the expected persistent accounts configured$/ do
   current_accounts = configured_pidgin_accounts
-  assert(current_accounts <=> @persistent_pidgin_accounts,
-         "Currently configured Pidgin accounts do not match the persistent ones:\n" \
-         "Current:\n#{current_accounts}\n" \
-         "Persistent:\n#{@persistent_pidgin_accounts}")
+  assert(
+    current_accounts <=> @persistent_pidgin_accounts,
+    "Currently configured Pidgin accounts do not match the persistent ones:\n" \
+    "Current:\n#{current_accounts}\n" \
+    "Persistent:\n#{@persistent_pidgin_accounts}"
+  )
 end
 
 Then /^Pidgin has the expected persistent OTR keys$/ do
@@ -395,8 +398,10 @@ Then /^Pidgin has the expected persistent OTR keys$/ do
 end
 
 def pidgin_add_certificate_from(cert_file)
+  src = '/usr/share/ca-certificates/mozilla/' \
+        'Staat_der_Nederlanden_EV_Root_CA.crt'
   # Here, we need a certificate that is not already in the NSS database
-  step "I copy \"/usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_EV_Root_CA.crt\" to \"#{cert_file}\" as user \"amnesia\""
+  step "I copy \"#{src}\" to \"#{cert_file}\" as user \"amnesia\""
 
   $vm.focus_window('Buddy List')
   @screen.wait('PidginToolsMenu.png', 10).click
@@ -419,7 +424,8 @@ end
 
 Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
-  wait_and_focus('PidginCertificateAddHostnameDialog.png', 'Certificate Import', 10)
+  wait_and_focus('PidginCertificateAddHostnameDialog.png',
+                 'Certificate Import', 10)
   @screen.type('XXX test XXX', ['Return'])
   wait_and_focus('PidginCertificateTestItem.png', 'Certificate Manager', 10)
 end
@@ -430,7 +436,8 @@ Then /^I cannot add a certificate from the "([^"]+)" directory to Pidgin$/ do |c
 end
 
 When /^I close Pidgin's certificate manager$/ do
-  wait_and_focus('PidginCertificateManagerDialog.png', 'Certificate Manager', 10)
+  wait_and_focus('PidginCertificateManagerDialog.png', 'Certificate Manager',
+                 10)
   @screen.press('Escape')
   # @screen.wait('PidginCertificateManagerClose.png', 10).click
   @screen.wait_vanish('PidginCertificateManagerDialog.png', 10)
