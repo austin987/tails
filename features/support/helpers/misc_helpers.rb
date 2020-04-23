@@ -18,10 +18,14 @@ Test::Unit.run = true
 include Test::Unit::Assertions # rubocop:disable Style/MixinUsage
 
 def assert_vmcommand_success(p, msg = nil) # rubocop:disable Naming/MethodParameterName
-  assert(p.success?, msg.nil? ? "Command failed: #{p.cmd}\n" \
-                                "error code: #{p.returncode}\n" \
-                                "stderr: #{p.stderr}" : \
-                                msg)
+  assert(p.success?,
+         if msg.nil?
+           "Command failed: #{p.cmd}\n" \
+           "error code: #{p.returncode}\n" \
+           "stderr: #{p.stderr}"
+         else
+           msg
+         end)
 end
 
 # It's forbidden to throw this exception (or subclasses) in anything

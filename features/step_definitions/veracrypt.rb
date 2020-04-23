@@ -13,16 +13,12 @@ def veracrypt_volume_size_in_nautilus(**options)
   if options[:isHidden]
     '52 MB'
   else
-    options[:needsPim] ?
-      '147 KB'
-    : '105 MB'
+    options[:needsPim] ? '147 KB' : '105 MB'
   end
 end
 
 def veracrypt_volume_size_in_gnome_disks(**options)
-  options[:needsPim] ?
-    '410 KB'
-  : '105 MB'
+  options[:needsPim] ? '410 KB' : '105 MB'
 end
 
 def create_veracrypt_keyfile
