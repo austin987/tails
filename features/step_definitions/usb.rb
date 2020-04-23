@@ -266,8 +266,8 @@ def check_disk_integrity(name, dev, scheme)
   info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.PartitionTable:\n")
   part_table_info = info_split[1]
-  assert(part_table_info.match("^    Type: +#{scheme}$"),
-         "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
+  assert_match(/^    Type: +#{scheme}/, part_table_info,
+               "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
 end
 
 def check_part_integrity(name, dev, usage, fs_type,
@@ -276,17 +276,17 @@ def check_part_integrity(name, dev, usage, fs_type,
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
   part_info = info_split[1]
-  assert(dev_info.match("^    IdUsage: +#{usage}$"),
-         "Unexpected device field 'usage' on USB drive '#{name}', '#{dev}'")
-  assert(dev_info.match("^    IdType: +#{fs_type}$"),
-         "Unexpected device field 'IdType' on USB drive '#{name}', '#{dev}'")
+  assert_match(/^    IdUsage: +#{usage}$/, dev_info,
+               "Unexpected device field 'usage' on drive '#{name}', '#{dev}'")
+  assert_match(/^    IdType: +#{fs_type}$/, dev_info,
+               "Unexpected device field 'IdType' on drive '#{name}', '#{dev}'")
   if part_label
-    assert(part_info.match("^    Name: +#{part_label}$"),
-           "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+    assert_match(/^    Name: +#{part_label}$/, part_info,
+                 "Unexpected partition label on drive '#{name}', '#{dev}'")
   end
   if part_type
-    assert(part_info.match("^    Type: +#{part_type}$"),
-           "Unexpected partition type on USB drive '#{name}', '#{dev}'")
+    assert_match(/^    Type: +#{part_type}$/, part_info,
+                 "Unexpected partition type on drive '#{name}', '#{dev}'")
   end
 end
 
@@ -368,10 +368,10 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 
   # Adapting check_part_integrity() seems like a bad idea so here goes
   info = $vm.execute("udisksctl info --block-device '#{luks_dev}'").stdout
-  assert info.match("^    CryptoBackingDevice: +'/[a-zA-Z0-9_/]+'$")
-  assert info.match('^    IdUsage: +filesystem$')
-  assert info.match('^    IdType: +ext[34]$')
-  assert info.match('^    IdLabel: +TailsData$')
+  assert_match(%r{^    CryptoBackingDevice: +'/[a-zA-Z0-9_/]+'$}, info)
+  assert_match(/^    IdUsage: +filesystem$/, info)
+  assert_match(/^    IdType: +ext[34]$/, info)
+  assert_match(/^    IdLabel: +TailsData$/, info)
 
   mount_dir = "/mnt/#{name}"
   $vm.execute("mkdir -p #{mount_dir}")
@@ -525,8 +525,9 @@ Then /^the boot device has safe access rights$/ do
   end
 
   info = $vm.execute("udisksctl info --block-device '#{super_boot_dev}'").stdout
-  assert(info.match('^    HintSystem: +true$'),
-         "Boot device '#{super_boot_dev}' is not system internal for udisks")
+  assert_match(/^    HintSystem: +true$/, info,
+               "Boot device '#{super_boot_dev}' is not system internal " \
+               'for udisks')
 end
 
 Then /^all persistent filesystems have safe access rights$/ do
