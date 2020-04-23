@@ -60,11 +60,9 @@ class SSHServer
     begin
       ret = Process.kill(0, @pid)
     rescue Errno::ESRCH => e
-      if e.message == 'No such process'
-        return false
-      else
-        raise e
-      end
+      return false if e.message == 'No such process'
+
+      raise e
     end
     assert_equal(1, ret, "This shouldn't happen")
     true

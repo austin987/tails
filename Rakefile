@@ -73,10 +73,10 @@ end
 
 def run_command(*args)
   Process.wait Kernel.spawn(*args)
-  if $CHILD_STATUS.exitstatus != 0
-    raise CommandError.new("command #{args} failed with exit status " \
-                           '%{status}', status: $CHILD_STATUS.exitstatus)
-  end
+  return if $CHILD_STATUS.exitstatus.zero?
+
+  raise CommandError.new("command #{args} failed with exit status " \
+                         '%{status}', status: $CHILD_STATUS.exitstatus)
 end
 
 def capture_command(*args)
@@ -508,12 +508,10 @@ def retrieve_artifacts(missing_ok: false)
   artifacts = list_artifacts
   if artifacts.empty?
     msg = 'No build artifacts were found!'
-    if missing_ok
-      warn msg
-      return
-    else
-      raise msg
-    end
+    raise msg unless missing_ok
+
+    warn msg
+    return
   end
   user = vagrant_ssh_config('User')
   hostname = vagrant_ssh_config('HostName')

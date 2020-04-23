@@ -10,10 +10,10 @@ def count_gpg_subkeys(key)
 end
 
 def check_for_seahorse_error
-  if @screen.exists('GnomeCloseButton.png')
-    raise OpenPGPKeyserverCommunicationError,
-          "Found GnomeCloseButton.png' on the screen"
-  end
+  return unless @screen.exists('GnomeCloseButton.png')
+
+  raise OpenPGPKeyserverCommunicationError,
+        "Found GnomeCloseButton.png' on the screen"
 end
 
 def dirmngr_conf

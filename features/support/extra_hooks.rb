@@ -69,15 +69,15 @@ end
 
 def debug_log(message, **options)
   options[:timestamp] = true unless options.key?(:timestamp)
-  if $debug_log_fns
-    if options[:timestamp]
-      # Force UTC so the local timezone difference vs UTC won't be
-      # added to the result.
-      elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime('%H:%M:%S.%9N')
-      message = "#{elapsed}: #{message}"
-    end
-    $debug_log_fns.each { |fn| fn.call(message, **options) }
+  return unless $debug_log_fns
+
+  if options[:timestamp]
+    # Force UTC so the local timezone difference vs UTC won't be
+    # added to the result.
+    elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime('%H:%M:%S.%9N')
+    message = "#{elapsed}: #{message}"
   end
+  $debug_log_fns.each { |fn| fn.call(message, **options) }
 end
 
 require 'cucumber/formatter/pretty'
@@ -95,18 +95,18 @@ module ExtraFormatters
     end
 
     def before_feature(feature)
-      if $before_feature_hooks
-        $before_feature_hooks.each do |hook|
-          hook.invoke(feature) if feature.accept_hook?(hook)
-        end
+      return unless $before_feature_hooks
+
+      $before_feature_hooks.each do |hook|
+        hook.invoke(feature) if feature.accept_hook?(hook)
       end
     end
 
     def after_feature(feature)
-      if $after_feature_hooks
-        $after_feature_hooks.reverse.each do |hook|
-          hook.invoke(feature) if feature.accept_hook?(hook)
-        end
+      return unless $after_feature_hooks
+
+      $after_feature_hooks.reverse.each do |hook|
+        hook.invoke(feature) if feature.accept_hook?(hook)
       end
     end
   end

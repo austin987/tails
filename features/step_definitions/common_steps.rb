@@ -602,14 +602,12 @@ Given /^the package "([^"]+)" is( not)? installed( after Additional Software has
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
-  if !version.empty?
-    raise "Unsupported version '#{version}'"
-  else
-    $vm.execute_successfully(
-      "nmcli connection add con-name #{con_name} " \
-      'type ethernet autoconnect yes ifname eth0'
-    )
-  end
+  raise "Unsupported version '#{version}'" unless version.empty?
+
+  $vm.execute_successfully(
+    "nmcli connection add con-name #{con_name} " \
+    'type ethernet autoconnect yes ifname eth0'
+  )
 
   try_for(10) do
     nm_con_list = $vm.execute('nmcli --terse --fields NAME connection show').stdout

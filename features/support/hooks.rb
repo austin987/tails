@@ -140,23 +140,24 @@ BeforeFeature('@product') do
       raise "No Tails #{type} image specified, and none could be found " \
             'in the current directory'
     end
-    if File.exist?(path)
-      # Workaround: when libvirt takes ownership of the ISO/IMG image it may
-      # become unreadable for the live user inside the guest in the
-      # host-to-guest share used for some tests.
 
-      unless File.world_readable?(path)
-        if File.owned?(path)
-          File.chmod(0o644, path)
-        else
-          raise "warning: the Tails #{type} image must be world readable " \
-                'or be owned by the current user to be available inside ' \
-                'the guest VM via host-to-guest shares, which is required ' \
-                'by some tests'
-        end
-      end
-    else
+    unless File.exist?(path)
       raise "The specified Tails #{type} image '#{path}' does not exist"
+    end
+
+    # Workaround: when libvirt takes ownership of the ISO/IMG image it may
+    # become unreadable for the live user inside the guest in the
+    # host-to-guest share used for some tests.
+
+    unless File.world_readable?(path)
+      if File.owned?(path)
+        File.chmod(0o644, path)
+      else
+        raise "warning: the Tails #{type} image must be world readable " \
+              'or be owned by the current user to be available inside ' \
+              'the guest VM via host-to-guest shares, which is required ' \
+              'by some tests'
+      end
     end
   end
   unless File.exist?(OLD_TAILS_ISO)

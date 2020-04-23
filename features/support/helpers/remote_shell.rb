@@ -35,12 +35,14 @@ module RemoteShell
         response_id, status, *rest = JSON.parse(line)
         if response_id == id
           if status != 'success'
+            # rubocop:disable Style/GuardClause
             if (status == 'error') && (rest.class == Array) && (rest.size == 1)
               msg = rest.first
               raise ServerFailure, msg.to_s
             else
               raise ServerFailure, "Uncaught exception: #{status}: #{rest}"
             end
+            # rubocop:enable Style/GuardClause
           end
           return rest
         else

@@ -65,11 +65,13 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
           mozilla_uris_counter += check_bookmarks_helper(v)
         elsif k == 'uri'
           uri = v
+          # rubocop:disable Style/GuardClause
           if uri.match("^https://(?:support|www)\.mozilla\.org/")
             mozilla_uris_counter += 1
           else
             raise "Unexpected Unsafe Browser bookmark for '#{uri}'"
           end
+          # rubocop:enable Style/GuardClause
         end
       end
     end
