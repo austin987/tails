@@ -294,9 +294,7 @@ def tails_is_installed_helper(name, tails_root, loader)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
   check_disk_integrity(name, disk_dev, 'gpt')
-  check_part_integrity(name, part_dev, 'filesystem', 'vfat', 'Tails',
-                       # EFI System Partition
-                       'c12a7328-f81f-11d2-ba4b-00a0c93ec93b')
+  check_part_integrity(name, part_dev, 'filesystem', 'vfat', 'Tails', ESP_GUID)
 
   target_root = '/mnt/new'
   $vm.execute("mkdir -p #{target_root}")
@@ -1009,9 +1007,7 @@ Then /^the system partition on "([^"]+)" is an EFI system partition$/ do |name|
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
   check_disk_integrity(name, disk_dev, 'gpt')
-  check_part_integrity(name, part_dev, 'filesystem', 'vfat', nil,
-                       # EFI System Partition
-                       'c12a7328-f81f-11d2-ba4b-00a0c93ec93b')
+  check_part_integrity(name, part_dev, 'filesystem', 'vfat', nil, ESP_GUID)
 end
 
 Then /^the FAT filesystem on the system partition on "([^"]+)" is at least (\d+)(.+) large$/ do |name, size, unit|

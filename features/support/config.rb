@@ -90,3 +90,6 @@ TAILS_SIGNING_KEY = cmd_helper(
 ).tr(' ', '').chomp
 TAILS_DEBIAN_REPO_KEY = '221F9A3C6FA3E09E182E060BC7988EA7A358D82E'
 WEBM_VIDEO_URL = 'https://tails.boum.org/lib/test_suite/test.webm'
+
+# EFI System Partition
+ESP_GUID = 'c12a7328-f81f-11d2-ba4b-00a0c93ec93b'
