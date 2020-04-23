@@ -401,13 +401,13 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
     sleep 2
     start_button.click
   end
-  step "the Tor Browser has started#{offline}"
+  step "the Tor Browser has started"
   if offline
     step 'the Tor Browser shows the "The proxy server is refusing connections" error'
   end
 end
 
-Given /^the Tor Browser (?:has started|starts)( in offline mode)?$/ do
+Given /^the Tor Browser (?:has started|starts)$/ do
   try_for(60) do
     @torbrowser = Dogtail::Application.new('Firefox')
     @torbrowser.child?(roleName: 'frame', recursive: false)
