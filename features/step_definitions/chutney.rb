@@ -174,11 +174,7 @@ end
 
 def chutney_onionservice_redir(remote_address, remote_port)
   redir_unit_name = 'tails-test-suite-redir.service'
-  if ENV['USER'] == 'root'
-    bus = '--system'
-  else
-    bus = '--user'
-  end
+  bus = ENV['USER'] == 'root' ? '--system' : '--user'
   kill_redir = proc do
     begin
       if system('/bin/systemctl', bus, '--quiet', 'is-active', redir_unit_name)

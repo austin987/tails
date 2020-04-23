@@ -176,11 +176,11 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
 end
 
 When /^I select the autoconfiguration wizard's (IMAP|POP3) choice$/ do |protocol|
-  if protocol == 'IMAP'
-    choice = 'IMAP (remote folders)'
-  else
-    choice = 'POP3 (keep mail on your computer)'
-  end
+  choice = if protocol == 'IMAP'
+             'IMAP (remote folders)'
+           else
+             'POP3 (keep mail on your computer)'
+           end
   thunderbird_wizard.child(choice, roleName: 'radio button').click
   @protocol = protocol
 end

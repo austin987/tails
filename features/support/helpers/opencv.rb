@@ -4,11 +4,11 @@ class OpenCVInternalError < StandardError
 end
 
 module OpenCV
-  if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
-    @python = 'python2.7'
-  else
-    @python = 'python3'
-  end
+  @python = if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
+              'python2.7'
+            else
+              'python3'
+            end
 
   def self.matchTemplate(image, screen, sensitivity, show_match)
     assert(sensitivity < 1.0)

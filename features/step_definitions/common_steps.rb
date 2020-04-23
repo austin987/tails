@@ -797,11 +797,11 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
 end
 
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
-  if output_dir == 'persistent Tor Browser'
-    output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
-  else
-    output_dir = "/home/#{LIVE_USER}/Tor Browser"
-  end
+  output_dir = if output_dir == 'persistent Tor Browser'
+                 "/home/#{LIVE_USER}/Persistent/Tor Browser"
+               else
+                 "/home/#{LIVE_USER}/Tor Browser"
+               end
   @screen.press('ctrl', 'p')
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
   print_dialog.child('Print to File', 'table cell').click
@@ -881,11 +881,11 @@ When /^I open a page on the LAN web server in the (.*)$/ do |browser|
 end
 
 Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
-  if min
-    time = rand(max.to_i - min.to_i + 1) + min.to_i
-  else
-    time = max.to_i
-  end
+  time = if min
+           rand(max.to_i - min.to_i + 1) + min.to_i
+         else
+           max.to_i
+         end
   puts "Slept for #{time} seconds"
   sleep(time)
 end

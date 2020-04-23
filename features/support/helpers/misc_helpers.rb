@@ -55,11 +55,11 @@ def try_for(timeout, **options)
         # XXX: The commit that introduced this version check can be
         # reverted when we drop support for running the test suite on
         # Debian Stretch.
-        if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
-          elapsed = ('%.2f' % elapsed).chomp('.00').chomp('.0').chomp('0')
-        else
-          elapsed = elapsed.ceil(2)
-        end
+        elapsed = if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
+                    ('%.2f' % elapsed).chomp('.00').chomp('.0').chomp('0')
+                  else
+                    elapsed.ceil(2)
+                  end
         debug_log("try_for: attempt #{attempts} (#{elapsed}s elapsed " \
                   "of #{timeout}s)...") if options[:log]
         if yield

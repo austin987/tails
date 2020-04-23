@@ -99,11 +99,11 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_address.call
   end
-  if browser == 'Tor Browser'
-    retry_method = method(:retry_tor)
-  else
-    retry_method = proc { |p, &b| retry_action(10, recovery_proc: p, &b) }
-  end
+  retry_method = if browser == 'Tor Browser'
+                   method(:retry_tor)
+                 else
+                   proc { |p, &b| retry_action(10, recovery_proc: p, &b) }
+                 end
   open_address.call
   retry_method.call(recovery_on_failure) do
     @screen.wait_vanish(info[:browser_stop_button_image], 120)

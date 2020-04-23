@@ -210,11 +210,11 @@ Before('@product') do |scenario|
                         err: ['/dev/null', 'w'],])
     @video_capture_pid = capture.pid
   end
-  if $config['IMAGE_BUMPING_MODE']
-    @screen = ImageBumpingScreen.new
-  else
-    @screen = Screen.new
-  end
+  @screen = if $config['IMAGE_BUMPING_MODE']
+              ImageBumpingScreen.new
+            else
+              Screen.new
+            end
   # English will be assumed if this is not overridden
   $language = ''
   @os_loader = 'MBR'

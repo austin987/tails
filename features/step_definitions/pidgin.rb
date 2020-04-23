@@ -184,13 +184,13 @@ When /^I join some empty multi-user chat$/ do
   @screen.wait('PidginJoinChatWindow.png', 10).click
   click_mid_right_edge('PidginJoinChatRoomLabel.png')
   account = xmpp_account('Tails_account')
-  if account.key?('chat_room') && \
-     !account['chat_room'].nil? && \
-     !account['chat_room'].empty?
-    chat_room = account['chat_room']
-  else
-    chat_room = random_alnum_string(10, 15)
-  end
+  chat_room = if account.key?('chat_room') && \
+                 !account['chat_room'].nil? && \
+                 !account['chat_room'].empty?
+                account['chat_room']
+              else
+                random_alnum_string(10, 15)
+              end
   @screen.type(chat_room)
 
   # We will need the conference server later, when starting the bot.
@@ -241,16 +241,8 @@ def configured_pidgin_accounts
     port = e.elements["settings/setting[@name='port']"].text
     username_element = e.elements["settings/setting[@name='username']"]
     realname_elemenet = e.elements["settings/setting[@name='realname']"]
-    if username_element
-      nickname = username_element.text
-    else
-      nickname = nil
-    end
-    if realname_elemenet
-      real_name = realname_elemenet.text
-    else
-      real_name = nil
-    end
+    nickname = username_element ? username_element.text : nil
+    real_name = realname_elemenet ? realname_elemenet.text : nil
     accounts[network] = {
       'name'      => account_name,
       'network'   => network,
