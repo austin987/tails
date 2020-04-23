@@ -485,12 +485,7 @@ end
 
 Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   bus = bus.downcase
-  expected_bus = case bus
-                 when 'sata'
-                   'ata'
-                 else
-                   bus
-                 end
+  expected_bus = bus == 'sata' ? 'ata' : bus
   assert_equal(expected_bus, boot_device_type)
   actual_dev = boot_device
   # The boot partition differs between an using Tails installer and
