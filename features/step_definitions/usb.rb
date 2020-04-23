@@ -496,7 +496,9 @@ Then /^the boot device has safe access rights$/ do
   super_boot_dev = boot_device.sub(/[[:digit:]]+$/, '')
   devs = $vm.execute("ls -1 #{super_boot_dev}*").stdout.chomp.split
   assert(!devs.empty?, 'Could not determine boot device')
-  all_users = $vm.execute("cut -d':' -f1 /etc/passwd").stdout.chomp.split
+  all_users = $vm.file_content('/etc/passwd')
+                 .split("\n")
+                 .map { |line| line.split(':')[0] }
   all_users_with_groups = all_users.collect do |user|
     groups = $vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /,
                                                             '').split(' ')
