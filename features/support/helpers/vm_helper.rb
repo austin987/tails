@@ -350,12 +350,8 @@ class VM
 
     plug_drive(name, type) unless disk_plugged?(name)
     set_boot_device('hd')
-    # XXX:Stretch: since our isotesters upgraded QEMU from
-    # 2.5+dfsg-4~bpo8+1 to 2.6+dfsg-3.1~bpo8+1 it seems we must remove
-    # the CDROM device to allow disk boot. This is not the case with the same
-    # version on Debian Sid. Let's hope we can remove this ugly
-    # workaround when we only support running the automated test suite
-    # on Stretch.
+
+    # We must remove the CDROM device to allow disk boot.
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
       remove_cdrom_device
