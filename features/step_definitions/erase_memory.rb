@@ -77,7 +77,7 @@ Given /^I prepare Tails for memory erasure tests$/ do
 
   ['initramfs-shutdown', 'memlockd',
    'tails-shutdown-on-media-removal',].each do |srv|
-    assert($vm.execute("systemctl status #{srv}.service").success?)
+    $vm.execute_successfully("systemctl status #{srv}.service")
   end
 end
 
