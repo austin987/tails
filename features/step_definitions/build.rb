@@ -36,7 +36,7 @@ Given /^Tails ([[:alnum:].]+) has not been released yet$/ do |version|
 end
 
 Given %r{^the last version mentioned in debian/changelog is ([[:alnum:]~.]+)$} do |version|
-  last = `dpkg-parsechangelog | awk '/^Version: / { print $2 }'`.strip
+  last = `dpkg-parsechangelog --show-field Version --count 1`.strip
   raise StandardError, 'dpkg-parsechangelog failed.' if $CHILD_STATUS != 0
 
   if last != version
