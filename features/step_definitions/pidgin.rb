@@ -1,4 +1,4 @@
-# Extracts the secrets for the XMMP account `account_name`.
+# Extracts the secrets for the XMPP account `account_name`.
 def xmpp_account(account_name, required_options = [])
   begin
     account = $config['Pidgin']['Accounts']['XMPP'][account_name]
