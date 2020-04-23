@@ -71,9 +71,7 @@ end
 ########
 
 After do
-  if @after_scenario_hooks
-    @after_scenario_hooks.each(&:call)
-  end
+  @after_scenario_hooks.each(&:call) if @after_scenario_hooks
   @after_scenario_hooks = []
 end
 
@@ -94,9 +92,7 @@ at_exit do
   end
   # The artifacts directory is empty (and useless) if it contains
   # nothing but the mandatory . and ..
-  if Dir.entries(ARTIFACTS_DIR).size <= 2
-    FileUtils.rmdir(ARTIFACTS_DIR)
-  end
+  FileUtils.rmdir(ARTIFACTS_DIR) if Dir.entries(ARTIFACTS_DIR).size <= 2
 end
 
 # For @product tests
@@ -183,9 +179,7 @@ end
 AfterFeature('@product') do
   unless KEEP_SNAPSHOTS
     checkpoints.each do |name, vals|
-      if vals[:temporary] && VM.snapshot_exists?(name)
-        VM.remove_snapshot(name)
-      end
+      VM.remove_snapshot(name) if vals[:temporary] && VM.snapshot_exists?(name)
     end
   end
   $vmstorage.list_volumes.each do |vol_name|
@@ -285,9 +279,7 @@ After('@product') do |scenario|
     # well cause the remote shell to not respond any more, e.g. when
     # we cause a system crash), so let's collect everything depending
     # on the remote shell here:
-    if $vm && $vm.remote_shell_is_up?
-      save_journal($config['TMPDIR'])
-    end
+    save_journal($config['TMPDIR']) if $vm && $vm.remote_shell_is_up?
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
       artifact_name = sanitize_filename(

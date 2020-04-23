@@ -41,7 +41,9 @@ def ip4tables_packet_counter_sum(**filters)
     next if filters[:tables] && !filters[:tables].include?(name)
 
     rules.each do |rule|
-      next if filters[:uid] && !rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"]
+      if filters[:uid] && !rule.elements["conditions/owner/uid-owner[text()=#{filters[:uid]}]"]
+        next
+      end
 
       pkts += rule.attribute('packet-count').to_s.to_i
     end

@@ -38,9 +38,7 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   # them with more permissible permissions, which libvirt will preserve
   # (although it will change ownership) so that the user running the
   # script can grep the dump for the fillram pattern, and delete it.
-  if File.exist?(dump)
-    File.delete(dump)
-  end
+  File.delete(dump) if File.exist?(dump)
   FileUtils.touch(dump)
   FileUtils.chmod(0o666, dump)
   $vm.domain.core_dump(dump)

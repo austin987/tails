@@ -154,9 +154,7 @@ class VM
   end
 
   def set_boot_device(dev)
-    if running?
-      raise 'boot settings can only be set for inactive vms'
-    end
+    raise 'boot settings can only be set for inactive vms' if running?
 
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/os/boot'].attributes['dev'] = dev
@@ -164,9 +162,7 @@ class VM
   end
 
   def add_cdrom_device
-    if running?
-      raise "Can't attach a CDROM device to a running domain"
-    end
+    raise "Can't attach a CDROM device to a running domain" if running?
 
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
@@ -179,15 +175,11 @@ class VM
   end
 
   def remove_cdrom_device
-    if running?
-      raise "Can't detach a CDROM device to a running domain"
-    end
+    raise "Can't detach a CDROM device to a running domain" if running?
 
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
-    if cdrom_el.nil?
-      raise 'No CDROM device is present'
-    end
+    raise 'No CDROM device is present' if cdrom_el.nil?
 
     domain_rexml.elements['domain/devices'].delete_element(cdrom_el)
     update(domain_rexml.to_s)
@@ -200,9 +192,7 @@ class VM
   def remove_cdrom_image
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
-    if cdrom_el.nil?
-      raise 'No CDROM device is present'
-    end
+    raise 'No CDROM device is present' if cdrom_el.nil?
 
     cdrom_el.delete_element('source')
     update(domain_rexml.to_s)
@@ -229,9 +219,7 @@ class VM
   end
 
   def set_cdrom_boot(image)
-    if running?
-      raise 'boot settings can only be set for inactive vms'
-    end
+    raise 'boot settings can only be set for inactive vms' if running?
 
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     unless domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
@@ -261,9 +249,7 @@ class VM
   end
 
   def plug_drive(name, type)
-    if disk_plugged?(name)
-      raise "disk '#{name}' already plugged"
-    end
+    raise "disk '#{name}' already plugged" if disk_plugged?(name)
 
     removable_usb = nil
     case type
@@ -312,9 +298,7 @@ class VM
 
   def disk_rexml_desc(name)
     xml = disk_xml_desc(name)
-    if xml
-      REXML::Document.new(xml)
-    end
+    REXML::Document.new(xml) if xml
   end
 
   def unplug_drive(name)
@@ -362,9 +346,7 @@ class VM
   end
 
   def set_disk_boot(name, type)
-    if running?
-      raise 'boot settings can only be set for inactive vms'
-    end
+    raise 'boot settings can only be set for inactive vms' if running?
 
     plug_drive(name, type) unless disk_plugged?(name)
     set_boot_device('hd')
@@ -383,9 +365,7 @@ class VM
   # XXX-9p: Shares don't work together with snapshot save+restore. See
   # XXX-9p in common_steps.rb for more information.
   def add_share(source, tag)
-    if running?
-      raise 'shares can only be added to inactive vms'
-    end
+    raise 'shares can only be added to inactive vms' if running?
 
     # The complete source directory must be group readable by the user
     # running the virtual machine, and world readable so the user inside
@@ -410,9 +390,7 @@ class VM
   end
 
   def set_os_loader(type)
-    if running?
-      raise 'boot settings can only be set for inactive vms'
-    end
+    raise 'boot settings can only be set for inactive vms' if running?
 
     if type == 'UEFI'
       domain_xml = REXML::Document.new(@domain.xml_desc)

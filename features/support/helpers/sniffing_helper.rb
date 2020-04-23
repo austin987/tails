@@ -43,8 +43,6 @@ class Sniffer
   end
 
   def clear
-    if File.exist?(@pcap_file)
-      File.delete(@pcap_file)
-    end
+    File.delete(@pcap_file) if File.exist?(@pcap_file)
   end
 end

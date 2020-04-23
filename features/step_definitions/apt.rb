@@ -12,9 +12,7 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
     next unless line.start_with? 'deb'
 
     source_host = URI(line.split[1]).host
-    unless hosts.include?(source_host)
-      raise "Bad APT source '#{line}'"
-    end
+    raise "Bad APT source '#{line}'" unless hosts.include?(source_host)
   end
 end
 
@@ -119,9 +117,7 @@ When /^I revert the APT tweaks that made it prefer an old version of cowsay$/ do
 end
 
 When /^the installed version of package "([^"]*)" is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
-  if asp
-    step 'the Additional Software installation service has started'
-  end
+  step 'the Additional Software installation service has started' if asp
   current_version = $vm.execute_successfully("dpkg-query -W -f='${Version}' #{package}").stdout
   if newer_than
     cmd_helper("dpkg --compare-versions '#{version}' lt '#{current_version}'")

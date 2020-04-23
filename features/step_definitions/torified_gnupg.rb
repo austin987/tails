@@ -189,7 +189,9 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
 
   recovery_proc = proc do
     setup_onion_keyserver
-    @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
+    if @screen.exists('GnomeCloseButton.png')
+      @screen.click('GnomeCloseButton.png')
+    end
     @screen.press('ctrl', 'w')
   end
   retry_tor(recovery_proc) do

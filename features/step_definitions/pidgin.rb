@@ -107,9 +107,7 @@ end
 Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_chat|
   account = xmpp_account('Friend_account', ['otr_key'])
   bot_opts = account.select { |k, _| ['connect_server'].include?(k) }
-  if join_chat
-    bot_opts['auto_join'] = [@chat_room_jid]
-  end
+  bot_opts['auto_join'] = [@chat_room_jid] if join_chat
   @friend_name = account['username']
   @chatbot = ChatBot.new(account['username'] + '@' + account['domain'],
                          account['password'], account['otr_key'], bot_opts)

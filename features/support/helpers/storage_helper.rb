@@ -49,16 +49,12 @@ class VMStorage
 
   def self.clear_storage_pool_volumes(pool)
     was_not_active = !pool.active?
-    if was_not_active
-      pool.create
-    end
+    pool.create if was_not_active
     pool.list_volumes.each do |vol_name|
       vol = pool.lookup_volume_by_name(vol_name)
       vol.delete
     end
-    if was_not_active
-      pool.destroy
-    end
+    pool.destroy if was_not_active
   rescue StandardError
     # Some of the above operations can fail if the pool's path was
     # deleted by external means; let's ignore that.

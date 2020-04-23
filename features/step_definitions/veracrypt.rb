@@ -156,7 +156,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
     sleep 1 # Otherwise typing the PIM goes in the void
     @screen.type($veracrypt_pim)
   end
-  @screen.click('VeraCryptUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
+  if @veracrypt_is_hidden
+    @screen.click('VeraCryptUnlockDialogHiddenVolumeLabel.png')
+  end
   @screen.press('Return')
   @screen.wait_vanish('VeraCryptUnlockDialog.png', 10)
   try_for(30) do
@@ -231,7 +233,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.type('/tmp/keyfile', ['Return'])
     @screen.wait_vanish('Gtk3FileChooserDesktopButton.png', 10)
   end
-  @screen.wait('GnomeDisksUnlockDialogHiddenVolumeLabel.png', 10).click if @veracrypt_is_hidden
+  if @veracrypt_is_hidden
+    @screen.wait('GnomeDisksUnlockDialogHiddenVolumeLabel.png', 10).click
+  end
   # Clicking is robust neither with Dogtail (no visible effect) nor
   # with imaget matching (that sometimes clicks just a little bit
   # outside of the button)

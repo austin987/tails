@@ -34,9 +34,7 @@ end
 # passed when we throw a Timeout::Error exception. If `timeout` is `nil`,
 # then we just run the code block with no timeout.
 def try_for(timeout, **options)
-  if block_given? && timeout.nil?
-    return yield
-  end
+  return yield if block_given? && timeout.nil?
 
   options[:delay] ||= 1
   options[:log] = true if options[:log].nil?

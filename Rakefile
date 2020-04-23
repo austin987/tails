@@ -646,9 +646,7 @@ task :test do
   args = ARGV.drop_while { |x| ['test', '--'].include?(x) }
   if on_jenkins?
     args += ['--'] unless args.include? '--'
-    unless releasing?
-      args += ['--tag', '~@fragile']
-    end
+    args += ['--tag', '~@fragile'] unless releasing?
     base_branch = git_helper('base_branch')
     if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}")
       args += ['--tag', '@doc']
@@ -766,9 +764,7 @@ namespace :basebox do
     boxes.sort! { |a, b| basebox_date(a) <=> basebox_date(b) }
     boxes.pop
     boxes.each do |box|
-      if basebox_date(box) < Date.today - 365.0 / 2.0
-        clean_up_basebox(box)
-      end
+      clean_up_basebox(box) if basebox_date(box) < Date.today - 365.0 / 2.0
     end
   end
 end

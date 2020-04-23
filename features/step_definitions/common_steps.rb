@@ -68,9 +68,7 @@ end
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   $vm.plug_drive(name, bus.downcase)
   sleep 1
-  if $vm.running?
-    step "drive \"#{name}\" is detected by Tails"
-  end
+  step "drive \"#{name}\" is detected by Tails" if $vm.running?
 end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
@@ -598,9 +596,7 @@ Given /^the package "([^"]+)" is( not)? installed( after Additional Software has
   if absent
     wait_for_package_removal(package)
   else
-    if asp
-      step 'the Additional Software installation service has started'
-    end
+    step 'the Additional Software installation service has started' if asp
     wait_for_package_installation(package)
   end
 end
@@ -766,7 +762,9 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
   info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
-    @screen.wait(image, 10).click(double: true) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+      @screen.wait(image, 10).click(double: true)
+    end
     step 'the Tor Browser has started'
   end
 end

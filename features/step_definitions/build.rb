@@ -72,9 +72,7 @@ end
 Given %r{I am working on the ([[:alnum:]./_-]+) base branch$} do |branch|
   create_git unless git_exists?
 
-  if current_branch != branch
-    fatal_system "git checkout --quiet '#{branch}'"
-  end
+  fatal_system "git checkout --quiet '#{branch}'" if current_branch != branch
 
   File.open('config/base_branch', 'w+') do |base_branch_file|
     base_branch_file.write("#{branch}\n")

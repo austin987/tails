@@ -117,9 +117,7 @@ class Screen
     end
     debug_log("Screen: trying to find #{image}") if opts[:log]
     p = match_screen(image, opts[:sensitivity], false)
-    if p.nil?
-      raise FindFailed, "cannot find #{image} on the screen"
-    end
+    raise FindFailed, "cannot find #{image} on the screen" if p.nil?
 
     m = Match.new(image, self, *p)
     debug_log("Screen: found #{image} at (#{m.middle.join(', ')})")
@@ -308,9 +306,7 @@ class ImageBumpingScreen
   def interactive_image_bump(image, **opts)
     opts[:sensitivity] ||= OPENCV_MIN_SIMILARITY
     $interactive_image_bump_ignores ||= []
-    if $interactive_image_bump_ignores.include?(image)
-      raise ImageBumpFailed
-    end
+    raise ImageBumpFailed if $interactive_image_bump_ignores.include?(image)
 
     message = "Failed to find #{image}"
     notify_user(message)

@@ -8,9 +8,7 @@ Then /^the hostname should not have been leaked on the network$/ do
       assert_not_nil(type, 'Found non-IP(v6)/ARP packet')
       payload = type.parse(packet).payload
       hostnames.each do |hostname|
-        if payload.match(hostname)
-          raise "Hostname leak detected: #{hostname}"
-        end
+        raise "Hostname leak detected: #{hostname}" if payload.match(hostname)
       end
     end
   rescue Exception => e

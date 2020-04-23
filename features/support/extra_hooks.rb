@@ -47,17 +47,13 @@ end
 require 'cucumber/formatter/console'
 unless $at_exit_print_artifacts_dir_patching_done
   module Cucumber::Formatter::Console
-    if method_defined?(:print_stats)
-      alias old_print_stats print_stats
-    end
+    alias old_print_stats print_stats if method_defined?(:print_stats)
     def print_stats(*args)
       @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
       @io.puts
       @io.puts "Debug log:           #{ARTIFACTS_DIR}/debug.log"
       @io.puts
-      if self.class.method_defined?(:old_print_stats)
-        old_print_stats(*args)
-      end
+      old_print_stats(*args) if self.class.method_defined?(:old_print_stats)
     end
   end
   $at_exit_print_artifacts_dir_patching_done = true
