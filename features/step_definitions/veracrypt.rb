@@ -168,7 +168,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   @screen.press('Return')
   @screen.wait_vanish('VeraCryptUnlockDialog.png', 10)
   try_for(30) do
-    $vm.execute_successfully('ls /media/amnesia/*/GPL-3')
+    !$vm.file_glob('/media/amnesia/*/GPL-3').empty?
   end
 end
 
@@ -272,7 +272,7 @@ description: 'Mount selected partition', showingOnly: true).click
     end
   end
   try_for(10, msg: '/media/amnesia/*/GPL-3 does not exist') do
-    $vm.execute_successfully('ls /media/amnesia/*/GPL-3')
+    !$vm.file_glob('/media/amnesia/*/GPL-3').empty?
   end
 end
 
@@ -299,6 +299,6 @@ When /^I lock the currently opened VeraCrypt (volume|file container)$/ do |suppo
 end
 
 Then /^the VeraCrypt (?:volume|file container) has been unmounted and locked$/ do
-  assert($vm.execute('ls /media/amnesia/*/GPL-3').failure?)
-  assert($vm.execute('ls /dev/mapper/tcrypt-*').failure?)
+  assert_empty($vm.file_glob('/media/amnesia/*/GPL-3'))
+  assert_empty($vm.file_glob('/dev/mapper/tcrypt-*'))
 end

@@ -494,7 +494,7 @@ end
 
 Then /^the boot device has safe access rights$/ do
   super_boot_dev = boot_device.sub(/[[:digit:]]+$/, '')
-  devs = $vm.execute("ls -1 #{super_boot_dev}*").stdout.chomp.split
+  devs = $vm.file_glob("#{super_boot_dev}*")
   assert(!devs.empty?, 'Could not determine boot device')
   all_users = $vm.file_content('/etc/passwd')
                  .split("\n")
@@ -553,9 +553,9 @@ Then /^all persistence configuration files have safe access rights$/ do
       $vm.execute("test ! -e #{mountpoint}/live-persistence.conf"),
       "#{mountpoint}/live-persistence.conf does exist, while it should not"
     )
-    $vm.execute(
-      "ls -1 #{mountpoint}/persistence.conf* #{mountpoint}/live-*.conf"
-    ).stdout.chomp.split.each do |f|
+    $vm.file_glob(
+      "#{mountpoint}/persistence.conf* #{mountpoint}/live-*.conf"
+    ).each do |f|
       file_owner = $vm.execute("stat -c %U '#{f}'").stdout.chomp
       file_group = $vm.execute("stat -c %G '#{f}'").stdout.chomp
       file_perms = $vm.execute("stat -c %a '#{f}'").stdout.chomp
