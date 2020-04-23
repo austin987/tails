@@ -148,7 +148,7 @@ When /^I configure Tails to use a simulated Tor network$/ do
   client_torrcs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*client/torrc"
   )
-  dir_auth_lines = open(client_torrcs.first) do |f|
+  dir_auth_lines = File.open(client_torrcs.first) do |f|
     f.grep(/^(Alternate)?(Dir|Bridge)Authority\s/)
   end
   client_torrc_lines.concat(dir_auth_lines)
@@ -159,13 +159,13 @@ def chutney_onionservice_info
   hs_hostname_file_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/hidden_service/hostname"
   ).first
-  hs_hostname = open(hs_hostname_file_path, 'r') do |f|
+  hs_hostname = File.open(hs_hostname_file_path) do |f|
     f.read.chomp
   end
   hs_torrc_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/torrc"
   ).first
-  _, hs_port, local_address_port = open(hs_torrc_path, 'r') do |f|
+  _, hs_port, local_address_port = File.open(hs_torrc_path) do |f|
     f.grep(/^HiddenServicePort/).first.split
   end
   local_address, local_port = local_address_port.split(':')

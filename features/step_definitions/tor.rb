@@ -341,7 +341,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     fingerprint = nil
     extra = nil
     if bridge_type == 'bridge'
-      open(bridge_dir + '/torrc') do |f|
+      File.open(bridge_dir + '/torrc') do |f|
         port = f.grep(/^OrPort\b/).first.split.last
       end
     else
@@ -350,17 +350,17 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
       # picked randomly so an already used port is not picked --
       # Chutney already has issues with that for OrPort selection.
       pt_re = /Registered server transport '#{bridge_type}' at '[^']*:(\d+)'/
-      open(bridge_dir + '/notice.log') do |f|
+      File.open(bridge_dir + '/notice.log') do |f|
         pt_lines = f.grep(pt_re)
         port = pt_lines.last.match(pt_re)[1]
       end
       if bridge_type == 'obfs4'
-        open(bridge_dir + '/pt_state/obfs4_bridgeline.txt') do |f|
+        File.open(bridge_dir + '/pt_state/obfs4_bridgeline.txt') do |f|
           extra = f.readlines.last.chomp.sub(/^.* cert=/, 'cert=')
         end
       end
     end
-    open(bridge_dir + '/fingerprint') do |f|
+    File.open(bridge_dir + '/fingerprint') do |f|
       fingerprint = f.read.chomp.split.last
     end
     @bridge_hosts << { address: address, port: port.to_i }

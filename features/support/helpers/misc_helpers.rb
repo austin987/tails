@@ -253,7 +253,7 @@ def all_tor_hosts
     "#{$config['TMPDIR']}/chutney-data/nodes/*/torrc"
   )
   chutney_torrcs.each do |torrc|
-    open(torrc) do |f|
+    File.open(torrc) do |f|
       nodes += f.grep(/^(Or|Dir)Port\b/).map do |line|
         { address: $vmnet.bridge_ip_addr, port: line.split.last.to_i }
       end
