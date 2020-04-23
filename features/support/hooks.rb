@@ -85,7 +85,7 @@ at_exit do
   if $virt
     unless KEEP_SNAPSHOTS
       VM.remove_all_snapshots
-      $vmstorage.clear_pool
+      $vmstorage&.clear_pool
     end
     $vmnet.destroy_and_undefine
     $virt.close
