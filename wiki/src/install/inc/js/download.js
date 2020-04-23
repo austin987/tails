@@ -186,6 +186,11 @@ document.addEventListener("DOMContentLoaded", function() {
     } catch (e) { } // Ignore if we fail to hit the download counter
   }
 
+  function showAnotherMirror() {
+    hide(document.getElementById("already-downloaded"));
+    show(document.getElementById("try-another-mirror"));
+  }
+
   function resetVerificationResult(result) {
     hide(document.getElementById("verifying-download"));
     hide(document.getElementById("verification-successful"));
@@ -283,6 +288,7 @@ document.addEventListener("DOMContentLoaded", function() {
       e.preventDefault();
       hitCounter("download-image");
       toggleDirectBitTorrent("direct");
+      showAnotherMirror();
       resetVerificationResult();
     } finally {
       // Setting window.location.href will abort AJAX requests resulting

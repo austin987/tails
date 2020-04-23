@@ -1,0 +1,40 @@
+Importing OpenPGP public keys using the *Passwords and Keys* utility is broken
+since Tails 4.0 (October 2019). ([[!tails_ticket 17183]])
+
+Do so on the command line instead:
+
+1. Download the OpenPGP public key that you want to import.
+
+1. Choose **Applications**&nbsp;▸ **System Tools**&nbsp;▸ **Terminal** to open
+   a *Terminal*.
+
+1. Execute the following command to import the OpenPGP public key that you downloaded. Replace:
+
+   - <span class="command-placeholder">openpgp-public-key.asc</span> with the
+     path to the OpenPGP public key.
+
+     <div class="tip">
+     <p>If you are unsure about the path to the OpenPGP public key, you can insert the
+     correct path by dragging and dropping the OpenPGP public key from the
+     <span class="application">Files</span> browser onto the
+     <span class="application"> Terminal</span>.</p>
+     </div>
+
+   <p class="pre command">gpg --import <span class="command-placeholder">openpgp-public-key.asc</span></p>
+
+   You should get something like this:
+
+   <p class="pre command-example">gpg --import '/home/amnesia/Tor Browser/0x1DCBDC01B44427C7.asc'</p>
+
+   The output of this command should look like this:
+
+   <pre>
+   gpg: key 0x1DCBDC01B44427C7: public key "Robert J. Hansen <rjh@sixdemonbag.org>" imported
+   gpg: Total number processed: 1
+   gpg:               imported: 1
+   </pre>
+
+1. The imported OpenPGP public key does not appear in the *Passwords and Keys*
+   utility. But, the key should appear in the list of keys available for encryption when
+   [[encrypting text with a public key|doc/encryption_and_privacy/gpgapplet/public-key_cryptography]]
+   using *OpenPGP Applet*.
