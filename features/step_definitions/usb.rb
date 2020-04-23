@@ -961,7 +961,7 @@ end
 def upgrader_trusted_signing_subkeys
   $vm.execute_successfully(
     'sudo -u tails-upgrade-frontend ' \
-    'gpg --batch --list-keys --with-colons' + TAILS_SIGNING_KEY
+    'gpg --batch --list-keys --with-colons ' + TAILS_SIGNING_KEY
   ).stdout.split("\n")
      .select { |line| /^sub:/.match(line) }
      .map { |line| line[/^sub:.:\d+:\d+:(?<subkeyid>[A-F0-9]+):/, 'subkeyid'] }
