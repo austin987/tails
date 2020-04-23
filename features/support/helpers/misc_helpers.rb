@@ -368,7 +368,7 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   opts ||= {}
   ruby_type_to_dbus_type = {
     String  => 'string',
-    # XXX:Stretch: drop the Fixnum line once we stop supporting Stretch
+    # XXX:Buster: drop the Fixnum line once we stop supporting Stretch
     Fixnum  => 'int32', # rubocop:disable Lint/UnifiedInteger
     Integer => 'int32',
   }

@@ -109,7 +109,7 @@ module Dogtail
         'False'
       elsif value.class == String
         "'#{value}'"
-      # XXX:Stretch: drop the Fixnum line once we stop supporting Stretch
+      # XXX:Buster: drop the Fixnum line once we stop supporting Stretch
       elsif [Fixnum, Integer, Float].include?(value.class) # rubocop:disable Lint/UnifiedInteger
         v.to_s
       else
