@@ -141,7 +141,7 @@ end
 def retry_tor(recovery_proc = nil, &block)
   tor_recovery_proc = proc do
     force_new_tor_circuit
-    recovery_proc.call if recovery_proc
+    recovery_proc&.call
   end
 
   retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
@@ -170,7 +170,7 @@ def retry_action(max_retries, options = {}, &block)
       if retries <= max_retries
         debug_log("retry_action: #{options[:operation_name]} failed with " \
                   "exception: #{e.class}: #{e.message}")
-        options[:recovery_proc].call if options[:recovery_proc]
+        options[:recovery_proc]&.call
         retries += 1
       else
         raise MaxRetriesFailure,

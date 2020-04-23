@@ -71,7 +71,7 @@ end
 ########
 
 After do
-  @after_scenario_hooks.each(&:call) if @after_scenario_hooks
+  @after_scenario_hooks&.each(&:call)
   @after_scenario_hooks = []
 end
 
@@ -81,7 +81,7 @@ BeforeFeature('@product', '@source') do |feature|
 end
 
 at_exit do
-  $vm.destroy_and_undefine if $vm
+  $vm&.destroy_and_undefine
   if $virt
     unless KEEP_SNAPSHOTS
       VM.remove_all_snapshots
@@ -280,7 +280,7 @@ After('@product') do |scenario|
     # well cause the remote shell to not respond any more, e.g. when
     # we cause a system crash), so let's collect everything depending
     # on the remote shell here:
-    save_journal($config['TMPDIR']) if $vm && $vm.remote_shell_is_up?
+    save_journal($config['TMPDIR']) if $vm&.remote_shell_is_up?
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
       artifact_name = sanitize_filename(
@@ -305,7 +305,7 @@ After('@product') do |scenario|
   # run during the next scenario's Before hooks, which we have seen
   # causing trouble (for instance, packets from the previous scenario
   # have failed scenarios tagged @check_tor_leaks).
-  $vm.power_off if $vm
+  $vm&.power_off
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|

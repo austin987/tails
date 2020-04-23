@@ -85,7 +85,7 @@ class VM
   # We lookup by name so we also catch domains from previous test
   # suite runs that weren't properly cleaned up (e.g. aborted).
   def destroy_and_undefine
-    @display.stop if @display && @display.active?
+    @display.stop if @display&.active?
     begin
       old_domain = @virt.lookup_domain_by_name(@domain_name)
       old_domain.destroy if old_domain.active?
@@ -633,7 +633,7 @@ class VM
   def restore_snapshot(name)
     debug_log("Restoring snapshot '#{name}'...")
     @domain.destroy if running?
-    @display.stop if @display && @display.active?
+    @display.stop if @display&.active?
     # See comment in save_snapshot() for details on why we use two
     # different type of snapshots.
     potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)

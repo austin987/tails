@@ -47,7 +47,7 @@ def post_snapshot_restore_hook(snapshot_name)
 end
 
 Given /^a computer$/ do
-  $vm.destroy_and_undefine if $vm
+  $vm&.destroy_and_undefine
   $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
