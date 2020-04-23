@@ -401,7 +401,7 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
     sleep 2
     start_button.click
   end
-  step "the Tor Browser has started"
+  step 'the Tor Browser has started'
   if offline
     step 'the Tor Browser shows the "The proxy server is refusing connections" error'
   end
