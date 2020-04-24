@@ -87,7 +87,7 @@ at_exit do
       VM.remove_all_snapshots
       $vmstorage&.clear_pool
     end
-    $vmnet.destroy_and_undefine
+    $vmnet&.destroy_and_undefine
     $virt.close
   end
   # The artifacts directory is empty (and useless) if it contains
