@@ -53,6 +53,7 @@ pref("mailnews.auto_config.guess.sslOnly", true);
 
 // Disable automatic configuration methods that could be serving
 // configurations without authentication.
+pref("mailnews.auto_config.fetchFromExchange.enabled", false);
 pref("mailnews.mx_service_url", "");
 
 // Drop auto-fetched configurations using Oauth2 -- they do not work
