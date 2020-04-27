@@ -861,22 +861,22 @@ Build the Incremental Upgrade Kits locally
     (
        set -eu
        WORK_DIR=$(mktemp -d)
-       TAILS_REMOTE="$(git -C "$RELEASE_CHECKOUT" remote get-url origin)"
-       PUPPET_TAILS_REMOTE=$(echo -n "$TAILS_REMOTE" | perl -p -E 's,:tails(:?[.]git)?\z,:puppet-tails,')
-       cd "$WORK_DIR"
+       TAILS_REMOTE="$(git -C "${RELEASE_CHECKOUT?:}" remote get-url origin)"
+       PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails(:?[.]git)?\z,:puppet-tails,')
+       cd "${WORK_DIR?:}"
        git clone "$PUPPET_TAILS_REMOTE"
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
-           --tails-git-remote "file://${RELEASE_CHECKOUT}/.git"             \
-           --tails-git-commit "$TAG"                                      \
-           --source-date-epoch "$SOURCE_DATE_EPOCH"                       \
-           --local-isos-dir "$ISOS"                                       \
+           --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
+           --tails-git-commit "${TAG?:}"                                      \
+           --source-date-epoch "${SOURCE_DATE_EPOCH?:}"                       \
+           --local-isos-dir "${ISOS?:}"                                       \
            --tmp-dir "${TMPDIR:-/tmp}"                                        \
-           --output-dir "$IUKS_DIR"                                       \
-           --source-versions "$IUK_SOURCE_VERSIONS"                       \
-           --new-version "$VERSION"                                       \
+           --output-dir "${IUKS_DIR?:}"                                       \
+           --source-versions "${IUK_SOURCE_VERSIONS?:}"                       \
+           --new-version "${VERSION?:}"                                       \
            --verbose
-       cd "$IUKS_DIR"
-       sha256sum Tails_amd64_*_to_${VERSION}.iuk > "$IUKS_HASHES"
+       cd "${IUKS_DIR?:}"
+       sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
    )
 
 This command takes a long time. In parallel, while it is running,
