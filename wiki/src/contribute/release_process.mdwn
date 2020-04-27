@@ -1315,7 +1315,14 @@ If preparing a final release
 
 Skip this part if preparing a RC.
 
-Rename, copy, garbage collect and update various files:
+XXX: If preparing a final *major* release, beware! The `git rm` steps
+will get confused because we should be removing files from the
+previous *bugfix* release (and `PREVIOUS_VERSION` points to the
+release candidate instead, for which we don't ship all files). Maybe
+start by removing all files (regardless of the version), before copying
+the new files? To be attempted/confirmed when releasing 4.11.
+
+Rename, copy, garbage collect and update various files.
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \
