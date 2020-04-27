@@ -1097,15 +1097,15 @@ If preparing a RC, skip this part.
 
 Update the image description file (IDF) used by the browser extension:
 
+    cd "${RELEASE_CHECKOUT?:}" && \
     ./bin/idf-content \
        --version "${VERSION:?}" \
        --iso "${ISO_PATH:?}" \
        --img "${IMG_PATH:?}" \
-       > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-    ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-      git commit -m "Update IDF file for Tails Verification." && \
-      git push origin "${WEBSITE_RELEASE_BRANCH:?}" )
+       > wiki/src/install/v2/Tails/amd64/stable/latest.json && \
+    git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
+    git commit -m "Update IDF file for Tails Verification." && \
+    git push origin "${WEBSITE_RELEASE_BRANCH:?}"
 
 Done with OpenPGP signing
 =========================
