@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 GNOME_ENV_VARS="
 DBUS_SESSION_BUS_ADDRESS
 DISPLAY

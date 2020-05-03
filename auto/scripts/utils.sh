@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # This library is meant to be used in bash, with "set -e" and "set -u".
 
 BASE_BRANCHES="stable testing devel"
