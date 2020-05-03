@@ -16,9 +16,11 @@ output_apt_binary_source() {
 }
 
 output_overlay_apt_binary_sources() {
-	for suite in $(ls config/APT_overlays.d) ; do
+	cd config/APT_overlays.d/
+	for suite in * ; do
 		output_apt_binary_source "$suite"
 	done
+	cd ../../
 }
 
 ### Sanity checks
