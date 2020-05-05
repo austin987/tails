@@ -417,7 +417,7 @@ class VM
     end
   end
 
-  def execute(cmd, options = {})
+  def execute(cmd, **options)
     options[:user] ||= "root"
     options[:spawn] = false unless options.has_key?(:spawn)
     if options[:libs]
@@ -430,11 +430,11 @@ class VM
       cmds << cmd
       cmd = cmds.join(" && ")
     end
-    return RemoteShell::ShellCommand.new(self, cmd, options)
+    return RemoteShell::ShellCommand.new(self, cmd, **options)
   end
 
-  def execute_successfully(*args)
-    p = execute(*args)
+  def execute_successfully(*args, **options)
+    p = execute(*args, **options)
     begin
       assert_vmcommand_success(p)
     rescue Test::Unit::AssertionFailedError => e
@@ -443,9 +443,9 @@ class VM
     return p
   end
 
-  def spawn(cmd, options = {})
+  def spawn(cmd, **options)
     options[:spawn] = true
-    return execute(cmd, options)
+    return execute(cmd, **options)
   end
 
   def remote_shell_is_up?
@@ -628,7 +628,23 @@ EOF
       @domain.snapshot_create_xml(xml)
     else
       snapshot_path = VM.ram_only_snapshot_path(name)
-      @domain.save(snapshot_path)
+      begin
+        @domain.save(snapshot_path)
+      rescue Guestfs::Error => e
+        no_space_left_error =
+          "Call to virDomainSaveFlags failed: operation failed: " +
+          "/usr/lib/libvirt/libvirt_iohelper: failure with .*: " +
+          "Unable to write .*: No space left on device"
+        if Regexp.new(no_space_left_error).match(e.to_s)
+          cmd = "du -ah \"#{$config['TMPDIR']}\" | sort -hr | head -n20"
+          info_log("Output of \"#{cmd}\":\n" + `#{cmd}`)
+          raise NoSpaceLeftError.New(e)
+        else
+          info_log("saving snapshot failed but was not a no-space-left error")
+          raise e
+        end
+      end
+
       # For consistency with the internal snapshot case (which is
       # "live", so the domain doesn't go down) we immediately restore
       # the snapshot.
