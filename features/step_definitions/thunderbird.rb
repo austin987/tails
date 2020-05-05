@@ -200,7 +200,7 @@ When /^I send an email to myself$/ do
     .typeText('test')
   compose_window.child('Composition Toolbar', roleName: 'tool bar')
     .button('Send').click
-  try_for(120, { :delay => 2 }) do
+  try_for(120, delay: 2) do
     not compose_window.exist?
   end
 end
