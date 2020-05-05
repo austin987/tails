@@ -791,6 +791,42 @@ Lastly, let's set some variables to be used later:
     IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
 
+Push images to ISO history
+==========================
+
+Push the released ISO and USB images and their artifacts (`.buildlog`,
+`.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
+repo, so that:
+
+ - The Jenkins `build_IUKs` job can fetch them.
+ - Our isotesters can fetch them from there for their testing.
+
+How to do so is described in the `ISO_history.mdwn` document in the RM team's
+Git repo.
+
+If the release manager has `$ISOS` pointing to a checkout of the ISO
+history repository, the following commands might be useful. For the
+record, images and their signatures are already in that directory, and
+one just needs to ship some metadata along:
+
+    (cd ${ISOS?:}/tails-amd64-${VERSION?:} && \
+    cp "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}{.buildlog,.build-manifest,.packages} . && \
+    git annex sync && \
+    git annex add . && \
+    git commit -m "Add Tails ${VERSION?:} images and metadata." && \
+    git annex sync && \
+    git annex copy --to origin .)
+
+This transfer can take a while, and it's possible to proceed with the
+next section in the meanwhile, up to the following step (included):
+
+ - Build the Incremental Upgrade Kits locally
+
+However, the following step will require those files being transferred
+and made available on the relevant web server:
+
+ - Build the Incremental Upgrade Kits on Jenkins
+
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
@@ -873,31 +909,18 @@ Build the Incremental Upgrade Kits locally
    )
 
 This command takes a long time. In parallel, while it is running,
-you can follow the next 2 steps:
+you can follow the next step:
 
- - Push the images to our ISO history git-annex repo
  - Build the Incremental Upgrade Kits on Jenkins
-
-ISO history
------------
-
-Push the released ISO and USB images and their artifacts (`.buildlog`,
-`.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
-repo, so that:
-
- - The Jenkins `build_IUKs` job can fetch them.
- - Our isotesters can fetch them from there for their testing.
-
-How to do so is described in the `ISO_history.mdwn` document in the RM team's
-Git repo.
-
-Then, wait (a few minutes) until the images appear
-on <https://iso-history.tails.boum.org/>.
 
 <a id="build-iuks-on-jenkins"></a>
 
 Build the Incremental Upgrade Kits on Jenkins
-------------------------------------------
+---------------------------------------------
+
+1. Make sure the push to ISO history (started in the previous section)
+   has finished, and that images have appeared on the web server:
+   <https://iso-history.tails.boum.org/>
 
 1. On <https://jenkins.tails.boum.org/job/build_IUKs/build?delay=0sec>,
    fill the form with these values:
