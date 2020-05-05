@@ -1327,10 +1327,12 @@ Prepare announcements and blog posts
 ====================================
 
 What follows in this section happens on the `$WEBSITE_RELEASE_BRANCH`
-branch in `${RELEASE_CHECKOUT:?}`:
+branch in `${RELEASE_CHECKOUT:?}`, making sure we catch up with the
+technical writers who have likely prepared release notes:
 
 	cd "${RELEASE_CHECKOUT:?}" && \
-	   git checkout "${WEBSITE_RELEASE_BRANCH:?}"
+	   git checkout "${WEBSITE_RELEASE_BRANCH:?}" && \
+	   git merge "origin/${WEBSITE_RELEASE_BRANCH?:}"
 
 If preparing a final release
 ----------------------------
