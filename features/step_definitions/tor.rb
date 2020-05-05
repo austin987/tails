@@ -35,7 +35,7 @@ def ip6tables_rules(chain, table = "filter")
   iptables_rules_parse("ip6tables", chain, table)
 end
 
-def ip4tables_packet_counter_sum(filters = {})
+def ip4tables_packet_counter_sum(**filters)
   pkts = 0
   ip4tables_chains do |name, _, rules|
     next if filters[:tables] && not(filters[:tables].include?(name))

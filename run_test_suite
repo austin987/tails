@@ -65,6 +65,9 @@ Sets up an appropriate environment and invokes cucumber. Note that this script
 must be run from the Tails source directory root.
 
 Options for '@product' features:
+  --allow-non-root   Normally the test suite must be run as root, but if you
+                     really know what you are doing this option allows any
+                     user to run it.
   --artifacts-base-uri URI
                      Pretend that the artifact is located at URI when printing
                      its location during a scenario failure. This is useful if
@@ -190,6 +193,7 @@ start_vnc_viewer() {
 # Unset all environment variables used by this script to pass options
 # to cucumber, except TMPDIR since we explicitly want to support
 # setting it that way.
+ALLOW_NON_ROOT=
 ARTIFACTS_BASE_URI=
 CAPTURE=
 CAPTURE_ALL=
@@ -202,11 +206,14 @@ KEEP_SNAPSHOTS=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,iso:,old-iso:,interactive-debugging,image-bumping-mode"
+LONGOPTS="allow-non-root,artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,iso:,old-iso:,interactive-debugging,image-bumping-mode"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
     case $1 in
+        --allow-non-root)
+            ALLOW_NON_ROOT="yes"
+            ;;
         --artifacts-base-uri)
             shift
             export ARTIFACTS_BASE_URI="${1}"
@@ -262,6 +269,11 @@ while [ $# -gt 0 ]; do
 done
 
 trap "test_suite_cleanup" EXIT HUP INT QUIT TERM
+
+if [ "${EUID}" -ne 0 -a -z "${ALLOW_NON_ROOT}" ]; then
+    error "you are not running as root; if you really know what you are" \
+          "doing, see the --allow-non-root option"
+fi
 
 check_dependencies ${GENERAL_DEPENDENCIES}
 
