@@ -10,8 +10,8 @@ amnesic, new software packages for Debian can be installed in a working
 session but they are not reinstalled at next reboot.
 
 Additional Software Packages is a feature to remember a set of Debian Packages
-to be installed automatically from [[persistent
-storage|contribute/design/persistence]] each time Tails is started.
+to be installed automatically from the [[Persistent
+Storage|contribute/design/persistence]] each time Tails is started.
 
 Use cases
 =========
@@ -20,7 +20,7 @@ Alice is a geographer working for an NGO in an unstable country. They need
 to use Tails but needs the QGis SIG to work. It would make little sense
 to add such a specific software in Tails. But thanks to Additional
 Software Packages, Alice can have QGis installed every time when they boot
-Tails with persistent storage enabled.
+Tails with the Persistent Storage unlocked.
 
 Bob is a journalist and wants to publish videos made by other
 colleagues. Bob needs to convert these videos and is used to the open
@@ -40,7 +40,7 @@ Goals
 - Integrate this in:
   - The usual installation and removal process of a package (through
     Synaptic, another graphical tool, or APT on the command line).
-  - The persistent storage configuration.
+  - The Persistent Storage settings.
 
 - Ensure packages are installed even offline.
 
@@ -153,7 +153,7 @@ installed or removed.
 
 <img src="https://redmine.tails.boum.org/code/attachments/download/1925/asp-flow-installed.svg" height="auto" />
 
-#### With persistent storage unlocked:
+#### With the Persistent Storage unlocked:
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - add.png"/>
 
@@ -165,14 +165,14 @@ atomically to the `live-additional-software.conf` configuration file
 (this logic is handled by
 <https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware.py>)
 
-#### Without persistent storage
+#### Without a Persistent Storage
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - add without persistent storage.png"/>
 
 When *Add To Persistent Storage* is clicked,
 `/usr/bin/tails-persistence-setup` is started as
 `tails-persistence-setup` with a GUI to lead the user through the process
-of creating a persistent storage. The `AdditionalSoftware` preset is
+of creating a Persistent Storage. The `AdditionalSoftware` preset is
 automatically enabled. The new additional packages are then added to the
 `live-additional-software.conf` configuration file, which is in this
 case mounted to `/media/tails-persistence-setup/TailsData` instead of
@@ -182,18 +182,18 @@ case mounted to `/media/tails-persistence-setup/TailsData` instead of
 The systemd service
 [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-synchronize-data-to-new-persistent-volume-on-shutdown.service]]
 is used to synchronize APT data (lists and cached packages) to the newly
-created persistent storage on Tails shutdown.
+created Persistent Storage on Tails shutdown.
 
-#### With persistent storage locked
+#### With the Persistent Storage locked
 
-No notification is displayed as people who have a persistent storage but
+No notification is displayed as people who have a Persistent Storage but
 don't unlock it, probably do this only sometimes and for a reason. They
-probably otherwise unlock their persistent storage most of the time. If
-they install packages with their persistent storage locked, they
-probably do it with their persistent storage unlock as well and would
+probably otherwise unlock their Persistent Storage most of the time. If
+they install packages with their Persistent Storage locked, they
+probably do it with their Persistent Storage unlocked as well and would
 learn about this feature when it's most relevant for them.
 
-#### When it's impossible to have persistent storage
+#### When it's impossible to have a Persistent Storage
 
 This happens when running from a DVD, virtual machine, or intermediary
 Tails.
@@ -223,7 +223,7 @@ The list of additional software can be opened from:
 - **Applications**&nbsp;▸ **System Tools**&nbsp;▸ **Additional Software**
 - **Applications**&nbsp;▸ **Tails**&nbsp;▸ **Additional Software**
 - a click on the gear button next to the **Additional
-Software** feature in the persistent storage settings
+Software** feature in the Persistent Storage settings
 
 This application is implemented in the following files:
 
@@ -231,9 +231,9 @@ This application is implemented in the following files:
 - [[!tails_gitweb config/chroot_local-includes/usr/share/applications/org.boum.tails.additional-software-config.desktop.in]]
 - [[!tails_gitweb config/chroot_local-includes/usr/share/tails/additional-software/configuration-window.ui]]
 
-If there is no persistent storage or before any package is added, if the
-persistent storage is locked, or if it is impossible to have a persistent
-storage (for example, when running from a DVD or a virtual machine) the window
+If there is no Persistent Storage or before any package is added, if the
+Persistent Storage is locked, or if it is impossible to have a Persistent
+Storage (for example, when running from a DVD or a virtual machine) the window
 shows an explanation text with appropriate pointers:
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - without persistent storage.png"/>
