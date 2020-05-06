@@ -11,6 +11,9 @@ require 'guestfs'
 require 'rexml/document'
 require 'etc'
 
+class NoSpaceLeftError < StandardError
+end
+
 class VMStorage
 
   def initialize(virt, xml_path)
@@ -87,7 +90,7 @@ class VMStorage
     @pool.lookup_volume_by_name(name).delete
   end
 
-  def create_new_disk(name, options = {})
+  def create_new_disk(name, **options)
     options[:size] ||= 2
     options[:unit] ||= "GiB"
     options[:type] ||= "qcow2"
@@ -96,10 +99,13 @@ class VMStorage
     reserved = 500
     needed = convert_to_MiB(options[:size].to_i, options[:unit])
     avail = convert_to_MiB(get_free_space('host', @pool_path), "KiB")
-    assert(avail - reserved >= needed,
+    if not (avail - reserved >= needed)
+        raise NoSpaceLeftError.new(
            "Error creating disk \"#{name}\" in \"#{@pool_path}\". " \
            "Need #{needed} MiB but only #{avail} MiB is available of " \
-           "which #{reserved} MiB is reserved for other temporary files.")
+           "which #{reserved} MiB is reserved for other temporary files."
+        )
+    end
     begin
       old_vol = @pool.lookup_volume_by_name(name)
     rescue Libvirt::RetrieveError
@@ -153,7 +159,7 @@ class VMStorage
     end
   end
 
-  def disk_mkpartfs(name, parttype, fstype, opts = {})
+  def disk_mkpartfs(name, parttype, fstype, **opts)
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
     opts[:size] ||= nil

@@ -306,7 +306,7 @@ class ImageBumpingScreen
     @screen = Screen.new
   end
 
-  def interactive_image_bump(image, opts = {})
+  def interactive_image_bump(image, **opts)
     opts[:sensitivity] ||= OPENCV_MIN_SIMILARITY
     $interactive_image_bump_ignores ||= []
     if $interactive_image_bump_ignores.include?(image)

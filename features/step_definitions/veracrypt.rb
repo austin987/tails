@@ -9,7 +9,7 @@ $veracrypt_volume_name = 'veracrypt'
 $veracrypt_pim = '1'
 $veracrypt_basic_container_with_pim = "#{MISC_FILES_DIR}/container_with_pim.hc"
 
-def veracrypt_volume_size_in_Nautilus(options = {})
+def veracrypt_volume_size_in_Nautilus(**options)
   options[:isHidden] ?
     '52 MB'
   : (
@@ -19,7 +19,7 @@ def veracrypt_volume_size_in_Nautilus(options = {})
   )
 end
 
-def veracrypt_volume_size_in_GNOME_Disks(options = {})
+def veracrypt_volume_size_in_GNOME_Disks(**options)
   options[:needsPim] ?
     '410 KB'
   : '105 MB'

@@ -32,7 +32,7 @@ end
 # one second breaks until it returns true, or until `timeout` seconds have
 # passed when we throw a Timeout::Error exception. If `timeout` is `nil`,
 # then we just run the code block with no timeout.
-def try_for(timeout, options = {})
+def try_for(timeout, **options)
   if block_given? && timeout.nil?
     return yield
   end
@@ -233,7 +233,7 @@ def cmd_helper(cmd, env = {})
   env = ENV.to_h.merge(env)
   IO.popen(env, cmd) do |p|
     out = p.readlines.join("\n")
-    p.close
+    Process.wait(p.pid)
     ret = $?
     assert_equal(0, ret, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
     return out
@@ -291,7 +291,7 @@ def random_alnum_string(min_len, max_len = 0)
 end
 
 # Sanitize the filename from unix-hostile filename characters
-def sanitize_filename(filename, options = {})
+def sanitize_filename(filename, **options)
   options[:replacement] ||= '_'
   bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
   filename.gsub(bad_unix_filename_chars, options[:replacement])
@@ -353,7 +353,9 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   opts ||= {}
   ruby_type_to_dbus_type = {
     String => 'string',
+    # XXX:Stretch: drop the Fixnum line once we stop supporting Stretch
     Fixnum => 'int32',
+    Integer => 'int32',
   }
   typed_args = args.map do |arg|
     type = ruby_type_to_dbus_type[arg.class]
@@ -387,4 +389,32 @@ def ffmpeg
     else
       return 'ffmpeg'
     end
+end
+# This is IO.popen() that ensures that we wait() for the subprocess to
+# finish. Please use this instead IO.popen() when running a subprocess
+# inside a try_for() or other Timeout::timeout() block!
+def popen_wait(*args, **opts)
+  p = IO.popen(*args, **opts)
+  Process.wait(p.pid)
+  return p
+ensure
+  # If popen is run inside a Timeout::timeout() block we might abort
+  # while the subprocess is still running and before the above wait()
+  # does its clean up, which would leave a defunct process around
+  # unless we take care to finish wait():ing.
+  begin
+    begin
+      Process.wait(p.pid)
+    rescue Errno::ECHILD
+      # Process has already exited.
+    else
+      begin
+        Process.kill("KILL", p.pid)
+      rescue IOError, Errno::ESRCH
+        # Process has already exited.
+      end
+    end
+  rescue NameError
+    # We aborted before p was assigned, so no clean up needed.
+  end
 end

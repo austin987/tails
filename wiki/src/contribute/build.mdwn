@@ -74,6 +74,15 @@ image before building it.
 
 * If Vagrant fails to start the Tails builder VM with:
 
+        Call to virDomainCreateWithFlags failed: Cannot access storage file '/path/to/some/file' (as uid:xxx, gid:yyy): Permission denied
+
+  … then you must give the `libvirt-qemu` user read-access to the path
+  mentioned in the error message. This is often the case if you store
+  your libvirt volumes inside your home, and your home is not globally
+  readable.
+
+* If Vagrant fails to start the Tails builder VM with:
+
         Initialization parameters must be an attributes hash, got NilClass nil (ArgumentError)
 
   … then restart the libvirtd service:

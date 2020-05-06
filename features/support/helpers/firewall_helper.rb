@@ -15,7 +15,7 @@ end
 
 # Returns the unique edges (based on protocol, source/destination
 # address/port) in the graph of all network flows.
-def pcap_connections_helper(pcap_file, opts = {})
+def pcap_connections_helper(pcap_file, **opts)
   opts[:ignore_dhcp] = true unless opts.has_key?(:ignore_dhcp)
   opts[:ignore_arp] = true unless opts.has_key?(:ignore_arp)
   opts[:ignore_sources] ||= [$vm.vmnet.bridge_mac]
@@ -101,8 +101,8 @@ end
 
 # These assertions are made from the perspective of the system under
 # testing when it comes to the concepts of "source" and "destination".
-def assert_all_connections(pcap_file, opts = {}, &block)
-  all = pcap_connections_helper(pcap_file, opts)
+def assert_all_connections(pcap_file, **opts, &block)
+  all = pcap_connections_helper(pcap_file, **opts)
   good = all.find_all(&block)
   bad = all - good
   unless bad.empty?
@@ -112,6 +112,6 @@ def assert_all_connections(pcap_file, opts = {}, &block)
   end
 end
 
-def assert_no_connections(pcap_file, opts = {}, &block)
-  assert_all_connections(pcap_file, opts) { |*args| not(block.call(*args)) }
+def assert_no_connections(pcap_file, **opts, &block)
+  assert_all_connections(pcap_file, **opts) { |*args| not(block.call(*args)) }
 end
