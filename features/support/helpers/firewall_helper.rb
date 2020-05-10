@@ -19,6 +19,7 @@ end
 # rubocop:disable Metrics/AbcSize
 # rubocop:disable Metrics/BlockLength
 # rubocop:disable Metrics/CyclomaticComplexity
+# rubocop:disable Metrics/MethodLength
 # rubocop:disable Metrics/PerceivedComplexity
 def pcap_connections_helper(pcap_file, **opts)
   opts[:ignore_dhcp] = true unless opts.key?(:ignore_dhcp)
@@ -99,6 +100,7 @@ end
 # rubocop:enable Metrics/AbcSize
 # rubocop:enable Metrics/BlockLength
 # rubocop:enable Metrics/CyclomaticComplexity
+# rubocop:enable Metrics/MethodLength
 # rubocop:enable Metrics/PerceivedComplexity
 
 class FirewallAssertionFailedError < Test::Unit::AssertionFailedError

@@ -744,7 +744,7 @@ end
 # meant to apply these exact changes, that are used by the test suite.
 # It's nice to keep that script updated when updating the list of expected
 # changes here and uploading new test IUKs.
-def iuk_changes(version)
+def iuk_changes(version) # rubocop:disable Metrics/MethodLength
   changes = [
     {
       filesystem:  :rootfs,

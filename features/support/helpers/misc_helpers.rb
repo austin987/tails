@@ -40,6 +40,7 @@ end
 # XXX: giving up on a few worst offenders for now
 # rubocop:disable Metrics/AbcSize
 # rubocop:disable Metrics/CyclomaticComplexity
+# rubocop:disable Metrics/MethodLength
 # rubocop:disable Metrics/PerceivedComplexity
 def try_for(timeout, **options)
   return yield if block_given? && timeout.nil?
@@ -123,6 +124,7 @@ rescue unique_timeout_exception
   raise exc_class, msg
 end
 # rubocop:enable Metrics/AbcSize
+# rubocop:enable Metrics/MethodLength
 # rubocop:enable Metrics/PerceivedComplexity
 # rubocop:enable Metrics/CyclomaticComplexity
 

@@ -118,6 +118,7 @@ CHECKPOINTS =
 
 # XXX: giving up on a few worst offenders for now
 # rubocop:disable Metrics/AbcSize
+# rubocop:disable Metrics/MethodLength
 def reach_checkpoint(name)
   scenario_indent = ' ' * 4
   step_indent = ' ' * 6
@@ -165,6 +166,7 @@ def reach_checkpoint(name)
   end
 end
 # rubocop:enable Metrics/AbcSize
+# rubocop:enable Metrics/MethodLength
 
 # For each checkpoint we generate a step to reach it.
 CHECKPOINTS.each do |name, desc|
