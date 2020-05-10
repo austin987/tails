@@ -267,7 +267,7 @@ def check_disk_integrity(name, dev, scheme)
 end
 
 def check_part_integrity(name, dev, usage, fs_type,
-                         part_label = nil, part_type = nil)
+                         part_label: nil, part_type: nil)
   info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
@@ -290,7 +290,8 @@ def tails_is_installed_helper(name, tails_root, loader)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
   check_disk_integrity(name, disk_dev, 'gpt')
-  check_part_integrity(name, part_dev, 'filesystem', 'vfat', 'Tails', ESP_GUID)
+  check_part_integrity(name, part_dev, 'filesystem', 'vfat',
+                       part_label: 'Tails', part_type: ESP_GUID)
 
   target_root = '/mnt/new'
   $vm.execute("mkdir -p #{target_root}")
@@ -338,7 +339,8 @@ end
 
 Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
   dev = $vm.disk_dev(name) + '2'
-  check_part_integrity(name, dev, 'crypto', 'crypto_LUKS', 'TailsData')
+  check_part_integrity(name, dev, 'crypto', 'crypto_LUKS',
+                       part_label: 'TailsData')
 
   luks_dev = nil
   # The LUKS container may already be opened, e.g. by udisks after
@@ -998,7 +1000,7 @@ Then /^the label of the system partition on "([^"]+)" is "([^"]+)"$/ do |name, l
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
   check_disk_integrity(name, disk_dev, 'gpt')
-  check_part_integrity(name, part_dev, 'filesystem', 'vfat', label)
+  check_part_integrity(name, part_dev, 'filesystem', 'vfat', part_label: label)
 end
 
 Then /^the system partition on "([^"]+)" is an EFI system partition$/ do |name|
@@ -1006,7 +1008,8 @@ Then /^the system partition on "([^"]+)" is an EFI system partition$/ do |name|
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + '1'
   check_disk_integrity(name, disk_dev, 'gpt')
-  check_part_integrity(name, part_dev, 'filesystem', 'vfat', nil, ESP_GUID)
+  check_part_integrity(name, part_dev, 'filesystem', 'vfat',
+                       part_type: ESP_GUID)
 end
 
 Then /^the FAT filesystem on the system partition on "([^"]+)" is at least (\d+)(.+) large$/ do |name, size, unit|
