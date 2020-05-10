@@ -260,7 +260,7 @@ class Screen
       raise "unsupported arguments: #{args}"
     end
     debug_log("Mouse: moving to (#{x}, #{y})") if opts[:log]
-    xdotool('mousemove', x, y)
+    xdotool('mousemove', '--sync', x, y)
     [x, y]
   end
 
