@@ -36,7 +36,7 @@ def reply_prompt(r_f, w_f, prompt_re, answer)
   end
 end
 
-def create_veracrypt_volume(type, with_keyfile)
+def prepare_veracrypt_volume(type, with_keyfile)
   @veracrypt_is_hidden = (type == 'hidden')
   @veracrypt_needs_keyfile = with_keyfile
   step 'I temporarily create a 100 MiB raw disk named ' \
@@ -115,7 +115,7 @@ def populate_veracrypt_volume(unlocked_veracrypt_mapping)
 end
 
 When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/ do |type, with_keyfile|
-  create_veracrypt_volume(type, with_keyfile)
+  prepare_veracrypt_volume(type, with_keyfile)
   step "I plug USB drive \"#{$veracrypt_volume_name}\""
 end
 
@@ -135,7 +135,7 @@ When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( 
     $vm.execute_successfully("mv '#{src}' '#{dst}'")
   else
     @veracrypt_needs_pim = false
-    create_veracrypt_volume(type, with_options)
+    prepare_veracrypt_volume(type, with_options)
     @veracrypt_shared_dir_in_guest = share_host_files(
       $vm.storage.disk_path($veracrypt_volume_name)
     )
