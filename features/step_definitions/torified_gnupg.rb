@@ -13,7 +13,7 @@ def check_for_seahorse_error
   return unless @screen.exists('GnomeCloseButton.png')
 
   raise OpenPGPKeyserverCommunicationError,
-        "Found GnomeCloseButton.png on the screen"
+        'Found GnomeCloseButton.png on the screen'
 end
 
 def dirmngr_conf
