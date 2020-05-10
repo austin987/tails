@@ -17,64 +17,87 @@ When /^I close the (?:Tor|Unsafe) Browser$/ do
   @screen.press('ctrl', 'q')
 end
 
+def tor_browser_application_info(defaults)
+  user = LIVE_USER
+  binary = $vm.execute_successfully(
+    'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
+  ).stdout.chomp
+  cmd_regex = "#{binary} .* -profile " \
+              "/home/#{user}/\.tor-browser/profile\.default"
+  defaults.merge(
+    {
+      user:                        user,
+      cmd_regex:                   cmd_regex,
+      chroot:                      '',
+      new_tab_button_image:        'TorBrowserNewTabButton.png',
+      browser_reload_button_image: 'TorBrowserReloadButton.png',
+      browser_stop_button_image:   'TorBrowserStopButton.png',
+    }
+  )
+end
+
+def unsafe_browser_application_info(defaults)
+  user = 'clearnet'
+  binary = $vm.execute_successfully(
+    'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
+  ).stdout.chomp
+  cmd_regex = "#{binary} .* " \
+              "-profile /home/#{user}/\.unsafe-browser/profile\.default"
+  defaults.merge(
+    {
+      user:                        user,
+      cmd_regex:                   cmd_regex,
+      chroot:                      '/var/lib/unsafe-browser/chroot',
+      new_tab_button_image:        'UnsafeBrowserNewTabButton.png',
+      browser_reload_button_image: 'UnsafeBrowserReloadButton.png',
+      browser_stop_button_image:   'UnsafeBrowserStopButton.png',
+    }
+  )
+end
+
+def tor_launcher_application_info(defaults)
+  user = 'tor-launcher'
+  # We do not enable AppArmor confinement for the Tor Launcher.
+  binary = $vm.execute_successfully(
+    'echo ${TBB_INSTALL}/firefox-unconfined', libs: 'tor-browser'
+  ).stdout.chomp
+  tor_launcher_install = $vm.execute_successfully(
+    'echo ${TOR_LAUNCHER_INSTALL}', libs: 'tor-browser'
+  ).stdout.chomp
+  cmd_regex = "#{binary}\s+-app #{tor_launcher_install}/application\.ini.*"
+  defaults.merge(
+    {
+      user:                        user,
+      cmd_regex:                   cmd_regex,
+      chroot:                      '',
+      new_tab_button_image:        nil,
+      browser_reload_button_image: nil,
+      browser_stop_button_image:   nil,
+      address_bar_image:           nil,
+      # The standalone Tor Launcher uses fewer libs than the full
+      # browser.
+      unused_tbb_libs:             defaults.unused_tbb_libs
+        .concat(['libfreebl3.so', 'libfreeblpriv3.so',
+                 'libnssckbi.so', 'libsoftokn3.so',]),
+    }
+  )
+end
+
 def xul_application_info(application)
-  address_bar_image = 'BrowserAddressBar.png'
-  unused_tbb_libs = ['libnssdbm3.so', 'libmozavcodec.so', 'libmozavutil.so']
+  defaults = {
+    address_bar_image: 'BrowserAddressBar.png',
+    unused_tbb_libs:   ['libnssdbm3.so', 'libmozavcodec.so', 'libmozavutil.so'],
+  }
   case application
   when 'Tor Browser'
-    user = LIVE_USER
-    binary = $vm.execute_successfully(
-      'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
-    ).stdout.chomp
-    cmd_regex = "#{binary} .* " \
-                "-profile /home/#{user}/\.tor-browser/profile\.default"
-    chroot = ''
-    browser_reload_button_image = 'TorBrowserReloadButton.png'
-    browser_stop_button_image = 'TorBrowserStopButton.png'
-    new_tab_button_image = 'TorBrowserNewTabButton.png'
+    tor_browser_application_info(defaults)
   when 'Unsafe Browser'
-    user = 'clearnet'
-    binary = $vm.execute_successfully(
-      'echo ${TBB_INSTALL}/firefox.real', libs: 'tor-browser'
-    ).stdout.chomp
-    cmd_regex = "#{binary} .* " \
-                "-profile /home/#{user}/\.unsafe-browser/profile\.default"
-    chroot = '/var/lib/unsafe-browser/chroot'
-    browser_reload_button_image = 'UnsafeBrowserReloadButton.png'
-    browser_stop_button_image = 'UnsafeBrowserStopButton.png'
-    new_tab_button_image = 'UnsafeBrowserNewTabButton.png'
+    unsafe_browser_application_info(defaults)
   when 'Tor Launcher'
-    user = 'tor-launcher'
-    # We do not enable AppArmor confinement for the Tor Launcher.
-    binary = $vm.execute_successfully(
-      'echo ${TBB_INSTALL}/firefox-unconfined', libs: 'tor-browser'
-    ).stdout.chomp
-    tor_launcher_install = $vm.execute_successfully(
-      'echo ${TOR_LAUNCHER_INSTALL}', libs: 'tor-browser'
-    ).stdout.chomp
-    cmd_regex = "#{binary}\s+-app #{tor_launcher_install}/application\.ini.*"
-    chroot = ''
-    new_tab_button_image = nil
-    address_bar_image = nil
-    browser_reload_button_image = nil
-    browser_stop_button_image = nil
-    # The standalone Tor Launcher uses fewer libs than the full
-    # browser.
-    unused_tbb_libs.concat(['libfreebl3.so', 'libfreeblpriv3.so',
-                            'libnssckbi.so', 'libsoftokn3.so',])
+    tor_launcher_application_info(defaults)
   else
     raise "Invalid browser or XUL application: #{application}"
   end
-  {
-    user:                        user,
-    cmd_regex:                   cmd_regex,
-    chroot:                      chroot,
-    new_tab_button_image:        new_tab_button_image,
-    address_bar_image:           address_bar_image,
-    browser_reload_button_image: browser_reload_button_image,
-    browser_stop_button_image:   browser_stop_button_image,
-    unused_tbb_libs:             unused_tbb_libs,
-  }
 end
 
 When /^I open a new tab in the (.*)$/ do |browser|
