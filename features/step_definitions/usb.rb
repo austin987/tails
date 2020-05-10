@@ -80,18 +80,15 @@ def persistent_presets_ui_settings
   presets = $vm.execute_successfully("perl -E '#{script}'")
                .stdout.chomp.split("\n")
   assert presets.size >= 10,
-         "Got #{presets.size} persistence presets, " \
-         'which is too few'
-  presets_ui_settings = []
-  presets.each do |line|
+         "Got #{presets.size} persistence presets, which is too few"
+  presets.map do |line|
     id, enabled, has_configuration_button = line.split(':')
-    presets_ui_settings += [{
+    {
       'id'                       => id,
       'enabled'                  => (enabled == '1'),
       'has_configuration_button' => (has_configuration_button == '1'),
-    }]
+    }
   end
-  presets_ui_settings
 end
 
 def recover_from_upgrader_failure
