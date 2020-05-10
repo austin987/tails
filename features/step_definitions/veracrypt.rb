@@ -46,30 +46,7 @@ def prepare_veracrypt_volume(type, with_keyfile)
   fatal_system "losetup -f '#{disk_path}'"
   loop_dev = `losetup -j '#{disk_path}'`.split(':').first
   create_veracrypt_volume(loop_dev, keyfile)
-  tcplay_map_cmd = "tcplay --map=veracrypt --device='#{loop_dev}'"
-  tcplay_map_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
-  debug_log "tcplay map command: #{tcplay_map_cmd}"
-  PTY.spawn(tcplay_map_cmd) do |r_f, w_f, pid|
-    begin
-      w_f.sync = true
-      reply_prompt(
-        r_f, w_f, /^Passphrase:\s/,
-        if @veracrypt_is_hidden
-          $veracrypt_hidden_passphrase
-        else
-          $veracrypt_passphrase
-        end
-      )
-      r_f.expect(/^All ok!/)
-    rescue Errno::EIO
-      # Handled by checking $CHILD_STATUS below
-    ensure
-      Process.wait pid
-    end
-    $CHILD_STATUS.exitstatus.zero? || raise(
-      "#{tcplay_map_cmd} exited with #{$CHILD_STATUS.exitstatus}"
-    )
-  end
+  map_veracrypt_volume(loop_dev, keyfile)
   populate_veracrypt_volume('veracrypt')
   fatal_system 'tcplay --unmap=veracrypt'
   fatal_system "losetup -d '#{loop_dev}'"
@@ -103,6 +80,33 @@ def create_veracrypt_volume(block_device, keyfile)
     end
     $CHILD_STATUS.exitstatus.zero? || raise(
       "#{tcplay_create_cmd} exited with #{$CHILD_STATUS.exitstatus}"
+    )
+  end
+end
+
+def map_veracrypt_volume(block_device, keyfile)
+  tcplay_map_cmd = "tcplay --map=veracrypt --device='#{block_device}'"
+  tcplay_map_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
+  debug_log "tcplay map command: #{tcplay_map_cmd}"
+  PTY.spawn(tcplay_map_cmd) do |r_f, w_f, pid|
+    begin
+      w_f.sync = true
+      reply_prompt(
+        r_f, w_f, /^Passphrase:\s/,
+        if @veracrypt_is_hidden
+          $veracrypt_hidden_passphrase
+        else
+          $veracrypt_passphrase
+        end
+      )
+      r_f.expect(/^All ok!/)
+    rescue Errno::EIO
+      # Handled by checking $CHILD_STATUS below
+    ensure
+      Process.wait pid
+    end
+    $CHILD_STATUS.exitstatus.zero? || raise(
+      "#{tcplay_map_cmd} exited with #{$CHILD_STATUS.exitstatus}"
     )
   end
 end
