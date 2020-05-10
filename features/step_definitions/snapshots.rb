@@ -117,6 +117,8 @@ def checkpoints
   }
 end
 
+# XXX: giving up on a few worst offenders for now
+# rubocop:disable Metrics/AbcSize
 def reach_checkpoint(name)
   scenario_indent = ' ' * 4
   step_indent = ' ' * 6
@@ -163,6 +165,7 @@ def reach_checkpoint(name)
     $vm.save_snapshot(name)
   end
 end
+# rubocop:enable Metrics/AbcSize
 
 # For each checkpoint we generate a step to reach it.
 checkpoints.each do |name, desc|

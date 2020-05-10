@@ -2,6 +2,8 @@ def chutney_src_dir
   "#{GIT_DIR}/submodules/chutney"
 end
 
+# XXX: giving up on a few worst offenders for now
+# rubocop:disable Metrics/AbcSize
 def ensure_chutney_is_running
   # Ensure that a fresh chutney instance is running, and that it will
   # be cleaned upon exit. We only do it once, though, since the same
@@ -90,6 +92,7 @@ def ensure_chutney_is_running
 
   $chutney_initialized = true
 end
+# rubocop:enable Metrics/AbcSize
 
 When /^I configure Tails to use a simulated Tor network$/ do
   # At the moment this step essentially assumes that we boot with 'the

@@ -85,6 +85,8 @@ class VMStorage
     @pool.lookup_volume_by_name(name).delete
   end
 
+  # XXX: giving up on a few worst offenders for now
+  # rubocop:disable Metrics/AbcSize
   def create_new_disk(name, **options)
     options[:size] ||= 2
     options[:unit] ||= 'GiB'
@@ -120,6 +122,7 @@ class VMStorage
     @pool.create_volume_xml(vol_xml.to_s)
     @pool.refresh
   end
+  # rubocop:enable Metrics/AbcSize
 
   def clone_to_new_disk(from, to)
     begin
@@ -154,6 +157,8 @@ class VMStorage
     end
   end
 
+  # XXX: giving up on a few worst offenders for now
+  # rubocop:disable Metrics/AbcSize
   def disk_mkpartfs(name, parttype, fstype, **opts)
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
@@ -187,6 +192,7 @@ class VMStorage
       end
     end
   end
+  # rubocop:enable Metrics/AbcSize
 
   def disk_mkswap(name, parttype)
     guestfs_disk_helper(name) do |g, disk_handle|

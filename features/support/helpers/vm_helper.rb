@@ -248,6 +248,8 @@ class VM
     end
   end
 
+  # XXX: giving up on a few worst offenders for now
+  # rubocop:disable Metrics/AbcSize
   def plug_drive(name, type)
     raise "disk '#{name}' already plugged" if disk_plugged?(name)
 
@@ -280,6 +282,7 @@ class VM
 
     plug_device(xml)
   end
+  # rubocop:enable Metrics/AbcSize
 
   def disk_xml_desc(name)
     domain_xml = REXML::Document.new(@domain.xml_desc)
