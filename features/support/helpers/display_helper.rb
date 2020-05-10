@@ -17,7 +17,7 @@ class Display
   def start
     @virtviewer = IO.popen(["virt-viewer", "--direct",
                                            "--kiosk",
-                                           "--reconnect",
+                                           "--kiosk-quit=on-disconnect",
                                            "--connect", "qemu:///system",
                                            "--display", @x_display,
                                            @domain,
@@ -46,6 +46,9 @@ class Display
   end
 
   def screenshot(target)
+    # Restart the virt-viewer connection if it's not active anymore
+    # (for example because the user connected via virt-viewer themselves)
+    restart if not active?
     FileUtils.rm_f(target)
     popen_wait(['import', '-quality', '100%', '-window', 'root', target])
     assert($?.success?)
