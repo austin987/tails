@@ -26,9 +26,7 @@ class Match
   end
 end
 
-class Screen
-  attr_reader :w, :h
-
+class Keymaps
   # Values extracted from the virkeyname-linux(7) man page. These are the
   # keys that tend to be the same on all keyboards, no matter locale.
   # Beware that this has not been tested/verified thoroughly!
@@ -85,6 +83,10 @@ class Screen
       '?' => [0x2a, 0x35], '>' => [0x2a, 0x56],
     }
   )
+end
+
+class Screen
+  attr_reader :w, :h
 
   def initialize
     @w = 1024
@@ -210,12 +212,7 @@ class Screen
     debug_log("Keyboard: pressing: #{sequence.join('+')}") if opts[:log]
     codes = []
     sequence.each do |key|
-      keymap = case $language
-               when ''
-                 US_KEYMAP
-               else
-                 COMMON_KEYMAP
-               end
+      keymap = $language.empty? ? Keymaps::US_KEYMAP : Keymaps::COMMON_KEYMAP
       # We use lower-case to make it easier to get the keycodes right.
       code = keymap[('A'..'Z').include?(key) ? key : key.downcase]
       if code.nil?
