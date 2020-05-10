@@ -197,10 +197,13 @@ When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) fil
   else
     raise "This should not happen"
   end
+  # Note that `yes` prints its own newline, so we have to skip it in
+  # `pattern` below.
+  # XXX:Stretch: once we drop support < Buster we can improve the
+  # expression below to `pattern[..-2]`.
   $vm.execute_successfully(
-    "for i in $(seq 1 #{pattern_nb}) ; do " +
-    "   echo wipe_didnt_work >> '#{dest_file}' ; " +
-    "done"
+    "yes #{pattern[0, pattern.length - 1]} | " +
+    "dd of=#{dest_file} bs=#{pattern.size} count=#{pattern_nb}"
    )
 end
 
