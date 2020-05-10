@@ -1,4 +1,4 @@
-def checkpoints
+CHECKPOINTS =
   {
     'tails-greeter'                              => {
       description:       "I have started Tails from DVD without network and stopped at Tails Greeter's login screen",
@@ -114,8 +114,7 @@ def checkpoints
       ],
     },
 
-  }
-end
+  }.freeze
 
 # XXX: giving up on a few worst offenders for now
 # rubocop:disable Metrics/AbcSize
@@ -128,7 +127,7 @@ def reach_checkpoint(name)
     $vm.restore_snapshot(name)
     post_snapshot_restore_hook(name)
   else
-    checkpoint = checkpoints[name]
+    checkpoint = CHECKPOINTS[name]
     checkpoint_description = checkpoint[:description]
     parent_checkpoint = checkpoint[:parent_checkpoint]
     steps = checkpoint[:steps]
@@ -144,7 +143,7 @@ def reach_checkpoint(name)
               color: :white, timestamp: false)
     step_action = 'Given'
     if parent_checkpoint
-      parent_description = checkpoints[parent_checkpoint][:description]
+      parent_description = CHECKPOINTS[parent_checkpoint][:description]
       debug_log(step_indent + "#{step_action} #{parent_description}",
                 color: :green, timestamp: false)
       step_action = 'And'
@@ -168,7 +167,7 @@ end
 # rubocop:enable Metrics/AbcSize
 
 # For each checkpoint we generate a step to reach it.
-checkpoints.each do |name, desc|
+CHECKPOINTS.each do |name, desc|
   step_regex = Regexp.new("^#{Regexp.escape(desc[:description])}$")
   Given step_regex do
     begin
