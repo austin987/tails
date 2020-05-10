@@ -33,6 +33,18 @@ end
 class UniqueTryForTimeoutError < RuntimeError
 end
 
+def time_delta(start_time, now)
+  elapsed = now - start_time
+  # XXX: Drop this version check when we drop support for running the test suite
+  # on Debian Stretch.
+  if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
+    format('%<elapsed>.2f', elapsed: elapsed)
+      .chomp('.00').chomp('.0').chomp('0')
+  else
+    elapsed.ceil(2)
+  end
+end
+
 # Call block (ignoring any exceptions it may throw) repeatedly with
 # one second breaks until it returns true, or until `timeout` seconds have
 # passed when we throw a Timeout::Error exception. If `timeout` is `nil`,
@@ -60,16 +72,7 @@ def try_for(timeout, **options)
     loop do
       begin
         attempts += 1
-        elapsed = (Time.now - start_time)
-        # XXX: The commit that introduced this version check can be
-        # reverted when we drop support for running the test suite on
-        # Debian Stretch.
-        elapsed = if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
-                    format('%<elapsed>.2f', elapsed: elapsed)
-                      .chomp('.00').chomp('.0').chomp('0')
-                  else
-                    elapsed.ceil(2)
-                  end
+        elapsed = time_delta(start_time, Time.now)
         debug_log("try_for: attempt #{attempts} (#{elapsed}s elapsed " \
                   "of #{timeout}s)...") if options[:log]
         if yield
