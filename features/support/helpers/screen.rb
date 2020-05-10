@@ -4,7 +4,7 @@ end
 class Match
   attr_reader :w, :h, :x, :y, :image
 
-  def initialize(image, screen, x, y, w, h)
+  def initialize(image, screen, x, y, w, h) # rubocop:disable Metrics/ParameterLists
     @image = image
     @screen = screen
     @x = x

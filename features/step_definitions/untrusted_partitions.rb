@@ -21,7 +21,7 @@ Then /^Tails has no disk swap enabled$/ do
          mem_info)
 end
 
-Given /^I create an?( (\d+) ([[:alpha:]]+))? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |with_size, size, unit, parttype, has_label, label, fstype, is_encrypted, luks_password, name|
+Given /^I create an?( (\d+) ([[:alpha:]]+))? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |with_size, size, unit, parttype, has_label, label, fstype, is_encrypted, luks_password, name| # rubocop:disable Metrics/ParameterLists
   opts = {}
   opts.merge!(label: label) if has_label
   opts.merge!(luks_password: luks_password) if is_encrypted
