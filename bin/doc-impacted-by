@@ -88,8 +88,6 @@ def read_package_manifest_file_as_package_map(path)
     .to_h
 end
 
-# XXX: giving up on a few worst offenders for now
-# rubocop:disable Metrics/AbcSize
 def canonicalize_relationship(orig_entry)
   entry = orig_entry.clone
   field_abbreviations = {
@@ -127,7 +125,6 @@ rescue Exception => e
   STDERR.puts
   raise e
 end
-# rubocop:enable Metrics/AbcSize
 
 # Reads the `relationship_file` and returns a "documentation impact
 # map", a Hash which maps all documentation pages to the sources it is
@@ -149,8 +146,6 @@ end
 # documentation pages are impacted. The return value is a mapping
 # from each affected documentation page to the list of "reasons",
 # explanations how the sources impact the page.
-# XXX: giving up on a few worst offenders for now
-# rubocop:disable Metrics/AbcSize
 def find_impacted_docs(impact_map,
                        old_commit,   new_commit,
                        old_manifest, new_manifest)
@@ -176,7 +171,7 @@ def find_impacted_docs(impact_map,
   end
 
   impacted_docs = {}
-  impact_map.each do |page, sources| # rubocop:disable Metrics/BlockLength
+  impact_map.each do |page, sources|
     file_paths = []
     package_globs = []
     test_paths = []
@@ -195,7 +190,7 @@ def find_impacted_docs(impact_map,
       end
     end
     all_source_file_paths = file_paths + test_paths
-    doc_pages.glob("wiki/src/#{page}.{html,mdwn}").each do |page_path| # rubocop:disable Metrics/BlockLength
+    doc_pages.glob("wiki/src/#{page}.{html,mdwn}").each do |page_path|
       all_source_file_paths.each do |source_path|
         # Git::Diff#path() alters the object so it cannot be used for a
         # successive call for another path.
@@ -208,7 +203,7 @@ def find_impacted_docs(impact_map,
         end
         impacted_docs.deep_merge({ page_path => reasons })
       end
-      package_globs.each do |package_glob| # rubocop:disable Metrics/BlockLength
+      package_globs.each do |package_glob|
         reasons = []
         removed_impacted_packages = removed_packages.glob(package_glob)
         introduced_impacted_packages = introduced_packages.glob(package_glob)
@@ -242,7 +237,6 @@ def find_impacted_docs(impact_map,
   end
   impacted_docs
 end
-# rubocop:enable Metrics/AbcSize
 
 # Main
 
