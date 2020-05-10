@@ -53,6 +53,8 @@ class VMNet
   end
 end
 
+# XXX: giving up on a few worst offenders for now
+# rubocop:disable Metrics/ClassLength
 class VM
   attr_reader :domain, :domain_name, :display, :vmnet, :storage
 
@@ -705,3 +707,4 @@ class VM
     end
   end
 end
+# rubocop:enable Metrics/ClassLength
