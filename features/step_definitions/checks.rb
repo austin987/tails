@@ -132,6 +132,11 @@ Given /^I plug and mount a USB drive containing a sample PNG$/ do
   @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))
 end
 
+def mat2_show(file_in_guest)
+  $vm.execute_successfully("mat2 --show '#{file_in_guest}'",
+                           user: LIVE_USER).stdout
+end
+
 Then /^MAT can clean some sample PNG file$/ do
   Dir.glob("#{MISC_FILES_DIR}/*.png").each do |png_on_host|
     png_name = File.basename(png_on_host)
@@ -145,15 +150,11 @@ Then /^MAT can clean some sample PNG file$/ do
     assert_vmcommand_success($vm.execute(raw_check_cmd + " '#{png_on_guest}'",
                                          user: LIVE_USER),
                              'The comment is not present in the PNG')
-    check_before = $vm.execute_successfully("mat2 --show '#{png_on_guest}'",
-                                            user: LIVE_USER).stdout
+    check_before = mat2_show(png_on_guest)
     assert(check_before.include?("Metadata for #{png_on_guest}"),
            "MAT failed to see that '#{png_on_host}' is dirty")
     $vm.execute_successfully("mat2 '#{png_on_guest}'", user: LIVE_USER)
-    check_after = $vm.execute_successfully(
-      "mat2 --show '#{cleaned_png_on_guest}'",
-      user: LIVE_USER
-    ).stdout
+    check_after = mat2_show(cleaned_png_on_guest)
     assert(check_after.include?('No metadata found'),
            "MAT failed to clean '#{png_on_host}'")
     assert($vm.execute(raw_check_cmd + " '#{cleaned_png_on_guest}'",
