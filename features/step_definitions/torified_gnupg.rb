@@ -183,8 +183,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     # upon.
     if $vm.execute_successfully(
       "gpg --batch --list-keys '#{keyid}'", user: LIVE_USER
-    ) ||
-       @screen.exists('GnomeCloseButton.png')
+    ) || @screen.exists('GnomeCloseButton.png')
       true
     end
   end
