@@ -562,6 +562,31 @@ class VM
     "#{$config['TMPDIR']}/#{name}-snapshot.memstate"
   end
 
+  def save_internal_snapshot(name)
+    xml = internal_snapshot_xml(name)
+    @domain.snapshot_create_xml(xml)
+  end
+
+  def save_ram_only_snapshot(name)
+    snapshot_path = VM.ram_only_snapshot_path(name)
+    begin
+      @domain.save(snapshot_path)
+    rescue Guestfs::Error => e
+      no_space_left_error =
+        'Call to virDomainSaveFlags failed: operation failed: ' \
+        '/usr/lib/libvirt/libvirt_iohelper: failure with .*: ' \
+        'Unable to write .*: No space left on device'
+      if Regexp.new(no_space_left_error).match(e.to_s)
+        cmd = "du -ah \"#{$config['TMPDIR']}\" | sort -hr | head -n20"
+        info_log("Output of \"#{cmd}\":\n" + `#{cmd}`)
+        raise NoSpaceLeftError.New(e)
+      else
+        info_log('saving snapshot failed but was not a no-space-left error')
+        raise e
+      end
+    end
+  end
+
   def save_snapshot(name)
     debug_log("Saving snapshot '#{name}'...")
     # If we have no qcow2 disk device, we'll use "memory state"
@@ -587,27 +612,9 @@ class VM
     # anything relating to external snapshots, but actually "memory
     # state"(-only) snapshots.
     if internal_snapshot
-      xml = internal_snapshot_xml(name)
-      @domain.snapshot_create_xml(xml)
+      save_internal_snapshot(name)
     else
-      snapshot_path = VM.ram_only_snapshot_path(name)
-      begin
-        @domain.save(snapshot_path)
-      rescue Guestfs::Error => e
-        no_space_left_error =
-          'Call to virDomainSaveFlags failed: operation failed: ' \
-          '/usr/lib/libvirt/libvirt_iohelper: failure with .*: ' \
-          'Unable to write .*: No space left on device'
-        if Regexp.new(no_space_left_error).match(e.to_s)
-          cmd = "du -ah \"#{$config['TMPDIR']}\" | sort -hr | head -n20"
-          info_log("Output of \"#{cmd}\":\n" + `#{cmd}`)
-          raise NoSpaceLeftError.New(e)
-        else
-          info_log('saving snapshot failed but was not a no-space-left error')
-          raise e
-        end
-      end
-
+      save_ram_only_snapshot(name)
       # For consistency with the internal snapshot case (which is
       # "live", so the domain doesn't go down) we immediately restore
       # the snapshot.
