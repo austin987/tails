@@ -45,34 +45,7 @@ def prepare_veracrypt_volume(type, with_keyfile)
   keyfile = create_veracrypt_keyfile
   fatal_system "losetup -f '#{disk_path}'"
   loop_dev = `losetup -j '#{disk_path}'`.split(':').first
-  tcplay_create_cmd = "tcplay --create --device='#{loop_dev}'" \
-                    + ' --weak-keys --insecure-erase'
-  tcplay_create_cmd += ' --hidden' if @veracrypt_is_hidden
-  tcplay_create_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
-  debug_log "tcplay create command: #{tcplay_create_cmd}"
-  PTY.spawn(tcplay_create_cmd) do |r_f, w_f, pid|
-    begin
-      w_f.sync = true
-      reply_prompt(r_f, w_f, /^Passphrase:\s/, $veracrypt_passphrase)
-      reply_prompt(r_f, w_f, /^Repeat passphrase:\s/, $veracrypt_passphrase)
-      if @veracrypt_is_hidden
-        reply_prompt(r_f, w_f, /^Passphrase for hidden volume:\s/,
-                     $veracrypt_hidden_passphrase)
-        reply_prompt(r_f, w_f, /^Repeat passphrase:\s/,
-                     $veracrypt_hidden_passphrase)
-        reply_prompt(r_f, w_f, /^Size of hidden volume.*:\s/, '50M')
-      end
-      reply_prompt(r_f, w_f, /^\s*Are you sure you want to proceed/, 'y')
-      r_f.expect(/^All done!/)
-    rescue Errno::EIO
-      # Handled by checking $CHILD_STATUS below
-    ensure
-      Process.wait pid
-    end
-    $CHILD_STATUS.exitstatus.zero? || raise(
-      "#{tcplay_create_cmd} exited with #{$CHILD_STATUS.exitstatus}"
-    )
-  end
+  create_veracrypt_volume(loop_dev, keyfile)
   tcplay_map_cmd = "tcplay --map=veracrypt --device='#{loop_dev}'"
   tcplay_map_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
   debug_log "tcplay map command: #{tcplay_map_cmd}"
@@ -101,6 +74,37 @@ def prepare_veracrypt_volume(type, with_keyfile)
   fatal_system 'tcplay --unmap=veracrypt'
   fatal_system "losetup -d '#{loop_dev}'"
   File.delete(keyfile)
+end
+
+def create_veracrypt_volume(block_device, keyfile)
+  tcplay_create_cmd = "tcplay --create --device='#{block_device}'" \
+                    + ' --weak-keys --insecure-erase'
+  tcplay_create_cmd += ' --hidden' if @veracrypt_is_hidden
+  tcplay_create_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
+  debug_log "tcplay create command: #{tcplay_create_cmd}"
+  PTY.spawn(tcplay_create_cmd) do |r_f, w_f, pid|
+    begin
+      w_f.sync = true
+      reply_prompt(r_f, w_f, /^Passphrase:\s/, $veracrypt_passphrase)
+      reply_prompt(r_f, w_f, /^Repeat passphrase:\s/, $veracrypt_passphrase)
+      if @veracrypt_is_hidden
+        reply_prompt(r_f, w_f, /^Passphrase for hidden volume:\s/,
+                     $veracrypt_hidden_passphrase)
+        reply_prompt(r_f, w_f, /^Repeat passphrase:\s/,
+                     $veracrypt_hidden_passphrase)
+        reply_prompt(r_f, w_f, /^Size of hidden volume.*:\s/, '50M')
+      end
+      reply_prompt(r_f, w_f, /^\s*Are you sure you want to proceed/, 'y')
+      r_f.expect(/^All done!/)
+    rescue Errno::EIO
+      # Handled by checking $CHILD_STATUS below
+    ensure
+      Process.wait pid
+    end
+    $CHILD_STATUS.exitstatus.zero? || raise(
+      "#{tcplay_create_cmd} exited with #{$CHILD_STATUS.exitstatus}"
+    )
+  end
 end
 
 def populate_veracrypt_volume(unlocked_veracrypt_mapping)
