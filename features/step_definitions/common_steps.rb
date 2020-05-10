@@ -934,8 +934,11 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_te
          @apparmor_profile_monitoring_start[profile],
          "It seems the profile '#{profile}' isn't being monitored by the " \
          "'I monitor the AppArmor log of ...' step")
-  audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" ' \
-                     'name="%s"' % [profile, file]
+  audit_line_regex = format(
+    'apparmor="DENIED" operation="open" profile="%<profile>s" name="%<file>s"',
+    profile: profile,
+    file:    file
+  )
   begin
     try_for(10, delay: 1) do
       audit_log = $vm.execute(

@@ -60,9 +60,8 @@ def try_for(timeout, **options)
         # reverted when we drop support for running the test suite on
         # Debian Stretch.
         elapsed = if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
-                    # rubocop:disable Style/FormatStringToken
-                    ('%.2f' % elapsed).chomp('.00').chomp('.0').chomp('0')
-                    # rubocop:enable Style/FormatStringToken
+                    format('%<elapsed>.2f', elapsed: elapsed)
+                      .chomp('.00').chomp('.0').chomp('0')
                   else
                     elapsed.ceil(2)
                   end

@@ -56,10 +56,12 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns * 16
-  patterns_m = convert_to_MiB(patterns_b, 'b')
   coverage = patterns_b.to_f / reference_memory_b
-  puts "Pattern coverage: #{'%.3f' % (coverage * 100)}% (#{patterns_m} MiB " \
-       "out of #{reference_memory_m} MiB reference memory)"
+  puts format('Pattern coverage: %<coverage>.3f% (%<patterns_m>s MiB ' \
+              'out of %<reference_memory_m>s MiB reference memory)',
+              coverage:           coverage * 100,
+              patterns_m:         convert_to_MiB(patterns_b, 'b'),
+              reference_memory_m: reference_memory_m)
   coverage
 end
 
@@ -150,14 +152,18 @@ end
 
 Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$/ do |expected_coverage|
   reference_memory_b = @tmp_filesystem_size_b
-  tmp_filesystem_size_MiB = convert_from_bytes(@tmp_filesystem_size_b, 'MiB')
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = expected_coverage.to_f / 100
   assert(coverage > min_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the test FS size " \
-         "(#{tmp_filesystem_size_MiB} MiB) " \
-         "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " \
-         'was expected')
+         format('%<coverage>.3f% of the test FS size ' \
+                '(%<tmp_filesystem_size_MiB>s MiB) ' \
+                'has the pattern, but more than %<min_coverage>.3f% ' \
+                'was expected',
+                coverage:                coverage * 100,
+                tmp_filesystem_size_MiB: convert_from_bytes(
+                  @tmp_filesystem_size_b, 'MiB'
+                ),
+                min_coverage:            min_coverage * 100))
 end
 
 Then /^patterns cover at least (\d+) MiB in the guest's memory$/ do |expected_patterns_MiB|
@@ -165,10 +171,13 @@ Then /^patterns cover at least (\d+) MiB in the guest's memory$/ do |expected_pa
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = 1
   assert(coverage >= min_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the expected size " \
-         "(#{expected_patterns_MiB} MiB) " \
-         "has the pattern, but more than #{'%.3f' % (min_coverage * 100)}% " \
-         'was expected')
+         format('%<coverage>.3f% of the expected size ' \
+                '(%<expected_patterns_MiB> MiB) ' \
+                'has the pattern, but more than %<min_coverage>.3f% ' \
+                'was expected',
+                coverage:              coverage * 100,
+                expected_patterns_MiB: expected_patterns_MiB,
+                min_coverage:          min_coverage * 100))
 end
 
 Then /^patterns cover less than (\d+) MiB in the guest's memory$/ do |expected_patterns_MiB|
@@ -176,10 +185,13 @@ Then /^patterns cover less than (\d+) MiB in the guest's memory$/ do |expected_p
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   max_coverage = 1
   assert(coverage < max_coverage,
-         "#{'%.3f' % (coverage * 100)}% of the expected size " \
-         "(#{expected_patterns_MiB} MiB) " \
-         "has the pattern, but less than #{'%.3f' % (max_coverage * 100)}% " \
-         'was expected')
+         format('%<coverage>.3f% of the expected size ' \
+                '(%<expected_patterns_MiB> MiB) ' \
+                'has the pattern, but less than %<max_coverage>.3f% ' \
+                'was expected',
+                coverage:              coverage * 100,
+                expected_patterns_MiB: expected_patterns_MiB,
+                max_coverage:          max_coverage * 100))
 end
 
 When(/^I umount "([^"]*)"$/) do |mount_arg|
@@ -191,8 +203,9 @@ Then /^I find very few patterns in the guest's memory$/ do
   max_coverage = 0.008
   assert(
     coverage < max_coverage,
-    "#{'%.3f' % (coverage * 100)}% of the free memory still has the " \
-    "pattern, but less than #{'%.3f' % (max_coverage * 100)}% was expected"
+    format('%<coverage>.3f% of the free memory still has the ' \
+           'pattern, but less than %<max_coverage>.3f% was expected',
+           coverage: coverage * 100)
   )
 end
 
