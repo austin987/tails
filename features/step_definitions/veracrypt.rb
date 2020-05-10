@@ -97,16 +97,21 @@ def create_veracrypt_volume(type, with_keyfile)
       "#{tcplay_map_cmd} exited with #{$CHILD_STATUS.exitstatus}"
     )
   end
-  fatal_system "mkfs.vfat '/dev/mapper/veracrypt' >/dev/null"
+  populate_veracrypt_volume('veracrypt')
+  fatal_system 'tcplay --unmap=veracrypt'
+  fatal_system "losetup -d '#{loop_dev}'"
+  File.delete(keyfile)
+end
+
+def populate_veracrypt_volume(unlocked_veracrypt_mapping)
+  unlocked_block_device = '/dev/mapper/' + unlocked_veracrypt_mapping
+  fatal_system "mkfs.vfat '#{unlocked_block_device}' >/dev/null"
   Dir.mktmpdir('veracrypt-mountpoint', $config['TMPDIR']) do |mountpoint|
-    fatal_system "mount -t vfat '/dev/mapper/veracrypt' '#{mountpoint}'"
+    fatal_system "mount -t vfat '#{unlocked_block_device}' '#{mountpoint}'"
     # must match SecretFileOnVeraCryptVolume.png when displayed in GNOME Files
     FileUtils.cp('/usr/share/common-licenses/GPL-3', "#{mountpoint}/GPL-3")
     fatal_system "umount '#{mountpoint}'"
   end
-  fatal_system 'tcplay --unmap=veracrypt'
-  fatal_system "losetup -d '#{loop_dev}'"
-  File.delete(keyfile)
 end
 
 When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/ do |type, with_keyfile|
