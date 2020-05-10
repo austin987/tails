@@ -152,11 +152,9 @@ Then /^I synchronize keys in Seahorse$/ do
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
-    if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
-       @screen.exists('GnomeCloseButton.png') || \
-       !$vm.process_running?('seahorse')
-      true
-    end
+    count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
+      @screen.exists('GnomeCloseButton.png') || \
+      !$vm.process_running?('seahorse')
   end
 
   retry_tor(recovery_proc) do
