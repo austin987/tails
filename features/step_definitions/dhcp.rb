@@ -1,3 +1,6 @@
+class DhcpLeakError < StandardError
+end
+
 Then /^the hostname should not have been leaked on the network$/ do
   begin
     hostnames = ['amnesia', $vm.execute('hostname').stdout.chomp]
@@ -9,10 +12,10 @@ Then /^the hostname should not have been leaked on the network$/ do
       assert_not_nil(type, 'Found non-IP(v6)/ARP packet')
       payload = type.parse(packet).payload
       hostnames.each do |hostname|
-        raise "Hostname leak detected: #{hostname}" if payload.match(hostname)
+        raise DhcpLeakError, "Hostname leak detected: #{hostname}" if payload.match(hostname)
       end
     end
-  rescue Exception => e
+  rescue DhcpLeakError => e
     save_failure_artifact('Network capture', @sniffer.pcap_file)
     raise e
   end

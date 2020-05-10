@@ -152,7 +152,7 @@ def reach_checkpoint(name)
     steps.each do |s|
       begin
         step(s)
-      rescue Exception => e
+      rescue StandardError => e
         debug_log(scenario_indent +
                   "Step failed while creating checkpoint: #{s}",
                   color: :red, timestamp: false)
@@ -174,7 +174,7 @@ CHECKPOINTS.each do |name, desc|
   Given step_regex do
     begin
       reach_checkpoint(name)
-    rescue Exception => e
+    rescue StandardError => e
       debug_log("    Generated snapshot step failed with exception:\n" \
                 "      #{e.class}: #{e}\n", color: :red, timestamp: false)
       raise e

@@ -83,13 +83,19 @@ def try_for(timeout, **options)
         # (never?) a good idea, so we rethrow them. See below why we
         # also rethrow *all* the unique exceptions.
         raise e
-      rescue Exception => e
-        # All other exceptions are ignored while trying the
-        # block. Well we save the last exception so we can print it in
-        # case of a timeout.
+      rescue StandardError => e
+        # Most other exceptions, that inherit from StandardError, are ignored
+        # while trying the block. We save the last exception so we can
+        # print it in case of a timeout.
         last_exception = e
         debug_log('try_for: failed with exception: ' \
                   "#{last_exception.class}: #{last_exception}") if options[:log]
+      rescue Exception => e # rubocop:disable Lint/RescueException
+        # Any other exception is rethrown as-is: it is probably not
+        # the kind of failure that try_for is supposed to mask.
+        # For example, try_for should not prevent a SignalException
+        # from being handled by Ruby.
+        raise e
       end
       sleep options[:delay]
     end
@@ -180,7 +186,7 @@ def retry_action(max_retries, options = {}, &block)
       # NameError most likely means typos, and hiding that is rarely
       # (never?) a good idea, so we rethrow them.
       raise e
-    rescue Exception => e
+    rescue StandardError => e
       if retries <= max_retries
         debug_log("retry_action: #{options[:operation_name]} failed with " \
                   "exception: #{e.class}: #{e.message}")
@@ -192,6 +198,12 @@ def retry_action(max_retries, options = {}, &block)
               "#{max_retries} times) with\n" \
               "#{e.class}: #{e.message}"
       end
+    rescue Exception => e # rubocop:disable Lint/RescueException
+      # Any other exception is rethrown as-is: it is probably not
+      # the kind of failure that retry_action is supposed to mask.
+      # For example, retry_action should not prevent a SignalException
+      # from being handled by Ruby.
+      raise e
     end
   end
 end

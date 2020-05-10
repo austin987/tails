@@ -113,7 +113,7 @@ def save_journal(path)
     file.write($vm.file_content('/tmp/systemd.journal'))
   end
   save_failure_artifact('Systemd journal', "#{path}/systemd.journal")
-rescue Exception => e
+rescue StandardError => e
   info_log('Exception thrown while trying to save the journal: ' \
            "#{e.class.name}: #{e}")
 end

@@ -18,7 +18,7 @@ class VMNet
     rexml.elements['network'].add_element('uuid')
     rexml.elements['network/uuid'].text = LIBVIRT_NETWORK_UUID
     update(rexml.to_s)
-  rescue Exception => e
+  rescue StandardError => e
     destroy_and_undefine
     raise e
   end
@@ -74,7 +74,7 @@ class VM
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot(TAILS_ISO)
     plug_network
-  rescue Exception => e
+  rescue StandardError => e
     destroy_and_undefine
     raise e
   end

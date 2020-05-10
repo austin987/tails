@@ -1,3 +1,6 @@
+class MacSpoofingError < StandardError
+end
+
 def all_ethernet_nics
   $vm.execute_successfully(
     'get_all_ethernet_nics', libs: 'hardware'
@@ -22,12 +25,14 @@ Then /^the (\d+)(?:st|nd|rd|th) network device has (its real|a spoofed) MAC addr
   begin
     if is_spoofed
       if nic_real_mac == nic_current_mac
-        raise "The MAC address was expected to be spoofed but wasn't"
+        raise MacSpoofingError,
+              "The MAC address was expected to be spoofed but wasn't"
       end
     elsif nic_real_mac != nic_current_mac
-      raise 'The MAC address is spoofed but was expected to not be'
+      raise MacSpoofingError,
+            'The MAC address is spoofed but was expected to not be'
     end
-  rescue Exception => e
+  rescue MacSpoofingError => e
     save_failure_artifact('Network capture', @sniffer.pcap_file)
     raise e
   end

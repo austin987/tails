@@ -190,7 +190,7 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" by clon
         .child('Installation complete!', roleName: 'label')
       true
     end
-  rescue Exception => e
+  rescue StandardError => e
     debug_log("Tails Installer debug log:\n" +
               $vm.file_content(@installer_log_path))
     raise e
