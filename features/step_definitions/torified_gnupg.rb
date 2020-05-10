@@ -165,9 +165,7 @@ Then /^I synchronize keys in Seahorse$/ do
     @screen.wait('SeahorseSyncKeys.png', 20)
     @screen.press('alt', 's') # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
-    try_for(120) do
-      change_of_status?
-    end
+    try_for(120) { change_of_status? }
     check_for_seahorse_error
     unless $vm.process_running?('seahorse')
       raise OpenPGPKeyserverCommunicationError,
