@@ -218,7 +218,7 @@ task :parse_build_options do
 
   options += ENV['TAILS_BUILD_OPTIONS'].split if ENV['TAILS_BUILD_OPTIONS']
 
-  options.uniq.each do |opt|
+  options.uniq.each do |opt| # rubocop:disable Metrics/BlockLength
     case opt
     # Memory build settings
     when 'ram'

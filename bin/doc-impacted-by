@@ -171,7 +171,7 @@ def find_impacted_docs(impact_map,
   end
 
   impacted_docs = {}
-  impact_map.each do |page, sources|
+  impact_map.each do |page, sources| # rubocop:disable Metrics/BlockLength
     file_paths = []
     package_globs = []
     test_paths = []
@@ -190,7 +190,7 @@ def find_impacted_docs(impact_map,
       end
     end
     all_source_file_paths = file_paths + test_paths
-    doc_pages.glob("wiki/src/#{page}.{html,mdwn}").each do |page_path|
+    doc_pages.glob("wiki/src/#{page}.{html,mdwn}").each do |page_path| # rubocop:disable Metrics/BlockLength
       all_source_file_paths.each do |source_path|
         # Git::Diff#path() alters the object so it cannot be used for a
         # successive call for another path.
@@ -203,7 +203,7 @@ def find_impacted_docs(impact_map,
         end
         impacted_docs.deep_merge({ page_path => reasons })
       end
-      package_globs.each do |package_glob|
+      package_globs.each do |package_glob| # rubocop:disable Metrics/BlockLength
         reasons = []
         removed_impacted_packages = removed_packages.glob(package_glob)
         introduced_impacted_packages = introduced_packages.glob(package_glob)

@@ -304,6 +304,7 @@ class ImageBumpingScreen
   end
 
   # XXX: giving up on a few worst offenders for now
+  # rubocop:disable Metrics/BlockLength
   # rubocop:disable Metrics/CyclomaticComplexity
   # rubocop:disable Metrics/PerceivedComplexity
   def interactive_image_bump(image, **opts)
@@ -367,6 +368,7 @@ class ImageBumpingScreen
       end
     end
   end
+  # rubocop:enable Metrics/BlockLength
   # rubocop:enable Metrics/CyclomaticComplexity
   # rubocop:enable Metrics/PerceivedComplexity
 
