@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 # Hostname of the virtual machine (must be in /etc/hosts)
-VIRTUAL_MACHINE_HOSTNAME = 'vagrant-buster'
+VIRTUAL_MACHINE_HOSTNAME = 'vagrant-buster'.freeze
 
 # Approximate amount of RAM needed to run the builder's base system
 # and perform a build
@@ -18,8 +18,8 @@ VM_MEMORY_FOR_DISK_BUILDS = VM_MEMORY_BASE
 VM_MEMORY_FOR_RAM_BUILDS = VM_MEMORY_BASE + BUILD_SPACE_REQUIREMENT
 
 # The builder VM's platform
-ARCHITECTURE = 'amd64'
-DISTRIBUTION = 'buster'
+ARCHITECTURE = 'amd64'.freeze
+DISTRIBUTION = 'buster'.freeze
 
 # The name of the Vagrant box
 def box_name

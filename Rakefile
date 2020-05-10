@@ -30,7 +30,7 @@ require_relative 'vagrant/lib/tails_build_settings'
 VAGRANT_PATH = File.expand_path('vagrant', __dir__)
 
 # Branches that are considered 'stable' (used to select SquashFS compression)
-STABLE_BRANCH_NAMES = ['stable', 'testing']
+STABLE_BRANCH_NAMES = ['stable', 'testing'].freeze
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
@@ -47,13 +47,13 @@ EXPORTED_VARIABLES = [
   'GIT_COMMIT',
   'GIT_REF',
   'BASE_BRANCH_GIT_COMMIT',
-]
+].freeze
 ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
 # In-VM proxy URL
-INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
+INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142".freeze
 
 ENV['ARTIFACTS'] ||= '.'
 

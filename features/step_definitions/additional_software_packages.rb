@@ -1,5 +1,6 @@
-ASP_STATE_DIR = '/run/live-additional-software'
+ASP_STATE_DIR = '/run/live-additional-software'.freeze
 ASP_CONF = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
+           .freeze
 
 Then /^the Additional Software (upgrade|installation) service has started$/ do |service|
   if $vm.file_exist?(ASP_CONF) && !$vm.file_empty?(ASP_CONF)

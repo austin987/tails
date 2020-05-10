@@ -14,12 +14,12 @@ module Dogtail
     :panel,
     :tab,
     :textentry,
-  ]
+  ].freeze
 
   TREE_API_NODE_SEARCH_FIELDS = [
     :labelee,
     :parent,
-  ]
+  ].freeze
 
   TREE_API_NODE_ACTIONS = [
     :click,
@@ -28,7 +28,7 @@ module Dogtail
     :keyCombo,
     :point,
     :typeText,
-  ]
+  ].freeze
 
   TREE_API_APP_SEARCHES = TREE_API_NODE_SEARCHES + [
     :dialog,
