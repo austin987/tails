@@ -15,6 +15,8 @@ end
 
 # Returns the unique edges (based on protocol, source/destination
 # address/port) in the graph of all network flows.
+# XXX: giving up on a few worst offenders for now
+# rubocop:disable Metrics/PerceivedComplexity
 def pcap_connections_helper(pcap_file, **opts)
   opts[:ignore_dhcp] = true unless opts.key?(:ignore_dhcp)
   opts[:ignore_arp] = true unless opts.key?(:ignore_arp)
@@ -91,6 +93,7 @@ def pcap_connections_helper(pcap_file, **opts)
   end
   connections.uniq.map { |p| OpenStruct.new(p) }
 end
+# rubocop:enable Metrics/PerceivedComplexity
 
 class FirewallAssertionFailedError < Test::Unit::AssertionFailedError
 end

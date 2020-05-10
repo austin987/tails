@@ -37,6 +37,8 @@ end
 # one second breaks until it returns true, or until `timeout` seconds have
 # passed when we throw a Timeout::Error exception. If `timeout` is `nil`,
 # then we just run the code block with no timeout.
+# XXX: giving up on a few worst offenders for now
+# rubocop:disable Metrics/PerceivedComplexity
 def try_for(timeout, **options)
   return yield if block_given? && timeout.nil?
 
@@ -118,6 +120,7 @@ rescue unique_timeout_exception
   end
   raise exc_class, msg
 end
+# rubocop:enable Metrics/PerceivedComplexity
 
 class TorFailure < StandardError
 end

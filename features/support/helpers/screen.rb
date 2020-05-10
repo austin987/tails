@@ -303,6 +303,8 @@ class ImageBumpingScreen
     @screen = Screen.new
   end
 
+  # XXX: giving up on a few worst offenders for now
+  # rubocop:disable Metrics/PerceivedComplexity
   def interactive_image_bump(image, **opts)
     opts[:sensitivity] ||= OPENCV_MIN_SIMILARITY
     $interactive_image_bump_ignores ||= []
@@ -364,6 +366,7 @@ class ImageBumpingScreen
       end
     end
   end
+  # rubocop:enable Metrics/PerceivedComplexity
 
   screen_methods = Screen.instance_methods - Object.instance_methods
   overrides = [:find, :exists, :wait, :find_any, :exists_any,
