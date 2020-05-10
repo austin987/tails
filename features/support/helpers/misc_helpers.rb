@@ -212,20 +212,23 @@ rescue Timeout::Error
 end
 
 def convert_bytes_mod(unit)
-  case unit
-  when 'bytes', 'b' then mod = 1
-  when 'KB'         then mod = 10**3
-  when 'k', 'KiB'   then mod = 2**10
-  when 'MB'         then mod = 10**6
-  when 'M', 'MiB'   then mod = 2**20
-  when 'GB'         then mod = 10**9
-  when 'G', 'GiB'   then mod = 2**30
-  when 'TB'         then mod = 10**12
-  when 'T', 'TiB'   then mod = 2**40
-  else
-    raise "invalid memory unit '#{unit}'"
-  end
-  mod
+  mod = {
+    'bytes' => 1,
+    'b'     => 1,
+    'KB'    => 10**3,
+    'k'     => 2**10,
+    'KiB'   => 2**10,
+    'MB'    => 10**6,
+    'M'     => 2**20,
+    'MiB'   => 2**20,
+    'GB'    => 10**9,
+    'G'     => 2**30,
+    'GiB'   => 2**30,
+    'TB'    => 10**12,
+    'T'     => 2**40,
+    'TiB'   => 2**40,
+  }
+  mod[unit] || raise("invalid memory unit '#{unit}'")
 end
 
 def convert_to_bytes(size, unit)
