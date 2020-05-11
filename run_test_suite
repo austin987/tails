@@ -4,7 +4,7 @@ set -e
 set -u
 set -o pipefail
 
-NAME=$(basename ${0})
+NAME=$(basename "${0}")
 
 GENERAL_DEPENDENCIES="
 cucumber
@@ -157,27 +157,27 @@ next_free_display() {
 
 test_suite_cleanup() {
     if [ -n "${XVFB_PID:-}" ]; then
-        (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
+        (kill -0 "${XVFB_PID}" 2>/dev/null && kill "${XVFB_PID}") || /bin/true
     fi
     return $?
 }
 
 start_xvfb() {
-    Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
+    Xvfb "$TARGET_DISPLAY" -screen 0 1024x768x24+32 >/dev/null 2>&1 &
     XVFB_PID=$!
     # Wait for Xvfb to run on TARGET_DISPLAY
-    until display_in_use $TARGET_DISPLAY; do
+    until display_in_use "$TARGET_DISPLAY"; do
 	sleep 1
     done
     echo "Virtual X framebuffer started on display ${TARGET_DISPLAY}"
     # Hide the mouse cursor so it won't be in the way when we are
     # trying to match images.
-    unclutter -display $TARGET_DISPLAY -root -idle 0.1 >/dev/null 2>&1 &
+    unclutter -display "$TARGET_DISPLAY" -root -idle 0.1 >/dev/null 2>&1 &
 }
 
 start_vnc_server() {
     check_dependencies x11vnc
-    VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
+    VNC_SERVER_PORT="$(x11vnc -listen localhost -display "${TARGET_DISPLAY}" \
                               -bg -nopw -forever 2>&1 | \
                                   grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
     echo "VNC server running on: localhost:${VNC_SERVER_PORT}"
@@ -192,7 +192,7 @@ start_vnc_viewer() {
         -SendClipboard=0 \
         -SetPrimary=0 \
         -SendPrimary=0 \
-        localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
+        "localhost:${VNC_SERVER_PORT}" 1>/dev/null 2>&1 &
 }
 
 # main script
@@ -253,15 +253,15 @@ while [ $# -gt 0 ]; do
             ;;
         --tmpdir)
             shift
-            export TMPDIR="$(readlink -f $1)"
+            export TMPDIR="$(readlink -f "$1")"
             ;;
         --iso)
             shift
-            export TAILS_ISO="$(readlink -f $1)"
+            export TAILS_ISO="$(readlink -f "$1")"
             ;;
         --old-iso)
             shift
-            export OLD_TAILS_ISO="$(readlink -f $1)"
+            export OLD_TAILS_ISO="$(readlink -f "$1")"
             ;;
         --help)
 	    usage
@@ -298,4 +298,4 @@ fi
 export USER_DISPLAY="${DISPLAY:-}"
 export DISPLAY=${TARGET_DISPLAY}
 
-cucumber ${@}
+cucumber "${@}"
