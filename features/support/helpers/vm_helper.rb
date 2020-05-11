@@ -85,6 +85,7 @@ class VM
     rexml.elements['domain'].add_element('uuid')
     rexml.elements['domain/uuid'].text = LIBVIRT_DOMAIN_UUID
     update(xml: rexml.to_s)
+    set_vcpu($config['VCPUS']) if $config['VCPUS']
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot(TAILS_ISO)
     plug_network
@@ -723,6 +724,12 @@ class VM
         return e.elements['source'].attribute('service').to_s.to_i
       end
     end
+  end
+
+  def set_vcpu(nr_cpus)
+    raise 'Cannot set the number of CPUs for a running domain' if running?
+
+    update { |xml| xml.elements['domain/vcpu'].text = nr_cpus }
   end
 end
 # rubocop:enable Metrics/ClassLength
