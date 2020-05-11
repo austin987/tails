@@ -219,7 +219,7 @@ def boot_menu_image
   end
 end
 
-Given /^Tails is at the boot menu's cmdline$/ do
+def enter_boot_menu_cmdline
   boot_timeout = 3 * 60
   # Simply looking for the boot splash image is not robust; sometimes
   # our image matching is not fast enough to see it. Here we hope that spamming
@@ -269,7 +269,7 @@ Given /^Tails is at the boot menu's cmdline$/ do
 end
 
 Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_apt_sources|
-  step "Tails is at the boot menu's cmdline"
+  enter_boot_menu_cmdline
   boot_key = @os_loader == 'UEFI' ? 'F10' : 'Return'
   @screen.type(' autotest_never_use_this_option' \
                ' blacklist=psmouse' \
