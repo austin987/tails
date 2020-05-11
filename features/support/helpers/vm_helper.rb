@@ -345,7 +345,7 @@ class VM
   end
 
   def disk_dev(name)
-    (rexml = disk_rexml_desc(name)) || (return nil)
+    (rexml = disk_rexml_desc(name)) || return
     '/dev/' + rexml.elements['disk/target'].attribute('dev').to_s
   end
 

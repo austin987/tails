@@ -192,7 +192,7 @@ def releasing?
 end
 
 def system_cpus
-  return nil unless RbConfig::CONFIG['host_os'] =~ /linux/i
+  return unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
   begin
     File.read('/proc/cpuinfo').scan(/^processor\s+:/).count
