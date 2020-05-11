@@ -57,7 +57,7 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   # Pattern is 16 bytes long
   patterns_b = patterns * 16
   coverage = patterns_b.to_f / reference_memory_b
-  puts format('Pattern coverage: %<coverage>.3f% (%<patterns_m>s MiB ' \
+  puts format('Pattern coverage: %.3<coverage>f%% (%<patterns_m>s MiB ' \
               'out of %<reference_memory_m>s MiB reference memory)',
               coverage:           coverage * 100,
               patterns_m:         convert_to_MiB(patterns_b, 'b'),
@@ -155,9 +155,9 @@ Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = expected_coverage.to_f / 100
   assert(coverage > min_coverage,
-         format('%<coverage>.3f% of the test FS size ' \
+         format('%.3<coverage>f%% of the test FS size ' \
                 '(%<tmp_filesystem_size_MiB>s MiB) ' \
-                'has the pattern, but more than %<min_coverage>.3f% ' \
+                'has the pattern, but more than %.3<min_coverage>f%% ' \
                 'was expected',
                 coverage:                coverage * 100,
                 tmp_filesystem_size_MiB: convert_from_bytes(
@@ -171,9 +171,9 @@ Then /^patterns cover at least (\d+) MiB in the guest's memory$/ do |expected_pa
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = 1
   assert(coverage >= min_coverage,
-         format('%<coverage>.3f% of the expected size ' \
-                '(%<expected_patterns_MiB> MiB) ' \
-                'has the pattern, but more than %<min_coverage>.3f% ' \
+         format('%.3<coverage>f%% of the expected size ' \
+                '(%<expected_patterns_MiB>s MiB) ' \
+                'has the pattern, but more than %.3<min_coverage>f%% ' \
                 'was expected',
                 coverage:              coverage * 100,
                 expected_patterns_MiB: expected_patterns_MiB,
@@ -185,9 +185,9 @@ Then /^patterns cover less than (\d+) MiB in the guest's memory$/ do |expected_p
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   max_coverage = 1
   assert(coverage < max_coverage,
-         format('%<coverage>.3f% of the expected size ' \
-                '(%<expected_patterns_MiB> MiB) ' \
-                'has the pattern, but less than %<max_coverage>.3f% ' \
+         format('%.3<coverage>f%% of the expected size ' \
+                '(%<expected_patterns_MiB>s MiB) ' \
+                'has the pattern, but less than %.3<max_coverage>f%% ' \
                 'was expected',
                 coverage:              coverage * 100,
                 expected_patterns_MiB: expected_patterns_MiB,
@@ -203,9 +203,10 @@ Then /^I find very few patterns in the guest's memory$/ do
   max_coverage = 0.008
   assert(
     coverage < max_coverage,
-    format('%<coverage>.3f% of the free memory still has the ' \
-           'pattern, but less than %<max_coverage>.3f% was expected',
-           coverage: coverage * 100)
+    format('%.3<coverage>f%% of the free memory still has the ' \
+           'pattern, but less than %.3<max_coverage>f%% was expected',
+           coverage:     coverage * 100,
+           max_coverage: max_coverage * 100)
   )
 end
 

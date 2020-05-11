@@ -76,7 +76,7 @@ def tor_launcher_application_info(defaults)
       address_bar_image:           nil,
       # The standalone Tor Launcher uses fewer libs than the full
       # browser.
-      unused_tbb_libs:             defaults.unused_tbb_libs
+      unused_tbb_libs:             defaults[:unused_tbb_libs]
         .concat(['libfreebl3.so', 'libfreeblpriv3.so',
                  'libnssckbi.so', 'libsoftokn3.so',]),
     }
