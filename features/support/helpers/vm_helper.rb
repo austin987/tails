@@ -70,7 +70,7 @@ class VM
     rexml.elements['domain/name'].text = @domain_name
     rexml.elements['domain'].add_element('uuid')
     rexml.elements['domain/uuid'].text = LIBVIRT_DOMAIN_UUID
-    update(rexml.to_s)
+    update(xml: rexml.to_s)
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot(TAILS_ISO)
     plug_network
@@ -79,7 +79,18 @@ class VM
     raise e
   end
 
-  def update(xml)
+  def domain_xml
+    REXML::Document.new(@domain.xml_desc)
+  end
+
+  def update(xml: nil)
+    xml = if block_given?
+            (yield domain_xml).to_s
+          elsif !xml.nil?
+            xml.to_s
+          else
+            raise 'update needs either XML or a block'
+          end
     destroy_and_undefine
     @domain = @virt.define_domain_xml(xml)
   end
@@ -98,16 +109,14 @@ class VM
   end
 
   def real_mac(alias_name)
-    REXML::Document.new(@domain.xml_desc)
-                   .elements["domain/devices/interface[@type='network']/" \
-                             "alias[@name='#{alias_name}']"]
-                   .parent.elements['mac'].attributes['address'].to_s
+    domain_xml.elements["domain/devices/interface[@type='network']/" \
+                        "alias[@name='#{alias_name}']"]
+              .parent.elements['mac'].attributes['address'].to_s
   end
 
   def all_real_macs
     macs = []
-    REXML::Document
-      .new(@domain.xml_desc)
+    domain_xml
       .elements.each("domain/devices/interface[@type='network']") do |nic|
       macs << nic.elements['mac'].attributes['address'].to_s
     end
@@ -119,31 +128,31 @@ class VM
                              'VM is running')
     assert(time.instance_of?(Time), "Argument must be of type 'Time'")
     adjustment = (time - Time.now).to_i
-    domain_rexml = REXML::Document.new(@domain.xml_desc)
-    clock_rexml_element = domain_rexml.elements['domain'].add_element('clock')
-    clock_rexml_element.add_attributes('offset'     => 'variable',
-                                       'basis'      => 'utc',
-                                       'adjustment' => adjustment.to_s)
-    update(domain_rexml.to_s)
+    update do |xml|
+      xml.elements['domain']
+         .add_element('clock')
+         .add_attributes('offset'     => 'variable',
+                         'basis'      => 'utc',
+                         'adjustment' => adjustment.to_s)
+      xml
+    end
   end
 
   def network_link_state
-    REXML::Document.new(@domain.xml_desc)
-                   .elements['domain/devices/interface/link']
-                   .attributes['state']
+    domain_xml.elements['domain/devices/interface/link']
+              .attributes['state']
   end
 
   def set_network_link_state(state)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml
-      .elements['domain/devices/interface/link']
-      .attributes['state'] = state
+    new_xml = domain_xml
+    new_xml.elements['domain/devices/interface/link']
+           .attributes['state'] = state
     if running?
       @domain.update_device(
-        domain_xml.elements['domain/devices/interface'].to_s
+        new_xml.elements['domain/devices/interface'].to_s
       )
     else
-      update(domain_xml.to_s)
+      update(xml: new_xml)
     end
   end
 
@@ -158,33 +167,38 @@ class VM
   def set_boot_device(dev)
     raise 'boot settings can only be set for inactive vms' if running?
 
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/os/boot'].attributes['dev'] = dev
-    update(domain_xml.to_s)
+    update do |xml|
+      xml.elements['domain/os/boot'].attributes['dev'] = dev
+      xml
+    end
   end
 
   def add_cdrom_device
     raise "Can't attach a CDROM device to a running domain" if running?
 
-    domain_rexml = REXML::Document.new(@domain.xml_desc)
-    if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
-      raise 'A CDROM device already exists'
-    end
+    update do |xml|
+      if xml.elements["domain/devices/disk[@device='cdrom']"]
+        raise 'A CDROM device already exists'
+      end
 
-    cdrom_rexml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml")).root
-    domain_rexml.elements['domain/devices'].add_element(cdrom_rexml)
-    update(domain_rexml.to_s)
+      cdrom_rexml = REXML::Document.new(
+        File.read("#{@xml_path}/cdrom.xml")
+      ).root
+      xml.elements['domain/devices'].add_element(cdrom_rexml)
+      xml
+    end
   end
 
   def remove_cdrom_device
     raise "Can't detach a CDROM device to a running domain" if running?
 
-    domain_rexml = REXML::Document.new(@domain.xml_desc)
-    cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
-    raise 'No CDROM device is present' if cdrom_el.nil?
+    update do |xml|
+      cdrom_el = xml.elements["domain/devices/disk[@device='cdrom']"]
+      raise 'No CDROM device is present' if cdrom_el.nil?
 
-    domain_rexml.elements['domain/devices'].delete_element(cdrom_el)
-    update(domain_rexml.to_s)
+      xml.elements['domain/devices'].delete_element(cdrom_el)
+      xml
+    end
   end
 
   def eject_cdrom
@@ -192,12 +206,13 @@ class VM
   end
 
   def remove_cdrom_image
-    domain_rexml = REXML::Document.new(@domain.xml_desc)
-    cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
-    raise 'No CDROM device is present' if cdrom_el.nil?
+    update do |xml|
+      cdrom_el = xml.elements["domain/devices/disk[@device='cdrom']"]
+      raise 'No CDROM device is present' if cdrom_el.nil?
 
-    cdrom_el.delete_element('source')
-    update(domain_rexml.to_s)
+      cdrom_el.delete_element('source')
+      xml
+    end
   rescue Libvirt::Error => e
     # While the CD-ROM is removed successfully we still get this
     # error, so let's ignore it.
@@ -214,17 +229,17 @@ class VM
     end
 
     remove_cdrom_image
-    domain_rexml = REXML::Document.new(@domain.xml_desc)
-    cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
-    cdrom_el.add_element('source', { 'file' => image })
-    update(domain_rexml.to_s)
+    update do |xml|
+      cdrom_el = xml.elements["domain/devices/disk[@device='cdrom']"]
+      cdrom_el.add_element('source', { 'file' => image })
+      xml
+    end
   end
 
   def set_cdrom_boot(image)
     raise 'boot settings can only be set for inactive vms' if running?
 
-    domain_rexml = REXML::Document.new(@domain.xml_desc)
-    unless domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+    unless domain_xml.elements["domain/devices/disk[@device='cdrom']"]
       add_cdrom_device
     end
     set_cdrom_image(image)
@@ -233,20 +248,20 @@ class VM
 
   def list_disk_devs
     ret = []
-    domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       ret << e.elements['target'].attribute('dev').to_s
     end
     ret
   end
 
-  def plug_device(xml)
+  def plug_device(device_xml)
     if running?
-      @domain.attach_device(xml.to_s)
+      @domain.attach_device(device_xml.to_s)
     else
-      domain_xml = REXML::Document.new(@domain.xml_desc)
-      domain_xml.elements['domain/devices'].add_element(xml)
-      update(domain_xml.to_s)
+      update do |xml|
+        xml.elements['domain/devices'].add_element(device_xml)
+        xml
+      end
     end
   end
 
@@ -287,7 +302,6 @@ class VM
   # rubocop:enable Metrics/AbcSize
 
   def disk_xml_desc(name)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       begin
         if e.elements['source'].attribute('file').to_s \
@@ -312,7 +326,6 @@ class VM
   end
 
   def disk_type(dev)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       if e.elements['target'].attribute('dev').to_s == dev
         return e.elements['driver'].attribute('type').to_s
@@ -328,7 +341,6 @@ class VM
 
   def disk_name(dev)
     dev = File.basename(dev)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       if /^#{e.elements['target'].attribute('dev')}/.match(dev)
         return File.basename(e.elements['source'].attribute('file').to_s)
@@ -357,8 +369,7 @@ class VM
     set_boot_device('hd')
 
     # We must remove the CDROM device to allow disk boot.
-    domain_rexml = REXML::Document.new(@domain.xml_desc)
-    if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+    if domain_xml.elements["domain/devices/disk[@device='cdrom']"]
       remove_cdrom_device
     end
   end
@@ -367,13 +378,12 @@ class VM
     raise 'boot settings can only be set for inactive vms' if running?
     raise 'unsupported OS loader type' unless type == 'UEFI'
 
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/os'].add_element(
-      REXML::Document.new(
-        '<loader>/usr/share/ovmf/OVMF.fd</loader>'
+    update do |xml|
+      xml.elements['domain/os'].add_element(
+        REXML::Document.new('<loader>/usr/share/ovmf/OVMF.fd</loader>')
       )
-    )
-    update(domain_xml.to_s)
+      xml
+    end
   end
 
   def running?
@@ -602,7 +612,6 @@ class VM
     # after starting the domain, are used then the memory state will
     # be dropped. External snapshots would also fix this.
     internal_snapshot = false
-    domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       if e.elements['driver'].attribute('type').to_s == 'qcow2'
         internal_snapshot = true
@@ -699,7 +708,6 @@ class VM
   end
 
   def get_remote_shell_port
-    domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/serial') do |e|
       if e.attribute('type').to_s == 'tcp'
         return e.elements['source'].attribute('service').to_s.to_i
