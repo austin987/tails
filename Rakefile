@@ -62,7 +62,7 @@ ENV['APT_SNAPSHOTS_SERIALS'] ||= ''
 class CommandError < StandardError
   attr_reader :status, :stderr
 
-  def initialize(message = nil, opts = {})
+  def initialize(message, **opts)
     opts[:status] ||= nil
     opts[:stderr] ||= nil
     @status = opts[:status]
