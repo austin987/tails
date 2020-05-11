@@ -498,7 +498,7 @@ Then /^the boot device has safe access rights$/ do
   all_users = $vm.file_content('/etc/passwd')
                  .split("\n")
                  .map { |line| line.split(':')[0] }
-  all_users_with_groups = all_users.collect do |user|
+  all_users_with_groups = all_users.map do |user|
     groups = $vm.execute("groups #{user}").stdout.chomp.sub(/^#{user} : /,
                                                             '').split(' ')
     [user, groups]

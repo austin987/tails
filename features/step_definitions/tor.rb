@@ -73,7 +73,7 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
   users.each do |user|
     expected_uids << $vm.execute_successfully("id -u #{user}").stdout.to_i
   end
-  allowed_output = iptables_rules('OUTPUT').find_all do |rule|
+  allowed_output = iptables_rules('OUTPUT').select do |rule|
     out_iface = rule.elements['conditions/match/o']
     is_maybe_accepted = rule.get_elements('actions/*').find do |action|
       !['DROP', 'REJECT', 'LOG'].include?(action.name)
@@ -133,7 +133,7 @@ Then /^the firewall's NAT rules only redirect traffic for Tor's TransPort and DN
   tor_dns_port = '5353'
   ip4tables_chains('nat') do |name, _, rules|
     if name == 'OUTPUT'
-      good_rules = rules.find_all do |rule|
+      good_rules = rules.select do |rule|
         redirect = rule.get_elements('actions/*').all? do |action|
           action.name == 'REDIRECT'
         end
@@ -169,7 +169,7 @@ Then /^the firewall is configured to block all external IPv6 traffic$/ do
     assert_equal(expected_policy, policy,
                  "The IPv6 #{name} chain has policy #{policy} but we " \
                  "expected #{expected_policy}")
-    good_rules = rules.find_all do |rule|
+    good_rules = rules.select do |rule|
       ['DROP', 'REJECT', 'LOG'].any? do |target|
         rule.elements["actions/#{target}"]
       end \
@@ -240,7 +240,7 @@ end
 
 When /^the system DNS is(?: still)? using the local DNS resolver$/ do
   resolvconf = $vm.file_content('/etc/resolv.conf')
-  bad_lines = resolvconf.split("\n").find_all do |line|
+  bad_lines = resolvconf.split("\n").select do |line|
     !line.start_with?('#') && !/^nameserver\s+127\.0\.0\.1$/.match(line)
   end
   assert_empty(bad_lines,

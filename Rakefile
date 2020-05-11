@@ -482,7 +482,7 @@ task build: [
 
     exported_env = EXPORTED_VARIABLES
                    .select { |k| ENV[k] }
-                   .collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+                   .map    { |k| "#{k}='#{ENV[k]}'" }.join(' ')
 
     begin
       retrieved_artifacts = false

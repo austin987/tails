@@ -110,7 +110,7 @@ end
 # testing when it comes to the concepts of "source" and "destination".
 def assert_all_connections(pcap_file, **opts, &block)
   all = pcap_connections_helper(pcap_file, **opts)
-  good = all.find_all(&block)
+  good = all.select(&block)
   bad = all - good
   return if bad.empty?
 
