@@ -83,6 +83,9 @@ class Keymaps
       '?' => [0x2a, 0x35], '>' => [0x2a, 0x56],
     }
   )
+
+  public_constant :US_KEYMAP
+  public_constant :COMMON_KEYMAP
 end
 
 class Screen

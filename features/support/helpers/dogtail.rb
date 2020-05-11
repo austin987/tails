@@ -3,6 +3,10 @@ module Dogtail
   MIDDLE_CLICK = 2
   RIGHT_CLICK = 3
 
+  private_constant :LEFT_CLICK
+  private_constant :MIDDLE_CLICK
+  private_constant :RIGHT_CLICK
+
   TREE_API_NODE_SEARCHES = [
     :button,
     :child,
@@ -15,11 +19,13 @@ module Dogtail
     :tab,
     :textentry,
   ].freeze
+  private_constant :TREE_API_NODE_SEARCHES
 
   TREE_API_NODE_SEARCH_FIELDS = [
     :labelee,
     :parent,
   ].freeze
+  private_constant :TREE_API_NODE_SEARCH_FIELDS
 
   TREE_API_NODE_ACTIONS = [
     :click,
@@ -29,11 +35,13 @@ module Dogtail
     :point,
     :typeText,
   ].freeze
+  private_constant :TREE_API_NODE_ACTIONS
 
   TREE_API_APP_SEARCHES = TREE_API_NODE_SEARCHES + [
     :dialog,
     :window,
   ]
+  private_constant :TREE_API_APP_SEARCHES
 
   class Failure < StandardError
   end

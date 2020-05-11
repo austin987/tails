@@ -15,6 +15,7 @@ module RemoteShell
   end
 
   DEFAULT_TIMEOUT = 20 * 60
+  private_constant :DEFAULT_TIMEOUT
 
   # Counter providing unique id:s for each communicate() call.
   @@request_id ||= 0
