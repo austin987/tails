@@ -219,6 +219,7 @@ Before('@product') do |scenario|
   @os_loader = 'MBR'
   @sudo_password = 'asdf'
   @persistence_password = 'asdf'
+  @has_been_reset = false
   # See comment for add_extra_allowed_host() above.
   @extra_allowed_hosts ||= []
 end

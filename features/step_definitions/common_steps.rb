@@ -247,6 +247,7 @@ def enter_boot_menu_cmdline
     rescue FindFailed => e
       debug_log('We missed the boot menu before we could deal with it, ' \
                 'resetting...')
+      @has_been_reset = true
       $vm.reset
       raise e
     ensure
@@ -276,6 +277,24 @@ Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_a
                " #{@boot_options}",
                [boot_key])
   @screen.wait('TailsGreeter.png', 5 * 60)
+  # When enter_boot_menu_cmdline has rebooted the system after the Greeter
+  # had already been displayed, after the reboot:
+  # 1. The Greeter shows up, but it's an artifact of the previous boot
+  #    (from graphics memory?)
+  # 2. The screen turns black (for a few seconds on my system).
+  # 3. Finally, the Greeter from this boot starts (one can see the animation).
+  #
+  # In such a situation, the previous instruction will erroneously
+  # succeed at step 1, and then following steps that interact with
+  # the Greeter can fail, if they're performed before step 3 happens.
+  #
+  # To workaround this problem, let's wait a bit for the transition
+  # steps 1 and 3 happens, when we know we had to reboot the VM
+  # in enter_boot_menu_cmdline.
+  if @has_been_reset
+    sleep 15
+    @screen.find('TailsGreeter.png')
+  end
   $vm.wait_until_remote_shell_is_up
   step 'I configure Tails to use a simulated Tor network'
   # This is required to use APT in the test suite as explained in
