@@ -50,7 +50,7 @@ class Display
   def screenshot(target)
     # Restart the virt-viewer connection if it's not active anymore
     # (for example because the user connected via virt-viewer themselves)
-    restart if not active?
+    restart unless active?
     FileUtils.rm_f(target)
     popen_wait(['import', '-quality', '100%', '-window', 'root', target])
     assert($CHILD_STATUS.success?)
