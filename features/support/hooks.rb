@@ -246,9 +246,11 @@ After('@product') do |scenario|
     hrs  = format('%<hrs>02d',  hrs: time_of_fail / (60 * 60))
     elapsed = "#{hrs}:#{mins}:#{secs}"
     info_log("Scenario failed at time #{elapsed}")
-    screenshot_path = sanitize_filename("#{scenario.name}.png")
-    $vm.display.screenshot(screenshot_path)
-    save_failure_artifact('Screenshot', screenshot_path)
+    if $vm.display
+      screenshot_path = sanitize_filename("#{scenario.name}.png")
+      $vm.display.screenshot(screenshot_path)
+      save_failure_artifact('Screenshot', screenshot_path)
+    end
     exception_name = scenario.exception.class.name
     case exception_name
     when 'FirewallAssertionFailedError'
