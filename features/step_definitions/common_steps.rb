@@ -201,10 +201,6 @@ When /^I cold reboot the computer$/ do
   step 'I start the computer'
 end
 
-When /^I destroy the computer$/ do
-  $vm.destroy_and_undefine
-end
-
 def boot_menu_cmdline_image
   case @os_loader
   when 'UEFI'
