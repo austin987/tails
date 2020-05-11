@@ -45,7 +45,7 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on
     secret_key = $config['Unsafe_SSH_private_key']
     public_key = $config['Unsafe_SSH_public_key']
   else
-    read_and_validate_ssh_config server_type
+    read_and_validate_ssh_config(server_type)
     secret_key = $config[server_type]['private_key']
     public_key = $config[server_type]['public_key']
   end
@@ -87,7 +87,7 @@ end
 When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
   case location
   when 'Internet'
-    read_and_validate_ssh_config 'SSH'
+    read_and_validate_ssh_config('SSH')
   when 'LAN'
     @ssh_port = @sshd_server_port
     @ssh_username = 'user'

@@ -27,7 +27,7 @@ def get_persistence_presets_config(skip_links = false)
     is_link = options.include? 'link'
     next if is_link && skip_links
 
-    source_str = options.find { |option| /^source=/.match option }
+    source_str = options.find { |option| /^source=/.match(option) }
     # If no source is given as an option, live-boot's persistence
     # feature defaults to the destination minus the initial "/".
     source = if source_str.nil?
