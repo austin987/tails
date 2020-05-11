@@ -86,19 +86,12 @@ def try_for(timeout, **options)
         # (never?) a good idea, so we rethrow them. See below why we
         # also rethrow *all* the unique exceptions.
         raise e
-      rescue StandardError => e
-        # Most other exceptions, that inherit from StandardError, are ignored
-        # while trying the block. We save the last exception so we can
-        # print it in case of a timeout.
+      rescue Exception => e # rubocop:disable Lint/RescueException
+        # All other exceptions are ignored while trying the block.
+        # We save the last exception so we can print it in case of a timeout.
         last_exception = e
         debug_log('try_for: failed with exception: ' \
                   "#{last_exception.class}: #{last_exception}") if options[:log]
-      rescue Exception => e # rubocop:disable Lint/RescueException
-        # Any other exception is rethrown as-is: it is probably not
-        # the kind of failure that try_for is supposed to mask.
-        # For example, try_for should not prevent a SignalException
-        # from being handled by Ruby.
-        raise e
       end
       sleep options[:delay]
     end
