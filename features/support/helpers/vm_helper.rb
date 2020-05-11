@@ -39,7 +39,11 @@ class VMNet
 
   def update(xml: nil)
     xml = if block_given?
-            (yield net_xml).to_s
+            xml = net_xml
+            # The block modifies the mutable xml (REXML::Document) object
+            # as a side-effect.
+            yield xml
+            xml.to_s
           elsif !xml.nil?
             xml.to_s
           else
@@ -95,7 +99,11 @@ class VM
 
   def update(xml: nil)
     xml = if block_given?
-            (yield domain_xml).to_s
+            xml = domain_xml
+            # The block modifies the mutable xml (REXML::Document) object
+            # as a side-effect.
+            yield xml
+            xml.to_s
           elsif !xml.nil?
             xml.to_s
           else
@@ -144,7 +152,6 @@ class VM
          .add_attributes('offset'     => 'variable',
                          'basis'      => 'utc',
                          'adjustment' => adjustment.to_s)
-      xml
     end
   end
 
@@ -179,7 +186,6 @@ class VM
 
     update do |xml|
       xml.elements['domain/os/boot'].attributes['dev'] = dev
-      xml
     end
   end
 
@@ -195,7 +201,6 @@ class VM
         File.read("#{@xml_path}/cdrom.xml")
       ).root
       xml.elements['domain/devices'].add_element(cdrom_rexml)
-      xml
     end
   end
 
@@ -207,7 +212,6 @@ class VM
       raise 'No CDROM device is present' if cdrom_el.nil?
 
       xml.elements['domain/devices'].delete_element(cdrom_el)
-      xml
     end
   end
 
@@ -221,7 +225,6 @@ class VM
       raise 'No CDROM device is present' if cdrom_el.nil?
 
       cdrom_el.delete_element('source')
-      xml
     end
   rescue Libvirt::Error => e
     # While the CD-ROM is removed successfully we still get this
@@ -242,7 +245,6 @@ class VM
     update do |xml|
       cdrom_el = xml.elements["domain/devices/disk[@device='cdrom']"]
       cdrom_el.add_element('source', { 'file' => image })
-      xml
     end
   end
 
@@ -270,7 +272,6 @@ class VM
     else
       update do |xml|
         xml.elements['domain/devices'].add_element(device_xml)
-        xml
       end
     end
   end
@@ -392,7 +393,6 @@ class VM
       xml.elements['domain/os'].add_element(
         REXML::Document.new('<loader>/usr/share/ovmf/OVMF.fd</loader>')
       )
-      xml
     end
   end
 
