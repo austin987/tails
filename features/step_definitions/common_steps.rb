@@ -219,17 +219,13 @@ def boot_menu_image
   end
 end
 
-def enter_boot_menu_cmdline
-  boot_timeout = 3 * 60
-  # Simply looking for the boot splash image is not robust; sometimes
-  # our image matching is not fast enough to see it. Here we hope that spamming
-  # UP, which will halt the boot process, will make this a bit more robust.
-  up_spammer_code = <<-SCRIPT
+def up_spammer_code(domain_name)
+  <<-SCRIPT
     require 'libvirt'
     up_key_code = 0x67
     virt = Libvirt::open("qemu:///system")
     begin
-      domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
+      domain = virt.lookup_domain_by_name('#{domain_name}')
       loop do
         domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [up_key_code])
         sleep 1
@@ -238,11 +234,18 @@ def enter_boot_menu_cmdline
       virt.close
     end
   SCRIPT
+end
+
+def enter_boot_menu_cmdline
+  boot_timeout = 3 * 60
+  # Simply looking for the boot splash image is not robust; sometimes
+  # our image matching is not fast enough to see it. Here we hope that spamming
+  # UP, which will halt the boot process, will make this a bit more robust.
   # The below code is not completely reliable, so we might have to
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
-      up_spammer = IO.popen(['ruby', '-e', up_spammer_code])
+      up_spammer = IO.popen(['ruby', '-e', up_spammer_code($vm.domain_name)])
       @screen.wait(boot_menu_image, 15)
     rescue FindFailed => e
       debug_log('We missed the boot menu before we could deal with it, ' \
