@@ -1102,9 +1102,10 @@ Given /^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/ do 
 
   step 'I start "Disks" via GNOME Activities Overview'
   disks = Dogtail::Application.new('gnome-disks')
-  disks.children(roleName: 'table cell').find do |row|
-    /^#{size_in_GB_of_destination_disk} GB Drive/.match(row.name)
-  end.grabFocus
+  destination_disk_label_regexp = /^#{size_in_GB_of_destination_disk} GB Drive/
+  disks.children(roleName: 'table cell')
+       .find { |row| destination_disk_label_regexp.match(row.name) }
+       .grabFocus
   disks.child('Menu', roleName: 'toggle button').click
   disks.child('Restore Disk Image…', roleName: 'menu item').click
   restore_dialog = disks.child('Restore Disk Image',

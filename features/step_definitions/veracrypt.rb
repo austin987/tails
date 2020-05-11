@@ -195,9 +195,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   )
   case support
   when 'volume'
-    disks.children(roleName: 'table cell').find do |row|
-      /^#{size} Drive/.match(row.name)
-    end.grabFocus
+    disks.children(roleName: 'table cell')
+         .find { |row| /^#{size} Drive/.match(row.name) }
+         .grabFocus
   when 'file container'
     gnome_shell = Dogtail::Application.new('gnome-shell')
     menu = gnome_shell.menu('Disks')
@@ -227,9 +227,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.press('Return')
     try_for(15) do
       begin
-        disks.children(roleName: 'table cell').find do |row|
-          /^#{size} Loop Device/.match(row.name)
-        end.grabFocus
+        disks.children(roleName: 'table cell')
+             .find { |row| /^#{size} Loop Device/.match(row.name) }
+             .grabFocus
         true
       rescue NoMethodError
         false
