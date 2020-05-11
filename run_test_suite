@@ -276,7 +276,7 @@ done
 
 trap "test_suite_cleanup" EXIT HUP INT QUIT TERM
 
-if [ "${EUID}" -ne 0 -a -z "${ALLOW_NON_ROOT}" ]; then
+if [ "${EUID}" -ne 0 ] && [ -z "${ALLOW_NON_ROOT}" ]; then
     error "you are not running as root; if you really know what you are" \
           "doing, see the --allow-non-root option"
 fi
