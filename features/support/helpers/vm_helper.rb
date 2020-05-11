@@ -17,7 +17,7 @@ class VMNet
     rexml.elements['network/name'].text = @net_name
     rexml.elements['network'].add_element('uuid')
     rexml.elements['network/uuid'].text = LIBVIRT_NETWORK_UUID
-    update(rexml.to_s)
+    update(xml: rexml.to_s)
   rescue StandardError => e
     destroy_and_undefine
     raise e
@@ -33,7 +33,18 @@ class VMNet
     # Nothing to clean up
   end
 
-  def update(xml)
+  def net_xml
+    REXML::Document.new(@net.xml_desc)
+  end
+
+  def update(xml: nil)
+    xml = if block_given?
+            (yield net_xml).to_s
+          elsif !xml.nil?
+            xml.to_s
+          else
+            raise 'update needs either XML or a block'
+          end
     destroy_and_undefine
     @net = @virt.define_network_xml(xml)
     @net.create
@@ -44,7 +55,6 @@ class VMNet
   end
 
   def bridge_ip_addr
-    net_xml = REXML::Document.new(@net.xml_desc)
     IPAddr.new(net_xml.elements['network/ip'].attributes['address']).to_s
   end
 
