@@ -126,7 +126,6 @@ def reach_checkpoint(name)
   step 'a computer'
   if VM.snapshot_exists?(name)
     $vm.restore_snapshot(name)
-    post_snapshot_restore_hook(name)
   else
     checkpoint = CHECKPOINTS[name]
     checkpoint_description = checkpoint[:description]
@@ -164,6 +163,11 @@ def reach_checkpoint(name)
     end
     $vm.save_snapshot(name)
   end
+  # VM#save_snapshot restores the RAM-only snapshot immediately
+  # after saving it, in which case post_snapshot_restore_hook is
+  # useful to ensure we've reached a good starting point, so we run
+  # it in all cases, including even when've just saved a new snapshot.
+  post_snapshot_restore_hook(name)
 end
 # rubocop:enable Metrics/AbcSize
 # rubocop:enable Metrics/MethodLength
