@@ -179,15 +179,14 @@ end
 
 AfterFeature('@product') do
   unless KEEP_SNAPSHOTS
-    CHECKPOINTS.each do |name, vals|
-      VM.remove_snapshot(name) if vals[:temporary] && VM.snapshot_exists?(name)
-    end
+    CHECKPOINTS
+      .select   { |name, vals| vals[:temporary] && VM.snapshot_exists?(name) }
+      .each_key { |name| VM.remove_snapshot(name) }
   end
-  $vmstorage.list_volumes.each do |vol_name|
-    next if vol_name == '__internal'
-
-    $vmstorage.delete_volume(vol_name)
-  end
+  $vmstorage
+    .list_volumes
+    .reject { |vol_name| vol_name == '__internal' }
+    .each   { |vol_name| $vmstorage.delete_volume(vol_name) }
 end
 
 # Cucumber Before hooks are executed in the order they are listed, and
