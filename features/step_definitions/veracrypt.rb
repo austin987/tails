@@ -130,7 +130,7 @@ end
 When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( with a keyfile| with a PIM)?$/ do |type, with_options|
   case with_options
   when ' with a PIM'
-    assert_equal(type, 'basic',
+    assert_equal('basic', type,
                  'Only basic containers are supported with PIM.')
     @veracrypt_needs_pim = true
     # Instead of creating a container, we use the one we have in Git.

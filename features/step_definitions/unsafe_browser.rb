@@ -177,6 +177,6 @@ Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
   when ''
     assert(pkts.positive?, 'Packets have not gone out to the internet.')
   when 'not'
-    assert_equal(pkts, 0, 'Packets have gone out to the internet.')
+    assert_equal(0, pkts, 'Packets have gone out to the internet.')
   end
 end

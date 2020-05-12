@@ -10,7 +10,7 @@ def udev_watchdog_monitored_device
   ps_output_scan = ps_output.scan(
     /^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/
   )
-  assert_equal(ps_output_scan.count, 1,
+  assert_equal(1, ps_output_scan.count,
                'There should be one udev-watchdog running.')
   monitored_out = ps_output_scan.flatten[0]
   assert_not_nil(monitored_out)
@@ -23,7 +23,7 @@ def udev_watchdog_monitored_device
 end
 
 Given /^udev-watchdog is monitoring the correct device$/ do
-  assert_equal(udev_watchdog_monitored_device, boot_device)
+  assert_equal(boot_device, udev_watchdog_monitored_device)
 end
 
 def used_ram_in_MiB

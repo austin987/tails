@@ -394,7 +394,7 @@ Then /^Pidgin has the expected persistent accounts configured$/ do
 end
 
 Then /^Pidgin has the expected persistent OTR keys$/ do
-  assert_equal(pidgin_otr_keys, @persistent_pidgin_otr_keys)
+  assert_equal(@persistent_pidgin_otr_keys, pidgin_otr_keys)
 end
 
 def pidgin_add_certificate_from(cert_file)

@@ -129,7 +129,7 @@ When /^the installed version of package "([^"]*)" is( newer than)? "([^"]*)"( af
   if newer_than
     cmd_helper("dpkg --compare-versions '#{version}' lt '#{current_version}'")
   else
-    assert_equal(current_version, version)
+    assert_equal(version, current_version)
   end
 end
 
