@@ -42,7 +42,7 @@ Feature: Untrusted partitions
     Then drive "fake_TailsData" is detected by Tails
     And Tails Greeter has not detected a persistence partition
 
-  Scenario: Tails can boot from live systems stored on hard drives
+  Scenario: Tails can be forced to boot from live systems stored on hard drives
     Given a computer
     And I temporarily create a 2 GiB disk named "live_hd"
     And I write the Tails ISO image to disk "live_hd"
