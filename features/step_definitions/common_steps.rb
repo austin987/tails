@@ -126,7 +126,6 @@ When /^I start the computer$/ do
   assert(!$vm.running?,
          'Trying to start a VM that is already running')
   $vm.start
-  post_vm_start_hook
 end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and genuine APT sources)?( and I login)?$/ do |dvd_boot, network_unplugged, keep_apt_sources, do_login|
@@ -328,6 +327,7 @@ Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_a
     @screen.find('TailsGreeter.png')
   end
   $vm.wait_until_remote_shell_is_up
+  post_vm_start_hook
   step 'I configure Tails to use a simulated Tor network'
   # This is required to use APT in the test suite as explained in
   # commit e2510fae79870ff724d190677ff3b228b2bf7eac
