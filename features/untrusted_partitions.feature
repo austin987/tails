@@ -3,14 +3,19 @@ Feature: Untrusted partitions
   As a Tails user
   I don't want to touch other media than the one Tails runs from
 
-  Scenario: Tails will not enable disk swap
+  Scenario: Tails ignores a swap volume and another Tails that are on an internal hard drive
     Given a computer
     And I temporarily create a 100 MiB disk named "swap"
     And I create a gpt swap partition on disk "swap"
     And I plug SATA drive "swap"
+    And I temporarily create a 2 GiB disk named "live_hd"
+    And I write the Tails ISO image to disk "live_hd"
+    And I plug SATA drive "live_hd"
     When I start Tails with network unplugged and I login
     Then a "swap" partition was detected by Tails on drive "swap"
+    And drive "live_hd" is detected by Tails
     But Tails has no disk swap enabled
+    And drive "live_hd" is not mounted
 
   Scenario: Tails will detect LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is set
     Given a computer
@@ -50,15 +55,6 @@ Feature: Untrusted partitions
     And I set Tails to boot with options "live-media="
     When I start Tails with network unplugged and I login
     Then Tails is running from SATA drive "live_hd"
-
-  Scenario: Tails booting from a DVD ignores another Tails that's on an internal hard drive
-    Given a computer
-    And I temporarily create a 2 GiB disk named "live_hd"
-    And I write the Tails ISO image to disk "live_hd"
-    And I plug SATA drive "live_hd"
-    And I start Tails from DVD with network unplugged and I login
-    Then drive "live_hd" is detected by Tails
-    And drive "live_hd" is not mounted
 
   Scenario: Booting Tails does not automount untrusted partitions
     Given a computer
