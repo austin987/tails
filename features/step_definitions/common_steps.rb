@@ -236,6 +236,35 @@ def up_spammer_code(domain_name)
   SCRIPT
 end
 
+def start_up_spammer(domain_name)
+  up_spammer_unit_name = 'tails-test-suite-up-spammer.service'
+  bus = ENV['USER'] == 'root' ? '--system' : '--user'
+  systemctl = ['/bin/systemctl', bus]
+  kill_up_spammer = proc do
+    begin
+      if system(*systemctl, '--quiet', 'is-active', up_spammer_unit_name)
+        system(*systemctl, 'stop', up_spammer_unit_name)
+      end
+    rescue StandardError
+      # noop
+    end
+  end
+  kill_up_spammer.call
+  up_spammer_job = fatal_system(
+    '/usr/bin/systemd-run',
+    bus,
+    "--unit=#{up_spammer_unit_name}",
+    '--quiet',
+    # XXX: enable this once we require systemd v236 or newer
+    # for running our test suite
+    # '--collect',
+    '/usr/bin/ruby',
+    '-e', up_spammer_code(domain_name)
+  )
+  add_after_scenario_hook { kill_up_spammer.call }
+  [up_spammer_job, kill_up_spammer]
+end
+
 def enter_boot_menu_cmdline
   boot_timeout = 3 * 60
   # Simply looking for the boot splash image is not robust; sometimes
@@ -245,8 +274,20 @@ def enter_boot_menu_cmdline
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
-      up_spammer = IO.popen(['ruby', '-e', up_spammer_code($vm.domain_name)])
+      _up_spammer_job, kill_up_spammer = start_up_spammer($vm.domain_name)
       @screen.wait(boot_menu_image, 15)
+      kill_up_spammer.call
+
+      # Navigate to the end of the kernel command-line
+      case @os_loader
+      when 'UEFI'
+        @screen.type('e')
+        3.times { @screen.press('Down') }
+        @screen.press('End')
+      else
+        @screen.press('Tab')
+      end
+      @screen.wait(boot_menu_cmdline_image, 5)
     rescue FindFailed => e
       debug_log('We missed the boot menu before we could deal with it, ' \
                 'resetting...')
@@ -254,22 +295,10 @@ def enter_boot_menu_cmdline
       $vm.reset
       raise e
     ensure
-      Process.kill('TERM', up_spammer.pid)
-      up_spammer.close
+      kill_up_spammer.call
     end
     true
   end
-
-  # Navigate to the end of the kernel command-line
-  case @os_loader
-  when 'UEFI'
-    @screen.type('e')
-    3.times { @screen.press('Down') }
-    @screen.press('End')
-  else
-    @screen.press('Tab')
-  end
-  @screen.wait(boot_menu_cmdline_image, 5)
 end
 
 Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_apt_sources|
