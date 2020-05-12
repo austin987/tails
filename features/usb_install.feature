@@ -82,8 +82,8 @@ Feature: Installing Tails to a USB drive
   @fragile @uefi
   Scenario: Booting Tails from a USB drive in UEFI mode
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
-    Then I power off the computer
-    Given the computer is set to boot in UEFI mode
+    And I power off the computer
+    And the computer is set to boot in UEFI mode
     When I start Tails from USB drive "__internal" with network unplugged and I login
     Then Tails is running from USB drive "__internal"
     And the boot device has safe access rights
