@@ -103,23 +103,6 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
-  Scenario: Writing a Tails isohybrid to a USB drive and booting it, then installing Tails on top of it using Tails Installer, and it still boots
-    Given a computer
-    And I temporarily create a 7200 MiB disk named "isohybrid"
-    And I write the Tails ISO image to disk "isohybrid"
-    And I start Tails from USB drive "isohybrid" with network unplugged and I login
-    Then Tails is running from USB drive "isohybrid"
-    When I shutdown Tails and wait for the computer to power off
-    And I start Tails from DVD with network unplugged and I login
-    And I install Tails to USB drive "isohybrid" by cloning
-    Then the running Tails is installed on USB drive "isohybrid"
-    But there is no persistence partition on USB drive "isohybrid"
-    When I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "isohybrid" with network unplugged and I login
-    Then Tails is running from USB drive "isohybrid"
-    And the boot device has safe access rights
-    And there is no persistence partition on USB drive "isohybrid"
-
   Scenario: Installing Tails with GNOME Disks from a USB image
     Given I have started Tails from DVD without network and logged in
     And I plug and mount a USB drive containing a Tails USB image
