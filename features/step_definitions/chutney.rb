@@ -51,12 +51,13 @@ def ensure_chutney_is_running
     # Nothing to kill
   end
 
-  if KEEP_SNAPSHOTS
+  if KEEP_CHUTNEY
     begin
       chutney_cmd.call('start')
     rescue Test::Unit::AssertionFailedError
       if File.directory?(env['CHUTNEY_DATA_DIR'])
-        raise 'You are running with --keep-snapshots but Chutney failed ' \
+        raise 'You are running with --keep-snapshots or --keep-chutney, ' \
+              'but Chutney failed ' \
               'to start with its current data directory. To recover you ' \
               "likely want to delete '#{env['CHUTNEY_DATA_DIR']}' and " \
               'all test suite snapshots and then start over.'
@@ -77,7 +78,7 @@ def ensure_chutney_is_running
 
   at_exit do
     chutney_cmd.call('stop')
-    chutney_data_dir_cleanup.call unless KEEP_SNAPSHOTS
+    chutney_data_dir_cleanup.call unless KEEP_CHUTNEY
   end
 
   # We have to sanity check that all nodes are running because

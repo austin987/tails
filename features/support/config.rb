@@ -40,6 +40,7 @@ ENV['TMPDIR'] = $config['TMPDIR']
 DEBUG_LOG_PSEUDO_FIFO = "#{$config['TMPDIR']}/debug_log_pseudo_fifo".freeze
 DISPLAY = ENV['DISPLAY']
 GIT_DIR = ENV['PWD']
+KEEP_CHUTNEY = !ENV['KEEP_CHUTNEY'].nil?
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 LIVE_USER = cmd_helper(
   '. config/chroot_local-includes/etc/live/config.d/username.conf; ' \

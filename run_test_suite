@@ -87,9 +87,12 @@ Options for '@product' features:
                      that allows to update the image. If run from a graphical
                      environment, any found candidate image will be displayed
                      in a pop-up.
+  --keep-chutney     Don't ever clean Chutney data directory.
+                     This can be a big time saver when debugging steps
+                     when --keep-snapshots is not an option.
   --keep-snapshots   Don't ever delete any snapshots (including ones marked as
                      temporary). This can be a big time saver when debugging new
-                     features.
+                     features. Implies --keep-chutney.
   --tmpdir           Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
@@ -208,11 +211,12 @@ VNC_VIEWER=
 VNC_SERVER=
 INTERACTIVE_DEBUGGING=
 IMAGE_BUMPING_MODE=
+KEEP_CHUTNEY=
 KEEP_SNAPSHOTS=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="allow-non-root,artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,iso:,old-iso:,interactive-debugging,image-bumping-mode"
+LONGOPTS="allow-non-root,artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-chutney,keep-snapshots,iso:,old-iso:,interactive-debugging,image-bumping-mode"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -247,7 +251,11 @@ while [ $# -gt 0 ]; do
         --image-bumping-mode)
             export IMAGE_BUMPING_MODE="yes"
             ;;
+        --keep-chutney)
+            export KEEP_CHUTNEY="yes"
+            ;;
         --keep-snapshots)
+            export KEEP_CHUTNEY="yes"
             export KEEP_SNAPSHOTS="yes"
             ;;
         --tmpdir)
