@@ -89,20 +89,6 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And Tails has started in UEFI mode
 
-  Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions, and making sure that it boots
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 7200 MiB disk named "mbr"
-    And I create a msdos label on disk "mbr"
-    And I plug USB drive "mbr"
-    And I install Tails to USB drive "mbr" by cloning
-    Then the running Tails is installed on USB drive "mbr"
-    But there is no persistence partition on USB drive "mbr"
-    When I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "mbr" with network unplugged and I login
-    Then Tails is running from USB drive "mbr"
-    And the boot device has safe access rights
-    And there is no persistence partition on USB drive "mbr"
-
   Scenario: Installing Tails with GNOME Disks from a USB image
     Given I have started Tails from DVD without network and logged in
     And I plug and mount a USB drive containing a Tails USB image
