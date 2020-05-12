@@ -109,8 +109,14 @@ Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_c
   bot_opts = account.select { |k, _| ['connect_server'].include?(k) }
   bot_opts['auto_join'] = [@chat_room_jid] if join_chat
   @friend_name = account['username']
-  @chatbot = ChatBot.new(account['username'] + '@' + account['domain'],
-                         account['password'], account['otr_key'], **bot_opts)
+  @chatbot = ChatBot.new(
+    account['username'] + '@' + account['domain'],
+    account['password'],
+    account['otr_key'],
+    # XXX:Buster: once we stop supporting running our test suite on Stretch,
+    # replace this with: **(bot_opts.transform_keys(&:to_sym))
+    **(bot_opts.each_with_object({}) { |(k, v), a| a[k.to_sym] = v })
+  )
   @chatbot.start
   add_after_scenario_hook { @chatbot.stop }
   $vm.focus_window('Buddy List')

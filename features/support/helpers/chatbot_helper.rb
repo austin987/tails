@@ -24,10 +24,10 @@ class ChatBot
       @password,
       @otr_key_file.path,
     ]
-    if @opts['connect_server']
-      cmd += ['--connect-server', @opts['connect_server']]
+    if @opts[:connect_server]
+      cmd += ['--connect-server', @opts[:connect_server]]
     end
-    cmd += ['--auto-join'] + @opts['auto_join'] if @opts['auto_join']
+    cmd += ['--auto-join'] + @opts[:auto_join] if @opts[:auto_join]
     cmd += ['--log-file', DEBUG_LOG_PSEUDO_FIFO]
 
     job = IO.popen(cmd)
