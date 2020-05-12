@@ -17,7 +17,7 @@ Feature: Untrusted partitions
     But Tails has no disk swap enabled
     And drive "live_hd" is not mounted
 
-  Scenario: Tails will detect LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is set
+  Scenario: Tails detects LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is set
     Given a computer
     And I temporarily create a 100 MiB disk named "fake_TailsData"
     And I create a gpt partition labeled "TailsData" with an ext4 filesystem encrypted with password "asdf" on disk "fake_TailsData"
@@ -27,7 +27,7 @@ Feature: Untrusted partitions
     Then drive "fake_TailsData" is detected by Tails
     And Tails Greeter has detected a persistence partition
 
-  Scenario: Tails will not detect LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is unset
+  Scenario: Tails detects LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is unset
     Given a computer
     And I temporarily create a 100 MiB disk named "fake_TailsData"
     And I create a gpt partition labeled "TailsData" with an ext4 filesystem encrypted with password "asdf" on disk "fake_TailsData"
@@ -37,7 +37,7 @@ Feature: Untrusted partitions
     Then drive "fake_TailsData" is detected by Tails
     And Tails Greeter has not detected a persistence partition
 
-  Scenario: Tails will not detect LUKS-encrypted GPT partitions labeled "TailsData" stored on local hard drives as persistence volumes
+  Scenario: Tails detects LUKS-encrypted GPT partitions labeled "TailsData" stored on local hard drives as persistence volumes
     Given a computer
     And I temporarily create a 100 MiB disk named "fake_TailsData"
     And I create a gpt partition labeled "TailsData" with an ext4 filesystem encrypted with password "asdf" on disk "fake_TailsData"

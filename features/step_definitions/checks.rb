@@ -7,11 +7,11 @@ def shipped_openpgp_keys
   openpgp_fingerprints
 end
 
-Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) months$/ do |months|
+Then /^the OpenPGP keys shipped with Tails are valid for the next (\d+) months$/ do |months|
   invalid = []
   shipped_openpgp_keys.each do |key|
     begin
-      step "the shipped OpenPGP key #{key} will be valid " \
+      step "the shipped OpenPGP key #{key} are valid " \
            "for the next #{months} months"
     rescue Test::Unit::AssertionFailedError
       invalid << key
@@ -23,7 +23,7 @@ Then /^the OpenPGP keys shipped with Tails will be valid for the next (\d+) mont
          "in #{months} months: #{invalid.join(', ')}")
 end
 
-Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be valid for the next (\d+) months$/ do |fingerprint, max_months|
+Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) are valid for the next (\d+) months$/ do |fingerprint, max_months|
   if fingerprint
     cmd = 'gpg'
     user = LIVE_USER
