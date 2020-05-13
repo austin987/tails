@@ -107,26 +107,26 @@ def add_after_scenario_hook(&block)
   @after_scenario_hooks << block
 end
 
-def save_failure_artifact(type, path)
-  $failure_artifacts << [type, path]
+def save_failure_artifact(desc, path)
+  $failure_artifacts << [desc, path]
 end
 
-def _save_vm_file_content(file:, destfile:, type:)
+def _save_vm_file_content(file:, destfile:, desc:)
   destfile = $config['TMPDIR'] + '/' + destfile
   File.open(destfile, 'w') { |f| f.write($vm.file_content(file)) }
-  save_failure_artifact(type, destfile)
+  save_failure_artifact(desc, destfile)
 rescue Exception => e
   info_log("Exception thrown while trying to save #{destfile}: " +
            "#{e.class.name}: #{e}")
 end
 
-def save_vm_command_output(command:, id:, type: nil)
+def save_vm_command_output(command:, id:, desc: nil)
   basename = "artifact.cmd_output_#{id}"
   $vm.execute("#{command} > /tmp/#{basename} 2>&1")
   _save_vm_file_content(
     file: "/tmp/#{basename}",
     destfile: basename,
-    type: type || "Output of #{command}"
+    desc: desc || "Output of #{command}"
   )
 end
 
@@ -134,15 +134,15 @@ def save_journal
   save_vm_command_output(
     command: 'journalctl -a --no-pager',
     id: 'journal',
-    type: 'systemd Journal'
+    desc: 'systemd Journal'
   )
 end
 
-def save_vm_file_content(file, type: nil)
+def save_vm_file_content(file, desc: nil)
   _save_vm_file_content(
     file: file,
     destfile: 'artifact.file_content_' + file.gsub('/', '_').sub(/^_/, ''),
-    type: type || "Content of #{file}"
+    desc: desc || "Content of #{file}"
   )
 end
 
@@ -303,13 +303,13 @@ After('@product') do |scenario|
       save_journal
     end
     $failure_artifacts.sort!
-    $failure_artifacts.each do |type, file|
+    $failure_artifacts.each do |desc, file|
       artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
       artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
       assert(File.exist?(file))
       FileUtils.mv(file, artifact_path)
       info_log
-      info_log_artifact_location(type, artifact_path)
+      info_log_artifact_location(desc, artifact_path)
     end
     if $config["INTERACTIVE_DEBUGGING"]
       pause(
