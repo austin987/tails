@@ -111,16 +111,33 @@ def save_failure_artifact(type, path)
   $failure_artifacts << [type, path]
 end
 
-def save_journal(path)
-  File.open("#{path}/systemd.journal", 'w') { |file|
-    $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
-    file.write($vm.file_content('/tmp/systemd.journal'))
-  }
-  save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
+def _save_vm_file_content(file:, destfile:, type:)
+  destfile = $config['TMPDIR'] + '/' + destfile
+  File.open(destfile, 'w') { |f| f.write($vm.file_content(file)) }
+  save_failure_artifact(type, destfile)
 rescue Exception => e
-  info_log("Exception thrown while trying to save the journal: " +
+  info_log("Exception thrown while trying to save #{destfile}: " +
            "#{e.class.name}: #{e}")
 end
+
+def save_vm_command_output(command:, id:, type: nil)
+  basename = "artifact.cmd_output_#{id}"
+  $vm.execute("#{command} > /tmp/#{basename} 2>&1")
+  _save_vm_file_content(
+    file: "/tmp/#{basename}",
+    destfile: basename,
+    type: type || "Output of #{command}"
+  )
+end
+
+def save_journal
+  save_vm_command_output(
+    command: 'journalctl -a --no-pager',
+    id: 'journal',
+    type: 'systemd Journal'
+  )
+end
+
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
 # are Tor nodes, located on the LAN, or allowed for some operational reason.
@@ -276,7 +293,7 @@ After('@product') do |scenario|
     # we cause a system crash), so let's collect everything depending
     # on the remote shell here:
     if $vm && $vm.remote_shell_is_up?
-      save_journal($config['TMPDIR'])
+      save_journal
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
