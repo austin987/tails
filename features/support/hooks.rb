@@ -302,6 +302,20 @@ After('@product') do |scenario|
     # on the remote shell here:
     if $vm && $vm.remote_shell_is_up?
       save_journal
+      save_vm_command_output(
+        command: 'ls -lAR --full-time /var/lib/apt',
+        id: 'var_lib_apt',
+      )
+      save_vm_command_output(
+        command: 'mount',
+        id: 'mount',
+      )
+      save_vm_command_output(
+        command: 'ls -lA --full-time /live/persistence/TailsData_unlocked',
+        id: 'persistent_volume',
+      )
+      save_vm_file_content('/var/log/live-persist')
+      save_vm_file_content('/run/live-additional-software/log')
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |desc, file|
