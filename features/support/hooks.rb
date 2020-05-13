@@ -138,6 +138,13 @@ def save_journal
   )
 end
 
+def save_vm_file_content(file, type: nil)
+  _save_vm_file_content(
+    file: file,
+    destfile: 'artifact.file_content_' + file.gsub('/', '_').sub(/^_/, ''),
+    type: type || "Content of #{file}"
+  )
+end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
 # are Tor nodes, located on the LAN, or allowed for some operational reason.
