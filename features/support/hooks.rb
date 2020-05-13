@@ -120,8 +120,8 @@ rescue Exception => e
            "#{e.class.name}: #{e}")
 end
 
-def save_vm_command_output(command:, id:, desc: nil)
-  basename = "artifact.cmd_output_#{id}"
+def save_vm_command_output(command:, id:, basename: nil, desc: nil)
+  basename ||= "artifact.cmd_output_#{id}"
   $vm.execute("#{command} > /tmp/#{basename} 2>&1")
   _save_vm_file_content(
     file: "/tmp/#{basename}",
@@ -134,6 +134,7 @@ def save_journal
   save_vm_command_output(
     command: 'journalctl -a --no-pager',
     id: 'journal',
+    basename: 'artifact.journal',
     desc: 'systemd Journal'
   )
 end
