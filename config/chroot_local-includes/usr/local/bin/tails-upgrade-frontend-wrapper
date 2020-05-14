@@ -62,7 +62,8 @@ def main(*args):
             "/bin/sh", "-c",
             "xhost +SI:localuser:{user};"
             "sudo -u {user} /usr/local/bin/tails-upgrade-frontend {args};"
-            "xhost -SI:localuser:{user}".format(user=RUN_AS_USER, args=" ".join(args))
+            "xhost -SI:localuser:{user}".format(user=RUN_AS_USER,
+                                                args=" ".join(args))
         )
     )
 
@@ -70,11 +71,12 @@ def main(*args):
 def error(msg):
     """Show error and exit."""
     cli_text = '{}: {} {}'.format(CMD, gettext('error:'), msg)
-    dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(gettext('Error'), msg)
+    dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(gettext('Error'),
+                                                          msg)
     print(cli_text, file=sys.stderr)
 
     sh.zenity('--error', '--ellipsize', '--title', "", '--text', dialog_text,
-              _ok_code=[0,1,5])
+              _ok_code=[0, 1, 5])
     sys.exit(1)
 
 
