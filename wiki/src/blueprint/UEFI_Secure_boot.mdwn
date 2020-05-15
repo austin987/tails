@@ -59,8 +59,13 @@ Automated testing
 =================
 
 * The hard(est) part seems to be about how to enroll the signing keys
-  into the nvram file. One option is to use `EnrollDefaultKeys.efi`
-  from OVMF.
+  into the nvram file.
+   - [[!debpkg ovmf]] 0.0~20200229-2 installs a "ms" firmware
+     descriptor, "which has keys pre-enrolled and Secure Boot enabled".
+     E.g. in the package there's `/usr/share/OVMF/OVMF_VARS.ms.fd`
+     and `/usr/share/qemu/firmware/40-edk2-x86_64-secure-enrolled.json`.
+     There's probably a way to ask libvirt to instruct QEMU to use that.
+   - One option is to use `EnrollDefaultKeys.efi` from OVMF.
 * [Automating Secure Boot Testing](https://www.youtube.com/watch?v=qtyRR-KbXYQ):
   how Red Hat does CI for Secure Boot (FOSDEM 2018)
 * <https://wiki.ubuntu.com/UEFI/SecureBoot/Testing>

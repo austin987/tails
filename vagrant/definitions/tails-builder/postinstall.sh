@@ -49,7 +49,7 @@ cat "/etc/apt/sources.list" | \
 echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ buster/updates main" \
 	> "/etc/apt/sources.list.d/buster-security.list"
 
-echo "I: Adding our builder-jessie suite with live-build and po4a..."
+echo "I: Adding our builder-jessie suite with live-build..."
 echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
@@ -58,12 +58,6 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 EOF
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Package: live-build
-	Pin: release o=Tails,n=builder-jessie
-	Pin-Priority: 999
-EOF
-# Install po4a 0.47 for now (#17005)
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/po4a <<EOF
-	Package: po4a
 	Pin: release o=Tails,n=builder-jessie
 	Pin-Priority: 999
 EOF
