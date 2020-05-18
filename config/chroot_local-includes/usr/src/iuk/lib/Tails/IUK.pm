@@ -100,6 +100,7 @@ option 'mksquashfs_lock_file' =>
     isa           => AbsPath,
     coerce        => AbsPath->coercion,
     format        => 's',
+    predicate     => 1,
     documentation => q{Location of the mksquashfs lock file};
 
 option 'ignore_if_same_content' =>
@@ -415,7 +416,7 @@ method create_squashfs_diff () {
     }
 
     my $lock = new IO::LockedFile(">".$self->mksquashfs_lock_file)
-        if $self->mksquashfs_lock_file;
+        if $self->has_mksquashfs_lock_file;
     $t1 = time;
     run_as_root(
         "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
@@ -427,7 +428,7 @@ method create_squashfs_diff () {
     $t2 = time;
     printf "TIME (main mksquashfs for $basename): %d seconds\n", ($t2-$t1);
     $lock->close()
-        if $self->mksquashfs_lock_file;
+        if $self->has_mksquashfs_lock_file;
 
     foreach ($union_basedir,
              $new_squashfs_mount, $new_iso_mount,
@@ -472,7 +473,7 @@ method saveas ($outfile_name) {
     $self->prepare_overlay_dir;
 
     my $lock = new IO::LockedFile(">".$self->mksquashfs_lock_file)
-        if $self->mksquashfs_lock_file;
+        if $self->has_mksquashfs_lock_file;
     my $basename = path($self->outfile)->basename;
     my $t1 = time;
     run_as_root(
@@ -486,7 +487,7 @@ method saveas ($outfile_name) {
     my $t2 = time;
     printf "TIME (final mksquashfs for $basename): %d seconds\n", ($t2-$t1);
     $lock->close()
-        if $self->mksquashfs_lock_file;
+        if $self->has_mksquashfs_lock_file;
 
     return;
 }
