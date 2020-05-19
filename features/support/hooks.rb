@@ -111,7 +111,7 @@ def _save_vm_file_content(file:, destfile:, desc:)
   destfile = $config['TMPDIR'] + '/' + destfile
   File.open(destfile, 'w') { |f| f.write($vm.file_content(file)) }
   save_failure_artifact(desc, destfile)
-rescue Exception => e
+rescue StandardError => e
   info_log("Exception thrown while trying to save #{destfile}: " \
            "#{e.class.name}: #{e}")
 end
