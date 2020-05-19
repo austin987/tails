@@ -8,12 +8,24 @@ ExecStop=/bin/sh -c '                                                        \
     if mountpoint -q /media/tails-persistence-setup/TailsData                \
             && test ! -d /media/tails-persistence-setup/TailsData/apt; then  \
         echo "Copy APT data to newly created persistent volume";             \
+        touch /media/tails-persistence-setup/TailsData/apt_sync_started &&   \
         mkdir /media/tails-persistence-setup/TailsData/apt/ &&               \
         cp -a /var/cache/apt/archives                                        \
                    /media/tails-persistence-setup/TailsData/apt/cache &&     \
         cp -a /var/lib/apt/lists                                             \
-                   /media/tails-persistence-setup/TailsData/apt/;            \
+                   /media/tails-persistence-setup/TailsData/apt/ &&          \
+        touch /media/tails-persistence-setup/TailsData/apt_sync_completed && \
+        sync --file-system /media/tails-persistence-setup/TailsData/apt;     \
     fi'
+# Tails sets a very small DefaultTimeoutStopSec= value, that this service
+# inherits. In many cases, that value is too short for our ExecStop=
+# step to complete successfully (#17278) so we need to bump this timeout here.
+#
+# APT lists are 215MB large as of 4.6. The cached binary packages can be
+# arbitrarily large, let's assume 335MB. So we need to copy 550MB from tmpfs
+# to a physical USB stick. Assuming a 2MB/s write rate in the worst case
+# scenario, the copy operation can take up to 550/2 = 275 seconds.
+TimeoutStopSec=300s
 
 [Install]
 WantedBy=multi-user.target
