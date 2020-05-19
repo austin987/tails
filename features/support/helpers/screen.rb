@@ -106,8 +106,6 @@ class Screen
     $vm.display.screenshot(screenshot)
     OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
                          screenshot, sensitivity, show_image)
-  ensure
-    FileUtils.rm_f(screenshot)
   end
 
   def real_find(pattern, **opts)
