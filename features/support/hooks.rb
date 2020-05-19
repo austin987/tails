@@ -103,19 +103,44 @@ def add_after_scenario_hook(&block)
   @after_scenario_hooks << block
 end
 
-def save_failure_artifact(type, path)
-  $failure_artifacts << [type, path]
+def save_failure_artifact(desc, path)
+  $failure_artifacts << [desc, path]
 end
 
-def save_journal(path)
-  File.open("#{path}/systemd.journal", 'w') do |file|
-    $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
-    file.write($vm.file_content('/tmp/systemd.journal'))
-  end
-  save_failure_artifact('Systemd journal', "#{path}/systemd.journal")
-rescue StandardError => e
-  info_log('Exception thrown while trying to save the journal: ' \
+def _save_vm_file_content(file:, destfile:, desc:)
+  destfile = $config['TMPDIR'] + '/' + destfile
+  File.open(destfile, 'w') { |f| f.write($vm.file_content(file)) }
+  save_failure_artifact(desc, destfile)
+rescue Exception => e
+  info_log("Exception thrown while trying to save #{destfile}: " +
            "#{e.class.name}: #{e}")
+end
+
+def save_vm_command_output(command:, id:, basename: nil, desc: nil)
+  basename ||= "artifact.cmd_output_#{id}"
+  $vm.execute("#{command} > /tmp/#{basename} 2>&1")
+  _save_vm_file_content(
+    file: "/tmp/#{basename}",
+    destfile: basename,
+    desc: desc || "Output of #{command}"
+  )
+end
+
+def save_journal
+  save_vm_command_output(
+    command: 'journalctl -a --no-pager',
+    id: 'journal',
+    basename: 'artifact.journal',
+    desc: 'systemd Journal'
+  )
+end
+
+def save_vm_file_content(file, desc: nil)
+  _save_vm_file_content(
+    file: file,
+    destfile: 'artifact.file_content_' + file.gsub('/', '_').sub(/^_/, ''),
+    desc: desc || "Content of #{file}"
+  )
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
@@ -282,7 +307,26 @@ After('@product') do |scenario|
     # well cause the remote shell to not respond any more, e.g. when
     # we cause a system crash), so let's collect everything depending
     # on the remote shell here:
-    save_journal($config['TMPDIR']) if $vm&.remote_shell_is_up?
+    if $vm && $vm.remote_shell_is_up?
+      save_journal
+      if scenario.feature.file \
+         == 'features/additional_software_packages.feature'
+        save_vm_command_output(
+          command: 'ls -lAR --full-time /var/lib/apt',
+          id: 'var_lib_apt',
+        )
+        save_vm_command_output(
+          command: 'mount',
+          id: 'mount',
+        )
+        save_vm_command_output(
+          command: 'ls -lA --full-time /live/persistence/TailsData_unlocked',
+          id: 'persistent_volume',
+        )
+        save_vm_file_content('/var/log/live-persist')
+        save_vm_file_content('/run/live-additional-software/log')
+      end
+    end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
       artifact_name = sanitize_filename(
@@ -292,7 +336,7 @@ After('@product') do |scenario|
       assert(File.exist?(file))
       FileUtils.mv(file, artifact_path)
       info_log
-      info_log_artifact_location(type, artifact_path)
+      info_log_artifact_location(desc, artifact_path)
     end
     if $config['INTERACTIVE_DEBUGGING']
       pause(
