@@ -30,7 +30,7 @@ end
 
 # It's forbidden to throw this exception (or subclasses) in anything
 # but try_for() below. Just don't use it anywhere else!
-class UniqueTryForTimeoutError < RuntimeError
+class UniqueTryForTimeoutError < Exception
 end
 
 def time_delta(start_time, now)
