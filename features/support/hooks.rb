@@ -116,7 +116,7 @@ rescue StandardError => e
            "#{e.class.name}: #{e}")
 end
 
-def save_vm_command_output(command:, id:, basename: nil, desc: nil)
+def save_vm_command_output(command:, id:, basename: nil, desc: nil) # rubocop:disable Naming/MethodParameterName
   basename ||= "artifact.cmd_output_#{id}"
   $vm.execute("#{command} > /tmp/#{basename} 2>&1")
   _save_vm_file_content(
