@@ -26,9 +26,6 @@ os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
 os.environ['TEXTDOMAIN'] = 'tails'
 
 CMD = os.path.basename(sys.argv[0])
-TORDATE_DIR = '/run/tordate'
-TORDATE_DONE_FILE = '{}/done'.format(TORDATE_DIR)
-INOTIFY_TIMEOUT = 60
 # While running iuk.git:features/frontend:
 #  - tails-upgrade-frontend never uses more than 100 * 10^6 bytes
 #  - tails-iuk-get-upgrade-description never uses more than 95 * 10^6 bytes
@@ -47,10 +44,10 @@ See https://tails.boum.org/doc/first_steps/upgrade#manual\"''')
 
 
 def main(*args):
-    if "--no-wait" not in args:
-        time.sleep(30)
-    else:
+    if "--no-wait" in args:
         args = (arg for arg in args if arg != "--no-wait")
+    else:
+        time.sleep(30)
 
     check_free_memory(MIN_AVAILABLE_MEMORY)
 
@@ -65,7 +62,8 @@ def main(*args):
             "/bin/sh", "-c",
             "xhost +SI:localuser:{user};"
             "sudo -u {user} /usr/local/bin/tails-upgrade-frontend {args};"
-            "xhost -SI:localuser:{user}".format(user=RUN_AS_USER, args=" ".join(args))
+            "xhost -SI:localuser:{user}".format(user=RUN_AS_USER,
+                                                args=" ".join(args))
         )
     )
 
@@ -73,11 +71,12 @@ def main(*args):
 def error(msg):
     """Show error and exit."""
     cli_text = '{}: {} {}'.format(CMD, gettext('error:'), msg)
-    dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(gettext('Error'), msg)
+    dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(gettext('Error'),
+                                                          msg)
     print(cli_text, file=sys.stderr)
 
     sh.zenity('--error', '--ellipsize', '--title', "", '--text', dialog_text,
-              _ok_code=[0,1,5])
+              _ok_code=[0, 1, 5])
     sys.exit(1)
 
 
