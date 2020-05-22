@@ -95,26 +95,43 @@ To learn how the new kernel works for us:
 
 ## Gather other data that will inform our decision
 
-You'll find the relevant data in:
-
- - [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
-   of the Debian package
- - Kernelnewbies's [human-readable
-   changelog](https://kernelnewbies.org/LinuxChanges) of upstream
-   changes (only relevant for a new major Linux release)
- - [Debian BTS](https://bugs.debian.org/cgi-bin/pkgreport.cgi?archive=0;dist=unstable;ordering=normal;repeatmerged=0;src=linux)
- - Debian [security tracker for
-   Linux](https://security-tracker.debian.org/tracker/source-package/linux)
-
-In there, look for:
+Look for:
 
  - Security issues fixed in _unstable_ since the version we currently ship
+
+   To do so, look for "CVE" in the
+   [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
+   entries newer than the kernel we currently ship.
+
  - Major security fixes still not fixed in _unstable_ (in which case,
    depending on when we are in our own release process, it may be worth
    delaying the analysis a bit)
+
+   To do so, use the Debian [security tracker for
+   Linux](https://security-tracker.debian.org/tracker/source-package/linux).
+
  - Important regressions i.e. bugs with severity _important_ or higher
    recently reported to Debian against this version of the kernel
+
+   To do so, in the [Debian
+   BTS](https://udd.debian.org/bugs.cgi?release=sid&merged=ign&fnewerval=7&flastmodval=7&packages=linux&cseverity=1&sortby=id&sorto=desc&format=html#results),
+   look for bugs with severity _important_ or higher that satisfy one of these
+   criteria:
+
+    - the bug title includes the kernel version we're considering upgrading to
+    - the bug was reported very recently (the bug title may not say
+      what kernel version is affected, but once you open the bug's page,
+      you'll see that info; for example, [[!debbug 960871]] is marked
+      as affecting linux/5.6.7-1)
+
  - Relevant hardware support improvements
+
+   To get a rough feeling about it, skim over:
+
+    - the Debian package's
+      [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
+    - Kernelnewbies's [human-readable changelog](https://kernelnewbies.org/LinuxChanges)
+      of upstream changes (only relevant for a new major Linux release)
 
 Take notes on the ticket of the most relevant bits or lack thereof.
 
