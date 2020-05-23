@@ -103,6 +103,14 @@ option 'mksquashfs_lock_file' =>
     predicate     => 1,
     documentation => q{Location of the mksquashfs lock file};
 
+has 'mksquashfs_prefix_cmd' =>
+    is          => 'lazy',
+    isa         => ArrayRef,
+    handles_via => 'Array',
+    handles     => {
+        list_mksquashfs_prefix_cmd => 'elements',
+    };
+
 option 'ignore_if_same_content' =>
     is            => 'lazy',
     isa           => ArrayRef,
@@ -257,6 +265,11 @@ method _build_mksquashfs_options () { [
     qw{-no-progress -noappend},
     qw{-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K},
 ]}
+
+method _build_mksquashfs_prefix_cmd () { [
+    "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
+]}
+
 method _build_union_type () { "overlayfs"; }
 
 method _build_delete_files () {
@@ -419,7 +432,7 @@ method create_squashfs_diff () {
         if $self->has_mksquashfs_lock_file;
     $t1 = time;
     run_as_root(
-        "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
+        $self->list_mksquashfs_prefix_cmd,
         qw{mksquashfs},
         $union_upperdir,
         $self->overlay_dir->child('live', $self->squashfs_diff_name),
@@ -477,7 +490,7 @@ method saveas ($outfile_name) {
     my $basename = path($self->outfile)->basename;
     my $t1 = time;
     run_as_root(
-        "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
+        $self->list_mksquashfs_prefix_cmd,
         qw{mksquashfs},
         $self->squashfs_src_dir,
         $outfile_name,
