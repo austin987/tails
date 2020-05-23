@@ -372,7 +372,7 @@ method create_squashfs_diff () {
         sprintf("%s/", $new_squashfs_mount),
         sprintf("%s/", $union_mount),
     );
-    printf "TIME (rsync for $basename): %d seconds\n", (time-$t1);
+    printf "TIME (rsync for $basename): %d seconds\n", (time - $t1);
 
     for my $glob (@{$self->ignore_if_same_content}) {
         my @candidates_for_removal = map {
@@ -439,7 +439,7 @@ method create_squashfs_diff () {
         $self->overlay_dir->child('live', $self->squashfs_diff_name),
         $self->list_mksquashfs_options
     );
-    printf "TIME (main mksquashfs for $basename): %d seconds\n", (time-$t1);
+    printf "TIME (main mksquashfs for $basename): %d seconds\n", (time - $t1);
 
     foreach ($union_basedir,
              $new_squashfs_mount, $new_iso_mount,
@@ -493,7 +493,7 @@ method saveas ($outfile_name) {
         $self->list_mksquashfs_options,
         '-all-root',
     );
-    printf "TIME (final mksquashfs for $basename): %d seconds\n", (time-$t1);
+    printf "TIME (final mksquashfs for $basename): %d seconds\n", (time - $t1);
 
     return;
 }
