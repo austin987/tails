@@ -25,7 +25,6 @@ use English qw{-no_match_vars};
 use File::Basename;
 use File::Spec::Functions;
 use Function::Parameters;
-use IO::LockedFile;
 use IPC::Run;
 use Path::Tiny;
 use Tails::IUK::Utils qw{extract_file_from_iso extract_here_file_from_iso run_as_root stdout_as_root};
@@ -267,7 +266,12 @@ method _build_mksquashfs_options () { [
 ]}
 
 method _build_mksquashfs_prefix_cmd () { [
-    "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
+    ("SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}"),
+    (
+        $self->has_mksquashfs_lock_file
+            ? ('flock', '--verbose', $self->mksquashfs_lock_file)
+            : (),
+    )
 ]}
 
 method _build_union_type () { "overlayfs"; }
@@ -428,8 +432,6 @@ method create_squashfs_diff () {
         }
     }
 
-    my $lock = new IO::LockedFile(">".$self->mksquashfs_lock_file)
-        if $self->has_mksquashfs_lock_file;
     $t1 = time;
     run_as_root(
         $self->list_mksquashfs_prefix_cmd,
@@ -440,8 +442,6 @@ method create_squashfs_diff () {
     );
     $t2 = time;
     printf "TIME (main mksquashfs for $basename): %d seconds\n", ($t2-$t1);
-    $lock->close()
-        if $self->has_mksquashfs_lock_file;
 
     foreach ($union_basedir,
              $new_squashfs_mount, $new_iso_mount,
@@ -485,8 +485,6 @@ method saveas ($outfile_name) {
 
     $self->prepare_overlay_dir;
 
-    my $lock = new IO::LockedFile(">".$self->mksquashfs_lock_file)
-        if $self->has_mksquashfs_lock_file;
     my $basename = path($self->outfile)->basename;
     my $t1 = time;
     run_as_root(
@@ -499,8 +497,6 @@ method saveas ($outfile_name) {
     );
     my $t2 = time;
     printf "TIME (final mksquashfs for $basename): %d seconds\n", ($t2-$t1);
-    $lock->close()
-        if $self->has_mksquashfs_lock_file;
 
     return;
 }
