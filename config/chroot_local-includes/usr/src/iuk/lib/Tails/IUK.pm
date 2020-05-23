@@ -262,7 +262,7 @@ method _build_overlay_dir () {
 method _build_format_version () { "2"; }
 method _build_mksquashfs_options () { [
     qw{-no-progress -noappend},
-    qw{-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K},
+    qw{-comp xz},
 ]}
 
 method _build_mksquashfs_prefix_cmd () { [
@@ -437,7 +437,8 @@ method create_squashfs_diff () {
         qw{mksquashfs},
         $union_upperdir,
         $self->overlay_dir->child('live', $self->squashfs_diff_name),
-        $self->list_mksquashfs_options
+        $self->list_mksquashfs_options,
+        qw{-Xbcj x86 -b 1024K -Xdict-size 1024K},
     );
     printf "TIME (main mksquashfs for $basename): %d seconds\n", (time - $t1);
 
