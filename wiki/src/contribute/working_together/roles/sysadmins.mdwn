@@ -160,7 +160,7 @@ Below, importance level is evaluated based on:
 * access: anyone can read, Tails core developers can write
 * tools: [[!debpts reprepro]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/reprepro/custom.pp
+  - [[!tails_gitweb_puppet_tails manifests/reprepro/custom.pp
     desc="`tails::reprepro::custom` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
 * importance: critical (needed by users, and to build & release a Tails ISO)
@@ -174,7 +174,7 @@ Below, importance level is evaluated based on:
 * access: anyone can read, release managers have write access
 * tools: [[!debpts reprepro]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/reprepro/snapshots/time_based.pp
+  - [[!tails_gitweb_puppet_tails manifests/reprepro/snapshots/time_based.pp
     desc="`tails::reprepro::snapshots::time_based` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
 * importance: critical (needed to build a Tails ISO)
@@ -188,7 +188,7 @@ Below, importance level is evaluated based on:
   snapshots
 * tools: [[!debpts reprepro]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/reprepro/snapshots/tagged.pp
+  - [[!tails_gitweb_puppet_tails manifests/reprepro/snapshots/tagged.pp
     desc="`tails::reprepro::snapshots::tagged` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
 * importance: critical (needed by users and to release Tails)
@@ -228,7 +228,7 @@ Below, importance level is evaluated based on:
   - Tails sysadmins can edit the zones with `pdnsutil edit-zone`
 * tools: [[!debpts pdns]] with its MySQL backend
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/pdns.pp
+  - [[!tails_gitweb_puppet_tails manifests/pdns.pp
     desc="`tails::pdns` class"]]
     and [[!tails_gitlab tails/puppet-tails/-/tree/master/manifests/pdns
     desc="`tails::pdns::*` resources"]]
@@ -264,7 +264,7 @@ Below, importance level is evaluated based on:
 * access: Tails core developers only
 * tools: [[!debpts gitolite3]]
 * configuration:
-  [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/gitolite.pp
+  [[!tails_gitweb_puppet_tails manifests/gitolite.pp
   desc="`tails::gitolite` class"]]
 * importance: high (needed to release Tails)
 
@@ -275,11 +275,11 @@ Below, importance level is evaluated based on:
 * access: Tails core developers only
 * tools: [[!debpts git-annex]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/git_annex.pp
+  - [[!tails_gitweb_puppet_tails manifests/git_annex.pp
     desc="`tails::git_annex` class"]]
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/gitolite.pp
+  - [[!tails_gitweb_puppet_tails manifests/gitolite.pp
     desc="`tails::gitolite` class"]]
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/git_annex/mirror.pp
+  - [[!tails_gitweb_puppet_tails manifests/git_annex/mirror.pp
     desc="`tails::git_annex::mirror` defined resource"]]
 * importance: high (needed to release Tails)
 
@@ -301,20 +301,20 @@ Below, importance level is evaluated based on:
 * tools: [[!debpts icinga2 desc="Icinga2"]], [[!debpts icingaweb2]]
 * configuration:
   - master:
-    * [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/monitoring/master.pp
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/master.pp
       desc="`tails::monitoring::master` class"]].
     * some configuration in the ecours.tails.boum.org node manifest.
     * See Vpn section.
   - web server:
-    * [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/monitoring/icingaweb2.pp
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/icingaweb2.pp
       desc="`tails::monitoring::icingaweb2` class"]],
       that wraps around [upstream `icingaweb2` module](https://git.icinga.org/puppet-icingaweb2.git).
     * some configuration in the ecours.tails.boum.org node manifest.
   - satellite:
-    * [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/monitoring/satellite.pp
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/satellite.pp
       desc="`tails::monitoring::satellite` class"]]
   - agents:
-    * [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/monitoring/agent.pp
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/agent.pp
       desc="`tails::monitoring::agent` class"]]
   - private keys are managed with the `tails_secrets_monitoring` Puppet module
 * documentation:
@@ -328,7 +328,7 @@ Below, importance level is evaluated based on:
   request an account.
 * tools: prosody
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/prosody.pp
+  - [[!tails_gitweb_puppet_tails manifests/prosody.pp
     desc="`tails::prosody` class"]]
 * importance: low
 
@@ -344,7 +344,7 @@ Below, importance level is evaluated based on:
   - master:
     * [[!tails_gitlab tails/puppet-jenkins/-/blob/master/manifests/init.pp
       desc="`jenkins` class"]]
-    * [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/jenkins/master.pp
+    * [[!tails_gitweb_puppet_tails manifests/jenkins/master.pp
       desc="`tails::jenkins::master` class"]]
     * a few Jenkins plugins installed with `jenkins::plugin`
     * YAML jobs configuration lives in a
@@ -352,20 +352,20 @@ Below, importance level is evaluated based on:
       [Jenkins Job Builder](http://ci.openstack.org/jenkins-job-builder/)
       uses it to configure Jenkins
   - slaves:
-    * [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/iso_builder.pp
+    * [[!tails_gitweb_puppet_tails manifests/iso_builder.pp
       desc="`tails::iso_builder`"]],
-      [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/jenkins/slave.pp
+      [[!tails_gitweb_puppet_tails manifests/jenkins/slave.pp
       desc="`tails::jenkins::slave`"]],
-      [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/jenkins/slave/iso_builder.pp
+      [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_builder.pp
       desc="`tails::jenkins::slave::iso_builder`"]],
-      [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/jenkins/slave/iso_tester.pp
+      [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_tester.pp
       desc="`tails::jenkins::slave::iso_tester`"]],
-      and [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/tester.pp
+      and [[!tails_gitweb_puppet_tails manifests/tester.pp
       desc="`tails::tester`"]]
       classes
     * signing keys are managed with the `tails_secrets_jenkins` Puppet module
   - web server:
-    * [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/jenkins/reverse_proxy.pp
+    * [[!tails_gitweb_puppet_tails manifests/jenkins/reverse_proxy.pp
       desc="`tails::jenkins::reverse_proxy` class"]]
 * design documentation: [[sysadmins/Jenkins]]
 * importance: critical (as a key component of our development process)
@@ -377,12 +377,12 @@ Below, importance level is evaluated based on:
 * access: public MTA listening on `mail.tails.boum.org`
 * tools: [[!debpts postfix]], [[!debpts amavisd-new]], [[!debpts spamassassin]]
 * configuration:
-  [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/postfix.pp
+  [[!tails_gitweb_puppet_tails manifests/postfix.pp
   desc="`tails::postfix`"]],
-  [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/amavisd_new.pp
+  [[!tails_gitweb_puppet_tails manifests/amavisd_new.pp
   desc="`tails::amavisd_new`"]],
   and
-  [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/spamassassin.pp
+  [[!tails_gitweb_puppet_tails manifests/spamassassin.pp
   desc="`tails::spamassassin`"]]
   classes
 * importance: high (at least because WhisperBack bug reports go through this MTA)
@@ -395,17 +395,17 @@ Below, importance level is evaluated based on:
 * access: not applicable
 * configuration:
   - to add a new reminder, or modify an existing one:
-    - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/meeting/reminders.pp
+    - [[!tails_gitweb_puppet_tails manifests/meeting/reminders.pp
       desc="`tails::meeting::reminders`"]]
     - [[!tails_gitlab tails/puppet-tails/-/tree/master/files/meeting
       desc="email templates"]]
   - implementation:
-    [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/meeting.pp
+    [[!tails_gitweb_puppet_tails manifests/meeting.pp
     desc="`tails::meeting`"]],
-    [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/meeting/reminder.pp
+    [[!tails_gitweb_puppet_tails manifests/meeting/reminder.pp
     desc="`tails::meeting::reminder`"]],
     and
-    [[!tails_gitlab tails/puppet-tails/-/blob/master/files/meeting/meeting.py
+    [[!tails_gitweb_puppet_tails files/meeting/meeting.py
     desc="`meeting.py` script"]]
 * importance: to be defined
 
@@ -431,7 +431,7 @@ Below, importance level is evaluated based on:
   developers
 * tools: [[!debpts rsync]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/rsync.pp
+  - [[!tails_gitweb_puppet_tails manifests/rsync.pp
     desc="`tails::rsync`"]]
   - users and credentials are managed with the `tails_secrets_rsync`
     Puppet module
@@ -445,7 +445,7 @@ Below, importance level is evaluated based on:
 * access: anyone can send email to these lists
 * tools: [[!debpts schleuder]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/schleuder.pp
+  - [[!tails_gitweb_puppet_tails manifests/schleuder.pp
     desc="`tails::schleuder` class"]]
   - `tails::schleuder::lists` Hiera setting
 * importance: high (at least because WhisperBack bug reports go through this service)
@@ -458,7 +458,7 @@ Below, importance level is evaluated based on:
   [BridgeDB](https://bridges.torproject.org/)
 * tools: [[!debpts tor]], [[!debpts obfs4proxy]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/apt/repository/torproject.pp
+  - [[!tails_gitweb_puppet_tails manifests/apt/repository/torproject.pp
     desc="`tails::apt::repository::torproject`"]]
   - [[!tails_gitlab tails/puppet-tor/-/blob/master/manifests/daemon/relay.pp
     desc="`tor::daemon::relay`"]]
@@ -471,7 +471,7 @@ Below, importance level is evaluated based on:
 * access: private network.
 * tools: [[!debpts tinc]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/vpn/instance.pp
+  - [[!tails_gitweb_puppet_tails manifests/vpn/instance.pp
     desc="`tails::vpn::instance` class"]]
 * importance: transitively critical (as a dependency of our monitoring system)
 
@@ -496,7 +496,7 @@ Below, importance level is evaluated based on:
 * admins: to be defined ([[!tails_ticket 17050]])
 * tools: [Weblate](https://weblate.org/)
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/weblate.pp
+  - [[!tails_gitweb_puppet_tails manifests/weblate.pp
     desc="`tails::weblate` class"]]
 * importance: to be defined
 
@@ -506,7 +506,7 @@ Below, importance level is evaluated based on:
 * access: public; WhisperBack (and hence, any bug reporter) uses it
 * tools: [[!debpts postfix desc="Postfix"]]
 * configuration:
-  - [[!tails_gitlab tails/puppet-tails/-/blob/master/manifests/whisperback/relay.pp
+  - [[!tails_gitweb_puppet_tails manifests/whisperback/relay.pp
     desc="`tails::whisperback::relay` class"]]
   - private keys are managed with the `tails_secrets_whisperback`
     Puppet module
