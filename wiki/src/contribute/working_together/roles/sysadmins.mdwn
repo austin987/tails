@@ -115,18 +115,26 @@ Tails system administrators have write access to the puppetmasters, and can log 
 the hosts.  
 They read the <tails-sysadmins@boum.org> encrypted mailing list.
 
-We use [[!tails_redmine desc="Redmine"]] tickets for public discussion
+We use [[!tails_gitlab desc="GitLab"]] issues for public discussion
 and tasks management:
 
-* To bring a ticket to the attention of system administrators,
-  assign it to the _Sysadmins_ group. You'll find it at the end
-  of the list of possible assignees.
-* [tickets that should be taken care of as part of sysadmin shifts](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=262)
-* [tickets that are on the sysadmin team's roadmap](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=267)
-* [tasks requiring *Sysadmin*
-  work](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=113)
-* [tasks belonging to the *Infrastructure*
-  category](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=140)
+* To bring an issue to the attention of system administrators,
+  mention the `@sysadmins-team` group.
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=Core+Work%3ASysadmin+%28maintenance%29
+  desc="issues that should be taken care of as part of sysadmin shifts"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=Core+Work%3ASysadmin+%28adapt%29
+  desc="issues that are on the sysadmin team's roadmap"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=T%3ASysadmin
+  desc="tasks that require *Sysadmin* work"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=C%3AInfrastructure
+  desc="tasks that belong to the *Infrastructure* category"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?scope=all&utf8=%E2%9C%93&state=opened&assignee_username=Sysadmins
+  desc="issues assigned to the *Sysadmins* user"]]
 
 <a id="services"></a>
 
@@ -190,7 +198,7 @@ Below, importance level is evaluated based on:
 * access: Tails core developers only
 * tools: [[!debpts bitcoind]]
 * configuration: `bitcoind` class in [[!tails_gitweb_repo puppet-bitcoind]]
-* Vcs-Git: <https://git-tails.immerda.ch/bitcoin/> and <https://git-tails.immerda.ch/bitcoin_libunivalue/>
+* Vcs-Git: [[!tails_gitweb_repo bitcoin]] and [[!tails_gitweb_repo bitcoin_libunivalue]]
 * importance: medium
 * To save disk space: as the `bitcoin@bitcoin.lizard` user, run
   `bitcoin-cli getblockcount` to get the ID of the last block,
@@ -223,12 +231,31 @@ Below, importance level is evaluated based on:
 * importance: critical (most of our other services are not available
   if this one is not working)
 
+## GitLab
+
+* purpose:
+  - host Tails issues
+  - host most Tails [[Git repositories|contribute/git]]
+* access: public + some data with more restricted access
+* operations documentation: [[contribute/working_together/GitLab#operations]]
+* end-user documentation: [[contribute/working_together/GitLab]]
+* configuration:
+  - immerda hosts our GitLab instance using [this Puppet
+    code](https://code.immerda.ch/immerda/ibox/puppet-modules/-/blob/master/ib_gitlab/manifests/instance.pp).
+  - We don't have shell access.
+  - Tails system administrators have administrator credentials inside GitLab.
+  - Groups, projects, and access control:
+     - [[high-level documentation|working_together/GitLab#access-control]]
+     - configuration: `gitlab-config` repository (hosted on `puppet-git.lizard`)
+* importance: critical (needed to release Tails)
+* Tails system administrators administrate this GitLab instance.
+
 ## Gitolite
 
 * purpose:
   - host Git repositories used by the puppetmaster and other services
-  - host the Tails [[main repository|contribute/git#main-repo]]
-    and our website's underlays
+  - host mirrors of various Git repositories needed on lizard,
+    and whose canonical copy lives on GitLab
 * access: Tails core developers only
 * tools: [[!debpts gitolite3]]
 * configuration: `tails::gitolite` class in [[!tails_gitweb_repo
