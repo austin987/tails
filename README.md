@@ -11,21 +11,24 @@
 [Learn learn how Tails works](https://tails.boum.org/about)
 
 
-### How to contribute to Tails:
+### How to contribute to Tails
+
 There are many ways [you can contribute to Tails](https://tails.boum.org/contribute/). No effort is too small and whatever you bring to this community will be appreciated.
 
 Find out how you can make a difference in Tails: https://tails.boum.org/contribute/.
 
-### How to get started with Gitlab:
+### How to get started with Gitlab
 
 https://tails.boum.org/contribute/working_together/GitLab/
 
 ### How to transition to GitLab
+
 https://tails.boum.org/contribute/working_together/GitLab/transition/
 
-### Contact:
+### Contact
+
 email and email lists: https://tails.boum.org/about/contact
 
-xmpp: tails@conference.riseup.net and tails-dev@conference.riseup.net
+XMPP: tails@conference.riseup.net and tails-dev@conference.riseup.net
 
 fediverse: https://fosstodon.org/@tails
