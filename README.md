@@ -30,5 +30,3 @@ https://tails.boum.org/contribute/working_together/GitLab/transition/
 email and email lists: https://tails.boum.org/about/contact
 
 XMPP: tails@conference.riseup.net and tails-dev@conference.riseup.net
-
-fediverse: https://fosstodon.org/@tails
