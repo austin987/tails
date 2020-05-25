@@ -8,11 +8,11 @@
 - Tails includes a selection of applications to work on sensitive documents and communicate securely. Everything in Tails is ready-to-use and has safe defaults.
 -You can download Tails for free and independent security researchers can verify our work. Tails is based on Debian GNU/Linux.
 
-[Learn learn how Tails works](https://tails.boum.org/about) 
+[Learn learn how Tails works](https://tails.boum.org/about)
 
 
-### How to contribute to Tails: 
-There are many ways [you can contribute to Tails](https://tails.boum.org/contribute/). No effort is too small and whatever you bring to this community will be appreciated. 
+### How to contribute to Tails:
+There are many ways [you can contribute to Tails](https://tails.boum.org/contribute/). No effort is too small and whatever you bring to this community will be appreciated.
 
 Find out how you can make a difference in Tails: https://tails.boum.org/contribute/.
 
@@ -20,7 +20,7 @@ Find out how you can make a difference in Tails: https://tails.boum.org/contribu
 
 https://tails.boum.org/contribute/working_together/GitLab/
 
-### How to transition to GitLab 
+### How to transition to GitLab
 https://tails.boum.org/contribute/working_together/GitLab/transition/
 
 ### Contact:
@@ -29,4 +29,3 @@ email and email lists: https://tails.boum.org/about/contact
 xmpp: tails@conference.riseup.net and tails-dev@conference.riseup.net
 
 fediverse: https://fosstodon.org/@tails
-
