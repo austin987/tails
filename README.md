@@ -25,8 +25,20 @@ https://tails.boum.org/contribute/working_together/GitLab/
 
 https://tails.boum.org/contribute/working_together/GitLab/transition/
 
+###  License and source code distribution 
+**Tails** is [Free Software](https://www.gnu.org/philosophy/free-sw.html): you can download, use, and share it with no restrictions.
+
+ <a href="https://tails.boum.org/doc/about/license/"><img alt="Tails is Free Software" src="https://tails.boum.org/index/gift.svg" width="560"/>
+
+The Tails source code is released under the GNU/GPL (version 3 or above) and is Copyright (C) Tails developers tails@boum.org. 
+Any exception to this rule is documented either [here](https://tails.boum.org/doc/about/license/) or in the affected source file.
+However, Tails includes non-free firmware in order to work on as much hardware as possible.
+
+
 ### Contact
 
 email and mailing lists: https://tails.boum.org/about/contact
 
 XMPP: tails@conference.riseup.net and tails-dev@conference.riseup.net
+
+[![Tails](https://tails.boum.org/contribute/how/promote/material/logo/tails-logo-flat.svg)](https://tails.boum.org)
