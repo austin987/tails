@@ -312,6 +312,8 @@ After('@product') do |scenario|
           command: 'mount',
           id: 'mount',
         )
+        # When removing the logging below, also revert commit
+        # c8429eecf23570274b0bb2134a87ae1fcf72ce07
         save_vm_command_output(
           command: 'ls -lA --full-time /live/persistence/TailsData_unlocked',
           id: 'persistent_volume',
