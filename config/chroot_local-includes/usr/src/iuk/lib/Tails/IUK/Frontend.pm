@@ -579,7 +579,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
         else {
             IPC::Run::run \@cmd, '2>', \$stderr,
                 '|', [qw{zenity --progress --percentage=0 --auto-close
-                         --no-cancel}, '--title', $title, '--text', $info]
+                         --auto-kill}, '--title', $title, '--text', $info]
                 or $success = 0;
             $exit_code = $?;
         }
