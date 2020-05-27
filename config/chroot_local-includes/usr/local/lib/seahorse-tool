@@ -14,40 +14,44 @@ that situation with `gpg --import`.
 """
 
 import gi
+import gnupg
 import os
 import os.path
 import sh
 import subprocess
 import sys
-from gettext import gettext
+from gettext import gettext, ngettext
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
 
 os.environ['TEXTDOMAIN'] = 'tails'
 
 
-def notify(message):
-    title = gettext("Keys Imported")
+def notify(title, message):
     Notify.init(title)
     n = Notify.Notification.new(title, message)
     n.show()
 
 
-def gpg_import(key_path):
-    key_name = os.path.basename(key_path)
-    try:
-        subprocess.run(['/usr/bin/gpg', '--import', key_path],
-                       check=True, capture_output=True)
-    except subprocess.CalledProcessError as e:
-        notify(gettext("Failed to import keys from {key}:\n{error}")
-               .format(key=key_name, error=e.stderr.decode()))
-        sys.exit(e.returncode)
-    notify(gettext("Imported keys from {key}").format(key=key_name))
-
-
 if __name__ == '__main__':
     if len(sys.argv) == 3 and sys.argv[1] == '--import':
-        gpg_import(sys.argv[2])
+        key_path = sys.argv[2]
+        try:
+            subprocess.run(['/usr/bin/gpg', '--import', key_path],
+                           check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            notify(gettext("Import Failed"),
+                   gettext("Failed to import keys from {path}:\n{error}")
+                   .format(path=key_path, error=e.stderr.decode()))
+            sys.exit(e.returncode)
+        keys = gnupg.GPG().scan_keys(key_path)
+        uids = set([uid for key in keys for uid in key['uids']])
+        title = ngettext("Key Imported", "Keys Imported", len(keys))
+        message = ngettext("Imported a key for {uids}",
+                           "Imported keys for {uids}",
+                           len(keys)) \
+                  .format(uids=", ".join(uids))
+        notify(title, message)
     else:
         os.execv('/usr/lib/seahorse/seahorse-tool',
                  ['/usr/lib/seahorse/seahorse-tool'] + sys.argv[1:])
