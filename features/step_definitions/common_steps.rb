@@ -62,7 +62,13 @@ end
 
 Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) (?:([[:alpha:]]+) )?disk named "([^"]+)"$/ do |temporary, size, unit, type, name|
   type ||= "qcow2"
-  $vm.storage.create_new_disk(name, size: size, unit: unit, type: type)
+  begin
+    $vm.storage.create_new_disk(name, size: size, unit: unit, type: type)
+  rescue NoSpaceLeftError => e
+    cmd = "du -ah \"#{$config['TMPDIR']}\" | sort -hr | head -n20"
+    info_log("#{cmd}\n" + `#{cmd}`)
+    raise e
+  end
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
 end
 
@@ -553,7 +559,10 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  try_for(3*60) do
+  # In the Additional Software feature, we need to wait enough for
+  # tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
+  # to complete: see its custom, higher-than-default, TimeoutStopSec=.
+  try_for(6 * 60) do
     if mode == 'restarts'
       @screen.find('TailsGreeter.png')
       true
@@ -640,7 +649,7 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
 end
 
 When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
-  timeout = 0 if timeout.nil?
+  timeout = 10 if timeout.nil?
   try_for(
     timeout.to_i,
     :msg => "The file #{file} does not exist after #{timeout} seconds"
@@ -857,7 +866,10 @@ EOF
     Process.kill(0, proc.pid) == 1
   end
 
-  add_after_scenario_hook { Process.kill("TERM", proc.pid) }
+  add_after_scenario_hook do
+    Process.kill("TERM", proc.pid)
+    Process.wait(proc.pid)
+  end
 
   # It seems necessary to actually check that the LAN server is
   # serving, possibly because it isn't doing so reliably when setting

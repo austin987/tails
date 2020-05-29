@@ -65,13 +65,6 @@ option 'outfile' =>
     format        => 's',
     documentation => q{Location of the created IUK};
 
-option 'union_type' =>
-    is            => 'lazy',
-    isa           => Enum[qw{aufs overlayfs}],
-    coerce        => Enum->coercion,
-    format        => 's',
-    documentation => q{aufs or overlayfs};
-
 has 'format_version' =>
     is  => 'lazy',
     isa => Str;
@@ -274,8 +267,6 @@ method _build_mksquashfs_prefix_cmd () { [
     )
 ]}
 
-method _build_union_type () { "overlayfs"; }
-
 method _build_delete_files () {
     my $old_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->old_iso->stringify);
     my $new_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->new_iso->stringify);
@@ -348,25 +339,18 @@ method create_squashfs_diff () {
     croak "SquashFS '$new_squashfs' not found in '$new_iso_mount'" unless -e $new_squashfs;
     run_as_root(qw{mount -t squashfs -o loop}, $new_squashfs, $new_squashfs_mount);
 
-    if ($self->union_type eq 'aufs') {
-        run_as_root(
-            qw{mount -t aufs},
-            "-o", sprintf("br=%s=rw:%s=ro", $union_upperdir, $old_squashfs_mount),
-            "none", $union_mount
-        );
-    } else {
-        run_as_root(
-            qw{mount -t overlay},
-            "-o", sprintf("lowerdir=%s,upperdir=%s,workdir=%s",
-                          $old_squashfs_mount, $union_upperdir, $union_workdir),
-            "overlay", $union_mount
-        );
-    }
+    run_as_root(
+        qw{mount -t overlay},
+        "-o", sprintf("lowerdir=%s,upperdir=%s,workdir=%s",
+                      $old_squashfs_mount, $union_upperdir, $union_workdir),
+        "overlay", $union_mount
+    );
+
+    my @rsync_options = qw{--archive --quiet --delete-after --acls --checksum
+                           --xattrs};
 
     my $basename = path($self->outfile)->basename;
     my $t1 = time;
-    my @rsync_options = qw{--archive --quiet --delete-after --acls --checksum};
-    push @rsync_options, "--xattrs" if $self->union_type eq 'overlayfs';
     run_as_root(
         "rsync", @rsync_options,
         sprintf("%s/", $new_squashfs_mount),
@@ -390,45 +374,39 @@ method create_squashfs_diff () {
         } @candidates_for_removal;
     }
 
-    if ($self->union_type eq 'aufs') {
-        run_as_root('auplink', $union_mount, 'flush');
-    }
-
     run_as_root("umount", $union_mount);
 
     # Remove trusted.overlay.* xattrs
-    if ($self->union_type eq 'overlayfs') {
-        my @xattrs_dump = stdout_as_root(
-            qw{getfattr --dump --recursive --no-dereference --absolute-names},
-            q{--match=^trusted\.overlay\.},
-            $union_upperdir->stringify,
-        );
-        my %xattrs;
-        my $current_filename;
-        foreach (@xattrs_dump) {
-            defined || last;
-            chomp;
-            if (! length($_)) {
-                $current_filename = undef;
-                next;
-            } elsif (my ($filename) = ($_ =~ m{\A [#] \s+ file: \s+ (.*) \z}xms)) {
-                $current_filename = $filename;
-            } elsif (my ($xattr, $value) = ($_ =~ m{\A(trusted[.]overlay[.][^=]+)=(.*)\z}xms)) {
-                push @{$xattrs{$xattr}}, $current_filename;
-            } else {
-                croak "Unrecognized line, aborting: '$_'";
-            }
+    my @xattrs_dump = stdout_as_root(
+        qw{getfattr --dump --recursive --no-dereference --absolute-names},
+        q{--match=^trusted\.overlay\.},
+        $union_upperdir->stringify,
+    );
+    my %xattrs;
+    my $current_filename;
+    foreach (@xattrs_dump) {
+        defined || last;
+        chomp;
+        if (! length($_)) {
+            $current_filename = undef;
+            next;
+        } elsif (my ($filename) = ($_ =~ m{\A [#] \s+ file: \s+ (.*) \z}xms)) {
+            $current_filename = $filename;
+        } elsif (my ($xattr, $value) = ($_ =~ m{\A(trusted[.]overlay[.][^=]+)=(.*)\z}xms)) {
+            push @{$xattrs{$xattr}}, $current_filename;
+        } else {
+            croak "Unrecognized line, aborting: '$_'";
         }
-        while (my ($xattr, $files) = each %xattrs) {
-            my $stdin = join(chr(0), @$files);
-            my ($stdout, $stderr);
-            IPC::Run::run [
-                qw{sudo xargs --null --no-run-if-empty},
-                'setfattr', '--remove=' . $xattr,
-                '--no-dereference',
-                '--'
-            ], \$stdin or croak "xargs failed: $?";
-        }
+    }
+    while (my ($xattr, $files) = each %xattrs) {
+        my $stdin = join(chr(0), @$files);
+        my ($stdout, $stderr);
+        IPC::Run::run [
+            qw{sudo xargs --null --no-run-if-empty},
+            'setfattr', '--remove=' . $xattr,
+            '--no-dereference',
+            '--'
+        ], \$stdin or croak "xargs failed: $?";
     }
 
     $t1 = time;
