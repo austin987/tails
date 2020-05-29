@@ -559,7 +559,10 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  try_for(3*60) do
+  # In the Additional Software feature, we need to wait enough for
+  # tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
+  # to complete: see its custom, higher-than-default, TimeoutStopSec=.
+  try_for(6 * 60) do
     if mode == 'restarts'
       @screen.find('TailsGreeter.png')
       true
