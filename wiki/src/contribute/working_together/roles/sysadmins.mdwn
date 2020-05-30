@@ -115,18 +115,26 @@ Tails system administrators have write access to the puppetmasters, and can log 
 the hosts.  
 They read the <tails-sysadmins@boum.org> encrypted mailing list.
 
-We use [[!tails_redmine desc="Redmine"]] tickets for public discussion
+We use [[!tails_gitlab desc="GitLab"]] issues for public discussion
 and tasks management:
 
-* To bring a ticket to the attention of system administrators,
-  assign it to the _Sysadmins_ group. You'll find it at the end
-  of the list of possible assignees.
-* [tickets that should be taken care of as part of sysadmin shifts](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=262)
-* [tickets that are on the sysadmin team's roadmap](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=267)
-* [tasks requiring *Sysadmin*
-  work](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=113)
-* [tasks belonging to the *Infrastructure*
-  category](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=140)
+* To bring an issue to the attention of system administrators,
+  mention the `@sysadmins-team` group.
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=Core+Work%3ASysadmin+%28maintenance%29
+  desc="issues that should be taken care of as part of sysadmin shifts"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=Core+Work%3ASysadmin+%28adapt%29
+  desc="issues that are on the sysadmin team's roadmap"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=T%3ASysadmin
+  desc="tasks that require *Sysadmin* work"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=C%3AInfrastructure
+  desc="tasks that belong to the *Infrastructure* category"]]
+* [[!tails_gitlab
+  groups/tails/-/issues?scope=all&utf8=%E2%9C%93&state=opened&assignee_username=Sysadmins
+  desc="issues assigned to the *Sysadmins* user"]]
 
 <a id="services"></a>
 
@@ -152,7 +160,8 @@ Below, importance level is evaluated based on:
 * access: anyone can read, Tails core developers can write
 * tools: [[!debpts reprepro]]
 * configuration:
-  - `tails::reprepro::custom` class in [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/reprepro/custom.pp
+    desc="`tails::reprepro::custom` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
 * importance: critical (needed by users, and to build & release a Tails ISO)
 
@@ -165,8 +174,8 @@ Below, importance level is evaluated based on:
 * access: anyone can read, release managers have write access
 * tools: [[!debpts reprepro]]
 * configuration:
-  - `tails::reprepro::snapshots::time_based` class in
-    [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/reprepro/snapshots/time_based.pp
+    desc="`tails::reprepro::snapshots::time_based` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
 * importance: critical (needed to build a Tails ISO)
 
@@ -179,8 +188,8 @@ Below, importance level is evaluated based on:
   snapshots
 * tools: [[!debpts reprepro]]
 * configuration:
-  - `tails::reprepro::snapshots::tagged` class in
-    [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/reprepro/snapshots/tagged.pp
+    desc="`tails::reprepro::snapshots::tagged` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
 * importance: critical (needed by users and to release Tails)
 
@@ -189,8 +198,10 @@ Below, importance level is evaluated based on:
 * purpose: handle the Tails Bitcoin wallet
 * access: Tails core developers only
 * tools: [[!debpts bitcoind]]
-* configuration: `bitcoind` class in [[!tails_gitweb_repo puppet-bitcoind]]
-* Vcs-Git: <https://git-tails.immerda.ch/bitcoin/> and <https://git-tails.immerda.ch/bitcoin_libunivalue/>
+* configuration:
+  [[!tails_gitlab tails/puppet-bitcoind/-/blob/master/manifests/init.pp
+  desc="`bitcoind` class"]]
+* Vcs-Git: [[!tails_gitweb_repo bitcoin]] and [[!tails_gitweb_repo libunivalue]]
 * importance: medium
 * To save disk space: as the `bitcoin@bitcoin.lizard` user, run
   `bitcoin-cli getblockcount` to get the ID of the last block,
@@ -217,22 +228,44 @@ Below, importance level is evaluated based on:
   - Tails sysadmins can edit the zones with `pdnsutil edit-zone`
 * tools: [[!debpts pdns]] with its MySQL backend
 * configuration:
-  - `tails::pdns` and `tails::pdns::*` resources in
-    [[!tails_gitweb_repo puppet-tails]]
-  - [[!tails_gitweb_repo puppet-powerdns]]
+  - [[!tails_gitweb_puppet_tails manifests/pdns.pp
+    desc="`tails::pdns` class"]]
+    and [[!tails_gitlab tails/puppet-tails/-/tree/master/manifests/pdns
+    desc="`tails::pdns::*` resources"]]
+  - [`powerdns` Puppet module](https://github.com/sensson/puppet-powerdns)
 * importance: critical (most of our other services are not available
   if this one is not working)
+
+## GitLab
+
+* purpose:
+  - host Tails issues
+  - host most Tails [[Git repositories|contribute/git]]
+* access: public + some data with more restricted access
+* operations documentation: [[contribute/working_together/GitLab#operations]]
+* end-user documentation: [[contribute/working_together/GitLab]]
+* configuration:
+  - immerda hosts our GitLab instance using [this Puppet
+    code](https://code.immerda.ch/immerda/ibox/puppet-modules/-/blob/master/ib_gitlab/manifests/instance.pp).
+  - We don't have shell access.
+  - Tails system administrators have administrator credentials inside GitLab.
+  - Groups, projects, and access control:
+     - [[high-level documentation|working_together/GitLab#access-control]]
+     - configuration: `gitlab-config` repository (hosted on `puppet-git.lizard`)
+* importance: critical (needed to release Tails)
+* Tails system administrators administrate this GitLab instance.
 
 ## Gitolite
 
 * purpose:
   - host Git repositories used by the puppetmaster and other services
-  - host the Tails [[main repository|contribute/git#main-repo]]
-    and our website's underlays
+  - host mirrors of various Git repositories needed on lizard,
+    and whose canonical copy lives on GitLab
 * access: Tails core developers only
 * tools: [[!debpts gitolite3]]
-* configuration: `tails::gitolite` class in [[!tails_gitweb_repo
-  puppet-tails]]
+* configuration:
+  [[!tails_gitweb_puppet_tails manifests/gitolite.pp
+  desc="`tails::gitolite` class"]]
 * importance: high (needed to release Tails)
 
 ## git-annex
@@ -242,10 +275,12 @@ Below, importance level is evaluated based on:
 * access: Tails core developers only
 * tools: [[!debpts git-annex]]
 * configuration:
-  - `tails::git_annex` and `tails::gitolite` classes in
-    [[!tails_gitweb_repo puppet-tails]]
-  - `tails::git_annex::mirror` defined resource in
-    [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/git_annex.pp
+    desc="`tails::git_annex` class"]]
+  - [[!tails_gitweb_puppet_tails manifests/gitolite.pp
+    desc="`tails::gitolite` class"]]
+  - [[!tails_gitweb_puppet_tails manifests/git_annex/mirror.pp
+    desc="`tails::git_annex::mirror` defined resource"]]
 * importance: high (needed to release Tails)
 
 <a id="icinga2"></a>
@@ -266,17 +301,21 @@ Below, importance level is evaluated based on:
 * tools: [[!debpts icinga2 desc="Icinga2"]], [[!debpts icingaweb2]]
 * configuration:
   - master:
-    * `tails::monitoring::master` class in [[!tails_gitweb_repo puppet-tails]].
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/master.pp
+      desc="`tails::monitoring::master` class"]].
     * some configuration in the ecours.tails.boum.org node manifest.
     * See Vpn section.
   - web server:
-    * `tails::monitoring::icingaweb2` class in [[!tails_gitweb_repo puppet-tails]],
-       that wraps around [upstream `icingaweb2` module](https://git.icinga.org/puppet-icingaweb2.git).
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/icingaweb2.pp
+      desc="`tails::monitoring::icingaweb2` class"]],
+      that wraps around [upstream `icingaweb2` module](https://git.icinga.org/puppet-icingaweb2.git).
     * some configuration in the ecours.tails.boum.org node manifest.
   - satellite:
-    * `tails::monitoring::satellite` class in [[!tails_gitweb_repo puppet-tails]],
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/satellite.pp
+      desc="`tails::monitoring::satellite` class"]]
   - agents:
-    * `tails::monitoring::agent` class in [[!tails_gitweb_repo puppet-tails]]
+    * [[!tails_gitweb_puppet_tails manifests/monitoring/agent.pp
+      desc="`tails::monitoring::agent` class"]]
   - private keys are managed with the `tails_secrets_monitoring` Puppet module
 * documentation:
   - [[How to add checks to our monitoring setup|roles/sysadmins/adding_icinga2_checks]]
@@ -289,7 +328,8 @@ Below, importance level is evaluated based on:
   request an account.
 * tools: prosody
 * configuration:
-  - `tails::prosody` in [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/prosody.pp
+    desc="`tails::prosody` class"]]
 * importance: low
 
 ## Jenkins
@@ -302,21 +342,31 @@ Below, importance level is evaluated based on:
 * tools: [[!debpts jenkins desc="Jenkins"]], [[!debpts jenkins-job-builder]]
 * configuration:
   - master:
-    * `jenkins` class in [[!tails_gitweb_repo puppet-jenkins]]
-    * `tails::jenkins::master` class in [[!tails_gitweb_repo puppet-tails]]
+    * [[!tails_gitlab tails/puppet-jenkins/-/blob/master/manifests/init.pp
+      desc="`jenkins` class"]]
+    * [[!tails_gitweb_puppet_tails manifests/jenkins/master.pp
+      desc="`tails::jenkins::master` class"]]
     * a few Jenkins plugins installed with `jenkins::plugin`
     * YAML jobs configuration lives in a
       [[!tails_gitweb_repo jenkins-jobs desc="dedicated Git repository"]];
       [Jenkins Job Builder](http://ci.openstack.org/jenkins-job-builder/)
       uses it to configure Jenkins
   - slaves:
-    * `tails::builder`, `tails::jenkins::slave`,
-      `tails::jenkins::slave::iso_builder` and `tails::tester` classes in
-      [[!tails_gitweb_repo puppet-tails]]
-    * some configuration in the manifest ([[!tails_ticket 7106]])
+    * [[!tails_gitweb_puppet_tails manifests/iso_builder.pp
+      desc="`tails::iso_builder`"]],
+      [[!tails_gitweb_puppet_tails manifests/jenkins/slave.pp
+      desc="`tails::jenkins::slave`"]],
+      [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_builder.pp
+      desc="`tails::jenkins::slave::iso_builder`"]],
+      [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_tester.pp
+      desc="`tails::jenkins::slave::iso_tester`"]],
+      and [[!tails_gitweb_puppet_tails manifests/tester.pp
+      desc="`tails::tester`"]]
+      classes
     * signing keys are managed with the `tails_secrets_jenkins` Puppet module
   - web server:
-    * some configuration in the manifest ([[!tails_ticket 7107]])
+    * [[!tails_gitweb_puppet_tails manifests/jenkins/reverse_proxy.pp
+      desc="`tails::jenkins::reverse_proxy` class"]]
 * design documentation: [[sysadmins/Jenkins]]
 * importance: critical (as a key component of our development process)
 
@@ -326,8 +376,15 @@ Below, importance level is evaluated based on:
   [[Schleuder lists|sysadmins#schleuder]]
 * access: public MTA listening on `mail.tails.boum.org`
 * tools: [[!debpts postfix]], [[!debpts amavisd-new]], [[!debpts spamassassin]]
-* configuration: `tails::postfix`, `tails::amavisd_new` and
-  `tails::spamassassin` classes in [[!tails_gitweb_repo puppet-tails]]
+* configuration:
+  [[!tails_gitweb_puppet_tails manifests/postfix.pp
+  desc="`tails::postfix`"]],
+  [[!tails_gitweb_puppet_tails manifests/amavisd_new.pp
+  desc="`tails::amavisd_new`"]],
+  and
+  [[!tails_gitweb_puppet_tails manifests/spamassassin.pp
+  desc="`tails::spamassassin`"]]
+  classes
 * importance: high (at least because WhisperBack bug reports go through this MTA)
 
 <a id="meeting-reminder"></a>
@@ -338,11 +395,18 @@ Below, importance level is evaluated based on:
 * access: not applicable
 * configuration:
   - to add a new reminder, or modify an existing one:
-    - `tails::meeting::reminders` in [[!tails_gitweb_repo puppet-tails]]
-    - templates are in `files/meeting/`
-  - implementation (in [[!tails_gitweb_repo puppet-tails]]):
-    `tails::meeting`, `tails::meeting::reminder`, and
-    `files/meeting/meeting.py`
+    - [[!tails_gitweb_puppet_tails manifests/meeting/reminders.pp
+      desc="`tails::meeting::reminders`"]]
+    - [[!tails_gitlab tails/puppet-tails/-/tree/master/files/meeting
+      desc="email templates"]]
+  - implementation:
+    [[!tails_gitweb_puppet_tails manifests/meeting.pp
+    desc="`tails::meeting`"]],
+    [[!tails_gitweb_puppet_tails manifests/meeting/reminder.pp
+    desc="`tails::meeting::reminder`"]],
+    and
+    [[!tails_gitweb_puppet_tails files/meeting/meeting.py
+    desc="`meeting.py` script"]]
 * importance: to be defined
 
 <a id="mumble"></a>
@@ -367,7 +431,8 @@ Below, importance level is evaluated based on:
   developers
 * tools: [[!debpts rsync]]
 * configuration:
-  - `tails::rsync` in [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/rsync.pp
+    desc="`tails::rsync`"]]
   - users and credentials are managed with the `tails_secrets_rsync`
     Puppet module
 * importance: critical (needed to release Tails)
@@ -379,8 +444,10 @@ Below, importance level is evaluated based on:
 * purpose: host some of our Schleuder mailing lists
 * access: anyone can send email to these lists
 * tools: [[!debpts schleuder]]
-* configuration: `tails::schleuder` class in [[!tails_gitweb_repo
-  puppet-tails]] and `tails::schleuder::lists` Hiera setting
+* configuration:
+  - [[!tails_gitweb_puppet_tails manifests/schleuder.pp
+    desc="`tails::schleuder` class"]]
+  - `tails::schleuder::lists` Hiera setting
 * importance: high (at least because WhisperBack bug reports go through this service)
 
 ## Tor bridge
@@ -391,9 +458,10 @@ Below, importance level is evaluated based on:
   [BridgeDB](https://bridges.torproject.org/)
 * tools: [[!debpts tor]], [[!debpts obfs4proxy]]
 * configuration:
-  - `tails::apt::repository::torproject` in
-    [[!tails_gitweb_repo puppet-tails]]
-  - `tor::daemon::relay` in [[!tails_gitweb_repo puppet-tor]]
+  - [[!tails_gitweb_puppet_tails manifests/apt/repository/torproject.pp
+    desc="`tails::apt::repository::torproject`"]]
+  - [[!tails_gitlab tails/puppet-tor/-/blob/master/manifests/daemon/relay.pp
+    desc="`tor::daemon::relay`"]]
 * importance: low
 
 ## VPN
@@ -403,8 +471,8 @@ Below, importance level is evaluated based on:
 * access: private network.
 * tools: [[!debpts tinc]]
 * configuration:
-  - `tails::vpn::instance` class in the [[!tails_gitweb_repo puppet-tails]]
-     repo.
+  - [[!tails_gitweb_puppet_tails manifests/vpn/instance.pp
+    desc="`tails::vpn::instance` class"]]
 * importance: transitively critical (as a dependency of our monitoring system)
 
 ## Web server
@@ -413,9 +481,8 @@ Below, importance level is evaluated based on:
 * access: depending on the service
 * tools: [[!debpts nginx]]
 * configuration:
-  - `nginx` class in [[!tails_gitweb_repo puppet-nginx]]
-  - hard-coded manifest snippets and files on the puppetmaster
-    ([[!tails_ticket 6938]])
+  - [[!tails_gitlab tails/puppet-nginx/-/blob/master/manifests/init.pp
+    desc="`nginx` class"]]
 * importance: transitively critical (as a dependency of Jenkins)
 
 <a id="weblate"></a>
@@ -429,7 +496,8 @@ Below, importance level is evaluated based on:
 * admins: to be defined ([[!tails_ticket 17050]])
 * tools: [Weblate](https://weblate.org/)
 * configuration:
-  - `tails::weblate` class in [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/weblate.pp
+    desc="`tails::weblate` class"]]
 * importance: to be defined
 
 ## WhisperBack relay
@@ -438,7 +506,8 @@ Below, importance level is evaluated based on:
 * access: public; WhisperBack (and hence, any bug reporter) uses it
 * tools: [[!debpts postfix desc="Postfix"]]
 * configuration:
-  - `tails::whisperback::relay` in [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_puppet_tails manifests/whisperback/relay.pp
+    desc="`tails::whisperback::relay` class"]]
   - private keys are managed with the `tails_secrets_whisperback`
     Puppet module
 * importance: high
