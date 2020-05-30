@@ -12,15 +12,40 @@ after having merged the current master branch into it!
 Requirements
 ============
 
+Packages
+--------
+
 To release Tails you'll need some packages installed:
 
-* `tidy mktorrent transmission-cli`
+* `gitlab-cli jq tidy mktorrent transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
 * `po4a` 0.55: different versions extract Markdown headings
    in a different way, which makes tons of strings fuzzy.
+
+Configuration files
+-------------------
+
+To release Tails you need:
+
+* `~/.python-gitlab.cfg`
+
+  You need at least this content:
+
+        [global]
+        ssl_verify = true
+
+        [Tails]
+        url = https://gitlab.tails.boum.org
+        per_page = 100
+        private_token = XXX
+
+   [[!tails_gitlab profile/personal_access_tokens
+   desc="Generate a _Personal Access Token_"]] with at least the `api` scope
+   enabled, and set it as the value of the `private_token` option
+   in your `~/.python-gitlab.cfg`.
 
 Environment
 ===========
@@ -240,7 +265,7 @@ the release branch's custom APT suite:
 
 * [[tails-installer]]
 * whisperback:
-  * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
+  * follow [upstream release process](https://gitlab.tails.boum.org/tails/whisperback/-/blob/master/HACKING.md#release)
   * build a Debian package in an amd64 chroot of the Debian release
     the Tails version you're preparing is based on
 
@@ -369,7 +394,7 @@ Then, gather other useful information from:
   - new upstream releases of applications mentioned in [[doc/about/features]]
   - new upstream releases of other important components such as the
     Linux kernel
-* the [*Completed for the next release*](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=327) Redmine view.
+* the [[!tails_gitlab groups/tails/-/milestones desc="GitLab milestone"]].
 
 Finally, sanity check the version and commit:
 
@@ -728,7 +753,7 @@ to verify that Jenkins reproduced your images:
          * Otherwise, if the fix looks time-consuming or difficult,
            let's release anyway. But let's add a known issue about
            "This Tails release does not build reproducibility" to the
-           release notes, linking to the ticket where
+           release notes, linking to the issue where
            the nature of the reproducibility failure is clearly
            described.
 
@@ -952,7 +977,7 @@ Else, if this verification fails, then:
 
    Else, if the parameters where correct, then follow the next steps.
 
-3. File a ticket about this problem.
+3. File an issue about this problem.
 
    Specify:
 
@@ -1294,7 +1319,7 @@ Testing
    suites are done in due time. Clock and report this work separately
    from your RM'ing work.
 1. Triage test results, reproduce bugs as needed, decide what the next
-   step is and make sure it happens: add to known issues? file ticket?
+   step is and make sure it happens: add to known issues? file an issue?
    release blocker? improve the test description (steps, expected outcome)?
 
 Prepare announcements and blog posts
@@ -1394,7 +1419,7 @@ Write the announcement for the release in
   [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
 - Document known issues.
-- This snippet can help to convert the copied changelog's ticket
+- This snippet can help to convert the copied changelog's issue
   references to links:
 
       sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
@@ -1481,8 +1506,11 @@ Make sure every active mirror in the pool has the new version:
 	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
-Ask <tails-mirrors@boum.org> [encrypted] to drop those that are lagging behind and
-notify their administrators.
+Ask the mirrors team to disable mirrors that are lagging behind:
+
+ - either over email: <tails-mirrors@boum.org> [encrypted]
+ - or by creating a merge request that modifies the
+   [mirrors configuration file](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json)
 
 Sanity checks
 -------------
@@ -1557,54 +1585,58 @@ Bug tracker
 
 Skip this part if preparing a release candidate.
 
-Edit the [*Completed for the next
-release*](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=327)
-Redmine view: set the _Target version_ filter to the next scheduled release.
-
 Postpone to next release any remaining open issue for the version
-you've just released. Use the right-click contextual menu to do so in
-one single batch.
+you've just released:
 
-Then, mark the just-released Redmine milestone as done: go to the
-target version page, click *Edit*, and set *Status* to *Closed*.
+1. Create a new `missed:$VERSION` label
+   on [[!tails_gitlab groups/tails/-/labels]]
+2. Visit the [[!tails_gitlab groups/tails/-/milestones desc="milestone"]]
+   for the version you've just released.
+3. In the right side bar, in the _Issues_ section, click on the _Open: NN_
+   link.
+4. Click the _Edit issues_ link in the top right corner.
+5. In the right side bar:
+    - select the milestone for the next scheduled release
+    - select the `missed:$VERSION` label
+6. On the top left of the list of issues, click the checkbox
+   that will select all issues.
+7. In the right side bar, click _Update all_.
+8. If some issues still appear on the list, go through these steps again:
+   there's pagination involved and
+   [[!tails_gitlab help/user/project/bulk_editing.html desc="bulk editing"]]
+   only applies to issues that are displayed.
+
+Then, do the same for MRs.
+
+Ideally we would [[!tails_ticket 17589 desc="automate this"]].
+
+Then, close the just-released [[!tails_gitlab groups/tails/-/milestones
+desc="milestone"]].
 
 ### Tickets linked from the website
 
-Go through the tickets linked from the documentation and support sections of the
-website and point our lead technical writer (sajolida) to the tickets that might be resolved in
-this release.
+Go through the issues linked from the documentation and support sections of the
+website and point our lead technical writer (sajolida) to those that might
+be resolved in this release.
 
     cd "${MASTER_CHECKOUT:?}" && \
-    find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
+    find wiki/src/{doc,support} ! -path wiki/src/support/known_issues/graphics.mdwn -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
-            url="https://redmine.tails.boum.org/code/issues/${ticket:?}"
-            url_content=$(curl --fail --silent ${url:?})
-            if [ "${?}" -ne 0 ] || [ -z "${url_content:-}" ]; then
-                echo "Failed to fetch ${url:?} so manually investigate #${ticket:?}" >&2
-                continue
-            fi
-            ticket_status="$(echo "${url_content:?}" | \
-                sed -n 's,^.*<div class="status attribute"><div class="label">Status:</div><div class="value">\([^<>]\+\)</div></div>.*$,\1,p')"
+            ticket_status="$(python-gitlab --gitlab Tails -o json --fields state project-issue get --project-id 1 --iid "$ticket" | jq --raw-output .state)"
             if [ -z "${ticket_status:-}" ]; then
                 echo "Failed to find the status of #${ticket:?}" >&2
                 continue
             fi
-            if [ "${ticket_status:?}" != "New" ] && \
-               [ "${ticket_status:?}" != "Confirmed" ] && \
-               [ "${ticket_status:?}" != "In Progress" ]; then
-                echo "It seems ticket #${ticket:?} has been fixed (Status: ${ticket_status:?}) so please find all instances in the wiki and fix them. Ticket URL: ${url:?}"
+            if [ "${ticket_status:?}" = "closed" ]; then
+                echo "It seems issue #${ticket:?} has been fixed. Please find all instances on the website and adjust them as needed. Ticket URL: https://gitlab.tails.boum.org/tails/tails/issues/${ticket:?}"
             fi
         done
-
-Remember that ticket expressions, e.g. `[[!tails_ticket 1234]]`, can
-span several lines, so finding the ones reported by the above code
-*might* be harder than `git grep "tails_ticket 1234"`.
 
 Twitter
 -------
 
-Check in the comments of the ticket for the release notes if the
+Check in the comments of the issue for the release notes if the
 technical writers have prepared a tweet. Otherwise tweet a simple link
 to the release notes:
 
@@ -1692,7 +1724,7 @@ If you just released a final release
         git submodule update --init && \
         bare_repo=$(mktemp -d) && \
         git clone --bare --reference "${MASTER_CHECKOUT:?}" \
-           gitolite@d53ykjpeekuikgoq.onion:tails \
+           git@gitlab.tails.boum.org:tails/tails \
            "${bare_repo:?}" && \
         PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
            --repo "${bare_repo:?}" && \
@@ -1755,10 +1787,11 @@ If you just released a final release
    <https://jenkins.tails.boum.org/>.
 1. Make sure you pushed all changes in every of our Git repo (including our
    Debian packages ones).
-1. Delete the _Release Manager View for ${VERSION_:?}_ Redmine custom query.
 1. Ensure the next two releases have their own _Release Manager View_.
-1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
-   in the Roof* so that this section appears after the next release.
+1. Set the *Due date* for the [[!tails_gitlab
+   groups/tails/-/milestones
+   desc="*Holes in the Roof* milestone"]] to a date between
+   the next 2 releases.
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
 1. Check the Mozilla release calendars:
