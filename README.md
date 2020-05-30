@@ -6,7 +6,7 @@
 - Tails uses the Tor network to protect your privacy online and help you avoid censorship. Enjoy the Internet like it should be.
 - Shut down the computer and start on your Tails USB stick instead of starting on Windows, macOS, or Linux. Tails leaves no trace on the computer when shut down.
 - Tails includes a selection of applications to work on sensitive documents and communicate securely. Everything in Tails is ready-to-use and has safe defaults.
--You can download Tails for free and independent security researchers can verify our work. Tails is based on Debian GNU/Linux.
+- You can download Tails for free and independent security researchers can verify our work. Tails is based on Debian GNU/Linux.
 
 [Learn learn how Tails works](https://tails.boum.org/about)
 
