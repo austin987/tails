@@ -825,6 +825,42 @@ Lastly, let's set some variables to be used later:
     IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
 
+Push images to ISO history
+==========================
+
+Push the released ISO and USB images and their artifacts (`.buildlog`,
+`.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
+repo, so that:
+
+ - The Jenkins `build_IUKs` job can fetch them.
+ - Our isotesters can fetch them from there for their testing.
+
+How to do so is described in the `ISO_history.mdwn` document in the RM team's
+Git repo.
+
+If the release manager has `$ISOS` pointing to a checkout of the ISO
+history repository, the following commands might be useful. For the
+record, images and their signatures are already in that directory, and
+one just needs to ship some metadata along:
+
+    (cd ${ISOS?:}/tails-amd64-${VERSION?:} && \
+    cp "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}{.buildlog,.build-manifest,.packages} . && \
+    git annex sync && \
+    git annex add . && \
+    git commit -m "Add Tails ${VERSION?:} images and metadata." && \
+    git annex sync && \
+    git annex copy --to origin .)
+
+This transfer can take a while, and it's possible to proceed with the
+next section in the meanwhile, up to the following step (included):
+
+ - Build the Incremental Upgrade Kits locally
+
+However, the following step will require those files being transferred
+and made available on the relevant web server:
+
+ - Build the Incremental Upgrade Kits on Jenkins
+
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
@@ -907,9 +943,8 @@ Build the Incremental Upgrade Kits locally
    )
 
 This command takes a long time. In parallel, while it is running,
-you can follow the next 2 steps:
+you can follow the next step:
 
- - Push the images to our ISO history git-annex repo
  - Build the Incremental Upgrade Kits on Jenkins
 
 ISO history
@@ -931,7 +966,11 @@ on <https://iso-history.tails.boum.org/>.
 <a id="build-iuks-on-jenkins"></a>
 
 Build the Incremental Upgrade Kits on Jenkins
-------------------------------------------
+---------------------------------------------
+
+1. Make sure the push to ISO history (started in the previous section)
+   has finished, and that images have appeared on the web server:
+   <https://iso-history.tails.boum.org/>
 
 1. On <https://jenkins.tails.boum.org/job/build_IUKs/build?delay=0sec>,
    fill the form with these values:
@@ -964,6 +1003,7 @@ Verify that Jenkins reproduced your IUKs
     "${RELEASE_CHECKOUT:?}"/bin/copy-iuks-to-rsync-server-and-verify \
        --hashes-file "${IUKS_HASHES:?}" \
        --work-dir /srv/tmp \
+       --debug \
        --jenkins-build-id "${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}"
 
 If this verification succeeds, move on to the next section.
@@ -1243,6 +1283,10 @@ candidate):
 	   git push origin master
 	)
 
+The IUK hashes files can be removed:
+
+    ssh rsync.lizard rm -f /srv/tmp/to_${VERSION?:}.sha256sum'*'
+
 ## Announce, seed and test the Torrents
 
 Check if there's enough space on our Bittorrent seed to import the new
@@ -1320,8 +1364,8 @@ Testing
    report their results in due time, and that they make it clear when
    they're leaving for good.
 1. Fill the holes and make sure that the automated and manual test
-   suites are done in due time. Clock and report this work separately
-   from your RM'ing work.
+   suites are done in due time. Clock and report this work along with
+   the rest of your RM'ing work.
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file an issue?
    release blocker? improve the test description (steps, expected outcome)?
@@ -1330,10 +1374,12 @@ Prepare announcements and blog posts
 ====================================
 
 What follows in this section happens on the `$WEBSITE_RELEASE_BRANCH`
-branch in `${RELEASE_CHECKOUT:?}`:
+branch in `${RELEASE_CHECKOUT:?}`, making sure we catch up with the
+technical writers who have likely prepared release notes:
 
 	cd "${RELEASE_CHECKOUT:?}" && \
-	   git checkout "${WEBSITE_RELEASE_BRANCH:?}"
+	   git checkout "${WEBSITE_RELEASE_BRANCH:?}" && \
+	   git merge "origin/${WEBSITE_RELEASE_BRANCH?:}"
 
 If preparing a final release
 ----------------------------
@@ -1570,9 +1616,8 @@ Push
 ### Git
 
 Push the last commits to our Git repository and put `master` in the
-following state. Don't forget to include a `Closes:` statement when
-merging `WEBSITE_RELEASE_BRANCH`, to close the relevant “Write release
-notes for X.Y.Z” ticket:
+following state, remembering to close the “Write release notes” ticket
+in the merge commit message):
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1582,7 +1627,7 @@ notes for X.Y.Z” ticket:
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
       git merge origin/master && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
+      git merge --edit "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
       echo "stable" > config/base_branch && \
       git commit config/base_branch \
           -m "Restore master's base branch." \
