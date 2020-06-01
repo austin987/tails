@@ -98,7 +98,8 @@ Export the following environment variables:
 * `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
   scheduled *bugfix* Tails release
 * `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
-  to the next emergency release if we have to put one out
+  to the next emergency release if we have to put one out; unset for a
+  release candidate
 * `NEXT_STABLE_CHANGELOG_VERSION`: if `$NEXT_PLANNED_BUGFIX_VERSION` is the next
   scheduled release, use it; otherwise, use `$NEXT_POTENTIAL_EMERGENCY_VERSION`
 
@@ -174,7 +175,7 @@ If we are at freeze time for a major release:
 
 6. Make it so the time-based APT repository snapshots are kept around
    long enough, by bumping their `Valid-Until` to 10 days after the
-   next major release (the one _after_ the one you're preparing)'s
+   second next major release (the one _after_ the one you're preparing)'s
    scheduled date:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
@@ -235,7 +236,7 @@ up-to-date localization files, so:
  - If you are preparing a release candidate, build at least the packages
    that change user-visible strings, so that translators can use the RC
    to check the status of their work and identify what's left to do.
- - If you are preparing a major release, build at least the packages
+ - If you are preparing a final major release, build at least the packages
    that got translation updates since the RC: we've sent a call for
    translation while releasing the RC so the least we can do is to
    incorporate the work that ensued into our final release :)
@@ -327,7 +328,7 @@ Update other base branches
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
 2. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
-   branch, the time-based APT repository snapshots that were used
+   branch, the time-based APT repository snapshots being used
    during the freeze. It's fine if that results in a no-op
    (it depends on how exactly previous operations were performed).
 
@@ -356,10 +357,12 @@ Update more included files
 Changelog
 ---------
 
-Remove the placeholder entry for next release in `debian/changelog`,
-and then:
+Make sure to switch back to the release branch, spawn an editor to
+remove the placeholder entry for then next release in `debian/changelog`,
+and gather data from the Git repository:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
+	dch -e && \
 	DEBEMAIL='tails@boum.org' DEBFULLNAME='Tails developers' \
 	./release ${VERSION:?} ${PREVIOUS_TAG:?}
 
@@ -470,10 +473,9 @@ points translators to up-to-date PO files:
 Call for translation
 ====================
 
-If at freeze time for a major release, send a call for translations
-to tails-l10n, making it clear what
-Git branch the translations must be based on, and what are the
-priorities.
+If at freeze time for a major release, send a call for translations to
+<tails-l10n@boum.org> [public], making it clear what Git branch the
+translations must be based on, and what are the priorities.
 
 To get a list of changes on the website:
 
@@ -592,7 +594,7 @@ Better catch this before people spend time doing manual tests.
 SquashFS file order
 -------------------
 
-1. Install the almost final USB image to a USB stick.
+1. Install the almost-final USB image to a USB stick.
 1. Boot this USB stick a first time to trigger re-partitioning.
 1. Shut down this Tails.
 1. Boot this USB stick **on bare metal** again.
@@ -672,7 +674,7 @@ suite should be ready, so it is time to:
    so don't bother setting it yourself.
 
 1. Compare the new build manifest with the one from the previous,
-   almost final build:
+   almost-final build:
 
         diff -Naur \
            "${BUILD_MANIFEST:?}" \
@@ -807,6 +809,11 @@ files metadata:
        rm -rf "${tmp:?}"
     done
 
+Due to various directory changes, one needs to manually go back to the
+desired directory, likely using:
+
+    cd ${RELEASE_CHECKOUT?:}
+
 Lastly, let's set some variables to be used later:
 
     ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso"
@@ -879,22 +886,22 @@ Build the Incremental Upgrade Kits locally
     (
        set -eu
        WORK_DIR=$(mktemp -d)
-       TAILS_REMOTE="$(git -C "$RELEASE_CHECKOUT" remote get-url origin)"
-       PUPPET_TAILS_REMOTE=$(echo -n "$TAILS_REMOTE" | perl -p -E 's,:tails(:?[.]git)?\z,:puppet-tails,')
-       cd "$WORK_DIR"
+       TAILS_REMOTE="$(git -C "${RELEASE_CHECKOUT?:}" remote get-url origin)"
+       PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails(:?[.]git)?\z,:puppet-tails,')
+       cd "${WORK_DIR?:}"
        git clone "$PUPPET_TAILS_REMOTE"
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
-           --tails-git-remote "file://${RELEASE_CHECKOUT}/.git"             \
-           --tails-git-commit "$TAG"                                      \
-           --source-date-epoch "$SOURCE_DATE_EPOCH"                       \
-           --local-isos-dir "$ISOS"                                       \
+           --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
+           --tails-git-commit "${TAG?:}"                                      \
+           --source-date-epoch "${SOURCE_DATE_EPOCH?:}"                       \
+           --local-isos-dir "${ISOS?:}"                                       \
            --tmp-dir "${TMPDIR:-/tmp}"                                        \
-           --output-dir "$IUKS_DIR"                                       \
-           --source-versions "$IUK_SOURCE_VERSIONS"                       \
-           --new-version "$VERSION"                                       \
+           --output-dir "${IUKS_DIR?:}"                                       \
+           --source-versions "${IUK_SOURCE_VERSIONS?:}"                       \
+           --new-version "${VERSION?:}"                                       \
            --verbose
-       cd "$IUKS_DIR"
-       sha256sum Tails_amd64_*_to_${VERSION}.iuk > "$IUKS_HASHES"
+       cd "${IUKS_DIR?:}"
+       sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
    )
 
 This command takes a long time. In parallel, while it is running,
@@ -1827,7 +1834,8 @@ If you just released an RC
    APT repository documentation. This includes some git operations,
    like creating an appropriate _"dummy changelog entry"_ in the
    `debian/changelog` file.
-1. Merge testing into devel, and push them:
+1. Merge testing into devel (keeping a single changelog entry, for the
+   second next major release), and push them:
 
         cd "${RELEASE_CHECKOUT:?}" && \
         git checkout devel && \
