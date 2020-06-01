@@ -24,6 +24,7 @@ To release Tails you'll need some packages installed:
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
 * `po4a` 0.55: different versions extract Markdown headings
    in a different way, which makes tons of strings fuzzy.
+* packages to [[build a local version of the website|contribute/build/website/]]
 
 Configuration files
 -------------------
@@ -149,19 +150,20 @@ Freeze
 Major release
 -------------
 
-If we are at freeze time for a major release:
+If we are at freeze time for a major release (i.e. preparing its
+release candidate):
 
 1. Merge the `master` Git branch into `devel`:
 
-        git checkout devel && git fetch origin && git merge --no-ff origin/master
+        git checkout devel && git fetch origin && git merge origin/devel && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `devel` branch's `config/APT_overlays.d/` into the `devel`
-   APT suite.
+   APT suite; set `BRANCH=testing` instead of the default `BRANCH=devel`.
 
 3. Merge the `devel` Git branch into the `testing` one:
 
-        git checkout testing && git merge devel
+        git checkout testing && git merge origin/testing && git merge devel
 
    ... and check that the resulting `config/APT_overlays.d/` in the
    `testing` branch is empty.
@@ -187,7 +189,7 @@ If we are at freeze time for a bugfix release:
 
 1. Merge the `master` Git branch into `stable`:
 
-        git checkout stable && git fetch && git merge --no-ff origin/master
+        git checkout stable && git fetch && git merge origin/stable && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
@@ -923,7 +925,7 @@ repo, so that:
 How to do so is described in the `ISO_history.mdwn` document in the RM team's
 Git repo.
 
-Then, wait (a few minutes) until the images appear
+Then, wait (a few minutes, */15 crontab) until the images appear
 on <https://iso-history.tails.boum.org/>.
 
 <a id="build-iuks-on-jenkins"></a>
@@ -1082,34 +1084,31 @@ Prepare upgrade-description files
    signatures to the Git branch used to prepare the release
    (`$WEBSITE_RELEASE_BRANCH`):
 
-        ( \
-          cd "${RELEASE_CHECKOUT:?}" && git add wiki/src/upgrade && \
-          git commit -m "Update upgrade-description files." && \
-          git push origin ${WEBSITE_RELEASE_BRANCH:?} \
-        )
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git add wiki/src/upgrade && \
+        git commit -m "Update upgrade-description files." && \
+        git push origin ${WEBSITE_RELEASE_BRANCH:?}
 
 1. Copy the generated UDFs for the previous releases to the *test*
    channel in `$MASTER_CHECKOUT`, modify their content accordingly,
    sign them, commit and push:
 
-        ( \
-          cd ${MASTER_CHECKOUT:?} && \
-          git fetch && \
-          git merge origin/master && \
-          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?} ${VERSION:?}); do
-            release_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
-            test_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
-            mkdir -p "$(dirname "$test_udf")" && \
-            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
-              | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
-            echo "Signing ${test_udf:?}" && \
-            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
-            mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
-            git add ${test_udf:?}* ; \
-          done && \
-          git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
-          git push origin master:master \
-        )
+        cd ${MASTER_CHECKOUT:?} && \
+        git fetch && \
+        git merge origin/master && \
+        for old_version in $(echo ${IUK_SOURCE_VERSIONS:?} ${VERSION:?}); do
+          release_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
+          test_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
+          mkdir -p "$(dirname "$test_udf")" && \
+          git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
+            | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
+          echo "Signing ${test_udf:?}" && \
+          gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+          mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+          git add ${test_udf:?}* ; \
+        done && \
+        git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
+        git push origin master:master
 
    XXX: ideally, we should also copy the UDFs that only advertise
    a full upgrade path to the version we're releasing, so that
@@ -1123,15 +1122,15 @@ If preparing a RC, skip this part.
 
 Update the image description file (IDF) used by the browser extension:
 
+    cd "${RELEASE_CHECKOUT?:}" && \
     ./bin/idf-content \
        --version "${VERSION:?}" \
        --iso "${ISO_PATH:?}" \
        --img "${IMG_PATH:?}" \
-       > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-    ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-      git commit -m "Update IDF file for Tails Verification." && \
-      git push origin "${WEBSITE_RELEASE_BRANCH:?}" )
+       > wiki/src/install/v2/Tails/amd64/stable/latest.json && \
+    git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
+    git commit -m "Update IDF file for Tails Verification." && \
+    git push origin "${WEBSITE_RELEASE_BRANCH:?}"
 
 Done with OpenPGP signing
 =========================
@@ -1341,7 +1340,14 @@ If preparing a final release
 
 Skip this part if preparing a RC.
 
-Rename, copy, garbage collect and update various files:
+XXX: If preparing a final *major* release, beware! The `git rm` steps
+will get confused because we should be removing files from the
+previous *bugfix* release (and `PREVIOUS_VERSION` points to the
+release candidate instead, for which we don't ship all files). Maybe
+start by removing all files (regardless of the version), before copying
+the new files? To be attempted/confirmed when releasing 4.11.
+
+Rename, copy, garbage collect and update various files.
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \
@@ -1380,6 +1386,8 @@ announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 Write an announcement listing the security bugs affecting the previous
 version in
 `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
+(XXX: when preparing a final *major* release, point at the
+previous *bugfix* release rather than at the release candidate)
 in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the
 images to be released were *built*. Including:
@@ -1481,6 +1489,7 @@ Skip this if you are preparing anything but a final, major release.
       <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
       EOF
 
+- To be in line with previous announces, remove navigation bits entirely.
 - [login to the Tor blog](https://blog.torproject.org/user)
 - click *Content* → *Add content* → *Blog Post*
 - add these tags, each in a separate text entry field (use _Add another item_):
@@ -1488,6 +1497,7 @@ Skip this if you are preparing anything but a final, major release.
   * anonymous operating system
   * tails releases
 - set *Title* to "New Release: Tails $VERSION"
+- set *URL alias* to "/new-release-tails-XYZ" (without dots)
 - choose *Filtered HTML* as the *Text format* in the blog post editor
 - copy the text you have prepared into the *Post Body* textarea of the
   blog post editor
@@ -1560,7 +1570,9 @@ Push
 ### Git
 
 Push the last commits to our Git repository and put `master` in the
-following state:
+following state. Don't forget to include a `Closes:` statement when
+merging `WEBSITE_RELEASE_BRANCH`, to close the relevant “Write release
+notes for X.Y.Z” ticket:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1677,8 +1689,11 @@ If you just released a final release
    stable release from:
    - our rsync server:
      `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+     (XXX: for final *major* releases, adjust `PREVIOUS_VERSION` to
+     point at the previous *bugfix* release, instead of the release
+     candidate).
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
-     (ISO and USB image)
+     (ISO and USB image, use comma-separated values)
      with `ssh bittorrent.lizard transmission-remote --list` and then
      delete them with
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
@@ -1709,7 +1724,7 @@ If you just released a final release
                     -not -name "*_to_${VERSION:?}.iuk" \
                     -not -name '*~test_*~test.iuk' \
                     -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
-                    -delete \
+                    -print -delete \
              \"
 
 1. Check how much space our mirrors need:
@@ -1743,7 +1758,12 @@ If you just released a final release
    never made.
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel`
+   `devel`.
+   Note: After a final *major* release is published, it's normal to
+   leave the `testing` branch alone: it will only become relevant
+   again when the next freeze starts. In this case, keep a single
+   changelog entry for `stable` (the next *bugfix* release) and for
+   `devel` (the next *major* release).
 1. Follow the
    [[post-release|APT_repository/custom#workflow-post-release]] custom
    APT repository documentation. This includes some git operations,
