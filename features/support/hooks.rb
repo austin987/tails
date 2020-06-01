@@ -330,7 +330,7 @@ After('@product') do |scenario|
       end
     end
     $failure_artifacts.sort!
-    $failure_artifacts.each do |_type, file|
+    $failure_artifacts.each do |desc, file|
       artifact_name = sanitize_filename(
         "#{elapsed}_#{scenario.name}#{File.extname(file)}"
       )
