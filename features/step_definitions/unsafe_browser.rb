@@ -15,7 +15,8 @@ def supported_torbrowser_languages
                   "#{first}_#{second}", first,]
     when_not_found = proc { raise "Could not find a locale for '#{line}'" }
     candidates.find(when_not_found) do |candidate|
-      $vm.directory_exist?("/usr/lib/locale/#{candidate}")
+      $vm.directory_exist?("/usr/lib/locale/#{candidate}") ||
+        $vm.directory_exist?("/usr/share/locale/#{candidate}")
     end
   end
 end

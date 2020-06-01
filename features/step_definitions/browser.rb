@@ -254,11 +254,11 @@ Then /^the file is saved to the default Tor Browser download directory$/ do
   try_for(10) { $vm.file_exist?(expected_path) }
 end
 
-When /^I open Tails homepage in the (.+)$/ do |browser|
+When /^I open the Tails homepage in the (.+)$/ do |browser|
   step "I open the address \"https://tails.boum.org\" in the #{browser}"
 end
 
-Then /^Tails homepage loads in the Unsafe Browser$/ do
+Then /^the Tails homepage loads in the Unsafe Browser$/ do
   @screen.wait('TailsHomepage.png', 60)
 end
 
