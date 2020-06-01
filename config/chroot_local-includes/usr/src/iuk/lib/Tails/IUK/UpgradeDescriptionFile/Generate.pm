@@ -113,12 +113,20 @@ method run () {
         }
     }
 
-    for my $previous_version (@{$self->previous_versions}) {
-        say STDERR q{* Updating upgrade-description file for previous },
-            'release (', $previous_version, "): \n  ",
-            $self->udf_for($previous_version), ' ...';
-        $self->update_udf_for_previous_release($previous_version);
-        say STDERR '';
+    for my $channel (qw{alpha stable}) {
+        for my $previous_version (@{$self->previous_versions}) {
+            # Only generate an UDF on the alpha channel if the previous
+            # version actually uses that channel, i.e. it is not a final one.
+            # The version regexp must be the same as in auto/config.
+            next if $channel eq 'alpha' &&
+                $previous_version !~ /~(?:alpha|beta|rc)[0-9]*$/;
+
+            say STDERR q{* Updating upgrade-description file for previous },
+                'release (', $previous_version, "), ", $channel, " channel: \n  ",
+                $self->udf_for($previous_version, channel => $channel), ' ...';
+            $self->update_udf_for_previous_release($previous_version, $channel);
+            say STDERR '';
+        }
     }
 }
 
@@ -148,8 +156,8 @@ method create_udf_for_next_release ($version, $channel) {
     $udf->spew($description->stringify);
 }
 
-method update_udf_for_previous_release ($previous_version) {
-    my $udf         = $self->udf_for($previous_version);
+method update_udf_for_previous_release ($previous_version, $channel) {
+    my $udf = $self->udf_for($previous_version, channel => $channel);
 
     my $description;
     if (-e $udf) {
@@ -160,7 +168,7 @@ method update_udf_for_previous_release ($previous_version) {
             product_name            => $self->product_name,
             initial_install_version => $previous_version,
             build_target            => $self->build_target,
-            channel                 => $self->channel,
+            channel                 => $channel,
         );
         $udf->parent->mkpath;
     }

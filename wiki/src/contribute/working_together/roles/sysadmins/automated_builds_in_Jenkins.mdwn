@@ -7,7 +7,7 @@ This system generates the needed Vagrant basebox before each build
 unless it is already available locally. By default such generated
 baseboxes are cached on each ISO builder forever, which is a waste of
 disk space: in practice only the most recent baseboxes are used. So we
-[take advantage](https://git-tails.immerda.ch/jenkins-jobs/tree/macros/builders.yaml)
+[take advantage](https://gitlab.tails.boum.org/tails/jenkins-jobs/-/blob/master/macros/builders.yaml)
 of the garbage collection mechanisms provided by the Tails
 [[!tails_gitweb Rakefile]]:
 
@@ -19,7 +19,7 @@ of the garbage collection mechanisms provided by the Tails
   the libvirt volumes partition. This way we ensure we only host one copy of a
   given basebox in the `.vagrant.d` directory of the Jenkins user `$HOME`.
 
-The [cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers)
+The [[!tails_gitweb_puppet_tails files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers desc="cleanup_build_job_leftovers"]]
 script ensures a failed basebox generation process
 does not break the following builds due to leftovers
 such as filesystems temporarily mounted by `vmdebootstrap`.
