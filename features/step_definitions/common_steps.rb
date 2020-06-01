@@ -419,14 +419,14 @@ Given /^the Tor Browser (?:has started|starts)( in offline mode)?$/ do |offline|
   end
 end
 
-Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails homepage|Tails GitLab)$/ do |page|
   case page
   when "startup page"
     titles = ['Tails', 'Tails - Trying a testing version of Tails']
   when "Tails homepage"
-    titles = ['Tails - Privacy for anyone anywhere']
-  when "Tails roadmap"
-    titles = ['Roadmap - Tails - Tails Ticket Tracker']
+    titles = ['Tails']
+  when "Tails GitLab"
+    titles = ['tails · GitLab']
   else
     raise "Unsupported page: #{page}"
   end
