@@ -10,39 +10,42 @@ set -x
 
 ### Unmount relevant filesystems
 
+# Wait for lazy unmounts to finish
+sync
+
 # Debugging
-mount
+/bin/mount
 
 # Otherwise we can't drop caches.
 # This may also help for tracking remaining mounts.
-mount -o remount,rw /proc
+/bin/mount -o remount,rw /proc
 
 # Otherwise we can't create new mountpoints in /mnt
-mount -o remount,rw /
+/bin/mount -o remount,rw /
 
 # Move /oldroot/* mountpoints out of the way
 mkdir -p /mnt/live/squashfs
-mount --move \
+/bin/mount --move \
       /oldroot/lib/live/mount/rootfs/filesystem.squashfs \
       /mnt/live/squashfs
 mkdir -p /mnt/live/medium
-mount --move \
+/bin/mount --move \
       /oldroot/lib/live/mount/medium \
       /mnt/live/medium
 mkdir -p /mnt/live/dev
-mount --move \
+/bin/mount --move \
       /oldroot/dev \
       /mnt/live/dev
 mkdir -p /mnt/live/run
-mount --move \
+/bin/mount --move \
       /oldroot/run \
       /mnt/live/run
 
 # Finally, really unmount relevant filesystems
-umount /oldroot
+/bin/umount /oldroot
 
 # Debugging
-mount
+/bin/mount
 
 ### Ensure any remaining disk cache is erased by Linux' memory poisoning
 echo 3 > /proc/sys/vm/drop_caches
