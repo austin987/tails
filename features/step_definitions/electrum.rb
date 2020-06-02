@@ -11,7 +11,7 @@ def electrum_wizard
 end
 
 Then /^I start Electrum through the GNOME menu$/ do
-  step "I start \"Electrum Bitcoin Wallet\" via GNOME Activities Overview"
+  step 'I start "Electrum Bitcoin Wallet" via GNOME Activities Overview'
 end
 
 Then /^Electrum (?:has started|starts)$/ do
@@ -23,9 +23,9 @@ end
 When /^a bitcoin wallet is (|not )present$/ do |existing|
   wallet = "/home/#{LIVE_USER}/.electrum/wallets/default_wallet"
   case existing
-  when ""
+  when ''
     step "the file \"#{wallet}\" exists after at most 30 seconds"
-  when "not "
+  when 'not '
     step "the file \"#{wallet}\" does not exist"
   else
     raise "Unknown value specified for #{existing}"
@@ -38,9 +38,11 @@ Then /^I am prompted to (configure Electrum|enter my Electrum wallet password)$/
   end
   case mode
   when 'configure Electrum'
-    expected = "This file does not exist.\nPress 'Next' to create this wallet, or choose another file."
+    expected = "This file does not exist.\n" \
+               "Press 'Next' to create this wallet, or choose another file."
   when 'enter my Electrum wallet password'
-    expected = "This file is encrypted.\nEnter your password or choose another file."
+    expected = "This file is encrypted.\n" \
+               'Enter your password or choose another file.'
   else
     raise 'Unsupported'
   end
@@ -50,7 +52,7 @@ end
 When /^I follow the Electrum wizard to create a new bitcoin wallet$/ do
   electrum_wizard.button('Next').click
   electrum_wizard.child('What kind of wallet do you want to create?',
-                         roleName: 'panel')
+                        roleName: 'panel')
   electrum_wizard.child('Standard wallet', roleName: 'radio button').click
   electrum_wizard.button('Next').click
   electrum_wizard.child('Keystore', roleName: 'label')
@@ -77,7 +79,7 @@ Then /^I see a warning that Electrum is not persistent$/ do
     Dogtail::Application.new('zenity')
       .child(roleName: 'label')
       .name
-      .start_with?("Persistence is disabled for Electrum")
+      .start_with?('Persistence is disabled for Electrum')
   )
 end
 

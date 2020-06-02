@@ -53,7 +53,7 @@ Feature: Browsing the web using the Unsafe Browser
     And I open the Tails homepage in the Unsafe Browser
     Then I see "BrowserProxyRefused.png" after at most 60 seconds
 
-  Scenario: The Unsafe Browser will not make any connections to the Internet which are not user initiated
+  Scenario: The Unsafe Browser only makes user-initiated connections to the Internet
     Given I have started Tails from DVD and logged in and the network is connected
     And I capture all network traffic
     And Tor is ready

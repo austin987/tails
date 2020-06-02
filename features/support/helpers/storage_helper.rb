@@ -15,27 +15,26 @@ class NoSpaceLeftError < StandardError
 end
 
 class VMStorage
-
   def initialize(virt, xml_path)
     @virt = virt
     @xml_path = xml_path
     pool_xml = REXML::Document.new(File.read("#{@xml_path}/storage_pool.xml"))
     pool_name = pool_xml.elements['pool/name'].text
-    @pool_path = "#{$config["TMPDIR"]}/#{pool_name}"
+    @pool_path = "#{$config['TMPDIR']}/#{pool_name}"
     begin
       @pool = @virt.lookup_storage_pool_by_name(pool_name)
     rescue Libvirt::RetrieveError
       @pool = nil
     end
-    if @pool and (not(KEEP_SNAPSHOTS) or
-                  (KEEP_SNAPSHOTS and not(Dir.exists?(@pool_path))))
+    if @pool && (!KEEP_SNAPSHOTS ||
+                  (KEEP_SNAPSHOTS && !Dir.exist?(@pool_path)))
       VMStorage.clear_storage_pool(@pool)
       @pool = nil
     end
     unless @pool
       pool_xml.elements['pool/target/path'].text = @pool_path
       @pool = @virt.define_storage_pool_xml(pool_xml.to_s)
-      if not(Dir.exists?(@pool_path))
+      unless Dir.exist?(@pool_path)
         # We'd like to use @pool.build, which will just create the
         # @pool_path directory, but it does so with root:root as owner
         # (at least with libvirt 1.2.21-2). libvirt itself can handle
@@ -44,31 +43,27 @@ class VMStorage
         # which we want to support.
         FileUtils.mkdir(@pool_path)
         FileUtils.chown(nil, 'libvirt-qemu', @pool_path)
-        FileUtils.chmod("ug+wrx", @pool_path)
+        FileUtils.chmod('ug+wrx', @pool_path)
       end
     end
     @pool.create unless @pool.active?
     @pool.refresh
   end
 
-  def VMStorage.clear_storage_pool_volumes(pool)
+  def self.clear_storage_pool_volumes(pool)
     was_not_active = !pool.active?
-    if was_not_active
-      pool.create
-    end
+    pool.create if was_not_active
     pool.list_volumes.each do |vol_name|
       vol = pool.lookup_volume_by_name(vol_name)
       vol.delete
     end
-    if was_not_active
-      pool.destroy
-    end
-  rescue
+    pool.destroy if was_not_active
+  rescue StandardError
     # Some of the above operations can fail if the pool's path was
     # deleted by external means; let's ignore that.
   end
 
-  def VMStorage.clear_storage_pool(pool)
+  def self.clear_storage_pool(pool)
     VMStorage.clear_storage_pool_volumes(pool)
     pool.destroy if pool.active?
     pool.undefine
@@ -90,21 +85,22 @@ class VMStorage
     @pool.lookup_volume_by_name(name).delete
   end
 
+  # XXX: giving up on a few worst offenders for now
+  # rubocop:disable Metrics/AbcSize
   def create_new_disk(name, **options)
     options[:size] ||= 2
-    options[:unit] ||= "GiB"
-    options[:type] ||= "qcow2"
+    options[:unit] ||= 'GiB'
+    options[:type] ||= 'qcow2'
     # Require 'slightly' more space to be available to give a bit more leeway
     # with rounding, temp file creation, etc.
     reserved = 500
     needed = convert_to_MiB(options[:size].to_i, options[:unit])
-    avail = convert_to_MiB(get_free_space('host', @pool_path), "KiB")
-    if not (avail - reserved >= needed)
-        raise NoSpaceLeftError.new(
-           "Error creating disk \"#{name}\" in \"#{@pool_path}\". " \
-           "Need #{needed} MiB but only #{avail} MiB is available of " \
-           "which #{reserved} MiB is reserved for other temporary files."
-        )
+    avail = convert_to_MiB(get_free_space('host', @pool_path), 'KiB')
+    if avail - reserved < needed
+      raise NoSpaceLeftError,
+            "Error creating disk \"#{name}\" in \"#{@pool_path}\". " \
+            "Need #{needed} MiB but only #{avail} MiB is available of " \
+            "which #{reserved} MiB is reserved for other temporary files."
     end
     begin
       old_vol = @pool.lookup_volume_by_name(name)
@@ -113,19 +109,20 @@ class VMStorage
     else
       old_vol.delete
     end
-    uid = Etc::getpwnam("libvirt-qemu").uid
-    gid = Etc::getgrnam("libvirt-qemu").gid
+    uid = Etc.getpwnam('libvirt-qemu').uid
+    gid = Etc.getgrnam('libvirt-qemu').gid
     vol_xml = REXML::Document.new(File.read("#{@xml_path}/volume.xml"))
     vol_xml.elements['volume/name'].text = name
     size_b = convert_to_bytes(options[:size].to_f, options[:unit])
     vol_xml.elements['volume/capacity'].text = size_b.to_s
-    vol_xml.elements['volume/target/format'].attributes["type"] = options[:type]
+    vol_xml.elements['volume/target/format'].attributes['type'] = options[:type]
     vol_xml.elements['volume/target/path'].text = "#{@pool_path}/#{name}"
     vol_xml.elements['volume/target/permissions/owner'].text = uid.to_s
     vol_xml.elements['volume/target/permissions/group'].text = gid.to_s
-    vol = @pool.create_volume_xml(vol_xml.to_s)
+    @pool.create_volume_xml(vol_xml.to_s)
     @pool.refresh
   end
+  # rubocop:enable Metrics/AbcSize
 
   def clone_to_new_disk(from, to)
     begin
@@ -137,7 +134,8 @@ class VMStorage
     end
     from_vol = @pool.lookup_volume_by_name(from)
     xml = REXML::Document.new(from_vol.xml_desc)
-    pool_path = REXML::Document.new(@pool.xml_desc).elements['pool/target/path'].text
+    pool_path = REXML::Document.new(@pool.xml_desc)
+                               .elements['pool/target/path'].text
     xml.elements['volume/name'].text = to
     xml.elements['volume/target/path'].text = "#{pool_path}/#{to}"
     @pool.create_volume_xml_from(xml.to_s, from_vol)
@@ -146,7 +144,7 @@ class VMStorage
   def disk_format(name)
     vol = @pool.lookup_volume_by_name(name)
     vol_xml = REXML::Document.new(vol.xml_desc)
-    return vol_xml.elements['volume/target/format'].attributes["type"]
+    vol_xml.elements['volume/target/format'].attributes['type']
   end
 
   def disk_path(name)
@@ -159,13 +157,15 @@ class VMStorage
     end
   end
 
+  # XXX: giving up on a few worst offenders for now
+  # rubocop:disable Metrics/AbcSize
   def disk_mkpartfs(name, parttype, fstype, **opts)
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
     opts[:size] ||= nil
     opts[:unit] ||= nil
     guestfs_disk_helper(name) do |g, disk_handle|
-      if ! opts[:size].nil? and ! opts[:unit].nil?
+      if !opts[:size].nil? && !opts[:unit].nil?
         g.part_init(disk_handle, parttype)
         size_in_bytes = convert_to_bytes(opts[:size].to_f, opts[:unit])
         sector_size = g.blockdev_getss(disk_handle)
@@ -179,10 +179,10 @@ class VMStorage
         g.part_disk(disk_handle, parttype)
       end
       g.part_set_name(disk_handle, 1, opts[:label]) if opts[:label]
-      primary_partition = g.list_partitions()[0]
+      primary_partition = g.list_partitions[0]
       if opts[:luks_password]
         g.luks_format(primary_partition, opts[:luks_password], 0)
-        luks_mapping = File.basename(primary_partition) + "_unlocked"
+        luks_mapping = File.basename(primary_partition) + '_unlocked'
         g.luks_open(primary_partition, opts[:luks_password], luks_mapping)
         luks_dev = "/dev/mapper/#{luks_mapping}"
         g.mkfs(fstype, luks_dev)
@@ -192,20 +192,21 @@ class VMStorage
       end
     end
   end
+  # rubocop:enable Metrics/AbcSize
 
   def disk_mkswap(name, parttype)
     guestfs_disk_helper(name) do |g, disk_handle|
       g.part_disk(disk_handle, parttype)
-      primary_partition = g.list_partitions()[0]
+      primary_partition = g.list_partitions[0]
       g.mkswap(primary_partition)
     end
   end
 
   def guestfs_disk_helper(*disks)
     assert(block_given?)
-    g = Guestfs::Guestfs.new()
+    g = Guestfs::Guestfs.new
     g.set_trace(1)
-    message_callback = Proc.new do |event, _, message, _|
+    message_callback = proc do |event, _, message, _|
       debug_log("libguestfs: #{Guestfs.event_to_string(event)}: #{message}")
     end
     g.set_event_callback(message_callback,
@@ -220,10 +221,9 @@ class VMStorage
         raise "cannot handle type '#{disk.class}'"
       end
     end
-    g.launch()
-    yield(g, *g.list_devices())
+    g.launch
+    yield(g, *g.list_devices)
   ensure
     g.close
   end
-
 end
