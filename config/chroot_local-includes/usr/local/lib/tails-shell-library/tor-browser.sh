@@ -34,6 +34,9 @@ exec_firefox_helper() {
         export TOR_SKIP_LAUNCH=1
     fi
 
+    # New in 9.5: Avoid overwriting user's dconf values. Fixes #27903.
+    export GSETTINGS_BACKEND=memory
+
     # The Tor Browser often assumes that the current directory is
     # where the browser lives, e.g. for the fixed set of fonts set by
     # fontconfig above.

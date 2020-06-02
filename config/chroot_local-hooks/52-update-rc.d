@@ -65,9 +65,6 @@ systemctl mask hwclock-save.service
 # Do not run timesyncd: we have our own time synchronization mechanism
 systemctl mask systemd-timesyncd.service
 
-# apt-daily.service can only cause problems in our context (#12390)
-systemctl mask apt-daily.timer
-
 # Do not let pppd-dns manage /etc/resolv.conf
 systemctl mask pppd-dns.service
 

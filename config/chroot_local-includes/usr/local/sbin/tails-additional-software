@@ -256,7 +256,7 @@ def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
         logging.warning("Warning: a copy of the APT lists already exists, "
                         "which should never happen. Removing it.")
         delete_old_apt_lists(destdir)
-    shutil.copytree(srcdir, destdir, symlinks=True)
+    subprocess.run(['cp', '--archive', srcdir, destdir], check=True)
 
 
 # Note: we can't do nicer delete + move operations because the directory
@@ -611,7 +611,8 @@ def upgrade_additional_packages():
     delete_old_apt_lists()
 
     # Remove outdated packages from the local package cache. This is needed as
-    # we disable apt-daily.timer, which would else take care of this cleanup.
+    # we disable apt-daily*.timer (via APT::Periodic::Enable), which would
+    # else take care of this cleanup.
     # We do this after the upgrade has succeeded so that the old packages
     # remain available in the cache in case we have to restore the old lists.
     # In the past we did this before upgrading in order to remove the
