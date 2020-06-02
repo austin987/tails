@@ -40,11 +40,11 @@ Feature: Chatting anonymously using Pidgin
     Then I can see that my friend joined the multi-user chat
     And I say something to my friend in the multi-user chat
     Then I receive a response from my friend in the multi-user chat
-    When I say https://labs.riseup.net/code/projects/tails/roadmap to my friend in the multi-user chat
-    Then I see the Tails roadmap URL
+    When I say https://gitlab.tails.boum.org/tails to my friend in the multi-user chat
+    Then I see the Tails GitLab URL
     When I wait 10 seconds
-    And I click on the Tails roadmap URL
-    Then the Tor Browser loads the Tails roadmap
+    And I click on the Tails GitLab URL
+    Then the Tor Browser loads the Tails GitLab
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR

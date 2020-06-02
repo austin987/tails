@@ -16,4 +16,10 @@ WORKDIR=$(/bin/mktemp -d)
 
 /bin/mv "$WORKDIR"/main/* /run/initramfs/
 
+# When migrating to overlayfs we had issues with the overlay rw branch
+# not being wiped (#15146) but switching mount/umount from BusyBox' to
+# util-linux' seems to bring the error rate from 10% to 0.5%.
+rm /run/initramfs/usr/bin/mount /run/initramfs/usr/bin/umount
+cp /bin/mount /bin/umount /run/initramfs/usr/bin/
+
 /bin/rm -rf "$WORKDIR"
