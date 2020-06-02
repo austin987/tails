@@ -457,13 +457,13 @@ When /^I close Pidgin's certificate import failure dialog$/ do
   @screen.wait_vanish('PidginCertificateImportFailed.png', 10)
 end
 
-When /^I see the Tails roadmap URL$/ do
+When /^I see the Tails GitLab URL$/ do
   try_for(60) do
     if @screen.exists('PidginServerMessage.png')
       @screen.click('PidginDialogCloseButton.png')
     end
     begin
-      @screen.find('PidginTailsRoadmapUrl.png')
+      @screen.find('PidginTailsGitLabUrl.png')
     rescue FindFailed => e
       @screen.press("Page_Up")
       raise e
@@ -471,8 +471,8 @@ When /^I see the Tails roadmap URL$/ do
   end
 end
 
-When /^I click on the Tails roadmap URL$/ do
-  @screen.click('PidginTailsRoadmapUrl.png')
+When /^I click on the Tails GitLab URL$/ do
+  @screen.click('PidginTailsGitLabUrl.png')
   try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
 end
 

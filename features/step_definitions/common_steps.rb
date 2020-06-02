@@ -419,14 +419,14 @@ Given /^the Tor Browser (?:has started|starts)( in offline mode)?$/ do |offline|
   end
 end
 
-Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails homepage|Tails GitLab)$/ do |page|
   case page
   when "startup page"
     titles = ['Tails', 'Tails - Trying a testing version of Tails']
   when "Tails homepage"
-    titles = ['Tails - Privacy for anyone anywhere']
-  when "Tails roadmap"
-    titles = ['Roadmap - Tails - Tails Ticket Tracker']
+    titles = ['Tails']
+  when "Tails GitLab"
+    titles = ['tails · GitLab']
   else
     raise "Unsupported page: #{page}"
   end
@@ -559,7 +559,10 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  try_for(3*60) do
+  # In the Additional Software feature, we need to wait enough for
+  # tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
+  # to complete: see its custom, higher-than-default, TimeoutStopSec=.
+  try_for(6 * 60) do
     if mode == 'restarts'
       @screen.find('TailsGreeter.png')
       true
