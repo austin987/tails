@@ -5,7 +5,7 @@ Feature: Localization
   And various Tails features should still work
 
   @doc
-  Scenario: The Report an Error launcher will open the support documentation in supported non-English locales
+  Scenario: The Report an Error launcher opens the support documentation in supported non-English locales
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I log in to a new session in German
     When I double-click on the Report an Error launcher on the desktop
