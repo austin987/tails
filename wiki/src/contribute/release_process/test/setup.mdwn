@@ -11,22 +11,30 @@ Once you have a working environment, see [[test/usage]].
 Operating system
 ================
 
+<div class="note">
+<p>
+<b>For Wayland users:</b> at the moment the <tt>--view</tt> and
+<tt>--vnc-server-only</tt> options only work on X11.
+</p>
+</div>
+
 If you usually run another operating system than Debian Stretch,
-then you need to:
+Buster, Bullseye or Sid, then you need to:
 
 1. Enable nested virtualization on your host system.
 
    For example, if the host system has an Intel CPU:
 
          if [ "$(cat /sys/module/kvm_intel/parameters/nested)" != Y ]; then
-            echo "options kvm_intel nested=Y" \
-                 >> /etc/modprobe.d/kvm.conf
+            echo "options kvm_intel nested=Y" | \
+                 sudo tee /etc/modprobe.d/kvm.conf
          fi
 
-2. Prepare a Stretch virtual machine.
+2. Prepare a Debian virtual machine; we recommend the stable release,
+   Debian Buster.
 
-3. And then, every step below applies to this Stretch virtual machine,
-   instead of to the host system.
+3. And then, every step below applies to this virtual machine, instead
+   of to the host system.
 
 Install dependencies
 ====================
@@ -37,6 +45,19 @@ To install the dependencies on our test suite:
 
 2. Install the following packages:
 
+        dist=$(lsb_release --short --codename)
+        if [ "${dist}" != stretch -o "${dist}" != buster ]; then
+            # For python-jabberbot and python-potr, that were removed after Buster
+            echo 'deb http://ftp.us.debian.org/debian/ buster main' \
+                | sudo tee /etc/apt/sources.list.d/buster.list
+        fi
+        if [ "${dist}" = buster ]; then
+            # For our qemu 4.2 buster-backport
+            echo 'deb http://deb.tails.boum.org/ isotester-buster main' \
+                | sudo tee /etc/apt/sources.list.d/isotester-buster.list
+            echo -e "Package: src:qemu\nPin: origin deb.tails.boum.org\nPin-Priority: 990" \
+                | sudo tee /etc/apt/preferences.d/qemu
+        fi
         sudo apt update && \
         sudo apt install \
             cucumber \
@@ -45,9 +66,8 @@ To install the dependencies on our test suite:
             gawk \
             git \
             i18nspector \
-            libav-tools \
+            imagemagick \
             libcap2-bin \
-            libsikulixapi-java \
             libvirt-clients \
             libvirt-daemon-system \
             libvirt-dev \
@@ -68,7 +88,6 @@ To install the dependencies on our test suite:
             ruby-libvirt \
             ruby-packetfu \
             ruby-rb-inotify \
-            ruby-rjb \
             ruby-rspec \
             ruby-test-unit \
             seabios \
@@ -80,7 +99,19 @@ To install the dependencies on our test suite:
             x11vnc \
             tigervnc-viewer \
             x264 \
+            xdotool \
             xvfb \
+            $(
+                if [ "${dist}" = stretch ]; then
+                    echo "libav-tools
+                          python-opencv
+                          python-pil"
+                else
+                    echo "ffmpeg
+                          python3-opencv
+                          python3-pil"
+                fi
+            ) \
             && \
         sudo service libvirtd restart
 
@@ -111,8 +142,8 @@ If you have AppArmor enabled:
 * You need to add the `/tmp/TailsToaster/** rwk,` line
   to `/etc/apparmor.d/libvirt/TEMPLATE.qemu`, in the
   `profile LIBVIRT_TEMPLATE` section; then delete
-  `/etc/apparmor.d/libvirt/libvirt-*` and retry.
-  If you use a custom `TMPDIR` to run the test suite,
+  `/etc/apparmor.d/libvirt/libvirt-*` and restart the test suite.
+  On Debian Stretch, if you use a custom `TMPDIR` to run the test suite,
   replace `/tmp/TailsToaster` with the value of that `$TMPDIR`.
 
 Patched QEMU
@@ -127,8 +158,7 @@ source package in this APT suite has the fix:
         deb-src http://deb.tails.boum.org/ isotester-stretch main
 
 This problem does not affect host systems that run Debian Buster
-or newer, but those cannot run our test suite at all due to
-[[!tails_ticket 15460]].
+or newer.
 
 Special use cases
 =================

@@ -92,7 +92,7 @@ $FAMILY_NAME
 ------------
 
 $LT!--
-Tickets: #XXXXX #XXXXX
+Issues: #XXXXX #XXXXX
 --$GT
 
 ### Affected graphics cards
@@ -114,7 +114,7 @@ AMD Radeon HD
 -------------
 
 <!--
-Tickets: #11095 #12482
+Issues: #11095 #12482
 -->
 
 ### Affected graphics cards
@@ -123,18 +123,27 @@ Tickets: #11095 #12482
 <tr><th>Name</th><th>ID</th><th>Revision number</th></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Mars XTX [Radeon HD 8790M]</td><td>[1002:6606]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Mars XTX [Radeon HD 8790M]</td><td>[1002:6606]</td><td>(rev ff)</td></tr>
+<tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Turks XT [Radeon HD 6670/7670]</td><td>[1002:6758]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Seymour LP [Radeon HD 6430M]</td><td>[1002:6761]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Cedar [Radeon HD 5000/6000/7350/8350 Series]</td><td>[1002:68f9]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Broadway PRO [Mobility Radeon HD 5850]</td><td>[1002:68a1]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] RV730/M96 [Mobility Radeon HD 4650/5165]</td><td>[1002:9480]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Device</td><td>[1002:98e4]</td><td>(rev da)</td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Trinity [Radeon HD 7520G]</td><td>[1002:9990]</td><td></td></tr>
+<tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Beavercreek [Radeon HD 6550D]</td><td>[1002:9640]</td><td></td></tr>
 </table>
 
 ### Workaround
 
-For some models, adding `radeon.modeset=0` to the
-[[boot options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
+Try adding to the [[boot
+options|doc/advanced_topics/boot_options]],
+one after the other:
+
+* `radeon.modeset=0`
+* `xorg-driver=modesetting`
+
+If the computer has another, integrated graphics card, try configuring
+the computer to use that one instead of the AMD graphics card.
 
 We need more test results from users: [[!tails_ticket 12482]]
 
@@ -144,7 +153,7 @@ AMD Radeon R9
 -------------
 
 <!--
-Tickets: #12218 #11850
+Issues: #12218 #11850
 -->
 
 ### Affected graphics cards
@@ -157,8 +166,28 @@ Tickets: #12218 #11850
 ### Workaround
 
 Adding `radeon.dpm=0` to the
-[[boot options|/doc/first_steps/startup_options#boot_loader_menu]]
+[[boot options|doc/advanced_topics/boot_options]]
 fixes the issue.
+
+AMD Radeon RX 400 family
+------------------------
+
+### Affected graphics cards
+
+<table>
+<tr><th>Name</th><th>ID</th><th>Revision number</th></tr>
+<tr><td>Radeon RX 480</td><td></td><td></td></tr>
+</table>
+
+### Workaround
+
+Adding `amdgpu.dc=0` to the
+[[boot options|doc/advanced_topics/boot_options]]
+fixes the issue.
+
+### Other possibly affected graphics cards
+
+Other graphics cards in the [[!wikipedia Radeon_RX_400_series]] might be affected.
 
 <a id="intel"></a>
 
@@ -166,8 +195,8 @@ Intel
 -----
 
 <!--
-Ticket: #12219
-Ticket: #16224
+Issue: #12219
+Issue: #16224
 -->
 
 ### Affected graphics cards
@@ -186,7 +215,7 @@ Various Intel graphics card.
 ### Workaround
 
 Try adding to the [[boot
-options|/doc/first_steps/startup_options#boot_loader_menu]],
+options|doc/advanced_topics/boot_options]],
 one after the other:
 
 * `xorg-driver=intel`
@@ -202,7 +231,7 @@ Intel 855GM
 -----------
 
 <!--
-Ticket: #11096, Debian #776911
+Issue: #11096, Debian #776911
 
 -->
 
@@ -219,7 +248,7 @@ Nvidia NV50 family (Tesla)
 --------------------------
 
 <!--
-Ticket: #15491
+Issue: #15491
 -->
 
 ### Affected graphics cards
@@ -231,8 +260,12 @@ Ticket: #15491
 
 ### Workaround
 
-Try adding `nomodeset` to the
-[[boot options|doc/first_steps/startup_options#boot_loader_menu]].
+Try adding to the [[boot
+options|doc/advanced_topics/boot_options]],
+one after the other:
+
+* `nomodeset`
+* `xorg-driver=modesetting`
 
 ### Other possibly affected graphics cards
 
@@ -302,13 +335,34 @@ Last updated: 2019-07-30
         </tr>
 </table>
 
+<a id="nvidia-kepler"></a>
+
+Nvidia NVE0 family (Kepler)
+--------------------------
+
+### Affected graphics cards
+
+<table>
+<tr><th>Name</th><th>ID</th><th>Revision number</th></tr>
+<tr><td>NVIDIA Corporation GK107 (GeForce GTX 650)</td><td>[10de:0fc6]</td><td>a1</td></tr>
+</table>
+
+### Other possibly affected graphics cards
+
+Other graphics cards in the [NVE0 family (Kepler)](https://nouveau.freedesktop.org/wiki/CodeNames/#nve0familykepler) might be affected.
+
+### Workaround
+
+We don't know any workaround for these graphics cards yet.
+Please let us know if you find one.
+
 <a id="nvidia-maxwell"></a>
 
 Nvidia NV110 family (Maxwell)
 -----------------------------
 
 <!--
-Ticket: #15116
+Issue: #15116
 -->
 
 ### Affected graphics cards
@@ -324,8 +378,13 @@ Ticket: #15116
 
 This problem has been fixed for some of these graphic cards.
 
-Otherwise, try adding `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-[[boot options|doc/first_steps/startup_options#boot_loader_menu]].
+Otherwise, try adding to the [[boot
+options|doc/advanced_topics/boot_options]],
+one after the other:
+
+* `nouveau.noaccel=1`
+* `nouveau.modeset=0`
+* `xorg-driver=modesetting`
 
 We need more test results from users: [[!tails_ticket 15116]]
 
@@ -375,7 +434,7 @@ Nvidia NV130 family (Pascal)
 ----------------------------
 
 <!--
-Ticket: #15116
+Issue: #15116
 -->
 
 <!--
@@ -427,10 +486,50 @@ Last updated: 2019-07-30
 
 This problem has been fixed for some of these graphic cards.
 
-Otherwise, try adding `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-[[boot options|doc/first_steps/startup_options#boot_loader_menu]].
+Otherwise, try adding to the [[boot
+options|doc/advanced_topics/boot_options]],
+one after the other:
+
+* `nouveau.noaccel=0`
+* `nouveau.noaccel=1`
+* `nouveau.modeset=0`
+* `xorg-driver=modesetting`
 
 We need more test results from users: [[!tails_ticket 15116]]
+
+<a id="nvidia-turing"></a>
+
+## Nvidia NV160 family (Turing)
+
+As of 2020-03-19, much of these Nvidia graphics cards are [not
+supported](https://nouveau.freedesktop.org/wiki/FeatureMatrix/) by Tails yet.
+
+### Affected graphics cards
+
+<table>
+        <tr>
+            <th><strong>Code name</strong>  </th>
+            <th><strong>Official Name</strong> </th>
+        </tr>
+        <tr>
+            <td>NV167 (TU117)</td>
+            <td>GeForce GTX 1650</td>
+        </tr>
+</table>
+
+### Possibly affected graphics cards
+
+Graphics cards in the [NV160 family (Turing)](https://nouveau.freedesktop.org/wiki/CodeNames/#nv160familyturing) might be affected.
+
+### Workaround
+
+Try adding to the [[boot
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `nouveau.noaccel=1`
+* `nouveau.modeset=0`
+* `xorg-driver=modesetting`
 
 Other issues
 ============
@@ -456,7 +555,7 @@ There are several possible workarounds for this issue:
 * Expert Linux users can also do the following:
 
   1. Add the `i915.modeset=0 rootpw=pass` option in the
-     [[Boot Loader Menu|doc/first_steps/startup_options#boot_loader_menu]].
+     [[Boot Loader|doc/advanced_topics/boot_options]].
 
   2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
      following content:
@@ -476,7 +575,7 @@ There are several possible workarounds for this issue:
 
          sudo passwd
 
-For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken with switchable graphics"]].
+For more details, see our issue on [[!tails_ticket 7505 desc="Video is broken with switchable graphics"]].
 
 <a id=sg-segfault></a>
 
@@ -484,12 +583,15 @@ Cannot start GNOME session with switchable graphics computers
 -------------------------------------------------------------
 
 On some computers with switchable graphics, Tails 2.10 and later fails
-to start the GNOME session and keeps returning to [[Tails
-Greeter|doc/first_steps/startup_options#greeter]].
+to start the GNOME session and keeps returning to the [[Welcome
+Screen|doc/first_steps/welcome_screen]].
 
-Starting in *Troubleshooting Mode* works, as well as adding the
-`modprobe.blacklist=nouveau` to the [[boot
-options|doc/first_steps/startup_options#boot_loader_menu]].
+Try adding to the [[boot
+options|doc/advanced_topics/boot_options]].
+one after the other:
+
+* `modprobe.blacklist=nouveau`
+* `xorg-driver=modesetting`
 
 <a id="intel-gm965"></a>
 
@@ -497,7 +599,7 @@ Intel GM965/GL960
 -----------------
 
 <!--
-Ticket: #12217, Linux #187001
+Issue: #12217, Linux #187001
 -->
 
 ### Affected graphics cards
@@ -513,7 +615,7 @@ The laptop crashes while running Tails.
 ### Workaround
 
 Adding `video=SVIDEO-1:d` to the
-[[boot options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
+[[boot options|doc/advanced_topics/boot_options]] fixes the issue.
 
 <a id="qemu"></a>
 

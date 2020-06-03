@@ -1,4 +1,3 @@
-From d3a3855b1ddbd3fa445e463d23082abda2e0d921 Mon Sep 17 00:00:00 2001
 From: anonym <anonym@riseup.net>
 Date: Wed, 27 Feb 2019 16:15:59 +0100
 Subject: [PATCH] Make use of non-SSL Exchange AutoDiscover methods optional.
@@ -8,15 +7,17 @@ server's HTTP response to redirect to an attacker controller Exchange
 server instead. So let's provide protection against this via the
 mailnews.auto_config.sslOnly pref.
 ---
-  .../content/exchangeAutoDiscover.js           | 20 ++++++++++---------
+ .../accountcreation/content/exchangeAutoDiscover.js  | 20 +++++++++++---------
  1 file changed, 11 insertions(+), 9 deletions(-)
 
+diff --git a/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js b/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
+index f9d2a6e..4c3e1ce 100644
 --- a/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
 +++ b/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
-@@ -127,15 +127,17 @@
+@@ -127,15 +127,17 @@ function fetchConfigFromExchange(
    fetch.start();
    call.setAbortable(fetch);
-
+ 
 -  call = priority.addCall();
 -  fetch3 = new FetchHTTP(
 -    url3,
@@ -37,6 +38,6 @@ mailnews.auto_config.sslOnly pref.
 +    fetch3.start();
 +    call.setAbortable(fetch3);
 +  }
-
+ 
    // url3 is an HTTP URL that will redirect to the real one, usually a HTTPS
    // URL of the hoster. XMLHttpRequest unfortunately loses the call

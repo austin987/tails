@@ -60,7 +60,7 @@ automatically if the ABI is bumped.
 # Process
 
 A Foundations Team member (generally the team lead, so far) creates
-a tracking ticket whenever:
+a tracking issue whenever:
 
  - A new major version of Linux is released. At this point, that
    version is generally available only in Debian _experimental_.
@@ -85,43 +85,53 @@ To learn how the new kernel works for us:
    run our entire test suite (`+force-all-tests`). But since this
    branch has no commit on top of `devel`, Jenkins will ignore it, so
    you need to create a dummy commit.
-2. Adjust the `aufs` submodule: in the `submodules/aufs-standalone`
-   directory, use `git fetch` and `git branch -a` to find the most
-   suitable branch for this kernel version, check it out, then move
-   back to the top level directory. `git diff` should show an updated
-   `Subproject commit` accordingly, and that can be committed.
 3. Push this new branch to our CI.
-4. Set the _Feature Branch_ field on the ticket to the name of your
-   new branch.
 5. Quickly test a build from this branch on your hardware.
 6. Compare the Jenkins build and test results to the ones for our
    `stable` and `devel` branch.
-7. Report your findings on the ticket.
+7. Report your findings on the issue.
 
 ## Gather other data that will inform our decision
 
-You'll find the relevant data in:
-
- - [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
-   of the Debian package
- - Kernelnewbies's [human-readable
-   changelog](https://kernelnewbies.org/LinuxChanges) of upstream
-   changes (only relevant for a new major Linux release)
- - [Debian BTS](https://bugs.debian.org/cgi-bin/pkgreport.cgi?archive=0;dist=unstable;ordering=normal;repeatmerged=0;src=linux)
- - Debian [security tracker for
-   Linux](https://security-tracker.debian.org/tracker/source-package/linux)
-
-In there, look for:
+Look for:
 
  - Security issues fixed in _unstable_ since the version we currently ship
+
+   To do so, look for "CVE" in the
+   [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
+   entries newer than the kernel we currently ship.
+
  - Major security fixes still not fixed in _unstable_ (in which case,
    depending on when we are in our own release process, it may be worth
    delaying the analysis a bit)
+
+   To do so, use the Debian [security tracker for
+   Linux](https://security-tracker.debian.org/tracker/source-package/linux).
+
  - Important regressions i.e. bugs with severity _important_ or higher
    recently reported to Debian against this version of the kernel
+
+   To do so, in the [Debian
+   BTS](https://udd.debian.org/bugs.cgi?release=sid&merged=ign&fnewerval=7&flastmodval=7&packages=linux&cseverity=1&sortby=id&sorto=desc&format=html#results),
+   look for bugs with severity _important_ or higher that satisfy one of these
+   criteria:
+
+    - the bug title includes the kernel version we're considering upgrading to
+    - the bug was reported very recently (the bug title may not say
+      what kernel version is affected, but once you open the bug's page,
+      you'll see that info; for example, [[!debbug 960871]] is marked
+      as affecting linux/5.6.7-1)
+
  - Relevant hardware support improvements
 
-Take notes on the ticket of the most relevant bits or lack thereof.
+   To get a rough feeling about it, skim over:
+
+    - the Debian package's
+      [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
+    - Kernelnewbies's [human-readable changelog](https://kernelnewbies.org/LinuxChanges)
+      of upstream changes (only relevant for a new major Linux release)
+
+Take notes on the issue of the most relevant bits or lack thereof.
 
 ## Make a decision
 
@@ -144,7 +154,7 @@ several factors:
 
 If in doubt, ask your team-mates :)
 
-If the decision is "do nothing", close the ticket and stop reading here.
+If the decision is "do nothing", close the issue and stop reading here.
 Else, read on.
 
 ## Implement the decision
@@ -160,8 +170,7 @@ Therefore, create a new
 `feature/NNNNN-linux-X.Y-stable+force-all-tests` topic branch forked
 off `stable` and transplant onto it the commits you had to create on
 your `devel`-based topic branch (`git rebase --onto` or `git
-cherry-pick`). Update the _Feature Branch_ field accordingly
-in Redmine.
+cherry-pick`).
 
 But the new resulting topic branch will likely not build: a bugfix
 release is built from our `stable` branch, that uses a set of APT
@@ -230,8 +239,9 @@ improvement:
  - Enabled by default: nothing to do, profit :)
 
  - Guarded by local configuration such as a sysctl or a kernel command
-   line option: file a ticket about it on Redmine and add this ticket
-   to the Foundations Team' radar. Optionally, do the work yourself:
+   line option: file a GitLab issue about it, with the
+   `Core work: Foundations Team` label.
+   Optionally, do the work yourself:
    once you've got CI results about your topic branch with this new
    option disabled, add a commit that enables it and compare the
    results (including test suite total run time, to spot important

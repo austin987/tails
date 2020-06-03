@@ -5,34 +5,40 @@
 The Tails downloads are served using two different mirror pools,
 depending on the use case:
 
-* We have dispatcher code, in JavaScript, that dynamically modifies the
-  hostname in the URL of our ISO image,
-  so that each user is pointed to random mirror.
-  - [public read-only mirror of the Git repository](https://git-tails.immerda.ch/mirror-pool-dispatcher/)
-  - Vanilla JS (no frameworks)
-  - The code is deployed live: <https://tails.boum.org/lib/js/mirror-dispatcher.js>
-  - The library code has two consumers:
-    * our website, primarily on our [[download page|installation_assistant#download]] but also on announcements of
-      release candidates
-    * Tails Upgrader, that runs the library code with Node.js
-  - Configuration for the JS is loaded from a JSON file hosted on our
-    website.
-    See [[the configuration section|mirrors#configuration]]
-    for details.
+### JSON pool
 
-* A DNS Round Robin pool that points to a few (3-7) fast and
-  reliable mirrors. It is the fallback for some use cases. So we still
-  have a DNS dynamic update system, re-purposed from the one we already had
-  (`dl.amnesia.boum.org`). This fallback DNS pool is used:
-  - by people who do not use JS, when downloading from our website;
-  - for the [[wget download option|install/expert/usb]].
+A dispatcher code in JavaScript dynamically modifies the
+hostname in the URL of our ISO image,
+so that each user is pointed to random mirror.
+
+- The code is deployed live: <https://tails.boum.org/lib/js/mirror-dispatcher.js>
+- The list of mirrors is loaded from a JSON file on our
+  website: <https://tails.boum.org/mirrors.json><br/>
+  See [[the configuration section|mirrors#configuration]]
+  for details.
+- [[!tails_gitweb_repo mirror-pool-dispatcher desc="Git repository"]]
+- Vanilla JS (no frameworks)
+- The library code has two consumers:
+  * our website, primarily on our [[download page|installation_assistant#download]] but also on announcements of
+    release candidates
+  * Tails Upgrader, that runs the library code with Node.js
+
+### DNS pool
+
+A DNS Round Robin pool points to a few (3-7) fast and
+reliable mirrors. It is the fallback for some use cases. So we still
+have a DNS dynamic update system, re-purposed from the one we already had
+(`dl.amnesia.boum.org`). This fallback DNS pool is used:
+
+- by people who do not use JS, when downloading from our website;
+- for the [[wget download option|install/expert/usb]].
 
 <a id="configuration"></a>
 
 # Mirror pool configuration
 
 The client dispatcher code fetches the mirror pool configuration file
-from our website.
+from our website: <https://tails.boum.org/mirrors.json>
 
 The configuration file is written in JSON, to avoid the
 need to use a third-party parser.
@@ -58,9 +64,7 @@ of them we need a few values:
    - in the old mirror pool design, this would be
      `http://dl.amnesia.boum.org/tails`
    - in the new mirror pool design, this could be e.g.
-     `http://42.dl.amnesia.boum.org/tails` (for mirrors who want to
-     use the unique VirtualHost we provide them), or something they
-     deal with themselves, e.g. `https://mirrors.kernel.org/tails`
+     `https://mirrors.kernel.org/tails`
 
  * weight: the probability this mirror has to be picked by the
    dispatcher code, expressed as a non-negative integer; weight
@@ -74,7 +78,4 @@ of them we need a few values:
 
 For a more formal, and probably more up-to-date definition of the data
 model, better see
-[its JSON schema](https://git-tails.immerda.ch/mirror-pool/tree/schema.json).
-
-Here is
-[an example configuration file](https://git-tails.immerda.ch/mirror-pool/tree/example-mirrors.json).
+[its JSON schema](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/schema.json).

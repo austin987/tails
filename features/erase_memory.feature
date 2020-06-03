@@ -61,7 +61,7 @@ Feature: System memory erasure on shutdown
     When I umount the USB drive
     Then I find very few patterns in the guest's memory
 
-  Scenario: Erasure of the aufs read-write branch on shutdown
+  Scenario: Erasure of the overlayfs read-write branch on shutdown
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
     When I fill a 128 MiB file with a known pattern on the root filesystem

@@ -7,8 +7,6 @@ use Path::Tiny;
 use Tails::IUK;
 use Test::Fatal qw{dies_ok};
 
-my $union_type = $ENV{UNION_TYPE} // 'aufs';
-
 my @genisoimage_opts = qw{--quiet -J -l -cache-inodes -allow-multidot};
 my @genisoimage = ('genisoimage', @genisoimage_opts);
 
@@ -57,7 +55,6 @@ describe 'An IUK object' => sub {
             system(@genisoimage, "-o", $new_iso, $new_iso_tempdir);
 
             $iuk = Tails::IUK->new(
-                union_type => $union_type,
                 old_iso => $old_iso,
                 new_iso => $new_iso,
                 squashfs_diff_name => 'test.squashfs',
@@ -90,7 +87,6 @@ describe 'An IUK object' => sub {
                 system(@genisoimage, "-o", $new_iso, $new_iso_tempdir);
 
                 $iuk = Tails::IUK->new(
-                    union_type => $union_type,
                     old_iso => $old_iso,
                     new_iso => $new_iso,
                     squashfs_diff_name => 'test.squashfs',
@@ -116,7 +112,6 @@ describe 'An IUK object' => sub {
                 system(@genisoimage, "-o", $new_iso, $new_iso_tempdir);
 
                 $iuk = Tails::IUK->new(
-                    union_type => $union_type,
                     old_iso => $old_iso,
                     new_iso => $new_iso,
                     squashfs_diff_name => 'test.squashfs',
@@ -144,7 +139,6 @@ describe 'An IUK object' => sub {
                 system(@genisoimage, "-o", $new_iso, $new_iso_tempdir);
 
                 $iuk = Tails::IUK->new(
-                    union_type => $union_type,
                     old_iso => $old_iso,
                     new_iso => $new_iso,
                     squashfs_diff_name => 'test.squashfs',

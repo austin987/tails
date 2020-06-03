@@ -25,8 +25,6 @@ my $bindir = path(__FILE__)->parent->parent->parent->parent->child('bin')->absol
 use Env qw{@PATH};
 unshift @PATH, $bindir;
 
-my $union_type = $ENV{UNION_TYPE} // 'aufs';
-
 Given qr{^a usable temporary directory$}, fun ($c) {
     my $dirname = Path::Tiny->tempdir(CLEANUP => 0);
     $c->{stash}->{scenario}->{tempdir} = $dirname;
@@ -212,7 +210,6 @@ When qr{^I create an IUK$}, fun ($c) {
         # that one needs to be root to create
         "sudo SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH} " .
         path($bindir, "tails-create-iuk") .
-        ' --union_type ' . $union_type .
         ' --old_iso "' .
         path($c->{stash}->{scenario}->{tempdir}, 'old.iso') . '" ' .
         ' --new_iso "' .
@@ -391,17 +388,11 @@ fun squashfs_in_iuk_deletes($iuk_in, $squashfs_name, $deleted_file) {
     my $union_workdir    = path($union_basedir, 'work');
     my $union_mountpoint = path($union_basedir, 'mount');
     $_->mkpath for ($union_workdir, $union_mountpoint);
-    my @mount_args = $union_type eq 'overlayfs'
-        ? (
-            '-t', 'overlay',
-            '-o', sprintf("noatime,lowerdir=%s,upperdir=%s,workdir=%s",
-                          $old_dir, $new_dir, $union_workdir),
-            'overlay'
-        )
-        : (
-            '-t', 'aufs',
-            '-o', sprintf("noatime,noxino,br=%s=rw:%s=rr+wh", $new_dir, $old_dir),
-            $new_dir
+    my @mount_args = (
+        '-t', 'overlay',
+        '-o', sprintf("noatime,lowerdir=%s,upperdir=%s,workdir=%s",
+                      $old_dir, $new_dir, $union_workdir),
+        'overlay'
         );
 
     capturex(

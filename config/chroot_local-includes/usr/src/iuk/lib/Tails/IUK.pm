@@ -65,13 +65,6 @@ option 'outfile' =>
     format        => 's',
     documentation => q{Location of the created IUK};
 
-option 'union_type' =>
-    is            => 'lazy',
-    isa           => Enum[qw{aufs overlayfs}],
-    coerce        => Enum->coercion,
-    format        => 's',
-    documentation => q{aufs or overlayfs};
-
 has 'format_version' =>
     is  => 'lazy',
     isa => Str;
@@ -92,6 +85,22 @@ has 'mksquashfs_options' =>
     handles_via => 'Array',
     handles     => {
         list_mksquashfs_options => 'elements',
+    };
+
+option 'mksquashfs_lock_file' =>
+    is            => 'lazy',
+    isa           => AbsPath,
+    coerce        => AbsPath->coercion,
+    format        => 's',
+    predicate     => 1,
+    documentation => q{Location of the mksquashfs lock file};
+
+has 'mksquashfs_prefix_cmd' =>
+    is          => 'lazy',
+    isa         => ArrayRef,
+    handles_via => 'Array',
+    handles     => {
+        list_mksquashfs_prefix_cmd => 'elements',
     };
 
 option 'ignore_if_same_content' =>
@@ -246,17 +255,31 @@ method _build_overlay_dir () {
 method _build_format_version () { "2"; }
 method _build_mksquashfs_options () { [
     qw{-no-progress -noappend},
-    qw{-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K},
+    qw{-comp xz},
 ]}
-method _build_union_type () { "aufs"; }
+
+method _build_mksquashfs_prefix_cmd () { [
+    ("SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}"),
+    (
+        $self->has_mksquashfs_lock_file
+            ? ('flock', '--verbose', $self->mksquashfs_lock_file)
+            : (),
+    )
+]}
 
 method _build_delete_files () {
     my $old_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->old_iso->stringify);
     my $new_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->new_iso->stringify);
     my @delete_files;
-    for (qw{EFI EFI/BOOT EFI/BOOT/grub},
+    for ('EFI',
+         'EFI/BOOT',
+         'EFI/BOOT/grub',
          'EFI/BOOT/grub/i386-efi',
          'EFI/BOOT/grub/x86_64-efi',
+         'EFI/debian',
+         'EFI/debian/grub',
+         'EFI/debian/grub/i386-efi',
+         'EFI/debian/grub/x86_64-efi',
          qw{isolinux live syslinux tails},
          qw{utils utils/mbr utils/linux}) {
         push @delete_files,
@@ -316,28 +339,24 @@ method create_squashfs_diff () {
     croak "SquashFS '$new_squashfs' not found in '$new_iso_mount'" unless -e $new_squashfs;
     run_as_root(qw{mount -t squashfs -o loop}, $new_squashfs, $new_squashfs_mount);
 
-    if ($self->union_type eq 'aufs') {
-        run_as_root(
-            qw{mount -t aufs},
-            "-o", sprintf("br=%s=rw:%s=ro", $union_upperdir, $old_squashfs_mount),
-            "none", $union_mount
-        );
-    } else {
-        run_as_root(
-            qw{mount -t overlay},
-            "-o", sprintf("lowerdir=%s,upperdir=%s,workdir=%s",
-                          $old_squashfs_mount, $union_upperdir, $union_workdir),
-            "overlay", $union_mount
-        );
-    }
+    run_as_root(
+        qw{mount -t overlay},
+        "-o", sprintf("lowerdir=%s,upperdir=%s,workdir=%s",
+                      $old_squashfs_mount, $union_upperdir, $union_workdir),
+        "overlay", $union_mount
+    );
 
-    my @rsync_options = qw{--archive --quiet --delete-after --acls --checksum};
-    push @rsync_options, "--xattrs" if $self->union_type eq 'overlayfs';
+    my @rsync_options = qw{--archive --quiet --delete-after --acls --checksum
+                           --xattrs};
+
+    my $basename = path($self->outfile)->basename;
+    my $t1 = time;
     run_as_root(
         "rsync", @rsync_options,
         sprintf("%s/", $new_squashfs_mount),
         sprintf("%s/", $union_mount),
     );
+    printf "TIME (rsync for $basename): %d seconds\n", (time - $t1);
 
     for my $glob (@{$self->ignore_if_same_content}) {
         my @candidates_for_removal = map {
@@ -355,54 +374,51 @@ method create_squashfs_diff () {
         } @candidates_for_removal;
     }
 
-    if ($self->union_type eq 'aufs') {
-        run_as_root('auplink', $union_mount, 'flush');
-    }
-
     run_as_root("umount", $union_mount);
 
     # Remove trusted.overlay.* xattrs
-    if ($self->union_type eq 'overlayfs') {
-        my @xattrs_dump = stdout_as_root(
-            qw{getfattr --dump --recursive --no-dereference --absolute-names},
-            q{--match=^trusted\.overlay\.},
-            $union_upperdir->stringify,
-        );
-        my %xattrs;
-        my $current_filename;
-        foreach (@xattrs_dump) {
-            defined || last;
-            chomp;
-            if (! length($_)) {
-                $current_filename = undef;
-                next;
-            } elsif (my ($filename) = ($_ =~ m{\A [#] \s+ file: \s+ (.*) \z}xms)) {
-                $current_filename = $filename;
-            } elsif (my ($xattr, $value) = ($_ =~ m{\A(trusted[.]overlay[.][^=]+)=(.*)\z}xms)) {
-                push @{$xattrs{$xattr}}, $current_filename;
-            } else {
-                croak "Unrecognized line, aborting: '$_'";
-            }
-        }
-        while (my ($xattr, $files) = each %xattrs) {
-            my $stdin = join(chr(0), @$files);
-            my ($stdout, $stderr);
-            IPC::Run::run [
-                qw{sudo xargs --null --no-run-if-empty},
-                'setfattr', '--remove=' . $xattr,
-                '--no-dereference',
-                '--'
-            ], \$stdin or croak "xargs failed: $?";
+    my @xattrs_dump = stdout_as_root(
+        qw{getfattr --dump --recursive --no-dereference --absolute-names},
+        q{--match=^trusted\.overlay\.},
+        $union_upperdir->stringify,
+    );
+    my %xattrs;
+    my $current_filename;
+    foreach (@xattrs_dump) {
+        defined || last;
+        chomp;
+        if (! length($_)) {
+            $current_filename = undef;
+            next;
+        } elsif (my ($filename) = ($_ =~ m{\A [#] \s+ file: \s+ (.*) \z}xms)) {
+            $current_filename = $filename;
+        } elsif (my ($xattr, $value) = ($_ =~ m{\A(trusted[.]overlay[.][^=]+)=(.*)\z}xms)) {
+            push @{$xattrs{$xattr}}, $current_filename;
+        } else {
+            croak "Unrecognized line, aborting: '$_'";
         }
     }
+    while (my ($xattr, $files) = each %xattrs) {
+        my $stdin = join(chr(0), @$files);
+        my ($stdout, $stderr);
+        IPC::Run::run [
+            qw{sudo xargs --null --no-run-if-empty},
+            'setfattr', '--remove=' . $xattr,
+            '--no-dereference',
+            '--'
+        ], \$stdin or croak "xargs failed: $?";
+    }
 
+    $t1 = time;
     run_as_root(
-        "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
+        $self->list_mksquashfs_prefix_cmd,
         qw{mksquashfs},
         $union_upperdir,
         $self->overlay_dir->child('live', $self->squashfs_diff_name),
-        $self->list_mksquashfs_options
+        $self->list_mksquashfs_options,
+        qw{-Xbcj x86 -b 1024K -Xdict-size 1024K},
     );
+    printf "TIME (main mksquashfs for $basename): %d seconds\n", (time - $t1);
 
     foreach ($union_basedir,
              $new_squashfs_mount, $new_iso_mount,
@@ -446,14 +462,17 @@ method saveas ($outfile_name) {
 
     $self->prepare_overlay_dir;
 
+    my $basename = path($self->outfile)->basename;
+    my $t1 = time;
     run_as_root(
-        "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
+        $self->list_mksquashfs_prefix_cmd,
         qw{mksquashfs},
         $self->squashfs_src_dir,
         $outfile_name,
         $self->list_mksquashfs_options,
         '-all-root',
     );
+    printf "TIME (final mksquashfs for $basename): %d seconds\n", (time - $t1);
 
     return;
 }

@@ -58,31 +58,31 @@ wants to have persistent. This is the `~/Persistent/` directory.
 If a user needs software that is not included in Tails by default it can be
 quite annoying to fetch the APT information and download it (slow over
 Tor) every time. Therefore, APT packages lists and cache can easily be
-made persistent. It's also possible to store in persistence a list of
+made persistent. It's also possible to store in the Persistent Storage a list of
 additional software packages to be automatically reinstalled on boot.
 
 Persistence storage location
 ----------------------------
 
-The Tails persistent volume is a LUKS-encrypted GPT partition, labeled
+The Tails Persistent Storage is a LUKS-encrypted GPT partition, labeled
 `TailsData`, stored on a removable storage device.
 
 Specifications
 ==============
 
-Once a persistent volume is enabled, changes to persistent files are saved.
+Once a Persistent Storage is enabled, changes to persistent files are saved.
 
 Moreover:
 
-* Read-write access to a persistent data store is not the default: it
-  requires a voluntary user action such as choosing enabling
-  a *persistence* option in the boot menu.
-* The persistent data is stored using strong, well-known, Free
+* Read-write access to the Persistent Storage is not the default: it
+  requires a voluntary user action such as unlocking the Persistent
+  Storage in the Welcome Screen.
+* The Persistent Storage uses strong, well-known, Free
   Software, peer-reviewed encryption tools (`dm-crypt` and LUKS)
 * Fixed storage devices are be blacklisted by default from the search
-  for persistent volumes. Rationale: preventing the risk of using
-  a malicious persistent volume seems more important than supporting
-  the rare "I want to store my persistent volume on a fixed hard-disk"
+  for a Persistent Storage. Rationale: preventing the risk of using
+  a malicious Persistent Storage seems more important than supporting
+  the rare "I want to store my Persistent Storage on a fixed hard-disk"
   use-case.
 
 Current state of things
@@ -116,10 +116,7 @@ That's why we have decided to:
   directory (e.g. `$HOME`) to regular files stored in
   a persistent location (e.g. `.gitconfig`, `.vimrc`, etc.)
 
-The code we ship lives in the `tmp-persistent-custom` branch in
-our [[live-boot Git repository|contribute/git]]. We build packages
-from the `master` branch in there, and drop them into the Tails main
-Git repository.
+The code we ship lives in our [[live-boot Git repository|contribute/git]].
 
 ### Example
 
@@ -141,7 +138,7 @@ User interface
 
 A *Configure persistent storage* menu entry is the entry point to the
 *bootstrap persistent storage* UI. This UI allows the user to set up
-a persistent storage container in the free space left on the USB stick
+a Persistent Storage in the free space left on the USB stick
 by [[Tails Installer|installation]].
 
 Choosing persistence is something *activelly* opt-in, i.e. "I want
@@ -154,14 +151,14 @@ own [[contribute/Git]] (gbp-style) repository.
 
 #### Design
 
-Setting up a Tails persistent volume means:
+Setting up a Persistent Storage means:
 
 * detect the device Tails is running from
 * error out if not running from USB
 * error out unless Tails was installed using Tails Installer (i.e.
   unless it's running from a GPT partition labeled `Tails`)
 * error out if the device Tails is running from already has
-  a persistent volume
+  a Persistent Storage
 * ask the user an encryption passphrase (welcome bonus: pointing to
   the relevant documentation about choosing a *strong* passphrase)
 * create a LUKS-encrypted partition on the Tails USB stick
@@ -177,14 +174,15 @@ Setting up a Tails persistent volume means:
   system is booting for the first time or not, every first boot must
   change something on the Tails system partition. We don't
   want to do this, hence the `tails-persistence-setup` will be run
-  from the Applications menu by users who decide they want persistence.
+  from the Applications menu by users who decide they want a Persistent
+  Storage.
 
 * **Storage location**: To keep the GUI and documentation simple, we
-  only support setting up a persistent volume *on the USB stick Tails
+  only support setting up a Persistent Storage *on the USB stick Tails
   is running from*. **Note**: the underlying tools (live-boot backend,
   tails-greeter) will support storage on whatever relevant device,
   though; moreover, `tails-persistence-setup` actually knows how to
-  set up persistence on arbitrary devices, thanks to command-line
+  set up a Persistent Storage on arbitrary devices, thanks to command-line
   options. Therefore, brave and advanced users can prepare their store
   their persistent data wherever they want, but this is not something
   we will actively support and document beyond the bare minimum
@@ -218,13 +216,13 @@ Setting up a Tails persistent volume means:
 
 ### Configure which bits are persistent
 
-This is automatically run right after the persistent storage bootstrap
+This is automatically run right after the Persistent Storage bootstrap
 step. The user is enabled to change the configuration later.
-Persistence settings changes are taken into account at next boot.
+Changes to the Persistent Storage settings are taken into account at next boot.
 
 #### Design
 
-* either persistence is currently enabled in read-write mode, and thus
+* either the Persistent Storage is currently unlocked in read-write mode, and thus
   the persistence partition is already mounted; or the user is
   directly coming from bootstrap, and then we must mount the partition
   ourselves
@@ -251,22 +249,22 @@ Persistence settings changes are taken into account at next boot.
   custom* button allows to enter custom source, destination (and
   comma-separated list of options?)
 
-### Enable persistence at boot time
+### Unlock the Persistent Storage at boot time
 
 Choosing between various persistence modes is one of the reasons why
 we've written a graphical [[!tails_ticket 5528 desc="boot menu"]]:
-[[!tails_ticket 5496 desc="TailsGreeter"]].
+the [[!tails_ticket 5496 desc="Welcome Screen"]] (aka. *tails-greeter*).
 
 #### Design
 
-* asks whether to enable persistence at all;
-* ask list of possibly valid persistent containers to `live-persist`
+* asks whether to unlock the Persistent Storage at all;
+* ask list of possibly valid Persistent Storages to `live-persist`
 * initial implementation (MVC -speak): the model (`live-persist` and
   tails-greeter code that runs it) supports enabling multiple
-  persistence containers, but the view (tails-greeter GUI) only
-  supports *one* persistence container
+  Persistent Storages, but the view (tails-greeter GUI) only
+  supports *one* Persistent Storage
 * ask LUKS passphrase, deals with errors
-* for a given persistent container, it's all or nothing: all bits of
+* for a given Persistent Storage, it's all or nothing: all bits of
   persistence configured in its `live.persist` are to be set up
 * runs `live-persist` to set up persistent data where it belong
 * pass information to the user session (at least
@@ -278,9 +276,10 @@ backend / tails-greeter interface
 
 ### Long story short
 
-0. The user chooses to toggle persistence on in `tails-greeter`.
+0. The user chooses to unlock the Persistent Storage in the Welcome
+   Screen, aka. `tails-greeter`.
 0. `tails-greeter` asks `live-boot` the list of possibly valid
-   persistent containers.
+   Persistent Storages.
 0. For each such volume, `tails-greeter` asks the user to enter the
    passphrase or to skip it, and tries to unlock. `tails-greeter`
    deals with error catching, retrying, etc. as appropriate.
@@ -301,7 +300,7 @@ as:
 well-behaved synchronously-called shell script, that is: with
 appropriate exit codes and `STDERR`.
 
-### Possibly valid persistent containers
+### Possibly valid Persistent Storages
 
 In our case, that is quite simple: it means removable LUKS encrypted
 filesystem, stored on GPT partitions labeled `Tails-persistence` (or
@@ -318,7 +317,7 @@ labeled with `live-rw` or `home-rw`, but if they're on encrypted
 device, then `live-boot` has to unlock the parent device them to see
 the label; also, in non-Tails usecases, any encrypted filesystem may
 contain a `*-rw` file, and must be unlocked to know too; so any
-encrypted device may be a valid persistent container that is worth
+encrypted device may be a valid Persistent Storage that is worth
 passing to `tails-greeter`; . `live-persist` will support non-Tails
 usecases on a best-effort basis, leaving room for improvement in case
 other developers want to add support for their preferred usecases.
@@ -335,7 +334,7 @@ Additional software packages
 ----------------------------
 
 The `tails-additional-software` script installs a list of
-additional software packages stored in persistence.
+additional software packages stored in the Persistent Storage.
 For details see [[additional_software_packages]].
 
 <a id="security"></a>
@@ -343,7 +342,7 @@ For details see [[additional_software_packages]].
 Security
 --------
 
-The root directory of the persistent volume filesystem root is created
+The root directory of the Persistent Storage is created
 by the persistence configuration assistant, owned by `root:root`, with
 permissions 0775:
 
@@ -361,17 +360,17 @@ by `tails-persistence-setup:tails-persistence-setup`, with permissions
 0600 and no ACLs. It refuses to read configuration files with
 different permissions.
 
-`live-persist` checks these permissions on the persistence root
-directory, on `persistence.conf` and on
+`live-persist` checks these permissions on the root directory of the
+Persistent Storage, on `persistence.conf` and on
 `live-additional-software.conf`. Then, `live-persist` disables every
-such file, and refuses to set up any persistence feature, if the
-persistent volume has wrong permissions. It also disables every such
+such file, and refuses to set up any feature of the Persistent Storage, if the
+Persistent Storage has wrong permissions. It also disables every such
 file that has wrong permissions itself.
 
-Migration from pre-0.21 persistent volumes
+Migration from pre-0.21 Persistent Storage
 ------------------------------------------
 
-Before Tails 0.21, the persistent volume and configuration file had
+Before Tails 0.21, the Persistent Storage and its configuration file had
 weaker permissions. An attacker who could run arbitrary code as the
 desktop `amnesia` user could tamper with the persistence
 configuration, and — with some minimal amount of imagination — give

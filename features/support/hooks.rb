@@ -65,29 +65,6 @@ AfterConfiguration do |config|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
-
-  # Start a thread that monitors a pseudo fifo file and debug_log():s
-  # anything written to it "immediately" (well, as fast as inotify
-  # detects it). We're forced to a convoluted solution like this
-  # because CRuby's thread support is horribly as soon as IO is mixed
-  # in (other threads get blocked).
-  FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
-  FileUtils.touch(DEBUG_LOG_PSEUDO_FIFO)
-  at_exit do
-    FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
-  end
-  Thread.new do
-    File.open(DEBUG_LOG_PSEUDO_FIFO) do |fd|
-      watcher = INotify::Notifier.new
-      watcher.watch(DEBUG_LOG_PSEUDO_FIFO, :modify) do
-        line = fd.read.chomp
-        debug_log(line) if line and line.length > 0
-      end
-      watcher.run
-    end
-  end
-  # Fix Sikuli's debug_log():ing.
-  bind_java_to_pseudo_fifo_logger
 end
 
 # Common
@@ -130,19 +107,44 @@ def add_after_scenario_hook(&block)
   @after_scenario_hooks << block
 end
 
-def save_failure_artifact(type, path)
-  $failure_artifacts << [type, path]
+def save_failure_artifact(desc, path)
+  $failure_artifacts << [desc, path]
 end
 
-def save_journal(path)
-  File.open("#{path}/systemd.journal", 'w') { |file|
-    $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
-    file.write($vm.file_content('/tmp/systemd.journal'))
-  }
-  save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
+def _save_vm_file_content(file:, destfile:, desc:)
+  destfile = $config['TMPDIR'] + '/' + destfile
+  File.open(destfile, 'w') { |f| f.write($vm.file_content(file)) }
+  save_failure_artifact(desc, destfile)
 rescue Exception => e
-  info_log("Exception thrown while trying to save the journal: " +
+  info_log("Exception thrown while trying to save #{destfile}: " +
            "#{e.class.name}: #{e}")
+end
+
+def save_vm_command_output(command:, id:, basename: nil, desc: nil)
+  basename ||= "artifact.cmd_output_#{id}"
+  $vm.execute("#{command} > /tmp/#{basename} 2>&1")
+  _save_vm_file_content(
+    file: "/tmp/#{basename}",
+    destfile: basename,
+    desc: desc || "Output of #{command}"
+  )
+end
+
+def save_journal
+  save_vm_command_output(
+    command: 'journalctl -a --no-pager',
+    id: 'journal',
+    basename: 'artifact.journal',
+    desc: 'systemd Journal'
+  )
+end
+
+def save_vm_file_content(file, desc: nil)
+  _save_vm_file_content(
+    file: file,
+    destfile: 'artifact.file_content_' + file.gsub('/', '_').sub(/^_/, ''),
+    desc: desc || "Content of #{file}"
+  )
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
@@ -223,7 +225,7 @@ Before('@product') do |scenario|
   if $config["CAPTURE"]
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
-    capture = IO.popen(['avconv',
+    capture = IO.popen([ffmpeg,
                         '-f', 'x11grab',
                         '-s', '1024x768',
                         '-r', '15',
@@ -236,9 +238,13 @@ Before('@product') do |scenario|
                        ])
     @video_capture_pid = capture.pid
   end
-  @screen = Sikuli::Screen.new
+  if $config["IMAGE_BUMPING_MODE"]
+    @screen = ImageBumpingScreen.new
+  else
+    @screen = Screen.new
+  end
   # English will be assumed if this is not overridden
-  @language = ""
+  $language = ""
   @os_loader = "MBR"
   @sudo_password = "asdf"
   @persistence_password = "asdf"
@@ -269,8 +275,9 @@ After('@product') do |scenario|
     hrs  = "%02d" % (time_of_fail / (60*60))
     elapsed = "#{hrs}:#{mins}:#{secs}"
     info_log("Scenario failed at time #{elapsed}")
-    screen_capture = @screen.capture
-    save_failure_artifact("Screenshot", screen_capture.getFilename)
+    screenshot_path = sanitize_filename("#{scenario.name}.png")
+    $vm.display.screenshot(screenshot_path)
+    save_failure_artifact("Screenshot", screenshot_path)
     exception_name = scenario.exception.class.name
     case exception_name
     when 'FirewallAssertionFailedError'
@@ -294,16 +301,35 @@ After('@product') do |scenario|
     # we cause a system crash), so let's collect everything depending
     # on the remote shell here:
     if $vm && $vm.remote_shell_is_up?
-      save_journal($config['TMPDIR'])
+      save_journal
+      if scenario.feature.file \
+         == 'features/additional_software_packages.feature'
+        save_vm_command_output(
+          command: 'ls -lAR --full-time /var/lib/apt',
+          id: 'var_lib_apt',
+        )
+        save_vm_command_output(
+          command: 'mount',
+          id: 'mount',
+        )
+        # When removing the logging below, also revert commit
+        # c8429eecf23570274b0bb2134a87ae1fcf72ce07
+        save_vm_command_output(
+          command: 'ls -lA --full-time /live/persistence/TailsData_unlocked',
+          id: 'persistent_volume',
+        )
+        save_vm_file_content('/var/log/live-persist')
+        save_vm_file_content('/run/live-additional-software/log')
+      end
     end
     $failure_artifacts.sort!
-    $failure_artifacts.each do |type, file|
+    $failure_artifacts.each do |desc, file|
       artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
       artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
       assert(File.exist?(file))
       FileUtils.mv(file, artifact_path)
       info_log
-      info_log_artifact_location(type, artifact_path)
+      info_log_artifact_location(desc, artifact_path)
     end
     if $config["INTERACTIVE_DEBUGGING"]
       pause(

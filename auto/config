@@ -183,6 +183,8 @@ TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="$AMNESIA_VERSION"
 TAILS_DISTRIBUTION="$TAILS_DISTRIBUTION"
 EOF
+# If you update the following regexp, also update it in
+# config/chroot_local-includes/usr/src/iuk/lib/Tails/IUK/UpgradeDescriptionFile/Generate.pm
 if echo "$AMNESIA_VERSION" | grep -qs -E '~(alpha|beta|rc)[0-9]*$' ; then
     echo 'TAILS_CHANNEL="alpha"' >> config/chroot_local-includes/etc/os-release
 fi
@@ -202,10 +204,6 @@ install -m 0755 -d config/chroot_local-includes/usr/local/lib/nodejs
 install -m 0755 \
    submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
    config/chroot_local-includes/usr/local/lib/nodejs/
-
-# aufs-standalone
-rm -rf config/chroot_local-includes/usr/src/aufs-standalone
-cp -a submodules/aufs-standalone config/chroot_local-includes/usr/src/
 
 # save the original file, shipped by the debootstrap package,
 # so we can always apply our debian-common.patch to the original

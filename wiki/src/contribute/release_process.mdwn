@@ -12,16 +12,41 @@ after having merged the current master branch into it!
 Requirements
 ============
 
+Packages
+--------
+
 To release Tails you'll need some packages installed:
 
-* `tidy mktorrent transmission-cli`
-* aufs DKMS module for your running kernel.
+* `gitlab-cli jq tidy mktorrent transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
-* `iuk` [[dependencies|contribute/release_process/tails-iuk]]
-* `perl5lib` [[dependencies|contribute/release_process/perl5lib]]
-* `po4a` _from Stretch_: the version in testing/sid extracts Markdown headings
+* `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
+* `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
+* `po4a` 0.55: different versions extract Markdown headings
    in a different way, which makes tons of strings fuzzy.
+* packages to [[build a local version of the website|contribute/build/website/]]
+
+Configuration files
+-------------------
+
+To release Tails you need:
+
+* `~/.python-gitlab.cfg`
+
+  You need at least this content:
+
+        [global]
+        ssl_verify = true
+
+        [Tails]
+        url = https://gitlab.tails.boum.org
+        per_page = 100
+        private_token = XXX
+
+   [[!tails_gitlab profile/personal_access_tokens
+   desc="Generate a _Personal Access Token_"]] with at least the `api` scope
+   enabled, and set it as the value of the `private_token` option
+   in your `~/.python-gitlab.cfg`.
 
 Environment
 ===========
@@ -72,10 +97,12 @@ Export the following environment variables:
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
   release).
 * `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
-  *bugfix* Tails release; if the next release is a bugfix release, use
-  that one; otherwise, use `${VERSION}.1`
+  scheduled *bugfix* Tails release
 * `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
-  to the next emergency release if we have to put one out
+  to the next emergency release if we have to put one out; unset for a
+  release candidate
+* `NEXT_STABLE_CHANGELOG_VERSION`: if `$NEXT_PLANNED_BUGFIX_VERSION` is the next
+  scheduled release, use it; otherwise, use `$NEXT_POTENTIAL_EMERGENCY_VERSION`
 
 Other variables
 ---------------
@@ -123,19 +150,20 @@ Freeze
 Major release
 -------------
 
-If we are at freeze time for a major release:
+If we are at freeze time for a major release (i.e. preparing its
+release candidate):
 
 1. Merge the `master` Git branch into `devel`:
 
-        git checkout devel && git fetch origin && git merge --no-ff origin/master
+        git checkout devel && git fetch origin && git merge origin/devel && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `devel` branch's `config/APT_overlays.d/` into the `devel`
-   APT suite.
+   APT suite; set `BRANCH=testing` instead of the default `BRANCH=devel`.
 
 3. Merge the `devel` Git branch into the `testing` one:
 
-        git checkout testing && git merge devel
+        git checkout testing && git merge origin/testing && git merge devel
 
    ... and check that the resulting `config/APT_overlays.d/` in the
    `testing` branch is empty.
@@ -149,7 +177,7 @@ If we are at freeze time for a major release:
 
 6. Make it so the time-based APT repository snapshots are kept around
    long enough, by bumping their `Valid-Until` to 10 days after the
-   next major release (the one _after_ the one you're preparing)'s
+   second next major release (the one _after_ the one you're preparing)'s
    scheduled date:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
@@ -161,7 +189,7 @@ If we are at freeze time for a bugfix release:
 
 1. Merge the `master` Git branch into `stable`:
 
-        git checkout stable && git fetch && git merge --no-ff origin/master
+        git checkout stable && git fetch && git merge origin/stable && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
@@ -181,8 +209,8 @@ Bootstrap manual testing coordination:
 1. Create a pad.
 2. Copy the [[manual test suite|contribute/release_process/test]]
    into it.
-3. Send the pad URL to the usual testers (see `manual_testers.mdwn` in
-   the RM team's Git repository), end-to-end encrypted.
+3. Send the pad URL in an **encrypted** mail to the manual testers:
+   <tails-manual-testers@boum.org>
 
 Update included files
 =====================
@@ -210,7 +238,7 @@ up-to-date localization files, so:
  - If you are preparing a release candidate, build at least the packages
    that change user-visible strings, so that translators can use the RC
    to check the status of their work and identify what's left to do.
- - If you are preparing a major release, build at least the packages
+ - If you are preparing a final major release, build at least the packages
    that got translation updates since the RC: we've sent a call for
    translation while releasing the RC so the least we can do is to
    incorporate the work that ensued into our final release :)
@@ -239,10 +267,10 @@ Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
 
 * [[tails-installer]]
-* [[persistence-setup]]
 * whisperback:
-  * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
-  * build a Debian package
+  * follow [upstream release process](https://gitlab.tails.boum.org/tails/whisperback/-/blob/master/HACKING.md#release)
+  * build a Debian package in an amd64 chroot of the Debian release
+    the Tails version you're preparing is based on
 
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
@@ -265,7 +293,7 @@ and commit the result, including new PO files:
 If `lint_po` complains:
 
 * rollback the offending PO files and retry; worst case, delete it
-* send a note to <tails-l10n@boum.org> so that they get in touch with
+* send a note to <tails-l10n@boum.org> [public] so that they get in touch with
   whoever can fix them.
 
 When preparing an actual release
@@ -302,7 +330,7 @@ Update other base branches
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
 2. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
-   branch, the time-based APT repository snapshots that were used
+   branch, the time-based APT repository snapshots being used
    during the freeze. It's fine if that results in a no-op
    (it depends on how exactly previous operations were performed).
 
@@ -331,10 +359,12 @@ Update more included files
 Changelog
 ---------
 
-Remove the placeholder entry for next release in `debian/changelog`,
-and then:
+Make sure to switch back to the release branch, spawn an editor to
+remove the placeholder entry for then next release in `debian/changelog`,
+and gather data from the Git repository:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
+	dch -e && \
 	DEBEMAIL='tails@boum.org' DEBFULLNAME='Tails developers' \
 	./release ${VERSION:?} ${PREVIOUS_TAG:?}
 
@@ -362,15 +392,14 @@ Changelog entries can be dispatched into those usual sections:
 
 Then, gather other useful information from:
 
-* every custom bundled package's own Changelog (Persistent
-  Volume Assistant, etc.);
+* every custom bundled package's own Changelog (Tails Installer, etc.)
 * the diff between the previous version's `.packages` file and the one
   from the to-be-released images; look for:
   - security fixes
   - new upstream releases of applications mentioned in [[doc/about/features]]
   - new upstream releases of other important components such as the
     Linux kernel
-* the [*Completed for the next release*](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=327) Redmine view.
+* the [[!tails_gitlab groups/tails/-/milestones desc="GitLab milestone"]].
 
 Finally, sanity check the version and commit:
 
@@ -446,10 +475,9 @@ points translators to up-to-date PO files:
 Call for translation
 ====================
 
-If at freeze time for a major release, send a call for translations
-to tails-l10n, making it clear what
-Git branch the translations must be based on, and what are the
-priorities.
+If at freeze time for a major release, send a call for translations to
+<tails-l10n@boum.org> [public], making it clear what Git branch the
+translations must be based on, and what are the priorities.
 
 To get a list of changes on the website:
 
@@ -568,12 +596,12 @@ Better catch this before people spend time doing manual tests.
 SquashFS file order
 -------------------
 
-1. Install the almost final USB image to a USB stick.
+1. Install the almost-final USB image to a USB stick.
 1. Boot this USB stick a first time to trigger re-partitioning.
 1. Shut down this Tails.
 1. Boot this USB stick **on bare metal** again.
 1. Add `profile` to the kernel command-line.
-1. Login with the default settings in the Greeter (e.g. do not configure
+1. Login with the default settings in the Welcome Screen (e.g. do not configure
    an _Administration Password_).
 1. Wait for the "Tor is ready" notification.
 1. Start *Tor Browser*.
@@ -587,15 +615,15 @@ SquashFS file order
            perl -ni -E 'chomp; say unless m{(?:
                   [.]pyc\s+\d+\z
                | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
-               | \Alib/live/mount/overlay/etc/fstab\s
-               | \Alib/live/mount/overlay/etc/console-setup/cached_\S+[.](?:gz|sh)\s
-               | \Alib/live/mount/overlay/etc/machine-id\s
-               | \Alib/live/mount/overlay/etc/network/interfaces\s
-               | \Alib/live/mount/overlay/var/log/wtmp\s
-               | \A(?:lib/live/mount/overlay/)?etc/apparmor[.]d/cache/[.]features\s
-               | \A(?:lib/live/mount/overlay/)?etc/(?:group|gshadow|passwd|shadow)-\s
-               | \A(?:lib/live/mount/overlay/)?etc/resolv-over-clearnet[.]conf\s
-               | \A(?:lib/live/mount/overlay/)?etc/skel/[.]config/autostart/end-profile[.]desktop\s
+               | \Alib/live/mount/overlay/rw/etc/fstab\s
+               | \Alib/live/mount/overlay/rw/etc/console-setup/cached_\S+[.](?:gz|sh)\s
+               | \Alib/live/mount/overlay/rw/etc/machine-id\s
+               | \Alib/live/mount/overlay/rw/etc/network/interfaces\s
+               | \Alib/live/mount/overlay/rw/var/log/wtmp\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/apparmor[.]d/cache/[.]features\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/(?:group|gshadow|passwd|shadow)-\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/resolv-over-clearnet[.]conf\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/skel/[.]config/autostart/end-profile[.]desktop\s
                | \Arun/
                | \Avar/lib/AccountsService/users/Debian-gdm\s
                | \Avar/lib/gdm3/[#]\d+\s
@@ -648,7 +676,7 @@ suite should be ready, so it is time to:
    so don't bother setting it yourself.
 
 1. Compare the new build manifest with the one from the previous,
-   almost final build:
+   almost-final build:
 
         diff -Naur \
            "${BUILD_MANIFEST:?}" \
@@ -727,7 +755,7 @@ to verify that Jenkins reproduced your images:
          * Otherwise, if the fix looks time-consuming or difficult,
            let's release anyway. But let's add a known issue about
            "This Tails release does not build reproducibility" to the
-           release notes, linking to the ticket where
+           release notes, linking to the issue where
            the nature of the reproducibility failure is clearly
            described.
 
@@ -783,6 +811,11 @@ files metadata:
        rm -rf "${tmp:?}"
     done
 
+Due to various directory changes, one needs to manually go back to the
+desired directory, likely using:
+
+    cd ${RELEASE_CHECKOUT?:}
+
 Lastly, let's set some variables to be used later:
 
     ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso"
@@ -791,6 +824,42 @@ Lastly, let's set some variables to be used later:
     IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.img"
     IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
+
+Push images to ISO history
+==========================
+
+Push the released ISO and USB images and their artifacts (`.buildlog`,
+`.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
+repo, so that:
+
+ - The Jenkins `parallel_build_IUKs` job can fetch them.
+ - Our isotesters can fetch them from there for their testing.
+
+How to do so is described in the `ISO_history.mdwn` document in the RM team's
+Git repo.
+
+If the release manager has `$ISOS` pointing to a checkout of the ISO
+history repository, the following commands might be useful. For the
+record, images and their signatures are already in that directory, and
+one just needs to ship some metadata along:
+
+    (cd ${ISOS?:}/tails-amd64-${VERSION?:} && \
+    cp "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}{.buildlog,.build-manifest,.packages} . && \
+    git annex sync && \
+    git annex add . && \
+    git commit -m "Add Tails ${VERSION?:} images and metadata." && \
+    git annex sync && \
+    git annex copy --to origin .)
+
+This transfer can take a while, and it's possible to proceed with the
+next section in the meanwhile, up to the following step (included):
+
+ - Build the Incremental Upgrade Kits locally
+
+However, the following step will require those files being transferred
+and made available on the relevant web server:
+
+ - Build the Incremental Upgrade Kits on Jenkins
 
 <a id="prepare-iuk"></a>
 
@@ -855,28 +924,27 @@ Build the Incremental Upgrade Kits locally
     (
        set -eu
        WORK_DIR=$(mktemp -d)
-       TAILS_REMOTE="$(git -C "$RELEASE_CHECKOUT" remote get-url origin)"
-       PUPPET_TAILS_REMOTE=$(echo -n "$TAILS_REMOTE" | perl -p -E 's,:tails(:?[.]git)?\z,:puppet-tails,')
-       cd "$WORK_DIR"
+       TAILS_REMOTE="$(git -C "${RELEASE_CHECKOUT?:}" remote get-url origin)"
+       PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails(:?[.]git)?\z,:puppet-tails,')
+       cd "${WORK_DIR?:}"
        git clone "$PUPPET_TAILS_REMOTE"
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
-           --tails-git-remote "file://${RELEASE_CHECKOUT}/.git"             \
-           --tails-git-commit "$TAG"                                      \
-           --source-date-epoch "$SOURCE_DATE_EPOCH"                       \
-           --local-isos-dir "$ISOS"                                       \
+           --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
+           --tails-git-commit "${TAG?:}"                                      \
+           --source-date-epoch "${SOURCE_DATE_EPOCH?:}"                       \
+           --local-isos-dir "${ISOS?:}"                                       \
            --tmp-dir "${TMPDIR:-/tmp}"                                        \
-           --output-dir "$IUKS_DIR"                                       \
-           --source-versions "$IUK_SOURCE_VERSIONS"                       \
-           --new-version "$VERSION"                                       \
+           --output-dir "${IUKS_DIR?:}"                                       \
+           --source-versions "${IUK_SOURCE_VERSIONS?:}"                       \
+           --new-version "${VERSION?:}"                                       \
            --verbose
-       cd "$IUKS_DIR"
-       sha256sum Tails_amd64_*_to_${VERSION}.iuk > "$IUKS_HASHES"
+       cd "${IUKS_DIR?:}"
+       sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
    )
 
 This command takes a long time. In parallel, while it is running,
-you can follow the next 2 steps:
+you can follow the next step:
 
- - Push the images to our ISO history git-annex repo
  - Build the Incremental Upgrade Kits on Jenkins
 
 ISO history
@@ -886,27 +954,33 @@ Push the released ISO and USB images and their artifacts (`.buildlog`,
 `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
 repo, so that:
 
- - The Jenkins `build_IUKs` job can fetch them.
+ - The Jenkins `parallel_build_IUKs` job can fetch them.
  - Our isotesters can fetch them from there for their testing.
 
 How to do so is described in the `ISO_history.mdwn` document in the RM team's
 Git repo.
 
-Then, wait (a few minutes) until the images appear
+Then, wait (a few minutes, */15 crontab) until the images appear
 on <https://iso-history.tails.boum.org/>.
 
 <a id="build-iuks-on-jenkins"></a>
 
 Build the Incremental Upgrade Kits on Jenkins
-------------------------------------------
+---------------------------------------------
 
-1. On <https://jenkins.tails.boum.org/job/build_IUKs/build?delay=0sec>,
+1. Make sure the push to ISO history (started in the previous section)
+   has finished, and that images have appeared on the web server:
+   <https://iso-history.tails.boum.org/>
+
+1. On <https://jenkins.tails.boum.org/job/parallel_build_IUKs/configure>, adjust
+   the `SOURCE_VERSION` axis to list all versions in `$IUK_SOURCE_VERSIONS`,
+   and save the updated configuration.
+
+1. On <https://jenkins.tails.boum.org/job/parallel_build_IUKs/build?delay=0sec>,
    fill the form with these values:
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
     - `SOURCE_DATE_EPOCH`: the value of `$SOURCE_DATE_EPOCH` in your
-      release environment
-    - `SOURCE_VERSIONS`: the value of `$IUK_SOURCE_VERSIONS` in your
       release environment
     - `NEW_VERSION`: the value of `$VERSION` in your release environment
     - `EXTRA_ARGS`: leave it blank
@@ -916,12 +990,15 @@ Build the Incremental Upgrade Kits on Jenkins
 3. After a few seconds, a new build appears on top of the _Build
    History_ sidebar. Click on the progress bar of this new build.
 
-4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable
-   to the ID of this job (an integer).
+3. **Verify:** A downstream `parallel_collect_IUKs` job should appear,
+   to be triggered once the `parallel_build_IUKs` has completed successfully.
 
-5. Wait until this *build_IUKs* job completes successfully.
+4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable
+   to the ID of that downstream job (an integer).
+
+5. Wait until both `parallel_build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
    It should take about 10-15 minutes for each member of
-   the `$IUK_SOURCE_VERSIONS` list.
+   the `$IUK_SOURCE_VERSIONS` list, distributed across `isobuilderN` workers.
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
@@ -931,17 +1008,20 @@ Verify that Jenkins reproduced your IUKs
     "${RELEASE_CHECKOUT:?}"/bin/copy-iuks-to-rsync-server-and-verify \
        --hashes-file "${IUKS_HASHES:?}" \
        --work-dir /srv/tmp \
+       --debug \
        --jenkins-build-id "${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}"
 
 If this verification succeeds, move on to the next section.
 
 Else, if this verification fails, then:
 
-1. Visit the web page whose URL is printed by the following command:
+1. Visit this page: `https://jenkins.tails.boum.org/job/parallel_build_IUKs/lastBuild/parameters/`
 
-        echo "https://jenkins.tails.boum.org/job/build_IUKs/${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}/parameters/"
-
-   It tells you which parameters you've passed to the Jenkins job.
+   It tells you which parameters you've passed to the upstream Jenkins
+   job, which spawned the many workers. Make sure to use the build
+   history browser to find the right `parallel_build_IUKs` job in case
+   there were several attempts; the URL above assumes the last build
+   is what you're interested in (see `lastBuild` part).
 
 2. Double-check that you've passed the correct parameters.
 
@@ -951,11 +1031,20 @@ Else, if this verification fails, then:
 
    Else, if the parameters where correct, then follow the next steps.
 
-3. File a ticket about this problem.
+2. As detailed in [[!tails_ticket 17658]], the `parallel_*_IUKs` jobs
+   are maintained manually instead of through `jenkins-job-builder`; it
+   might be that changes to the serial version (`build_IUKs`) weren't
+   reflected into the parallel version (`parallel_build_IUKs`). You
+   might want to try a build with the serial version before filing a
+   ticket (maybe for a single source version for a quick temperature
+   check, then for all of them if the first one matches your local
+   version).
+
+3. File an issue about this problem.
 
    Specify:
 
-    - Which set of parameters you've passed to the *build_IUKs*
+    - Which set of parameters you've passed to the *parallel_build_IUKs*
       job, so that the person who'll investigate the problem
       can reproduce it.
     - The ID of the build that failed to reproduce your
@@ -1012,7 +1101,9 @@ Prepare upgrade-description files
                         --next_version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
                         --next_version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}"
                 else
-                    echo --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,')
+                    echo \
+                        --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,') \
+                        --next_version "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}"
                 fi
             ) \
             $( \
@@ -1049,33 +1140,31 @@ Prepare upgrade-description files
    signatures to the Git branch used to prepare the release
    (`$WEBSITE_RELEASE_BRANCH`):
 
-        ( \
-          cd "${RELEASE_CHECKOUT:?}" && git add wiki/src/upgrade && \
-          git commit -m "Update upgrade-description files." && \
-          git push origin ${WEBSITE_RELEASE_BRANCH:?} \
-        )
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git add wiki/src/upgrade && \
+        git commit -m "Update upgrade-description files." && \
+        git push origin ${WEBSITE_RELEASE_BRANCH:?}
 
 1. Copy the generated UDFs for the previous releases to the *test*
    channel in `$MASTER_CHECKOUT`, modify their content accordingly,
    sign them, commit and push:
 
-        ( \
-          cd ${MASTER_CHECKOUT:?} && \
-          git fetch && \
-          git merge origin/master && \
-          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?} ${VERSION:?}); do
-            release_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
-            test_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
-            mkdir -p "$(dirname "$test_udf")" && \
-            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
-              | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
-            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
-            mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
-            git add ${test_udf:?}* ; \
-          done && \
-          git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
-          git push origin master:master \
-        )
+        cd ${MASTER_CHECKOUT:?} && \
+        git fetch && \
+        git merge origin/master && \
+        for old_version in $(echo ${IUK_SOURCE_VERSIONS:?} ${VERSION:?}); do
+          release_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
+          test_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
+          mkdir -p "$(dirname "$test_udf")" && \
+          git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
+            | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
+          echo "Signing ${test_udf:?}" && \
+          gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+          mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+          git add ${test_udf:?}* ; \
+        done && \
+        git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
+        git push origin master:master
 
    XXX: ideally, we should also copy the UDFs that only advertise
    a full upgrade path to the version we're releasing, so that
@@ -1089,15 +1178,15 @@ If preparing a RC, skip this part.
 
 Update the image description file (IDF) used by the browser extension:
 
+    cd "${RELEASE_CHECKOUT?:}" && \
     ./bin/idf-content \
        --version "${VERSION:?}" \
        --iso "${ISO_PATH:?}" \
        --img "${IMG_PATH:?}" \
-       > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-    ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-      git commit -m "Update IDF file for Tails Verification." && \
-      git push origin "${WEBSITE_RELEASE_BRANCH:?}" )
+       > wiki/src/install/v2/Tails/amd64/stable/latest.json && \
+    git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
+    git commit -m "Update IDF file for Tails Verification." && \
+    git push origin "${WEBSITE_RELEASE_BRANCH:?}"
 
 Done with OpenPGP signing
 =========================
@@ -1131,7 +1220,7 @@ above).
 Publish the ISO, IMG, and IUKs over HTTP
 ----------------------------------------
 
-If the IUKs reproducibility check you did earlier has failed,
+**If** the IUKs reproducibility check you did earlier has failed,
 then upload the IUKs you've built to our rsync server
 (we trust your machine more than our Jenkins):
 
@@ -1182,6 +1271,11 @@ and on the live website (even for a release candidate):
 	   git push origin master
 	)
 
+At this stage, either IUKs were reproduced by Jenkins and left on the
+rsync server in a temporary location, or one should wait until the
+synchronization of local files (started in the first part of this
+section) to the same temporary location has completed.
+
 Move the IUKs in place with proper
 ownership and permissions and update the time in `project/trace` file
 on our rsync server and on the live website (even for a release
@@ -1204,6 +1298,10 @@ candidate):
 	      -m "Updating trace file after uploading the IUKs for ${VERSION:?}." && \
 	   git push origin master
 	)
+
+The IUK hashes files can be removed:
+
+    ssh rsync.lizard rm -f /srv/tmp/to_${VERSION?:}.sha256sum'*'
 
 ## Announce, seed and test the Torrents
 
@@ -1269,8 +1367,8 @@ Testing
 
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
-1. Email <tails@boum.org> and potential contributors (see
-   `manual_testers.mdwn` in the internal Git repository) that tests
+   This is a public list, don't point to the pad.
+1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
    may start:
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
@@ -1282,27 +1380,36 @@ Testing
    report their results in due time, and that they make it clear when
    they're leaving for good.
 1. Fill the holes and make sure that the automated and manual test
-   suites are done in due time. Clock and report this work separately
-   from your RM'ing work.
+   suites are done in due time. Clock and report this work along with
+   the rest of your RM'ing work.
 1. Triage test results, reproduce bugs as needed, decide what the next
-   step is and make sure it happens: add to known issues? file ticket?
+   step is and make sure it happens: add to known issues? file an issue?
    release blocker? improve the test description (steps, expected outcome)?
 
 Prepare announcements and blog posts
 ====================================
 
 What follows in this section happens on the `$WEBSITE_RELEASE_BRANCH`
-branch in `${RELEASE_CHECKOUT:?}`:
+branch in `${RELEASE_CHECKOUT:?}`, making sure we catch up with the
+technical writers who have likely prepared release notes:
 
 	cd "${RELEASE_CHECKOUT:?}" && \
-	   git checkout "${WEBSITE_RELEASE_BRANCH:?}"
+	   git checkout "${WEBSITE_RELEASE_BRANCH:?}" && \
+	   git merge "origin/${WEBSITE_RELEASE_BRANCH?:}"
 
 If preparing a final release
 ----------------------------
 
 Skip this part if preparing a RC.
 
-Rename, copy, garbage collect and update various files:
+XXX: If preparing a final *major* release, beware! The `git rm` steps
+will get confused because we should be removing files from the
+previous *bugfix* release (and `PREVIOUS_VERSION` points to the
+release candidate instead, for which we don't ship all files). Maybe
+start by removing all files (regardless of the version), before copying
+the new files? To be attempted/confirmed when releasing 4.11.
+
+Rename, copy, garbage collect and update various files.
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \
@@ -1312,10 +1419,10 @@ Rename, copy, garbage collect and update various files:
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
 	git rm \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
-	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
+	LC_NUMERIC=C ls -l -h -L ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
-	LC_NUMERIC=C ls -l -h ${IMG_PATH:?} | \
+	LC_NUMERIC=C ls -l -h -L ${IMG_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html" && \
     gpg --check-trustdb && \
@@ -1331,7 +1438,7 @@ Rename, copy, garbage collect and update various files:
 Then, build the website and commit this last set of changes:
 
 	./build-website && \
-	git add wiki/src && \
+	git add wiki/src/{inc,torrents} && \
 	git commit -m "Update various website source files for ${VERSION:?}"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
@@ -1341,6 +1448,8 @@ announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 Write an announcement listing the security bugs affecting the previous
 version in
 `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
+(XXX: when preparing a final *major* release, point at the
+previous *bugfix* release rather than at the release candidate)
 in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the
 images to be released were *built*. Including:
@@ -1380,12 +1489,12 @@ Write the announcement for the release in
 
 - Update the `meta title` directive.
 - Update the `meta date` directive.
-- Document important config changes that persistence users have to do
+- Document important config changes that users of the Persistent Storage have to do
   themselves (e.g. the Pidgin proxy settings change in
   [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
 - Document known issues.
-- This snippet can help to convert the copied changelog's ticket
+- This snippet can help to convert the copied changelog's issue
   references to links:
 
       sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
@@ -1442,6 +1551,7 @@ Skip this if you are preparing anything but a final, major release.
       <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
       EOF
 
+- To be in line with previous announces, remove navigation bits entirely.
 - [login to the Tor blog](https://blog.torproject.org/user)
 - click *Content* → *Add content* → *Blog Post*
 - add these tags, each in a separate text entry field (use _Add another item_):
@@ -1449,6 +1559,7 @@ Skip this if you are preparing anything but a final, major release.
   * anonymous operating system
   * tails releases
 - set *Title* to "New Release: Tails $VERSION"
+- set *URL alias* to "/new-release-tails-XYZ" (without dots)
 - choose *Filtered HTML* as the *Text format* in the blog post editor
 - copy the text you have prepared into the *Post Body* textarea of the
   blog post editor
@@ -1472,8 +1583,11 @@ Make sure every active mirror in the pool has the new version:
 	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
-Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
-notify their administrators.
+Ask the mirrors team to disable mirrors that are lagging behind:
+
+ - either over email: <tails-mirrors@boum.org> [encrypted]
+ - or by creating a merge request that modifies the
+   [mirrors configuration file](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json)
 
 Sanity checks
 -------------
@@ -1518,7 +1632,8 @@ Push
 ### Git
 
 Push the last commits to our Git repository and put `master` in the
-following state:
+following state, remembering to close the “Write release notes” ticket
+in the merge commit message):
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1528,7 +1643,7 @@ following state:
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
       git merge origin/master && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
+      git merge --edit "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
       echo "stable" > config/base_branch && \
       git commit config/base_branch \
           -m "Restore master's base branch." \
@@ -1548,54 +1663,63 @@ Bug tracker
 
 Skip this part if preparing a release candidate.
 
-Edit the [*Completed for the next
-release*](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=327)
-Redmine view: set the _Target version_ filter to the next scheduled release.
+Sign in on GitLab as the `role-release-automation` user (credentials are
+in `rm.git`'s keyringer).
 
 Postpone to next release any remaining open issue for the version
-you've just released. Use the right-click contextual menu to do so in
-one single batch.
+you've just released:
 
-Then, mark the just-released Redmine milestone as done: go to the
-target version page, click *Edit*, and set *Status* to *Closed*.
+1. Create a new `missed:$VERSION` label
+   on [[!tails_gitlab groups/tails/-/labels]]
+2. Visit the [[!tails_gitlab groups/tails/-/milestones desc="milestone"]]
+   for the version you've just released.
+3. In the right side bar, in the _Issues_ section, click on the _Open: NN_
+   link.
+4. Click the _Edit issues_ link in the top right corner.
+5. In the right side bar:
+    - select the milestone for the next scheduled release
+    - select the `missed:$VERSION` label
+6. On the top left of the list of issues, click the checkbox
+   that will select all issues.
+7. In the right side bar, click _Update all_.
+8. If some issues still appear on the list, go through these steps again:
+   there's pagination involved and
+   [[!tails_gitlab help/user/project/bulk_editing.html desc="bulk editing"]]
+   only applies to issues that are displayed.
+
+Then, do the same for MRs.
+
+Ideally we would [[!tails_ticket 17589 desc="automate this"]].
+
+Then, close the just-released [[!tails_gitlab groups/tails/-/milestones
+desc="milestone"]].
+
+Finally, sign out from the `role-release-automation` GitLab user.
 
 ### Tickets linked from the website
 
-Go through the tickets linked from the documentation and support sections of the
-website and point our lead technical writer (sajolida) to the tickets that might be resolved in
-this release.
+Go through the issues linked from the documentation and support sections of the
+website and point our lead technical writer (sajolida) to those that might
+be resolved in this release.
 
     cd "${MASTER_CHECKOUT:?}" && \
-    find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
+    find wiki/src/{doc,support} ! -path wiki/src/support/known_issues/graphics.mdwn -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
-            url="https://redmine.tails.boum.org/code/issues/${ticket:?}"
-            url_content=$(curl --fail --silent ${url:?})
-            if [ "${?}" -ne 0 ] || [ -z "${url_content:-}" ]; then
-                echo "Failed to fetch ${url:?} so manually investigate #${ticket:?}" >&2
-                continue
-            fi
-            ticket_status="$(echo "${url_content:?}" | \
-                sed -n 's,^.*<div class="status attribute"><div class="label">Status:</div><div class="value">\([^<>]\+\)</div></div>.*$,\1,p')"
+            ticket_status="$(python-gitlab --gitlab Tails -o json --fields state project-issue get --project-id 2 --iid "$ticket" | jq --raw-output .state)"
             if [ -z "${ticket_status:-}" ]; then
                 echo "Failed to find the status of #${ticket:?}" >&2
                 continue
             fi
-            if [ "${ticket_status:?}" != "New" ] && \
-               [ "${ticket_status:?}" != "Confirmed" ] && \
-               [ "${ticket_status:?}" != "In Progress" ]; then
-                echo "It seems ticket #${ticket:?} has been fixed (Status: ${ticket_status:?}) so please find all instances in the wiki and fix them. Ticket URL: ${url:?}"
+            if [ "${ticket_status:?}" = "closed" ]; then
+                echo "It seems issue #${ticket:?} has been fixed. Please find all instances on the website and adjust them as needed. Ticket URL: https://gitlab.tails.boum.org/tails/tails/-/issues/${ticket:?}"
             fi
         done
-
-Remember that ticket expressions, e.g. `[[!tails_ticket 1234]]`, can
-span several lines, so finding the ones reported by the above code
-*might* be harder than `git grep "tails_ticket 1234"`.
 
 Twitter
 -------
 
-Check in the comments of the ticket for the release notes if the
+Check in the comments of the issue for the release notes if the
 technical writers have prepared a tweet. Otherwise tweet a simple link
 to the release notes:
 
@@ -1624,15 +1748,18 @@ Amnesia news
 Prepare for the next development cycle
 ======================================
 
-XXX: adapt / fork for release candidates. In the meantime, read all
-this, and skip what does not make sense for a RC.
+If you just released a final release
+------------------------------------
 
 1. If you just released a new stable release, remove the previous
    stable release from:
    - our rsync server:
      `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+     (XXX: for final *major* releases, adjust `PREVIOUS_VERSION` to
+     point at the previous *bugfix* release, instead of the release
+     candidate).
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
-     (ISO and USB image)
+     (ISO and USB image, use comma-separated values)
      with `ssh bittorrent.lizard transmission-remote --list` and then
      delete them with
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
@@ -1663,7 +1790,7 @@ this, and skip what does not make sense for a RC.
                     -not -name "*_to_${VERSION:?}.iuk" \
                     -not -name '*~test_*~test.iuk' \
                     -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
-                    -delete \
+                    -print -delete \
              \"
 
 1. Check how much space our mirrors need:
@@ -1679,10 +1806,11 @@ this, and skip what does not make sense for a RC.
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
         git fetch && \
-        git submodule update && \
-        bare_repo=$(mktemp -d)
+        git merge origin/master && \
+        git submodule update --init && \
+        bare_repo=$(mktemp -d) && \
         git clone --bare --reference "${MASTER_CHECKOUT:?}" \
-           gitolite@d53ykjpeekuikgoq.onion:tails \
+           git@gitlab.tails.boum.org:tails/tails \
            "${bare_repo:?}" && \
         PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
            --repo "${bare_repo:?}" && \
@@ -1696,11 +1824,12 @@ this, and skip what does not make sense for a RC.
    never made.
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel`
-1. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
-   branch, the time-based APT repository snapshots that were used
-   during the freeze. This should generally be a no-op but if there
-   was some hiccup earlier it could be needed.
+   `devel`.
+   Note: After a final *major* release is published, it's normal to
+   leave the `testing` branch alone: it will only become relevant
+   again when the next freeze starts. In this case, keep a single
+   changelog entry for `stable` (the next *bugfix* release) and for
+   `devel` (the next *major* release).
 1. Follow the
    [[post-release|APT_repository/custom#workflow-post-release]] custom
    APT repository documentation. This includes some git operations,
@@ -1749,10 +1878,10 @@ this, and skip what does not make sense for a RC.
    <https://jenkins.tails.boum.org/>.
 1. Make sure you pushed all changes in every of our Git repo (including our
    Debian packages ones).
-1. Delete the _Release Manager View for ${VERSION_:?}_ Redmine custom query.
-1. Ensure the next two releases have their own _Release Manager View_.
-1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
-   in the Roof* so that this section appears after the next release.
+1. Ask sysadmins to set the *Due date* for the [[!tails_gitlab
+   groups/tails/-/milestones
+   desc="*Holes in the Roof* milestone"]] to a date between
+   the next 2 releases, via `gitlab-config.git`.
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
 1. Check the Mozilla release calendars:
@@ -1767,13 +1896,45 @@ this, and skip what does not make sense for a RC.
 
 1. Announce the date of the next release on <tails-dev@boum.org> and
    <tails-l10n@boum.org>.
-   - Bcc the usual testers (see `manual_testers.mdwn` in the RM team's
-     Git repository), asking them to privately tell the RM for that release
+   - Cc <tails-manual-testers@boum.org>,
+     asking them to privately tell the RM for that release
      whether they can do manual testing on release day.
 1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
-   [[release manager role page|contribute/working_together/roles/release_manager]].
+   [[release manager role page|contribute/working_together/roles/release_manager#shift]].
    Otherwise, kindly remind the next release manager about this :)
+
+If you just released an RC
+--------------------------
+
+1. On the devel branch,
+   [[thaw|APT_repository/time-based_snapshots#freeze-exceptions-post-release]]
+   all packages (if any) that were granted freeze exceptions.
+1. On the devel branch,
+   [[thaw|APT_repository/time-based_snapshots#thaw]] the time-based
+   APT repository snapshots. This should generally be a no-op but if
+   there was some hiccup earlier it could be needed.
+1. Follow the
+   [[post-release|APT_repository/custom#workflow-post-release]] custom
+   APT repository documentation. This includes some git operations,
+   like creating an appropriate _"dummy changelog entry"_ in the
+   `debian/changelog` file.
+1. Merge testing into devel (keeping a single changelog entry, for the
+   second next major release), and push them:
+
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git checkout devel && \
+        git merge testing && \
+        git push origin testing devel
+
+1. Make sure you pushed all changes in every of our Git repo (including our
+   Debian packages ones).
+1. Follow the "Verify that the snapshots used in the release branch
+   are ok" step for final releases, above.
+1. Make sure Jenkins manages to build all updated major branches:
+   <https://jenkins.tails.boum.org/>.
+1. In [[contribute/calendar]], remove the entries about the version that you've
+   just released.
 
 Related pages
 =============

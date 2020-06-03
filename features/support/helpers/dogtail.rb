@@ -35,6 +35,9 @@ module Dogtail
     :window,
   ]
 
+  class Failure < StandardError
+  end
+
   # We want to keep this class immutable so that handles always are
   # left intact when doing new (proxied) method calls.  This way we
   # can support stuff like:
@@ -51,7 +54,7 @@ module Dogtail
   class Application
     @@node_counter ||= 0
 
-    def initialize(app_name, opts = {})
+    def initialize(app_name, **opts)
       @var = "node#{@@node_counter += 1}"
       @app_name = app_name
       @opts = opts
@@ -79,7 +82,7 @@ module Dogtail
       code = code.join("\n") if code.class == Array
       c = RemoteShell::PythonCommand.new($vm, code, user: @opts[:user])
       if c.failure?
-        raise RuntimeError.new("The Dogtail script raised: #{c.exception}")
+        raise Failure.new("The Dogtail script raised: #{c.exception}")
       end
       return c
     end
@@ -159,7 +162,7 @@ module Dogtail
       ]
       size = run(find_script_lines).stdout.chomp.to_i
       return size.times.map do |i|
-        Node.new("#{nodes_var}[#{i}]", @opts)
+        Node.new("#{nodes_var}[#{i}]", **@opts)
       end
     end
 
@@ -210,13 +213,13 @@ module Dogtail
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
         method_call = "#{method.to_s}(#{args_str})"
-        Node.new("#{@var}.#{method_call}", @opts)
+        Node.new("#{@var}.#{method_call}", **@opts)
       end
     end
 
     TREE_API_NODE_SEARCH_FIELDS.each do |field|
       define_method(field) do
-        Node.new("#{@var}.#{field}", @opts)
+        Node.new("#{@var}.#{field}", **@opts)
       end
     end
 
@@ -224,7 +227,7 @@ module Dogtail
 
   class Node < Application
 
-    def initialize(expr, opts = {})
+    def initialize(expr, **opts)
       @expr = expr
       @opts = opts
       @opts[:user] ||= LIVE_USER
@@ -237,7 +240,7 @@ module Dogtail
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
         method_call = "#{method.to_s}(#{args_str})"
-        Node.new("#{@var}.#{method_call}", @opts)
+        Node.new("#{@var}.#{method_call}", **@opts)
       end
     end
 

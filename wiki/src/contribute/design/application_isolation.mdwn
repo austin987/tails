@@ -65,7 +65,7 @@ First, we are using a couple of
 [aliases](http://wiki.apparmor.net/index.php/AppArmor_Core_Policy_Reference#Alias_and_rewrite_rules)
 so that rules applying to "normal" paths (e.g.
 `/home/amnesia/.gnupg/`) also apply to Debian Live -specific paths,
-such as `/lib/live/mount/overlay/home/amnesia/.gnupg/`. And, to avoid
+such as `/lib/live/mount/overlay/rw/home/amnesia/.gnupg/`. And, to avoid
 subsequent problems with overlapping rules, and to mitigate the
 increased policy compilation time (see details below), we also patch
 some some very broad rules to make them _not_ apply to `/lib/live/*`.
@@ -117,7 +117,7 @@ Tor Browser
 As of Tails 1.3, the Tor Browser is somewhat confined with AppArmor.
 
 Given we cannot seriously allow the Tor Browser to read and write
-everywhere in the home and persistent directory, we had to allow it to
+everywhere in the home and *Persistent* folder, we had to allow it to
 read/write files from/to one specific directory, and make it so the
 user experience is not hurt too much.
 
@@ -139,10 +139,10 @@ store it entirely, so this problem is not specific to downloading to
 an amnesiac directory.
 
 Still, we thought it would be good to allow users to download large
-files from Tor Browser to their persistent volume, so we have
+files from Tor Browser to their Persistent Storage, so we have
 introduced a second downloads/uploads directory: `~/Persistent/Tor
 Browser/`, that is created whenever the "Personal data" (aka.
-`~/Persistent/`) persistence feature is activated. In that case, if
+`~/Persistent/`) feature is turned on. In that case, if
 persistence was activated read-write, another GTK bookmark pointing to
 that directory is created at login time.
 
@@ -338,17 +338,9 @@ back some paths that were rewritten.
 overlayfs
 ---------
 
-[overlayfs](https://git.kernel.org/cgit/linux/kernel/git/mszeredi/vfs.git/tree/Documentation/filesystems/overlayfs.txt?h=overlayfs.current)
-is another kind of union filesystem. It has been merged in
-Linux mainline, and is supported by live-boot 5.
-overlayfs works differently from aufs, in ways that give hope that it
-might be easier for AppArmor to support it natively.
-
 Some ongoing work on AppArmor (labeling, extended conditionals) will
-help support overlayfs. Time will tell whether the result meets
-our needs.
-
-See [[!tails_ticket 9045]] for more up-to-date information.
+help support overlayfs with less kludges. Time will tell whether the
+result meets our needs.
 
 <a id="linux-containers"></a>
 

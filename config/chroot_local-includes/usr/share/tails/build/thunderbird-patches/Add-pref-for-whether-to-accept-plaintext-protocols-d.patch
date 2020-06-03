@@ -1,20 +1,16 @@
-From 619c17e0dc3d1cbfdf3859b18c9e71ec00694f9c Mon Sep 17 00:00:00 2001
-From: anonym <anonym@riseup.net>
-Date: Wed, 27 Feb 2019 10:59:33 +0100
+From: intrigeri <intrigeri@boum.org>
+Date: Sun, 16 Feb 2020 09:29:00 +0000
 Subject: [PATCH] Add pref for whether to accept plaintext protocols during
  autoconfiguration.
 
-Let's make it possible for security-focused distributions (and
-extensions like TorBirdy) to prevent insecure configurations to ever
-be displayed to users; for other users there is a warning explaining
-the consequences of accepting a non-SSL configuration.
-
+Author: anonym <anonym@riseup.net>
 ---
- .../components/accountcreation/content/readFromXML.js  | 10 ++++++++++
- comm/mailnews/mailnews.js                              |  6 ++++++
+ comm/mail/components/accountcreation/content/readFromXML.js | 10 ++++++++++
+ comm/mailnews/mailnews.js                                   |  6 ++++++
  2 files changed, 16 insertions(+)
 
 diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/mail/components/accountcreation/content/readFromXML.js
+index 780229f..6a9fef9 100644
 --- a/comm/mail/components/accountcreation/content/readFromXML.js
 +++ b/comm/mail/components/accountcreation/content/readFromXML.js
 @@ -34,6 +34,8 @@ function readFromXML(clientConfigXML) {
@@ -26,10 +22,10 @@ diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/
    var exception;
    if (
      typeof clientConfigXML != "object" ||
-@@ -113,6 +115,10 @@ function readFromXML(clientConfigXML) {
+@@ -115,6 +117,10 @@ function readFromXML(clientConfigXML) {
        }
        exception = null;
-
+ 
 +      if (ssl_only && iO.socketType == 1) {
 +        continue;
 +      }
@@ -37,10 +33,10 @@ diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/
        for (let iXauth of array_or_undef(iX.$authentication)) {
          try {
            iO.auth = sanitize.translate(iXauth, {
-@@ -255,6 +261,10 @@ function readFromXML(clientConfigXML) {
+@@ -257,6 +263,10 @@ function readFromXML(clientConfigXML) {
        }
        exception = null;
-
+ 
 +      if (ssl_only && oO.socketType == 1) {
 +        continue;
 +      }
@@ -49,9 +45,10 @@ diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/
          try {
            oO.auth = sanitize.translate(oXauth, {
 diff --git a/comm/mailnews/mailnews.js b/comm/mailnews/mailnews.js
+index 8f598b2..7dda1ad 100644
 --- a/comm/mailnews/mailnews.js
 +++ b/comm/mailnews/mailnews.js
-@@ -962,6 +962,12 @@ pref("mailnews.auto_config.guess.sslOnly", false);
+@@ -969,6 +969,12 @@ pref("mailnews.auto_config.guess.sslOnly", false);
  pref("mailnews.auto_config.guess.timeout", 10);
  // Whether we allow fetched configurations using OAuth2.
  pref("mailnews.auto_config.account_constraints.allow_oauth2", true);
@@ -63,3 +60,4 @@ diff --git a/comm/mailnews/mailnews.js b/comm/mailnews/mailnews.js
 +pref("mailnews.auto_config.sslOnly", false);
  // Work around bug 1454325 by disabling mimetype mungling in XmlHttpRequest
  pref("dom.xhr.standard_content_type_normalization", false);
+ 

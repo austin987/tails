@@ -41,31 +41,32 @@ Here are a couple of links to get started with Git:
 General information
 ===================
 
+<a id="gitlab"></a>
+
+GitLab
+------
+
+Most of our repositories live in [[!tails_gitlab desc="our GitLab"]].
+
+See the [[documentation about how we're using GitLab|contribute/working_together/GitLab]].
+
 <a id="immerda"></a>
 
 Git hosting setup at immerda
 ----------------------------
 
-Most of our repositories live on `git.tails.boum.org`, which is hosted
-by the [immerda](https://www.immerda.ch/) collective.
+Some of our historical Git repositories live on <https://git.tails.boum.org/>,
+which is hosted by the [immerda](https://www.immerda.ch/) collective.
 
 Documentation for our Git hosting setup at immerda:
 
 * [main documentation](https://wiki.immerda.ch/index.php/GitRepositoriesImmerda)
-* [SSL and SSH fingerprints](https://www.immerda.ch/infos/certs.html)
+* [SSL and SSH fingerprints](https://www.immerda.ch/certs.html)
 
 Merge policy
 ------------
 
 See our [[contribute/merge_policy]].
-
-Caution!
---------
-
-If you intend to prepare Tails releases, you'll need to make
-the development team signing key the default one for Git tags:
-
-	git config user.signingkey A490D0F4D311A4153E2BB7CADBB802B258ACD84F
 
 Repositories
 ============
@@ -77,30 +78,23 @@ Main repository
 
 This repository contains the Tails source code and the source of the website.
 
-Anyone can check it out like this:
+For instructions about cloning and forking this repository,
+visit it [[!tails_gitlab tails/tails desc="on GitLab"]].
 
-	git clone https://git.tails.boum.org/tails
-
-Developers with write access to the repositories should instead:
-
-	torsocks git clone gitolite@d53ykjpeekuikgoq.onion:tails
-
-And then, in any case, in your new Git clone's directory:
+We use Git submodules, so after cloning this repository, in your new Git clone's
+directory, run:
 
 	git submodule update --init
 
 For more information about our usage of Git submodules, see
 [[the dedicated section|git#submodules]].
 
-We have a [web interface](https://git.tails.boum.org/tails/)
-available for the main repository.
-
 ### Configuration
 
 Developers with write access to the repositories should:
 
-	git config --global url.tails@git.tails.boum.org:.insteadOf \
-	   https://git.tails.boum.org/
+	git config --global url.git@gitlab-ssh.tails.boum.org:.insteadOf \
+	   https://gitlab.tails.boum.org/
 
 We also recommend the following setting in your Tails clone since it
 otherwise is too easy to forget pushing updated submodules:
@@ -174,7 +168,7 @@ merged (with `--no-ff`) into the appropriate branch (generally
 rewritten, e.g. it may be rebased on top of `devel`.
 
 Unless there are good reasons to do otherwise, bugfix branches must be
-forked off the latest stable release tag, while feature branches
+forked off the stable branch, while feature branches
 should be forked off the devel branch.
 
 If you intend to work on a branch not really meant to be proposed to a
@@ -193,16 +187,8 @@ Promotion material
 This repository contains Tails [[promotion
 material|contribute/how/promote/material]].
 
-Anyone can check it out like this:
-
-	git clone https://git.tails.boum.org/promotion-material
-
-Developers with write access to the repositories should instead:
-
-	torsocks git clone gitolite@d53ykjpeekuikgoq.onion:promotion-material
-
-We have a [web interface](https://git.tails.boum.org/promotion-material/)
-available for the promotion material repository.
+For instructions about cloning and forking this repository,
+visit it [[!tails_gitlab tails/promotion-material desc="on GitLab"]].
 
 <a id="puppet"></a>
 
@@ -248,8 +234,8 @@ authoritative repositories for these modules at
    manifests repository so you should have a local clone of
    them already.
  - Anything you push to these repositories (except `tails_secrets_*`)
-   is automatically synchronized to public mirrors at
-   <https://git.tails.boum.org/>.
+   is automatically synchronized to public mirrors
+   [[!tails_gitlab tails desc="on our GitLab"]].
  - Do not push to the public mirrors: your changes would be
    overwritten by the next automatic synchronization.
 
@@ -261,16 +247,8 @@ their [[public mirrors|git#other-repositories]].
 Other repositories
 ------------------
 
-All other public Tails Git repositories are at
-<https://git.tails.boum.org/>.
-
-Unauthenticated access is of the form:
-
-	git clone https://git.tails.boum.org/$REPOSITORY
-
-Developers with write access to the repositories should instead:
-
-	git clone tails@git.tails.boum.org:$REPOSITORY
+Most other public Tails Git repositories are
+[[!tails_gitlab tails desc="on our GitLab"]].
 
 <a id="submodules"></a>
 
@@ -300,30 +278,20 @@ Creating a new repository
 =========================
 
 In the vast majority of cases, your new repository will be hosted
-at <https://git.tails.boum.org/>. Here is how to get it created.
+[[!tails_gitlab desc="our GitLab"]].
 
-1. Send your OpenPGP public key, pasted in the body of an email, to
-   the [[Tails system administrators|about/contact#tails-sysadmins]].
-   State that you want to establish a communication channel in order
-   to eventually get a Git repository created. Do not _attach_ your
-   public key, this would not work due to bugs in the mailing list
-   software we use.
-2. Wait for the Tails system administrators to confirm they have
-   received your OpenPGP public key and imported it into the keyring
-   of their mailing list.
-3. Send your Git repository request in an OpenPGP-signed email to the
-   [[Tails system administrators|about/contact#tails-sysadmins]];
-   include the following information:
-   - the name you want to publicly use in our Git repository hosting
-     system (only lower-case ASCII chars and digits);
-   - the preferred name of the repository you want to create
-      (only lower-case ASCII chars and digits);
-   - your SSH RSA public key;
-   - whether the repository shall be publicly available or not;
-   - who else needs read access to the repository, plus their SSH RSA
-     public key;
-   - who else needs write access to the repository, plus their SSH RSA
-     public key.
+If you want to modify files that are already in one of our Git repositories,
+[[!tails_gitlab help/user/project/repository/forking_workflow.md desc="create
+your own fork"]] of this repository from your account on our GitLab.
+
+Else, if you want a new repository for a different project or a new team, request it from the
+[[Tails system administrators|about/contact#tails-sysadmins]].
+Include the following information in your request:
+
+   - your GitLab user name
+   - the preferred name of the new repository
+   - which teams and individuals should have read access to this new repository
+   - which teams and individuals should have write access to this new repository
 
 Once your repository has been created, clone it:
 
@@ -331,9 +299,8 @@ Once your repository has been created, clone it:
   OpenPGP, go through some arcane
   [[initialization ritual|contribute/git#initialize-git-remote-gcrypt]]
   to reach wisdom, bliss and enlightenment.
-* Otherwise (lucky you!), see:
-  - [[addresses for Git clone and web access|contribute/git#other-repositories]]
-  - [[immerda's documentation|contribute/git#immerda]].
+* Otherwise (lucky you!), find your new repository
+  and instructions to clone it on [[!tails_gitlab desc="GitLab"]].
 
 <a id="initialize-git-remote-gcrypt"></a>
 
@@ -343,7 +310,7 @@ Initializing a git-remote-gcrypt repository
 Clone the new, empty repository in a way that tells Git it's going to
 be encrypted:
 
-	git clone gcrypt::tails@git.tails.boum.org:$REPOSITORY
+	git clone gcrypt::git@gitlab.tails.boum.org:$REPOSITORY
 
 Change directory into the newly cloned repository:
 

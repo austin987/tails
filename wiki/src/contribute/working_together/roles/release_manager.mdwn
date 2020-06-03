@@ -1,12 +1,45 @@
 [[!meta title="Release Manager"]]
 
-# Tasks
+[[!toc levels=1]]
 
-## Continuously
+<a id="duties"></a>
 
-Stay on top of email received on the Release Managers mailing list.
-This includes for example analyzing failure notifications for Jenkins jobs
-and filing tickets for the Foundations Team as needed.
+# Duties
+
+The Tails Release Managers are primarily responsible for:
+
+* publishing new Tails versions in a timely fashion, according to the
+  schedule submitted by the [[Foundations Team|foundations team]];
+
+* reaching a consensus regarding documenting, delaying, or releasing,
+  when emergency releases might be warranted (usually prompted by
+  unplanned Tor Browser releases for security issues that require
+  urgent care);
+
+* making sure automatic and manual testers are covered during each
+  release process;
+
+* being in the loop when major changes land in release branches, so
+  that they can propose extra manual tests if those changes feel
+  risky (e.g. changes in the upgrader code).
+
+To ensure releasing is achievable in a timely manner, historically,
+they have also been responsible for:
+
+* making sure the various Git branches get successful builds and test
+  suite runs in Jenkins, filing issues for the Foundations Team as
+  needed.
+
+This responsibility might get shifted to the Foundations Team in the
+near future though.
+
+Also historically, the Release Manager for a given Tails release deals
+with integrating the target Tor Browser version, even if that's one of
+the Foundations Team's duties.
+
+<a id="shift"></a>
+
+# Shift
 
 ## In the beginning of your shift
 
@@ -23,6 +56,7 @@ and filing tickets for the Foundations Team as needed.
   the RM has unplugged their smartcard. When accepting the offer,
   the Trusted Reproducer must read the [["Preparation" section of
   the instructions|contribute/release_process/test/reproducibility#preparation]].
+  If needed, the request can be extended to <tails-manual-testers@boum.org>.
 - Update [[contribute/calendar]] accordingly.
 - Update the due date on [[!tails_roadmap]] accordingly.
 - Make sure you have access to the various systems used to do
@@ -41,26 +75,28 @@ and filing tickets for the Foundations Team as needed.
     [[APT_repository/time-based_snapshots]] and this very document
   - access to the RM team's Git repository: install the
     `git-remote-gcrypt` package, `git clone
-    gcrypt::tails@git.tails.boum.org:rm`, follow instructions in the
+    gcrypt::git@gitlab.tails.boum.org:tails/rm`, follow instructions in the
     `README`
   - follow the instructions in `keyringer/README` in the RM team's Git
     repository then make sure you can `keyringer tails-rm decrypt credentials`
-  - _Manager_ status on Redmine
+  - _Reporter_ status on
+    [[!tails_gitlab groups/tails/-/group_members
+    desc="the `tails` GitLab group"]]
 - Check when our OpenPGP signing key expires.
   If that's before, or soon after, the scheduled date for the release
   _after_ the one your shift is about, then shout.
 - The ISO images for *every* previous beta, RC, and final release
   based on the version of Debian that will be used for the release
   you'll be preparing.
-  For example, if you're preparing 4.3, you need the ISO images
-  for 4.0~beta1, 4.0~beta2, 4.0~rc1, 4.0, 4.1, 4.1.1, 4.2, and 4.2.1.
+  For example, if you're preparing 4.4, you need the ISO images
+  for 4.0~beta1, 4.0~beta2, 4.0~rc1, 4.0, 4.1, 4.1.1, 4.2, 4.2.2, and 4.3.
 
 ## Two weeks after the beginning of your shift
 
 - Ensure you have found a _Trusted Reproducer_ and write who this is
   in the [[contribute/calendar]].
-- Create a Foundations Team ticket about upgrading Tor Browser
-  in the release your shift is about.
+- Create an issue with the `Core Work: Foundations Team` label,
+  about upgrading Tor Browser in the release your shift is about.
 - Check if you have enough manual testers registered.
   If not, ping the usual testers.
 
@@ -121,9 +157,3 @@ documentation have the `@doc` tag.
 ## Make the release happen
 
 No kidding. See [[contribute/release_process]].
-
-# Shifts
-
-The release manager shifts could be done by a team. They start right after the
-publication of the previous release to the publication and announcement of the
-release they are taking care of.

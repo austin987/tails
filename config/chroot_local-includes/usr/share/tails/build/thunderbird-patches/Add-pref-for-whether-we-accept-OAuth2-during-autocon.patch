@@ -1,6 +1,5 @@
-From bd42ea2e3864f97608530d3f79efb8f816f2c71a Mon Sep 17 00:00:00 2001
-From: anonym <anonym@riseup.net>
-Date: Wed, 27 Feb 2019 10:34:33 +0100
+From: intrigeri <intrigeri@boum.org>
+Date: Sun, 16 Feb 2020 09:23:28 +0000
 Subject: [PATCH] Add pref for whether we accept OAuth2 during
  autoconfiguration.
 
@@ -9,29 +8,41 @@ disabled autoconfiguration then result in a terrible UX (e.g. the web
 login fails, has to manually alter the authentication method). Let's
 provide a pref that discards OAuth2 configurations so e.g. extensions
 that disables JavaScript (like TorBirdy) can provide a workaround.
----
- .../accountcreation/content/emailWizard.js    | 74 ++++++++++---------
- .../accountcreation/content/readFromXML.js    | 13 ++++
- comm/mailnews/mailnews.js                     |  2 +
- 3 files changed, 54 insertions(+), 35 deletions(-)
 
+Original author: anonym <anonym@riseup.net>
+---
+ .../accountcreation/content/emailWizard.js         | 64 ++++++++++++----------
+ .../accountcreation/content/readFromXML.js         | 13 +++++
+ comm/mailnews/mailnews.js                          |  2 +
+ 3 files changed, 49 insertions(+), 30 deletions(-)
+
+diff --git a/comm/mail/components/accountcreation/content/emailWizard.js b/comm/mail/components/accountcreation/content/emailWizard.js
+index 3780792..86bef64 100644
 --- a/comm/mail/components/accountcreation/content/emailWizard.js
 +++ b/comm/mail/components/accountcreation/content/emailWizard.js
-@@ -1338,25 +1338,27 @@ EmailConfigWizard.prototype = {
+@@ -1432,21 +1432,23 @@ EmailConfigWizard.prototype = {
      }
      this.fillPortDropdown(config.incoming.type);
-
--    // If the hostname supports OAuth2 and imap is enabled, enable OAuth2.
+ 
+-    // If the incoming server hostname supports OAuth2, enable OAuth2 for it.
 -    let iDetails = OAuth2Providers.getHostnameDetails(config.incoming.hostname);
+-    e("in-authMethod-oauth2").hidden = !iDetails;
 -    if (iDetails) {
 -      gEmailWizardLogger.info(
 -        "OAuth2 details for incoming server " +
 -          config.incoming.hostname +
 -          " is " +
 -          iDetails
+-      );
+-      config.oauthSettings = {};
+-      [config.oauthSettings.issuer, config.oauthSettings.scope] = iDetails;
+-      // oauthsettings are not stored nor changeable in the user interface, so just
+-      // store them in the base configuration.
+-      this._currentConfig.oauthSettings = config.oauthSettings;
 +    if (Services.prefs.getBoolPref("mailnews.auto_config.account_constraints.allow_oauth2")) {
-+      // If the hostname supports OAuth2 and imap is enabled, enable OAuth2.
++      // If the incoming server hostname supports OAuth2, enable OAuth2 for it.
 +      let iDetails = OAuth2Providers.getHostnameDetails(config.incoming.hostname);
++      e("in-authMethod-oauth2").hidden = !iDetails;
 +      if (iDetails) {
 +        gEmailWizardLogger.info(
 +          "OAuth2 details for incoming server " +
@@ -39,21 +50,6 @@ that disables JavaScript (like TorBirdy) can provide a workaround.
 +            " is " +
 +            iDetails
 +        );
-+      }
-+      e("in-authMethod-oauth2").hidden = !(
-+        iDetails && e("incoming_protocol").value == 1
-       );
--    }
--    e("in-authMethod-oauth2").hidden = !(
--      iDetails && e("incoming_protocol").value == 1
--    );
--    if (!e("in-authMethod-oauth2").hidden) {
--      config.oauthSettings = {};
--      [config.oauthSettings.issuer, config.oauthSettings.scope] = iDetails;
--      // oauthsettings are not stored nor changeable in the user interface, so just
--      // store them in the base configuration.
--      this._currentConfig.oauthSettings = config.oauthSettings;
-+      if (!e("in-authMethod-oauth2").hidden) {
 +        config.oauthSettings = {};
 +        [config.oauthSettings.issuer, config.oauthSettings.scope] = iDetails;
 +        // oauthsettings are not stored nor changeable in the user interface, so just
@@ -61,14 +57,15 @@ that disables JavaScript (like TorBirdy) can provide a workaround.
 +        this._currentConfig.oauthSettings = config.oauthSettings;
 +      }
      }
-
+ 
      // outgoing server
-@@ -1381,23 +1383,25 @@ EmailConfigWizard.prototype = {
+@@ -1471,21 +1473,23 @@ EmailConfigWizard.prototype = {
        this.adjustOutgoingPortToSSLAndProtocol(config);
      }
-
--    // If the hostname supports OAuth2 and imap is enabled, enable OAuth2.
+ 
+-    // If the smtp hostname supports OAuth2, enable OAuth2 for it.
 -    let oDetails = OAuth2Providers.getHostnameDetails(config.outgoing.hostname);
+-    e("out-authMethod-oauth2").hidden = !oDetails;
 -    if (oDetails) {
 -      gEmailWizardLogger.info(
 -        "OAuth2 details for outgoing server " +
@@ -76,17 +73,15 @@ that disables JavaScript (like TorBirdy) can provide a workaround.
 -          " is " +
 -          oDetails
 -      );
--    }
--    e("out-authMethod-oauth2").hidden = !oDetails;
--    if (!e("out-authMethod-oauth2").hidden) {
 -      config.oauthSettings = {};
 -      [config.oauthSettings.issuer, config.oauthSettings.scope] = oDetails;
 -      // oauthsettings are not stored nor changeable in the user interface, so just
 -      // store them in the base configuration.
 -      this._currentConfig.oauthSettings = config.oauthSettings;
 +    if (Services.prefs.getBoolPref("mailnews.auto_config.account_constraints.allow_oauth2")) {
-+      // If the hostname supports OAuth2 and imap is enabled, enable OAuth2.
++      // If the smtp hostname supports OAuth2, enable OAuth2 for it.
 +      let oDetails = OAuth2Providers.getHostnameDetails(config.outgoing.hostname);
++      e("out-authMethod-oauth2").hidden = !oDetails;
 +      if (oDetails) {
 +        gEmailWizardLogger.info(
 +          "OAuth2 details for outgoing server " +
@@ -94,9 +89,6 @@ that disables JavaScript (like TorBirdy) can provide a workaround.
 +            " is " +
 +            oDetails
 +        );
-+      }
-+      e("out-authMethod-oauth2").hidden = !oDetails;
-+      if (!e("out-authMethod-oauth2").hidden) {
 +        config.oauthSettings = {};
 +        [config.oauthSettings.issuer, config.oauthSettings.scope] = oDetails;
 +        // oauthsettings are not stored nor changeable in the user interface, so just
@@ -104,9 +96,10 @@ that disables JavaScript (like TorBirdy) can provide a workaround.
 +        this._currentConfig.oauthSettings = config.oauthSettings;
 +      }
      }
-
+ 
      // populate fields even if existingServerKey, in case user changes back
 diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/mail/components/accountcreation/content/readFromXML.js
+index 8c7ecdd..780229f 100644
 --- a/comm/mail/components/accountcreation/content/readFromXML.js
 +++ b/comm/mail/components/accountcreation/content/readFromXML.js
 @@ -32,6 +32,8 @@ function readFromXML(clientConfigXML) {
@@ -118,7 +111,7 @@ diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/
    var exception;
    if (
      typeof clientConfigXML != "object" ||
-@@ -124,6 +126,12 @@ function readFromXML(clientConfigXML) {
+@@ -126,6 +128,12 @@ function readFromXML(clientConfigXML) {
              NTLM: Ci.nsMsgAuthMethod.NTLM,
              OAuth2: Ci.nsMsgAuthMethod.OAuth2,
            });
@@ -131,10 +124,10 @@ diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/
            break; // take first that we support
          } catch (e) {
            exception = e;
-@@ -267,6 +275,11 @@ function readFromXML(clientConfigXML) {
+@@ -269,6 +277,11 @@ function readFromXML(clientConfigXML) {
              OAuth2: Ci.nsMsgAuthMethod.OAuth2,
            });
-
+ 
 +          if (!allow_oauth2 && oO.auth == Ci.nsMsgAuthMethod.OAuth2) {
 +            oO.auth = null;
 +            continue;
@@ -144,9 +137,10 @@ diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/
          } catch (e) {
            exception = e;
 diff --git a/comm/mailnews/mailnews.js b/comm/mailnews/mailnews.js
+index bde86d3..8f598b2 100644
 --- a/comm/mailnews/mailnews.js
 +++ b/comm/mailnews/mailnews.js
-@@ -960,6 +960,8 @@ pref("mailnews.auto_config.guess.enabled", true);
+@@ -967,6 +967,8 @@ pref("mailnews.auto_config.guess.enabled", true);
  pref("mailnews.auto_config.guess.sslOnly", false);
  // The timeout (in seconds) for each guess
  pref("mailnews.auto_config.guess.timeout", 10);
@@ -154,3 +148,4 @@ diff --git a/comm/mailnews/mailnews.js b/comm/mailnews/mailnews.js
 +pref("mailnews.auto_config.account_constraints.allow_oauth2", true);
  // Work around bug 1454325 by disabling mimetype mungling in XmlHttpRequest
  pref("dom.xhr.standard_content_type_normalization", false);
+ 

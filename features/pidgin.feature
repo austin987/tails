@@ -40,11 +40,11 @@ Feature: Chatting anonymously using Pidgin
     Then I can see that my friend joined the multi-user chat
     And I say something to my friend in the multi-user chat
     Then I receive a response from my friend in the multi-user chat
-    When I say https://labs.riseup.net/code/projects/tails/roadmap to my friend in the multi-user chat
-    Then I see the Tails roadmap URL
+    When I say https://gitlab.tails.boum.org/tails to my friend in the multi-user chat
+    Then I see the Tails GitLab URL
     When I wait 10 seconds
-    And I click on the Tails roadmap URL
-    Then the Tor Browser loads the Tails roadmap
+    And I click on the Tails GitLab URL
+    Then the Tor Browser loads the Tails GitLab
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
@@ -87,10 +87,10 @@ Feature: Chatting anonymously using Pidgin
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
     When I close Pidgin's certificate import failure dialog
     And I close Pidgin's certificate manager
-    Then I cannot add a certificate from the "/lib/live/mount/overlay/home/amnesia/.gnupg" directory to Pidgin
+    Then I cannot add a certificate from the "/lib/live/mount/overlay/rw/home/amnesia/.gnupg" directory to Pidgin
     When I close Pidgin's certificate import failure dialog
     And I close Pidgin's certificate manager
-    Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
+    Then I cannot add a certificate from the "/live/overlay/rw/home/amnesia/.gnupg" directory to Pidgin
 
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration

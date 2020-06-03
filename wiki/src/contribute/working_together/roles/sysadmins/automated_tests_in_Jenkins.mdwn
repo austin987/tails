@@ -41,10 +41,21 @@ corresponding `test_Tail_ISO_*` job, passing to the
 `UPSTREAMJOB_BUILD_NUMBER` parameter the ID of the `build_Tail_ISO_*`
 job build you want to test.
 
-## Jenkins jobs you can safely ignore
+When doing so, you may also pass arbitrary arguments to Cucumber
+via the `EXTRA_CUCUMBER_ARGS` job parameter.
 
-The success/failure of the `keep_node_busy_during_cleanup` job does
-not matter.
+## Known usability issues
+
+We collect a list of other known CI usability issues on [[!tails_ticket 16959]].
+
+Apart of that, be aware that:
+
+* The _Revision: $COMMIT_ information, that's displayed on the page of
+  a `test_Tails_ISO_*` job run, may be incorrect. In order to determine what
+  commit the test suite was run from, look for `git reset --hard` in the console
+  output of the job run.
+* The success/failure of the `keep_node_busy_during_cleanup` job does
+  not matter.
 
 # For sysadmins
 
@@ -68,7 +79,7 @@ use the ISO being tested instead of the last released one:
    for our [[Puppet modules|contribute/git#puppet]].
 
    See for example
-   [commit 371be73](https://git-tails.immerda.ch/jenkins-jobs/commit/?id=371be73).
+   [commit 371be73](https://gitlab.tails.boum.org/tails/jenkins-jobs/-/commit/371be73).
 
    <div class="note">
    Treat the repository at immerda as a read-only mirror: any change
@@ -80,7 +91,7 @@ use the ISO being tested instead of the last released one:
    ISO being tested (instead of the last released one) to
    `run_test_suite`'s `--old-iso` argument.
 
-2. File a ticket to ensure this temporarily change gets reverted
+2. File an issue to ensure this temporarily change gets reverted
    in due time.
 
 ## Restarting slave VMs between test suite jobs

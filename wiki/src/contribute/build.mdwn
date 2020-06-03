@@ -53,7 +53,7 @@ To build Tails you need:
    [[development branch|contribute/git#main-repo]], execute the
    following commands:
 
-        git clone https://git-tails.immerda.ch/tails && \
+        git clone https://gitlab.tails.boum.org/tails/tails.git && \
         cd tails && \
         git checkout devel && \
         git submodule update --init
@@ -71,6 +71,15 @@ image before building it.
 <a id="vagrant-known-issues"></a>
 
 # Known issues and workarounds
+
+* If Vagrant fails to start the Tails builder VM with:
+
+        Call to virDomainCreateWithFlags failed: Cannot access storage file '/path/to/some/file' (as uid:xxx, gid:yyy): Permission denied
+
+  … then you must give the `libvirt-qemu` user read-access to the path
+  mentioned in the error message. This is often the case if you store
+  your libvirt volumes inside your home, and your home is not globally
+  readable.
 
 * If Vagrant fails to start the Tails builder VM with:
 
@@ -113,7 +122,7 @@ You can customize the build system using two environment variables:
 
    For example, you can speed up the build by setting:
 
-        export TAILS_BUILD_OPTIONS="ram fastcomp cachewebsite"
+        export TAILS_BUILD_OPTIONS="ram fastcomp"
 
    This will force the build to happen in RAM and SquashFS compression
    will be done using faster, though less efficient size-wise, settings.
@@ -202,9 +211,12 @@ affect reproducibility of the ISO image:
  * **rescue**: implies **keeprunning** and will also not clean up the
    build directory, which is useful for investigating build failures.
 
- * **cachewebsite**: enable caching of the built website.
-   The cache is keyed on the input parameters that primarily determine
-   the output of the website build.
+ * **cachewebsite=**:
+   - If set to "yes" (the default, unless building from a tag), enable caching
+     of the built website. The cache is keyed on the input parameters that
+     primarily determine the output of the website build.
+   - If set to "no" (the default when building from a tag), build the website
+     from scratch.
 
 ## HTTP proxy settings
 

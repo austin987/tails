@@ -8,7 +8,8 @@ Git or the command line.
 
 This is the technical design documentation of our new setup.
 It is by no means perfect. We track known issues via
-[tickets on Redmine](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=321).
+[[!tails_gitlab groups/tails/-/issues?label_name%5B%5D=C%3ATranslation+Platform
+desc="issues on GitLab"]].
 
 [[!toc levels=2]]
 
@@ -101,7 +102,7 @@ There are several languages enabled, some of them with few or no
 translations. As everything is fed back to the Tails canonical
 repository, all files are available when cloning this repository:
 
-    git clone https://git-tails.immerda.ch/tails
+    git clone https://gitlab.tails.boum.org/tails/tails.git
 
 If needed, for exceptional means, Weblate's Git repository can be cloned
 or added as a remote:
@@ -128,9 +129,11 @@ Automatic merging and pushing
 -----------------------------
 
 The integration of changes from the different repositories is done by a
-script which is executed on the VM hosting Weblate as [a cronjob](https://git-tails.immerda.ch/puppet-tails/tree/manifests/weblate.pp). The
-[`cron.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/cron.sh) script
-has the following steps which we will explain below:
+script which is executed on the VM hosting Weblate as
+[[!tails_gitweb_puppet_tails manifests/weblate.pp desc="a cronjob"]].
+The
+[[!tails_gitweb_puppet_tails files/weblate/scripts/cron.sh desc="`cron.sh`"]]
+script has the following steps which we will explain below:
 
   1. Canonical → Integration:
      Update the integration repository with changes made on the
@@ -167,7 +170,8 @@ repository**
 
 The script fetches from the canonical (remote) repository and tries to
 merge changes into the (local) integration repository. The merge
-strategy used for this step is defined in [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py):
+strategy used for this step is defined in
+[[!tails_gitweb_puppet_tails files/weblate/scripts/merge_canonical_changes.py desc="`merge_canonical_changes.py`"]]:
 
 When this script is executed, it merges changes in PO files based on
 single translation units (`msgids`). A merge conflict occurs when the same
@@ -227,7 +231,8 @@ repository**
 
 The script fetches from the Weblate (remote) Git repository and tries to
 merge changes into the (local) integration repository. The merge
-strategy used for this step is defined in [`merge_weblate_changes.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/merge_weblate_changes.py).
+strategy used for this step is defined in
+[[!tails_gitweb_puppet_tails files/weblate/scripts/merge_weblate_changes.py desc="`merge_weblate_changes.py`"]].
 
 Changes already present in the integration repository are preferred over
 the changes from the remote, Weblate repository. This makes fixes
@@ -250,7 +255,7 @@ Canonical aka puppet-git.lizard. After this, the Canonical repository has
 everything integrated from Weblate.
 
 On the side of the canonical Git repository, a Gitolite hook
-([`tails-weblate-update.hook`](https://git-tails.immerda.ch/puppet-tails/tree/files/gitolite/hooks/tails-weblate-update.hook))
+([[!tails_gitweb_puppet_tails files/gitolite/hooks/tails-weblate-update.hook desc="`tails-weblate-update.hook`"]])
 makes sure that Weblate only pushes changes on PO files.
 This hook also checks and verifies the committer of each commit, to make
 sure only translations made on the Weblate platform are automatically
@@ -278,14 +283,14 @@ If the fast-forward merge was successful, we need to update Weblate's components
 to reflect the modifications that happened in Git, such as
 string and file updates, removals, renames, or additions. This is
 handled by another script:
-[`update_weblate_components.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_components.py).
+[[!tails_gitweb_puppet_tails files/weblate/scripts/update_weblate_components.py desc="`update_weblate_components.py`"]].
 
 Besides our scripts that modify the Weblate repository, Weblate itself
 keeps creating commits and updates the master branch. That's why the
 script is using a dedicated Git remote named `cron` to keep track of which
 commits need to be looked at for Weblate component changes. This remote
 name is set in
-[weblate.pp](https://git-tails.immerda.ch/puppet-tails/tree/manifests/weblate.pp)
+[[!tails_gitweb_puppet_tails manifests/weblate.pp desc="weblate.pp"]]
 and used in the cronjob like this:
 
 	update_weblate_components.py --remoteBranch=cron/master [...]
@@ -326,13 +331,13 @@ This allows:
 ### What is done behind the scenes to generate a new version of the staging website?
 
 The
-[`update-staging-website.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update-staging-website.sh)
+[[!tails_gitweb_puppet_tails files/weblate/scripts/update-staging-website.sh desc="`update-staging-website.sh`"]]
 cronjob is run.
 
 This cronjob calls a script that extracts suggestions from Weblate's
 database and applies them to a local clone of Weblate's Git repository,
 after having updated this clone:
-[`save-suggestions.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/save-suggestions.py)
+[[!tails_gitweb_puppet_tails files/weblate/scripts/save-suggestions.py desc="`save-suggestions.py`"]].
 
 After that we run `ikiwiki --refresh` using an dedicated `ikiwiki.setup`
 file for the staging website.
@@ -362,10 +367,11 @@ window, in the _Machine translation_ tab.
 We use tmserver for machine translation ([upstream documentation](https://docs.weblate.org/en/weblate-2.20/admin/machine.html#tmserver)).
 
 In order to update the suggestion we run
-[`update_tm.sh`](https://git-tails.immerda.ch/puppet-tails/tree/templates/weblate/update_tm.sh.erb) via cronjob every month.
+[[!tails_gitweb_puppet_tails templates/weblate/update_tm.sh.erb desc="`update_tm.sh`"]]
+via cronjob every month.
 
-The tmserver can be queried like this [(see
-`tmserver.service`)](https://git-tails.immerda.ch/puppet-tails/tree/manifests/weblate.pp):
+The tmserver can be queried like this
+[[!tails_gitweb_puppet_tails manifests/weblate.pp desc="(see `tmserver.service`)"]]:
 
 	http://localhost:8080/tmserver/en/de/unit/contribute
 
@@ -414,7 +420,7 @@ Currently implemented proposal
   vote on suggestions.
 
 - A reviewer, i.e. a member of the `@Review` group in Weblate, is
-  allowed to accept suggestions.
+  allowed to accept and delete suggestions.
 
   Limitations:
 

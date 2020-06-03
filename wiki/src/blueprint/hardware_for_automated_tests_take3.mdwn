@@ -120,6 +120,8 @@ area:
 
 # Options
 
+<a id="new-bare-metal-server"></a>
+
 ## Bare metal server dedicated to CI
 
 Hard to tell whether this would fix our test suite fragility problems,
@@ -189,6 +191,39 @@ Specs:
 Cost estimate: $14-16k, depending on the chosen memory and storage setup
 (based on <https://www.thinkmate.com/system/rax-xt24-42s1>
 or <https://www.thinkmate.com/system/superserver-2029bt-dnc0r>).
+
+<a id="gamer-option"></a>
+
+## Bare metal gaming setup in a server housing dedicated to CI
+
+CPU's targeted at the gaming sector are likely to provide the processing power we need, for a way lower price than regular server hardware. In particular, the new generation AMD Threadripper CPU's seem to be a good match. This would involve placing a gaming motherboard in a server casing.
+
+Pros:
+
+ * No initial development nor skills to learn: we can run our test
+   suite in exactly the same way as we currently do.
+ * Can provide hardware redundancy in case lizard suddenly dies.
+ * We control the hardware and have a good relationship with
+   a friendly collocation.
+ * Relatively cheap
+
+Cons:
+
+ * On-going cost for hosting a second server.
+ * No IPMI
+ * Will require some research into cooling
+
+Extra options:
+
+ * We could get a KVM over IP device to compensate for the lack of IPMI
+ * Or we could wait for a server board with TRX40 socket and IPMI support to enter the market
+
+Specs:
+
+ * The Threadripper 3960X has 24 cores at a 3.8Ghz base frequency. This easily meets our required 16 cores at ≥ 3.5 GHz base frequency.
+ * A board like the Gigabyte TRX40 Aorus Xtreme can provide 256GB of DDR4 ECC memory and dual PCI-e 4.0 x8 1.6TB for storage.
+
+Cost estimate: roughly 1k for the motherboard, 1.5k for the CPU, 2k for the memory, 1.5k for the storage, 0.5k for housing and extras ~= e6.5k for the most fancy version with super fast storage. Cutting down on the storage and motherboard could bring this down to roughly e5k.
 
 <a id="hacker-option"></a>
 
@@ -520,18 +555,25 @@ Cons:
    - 2nd bare metal server-grade machine:
      * <strike>hardware specs [intrigeri]</strike> [DONE]
      * <strike>hosting needs (high power consumption)</strike> [DONE]
-   - the hacker option: hosting
+   - the gamer option:
+     * <strike>hardware specs [groente]</strike> [DONE]
+     * <strike>hosting needs (high power consumption)</strike> [DONE]
+     * KVM over IP?
+   - <strike>the hacker option: hosting</strike>
+     [CANCELED: we won't do the hacker option]
 
 5. Ask potential hardware/VMs donors (e.g. ProfitBricks) if they
    would happily satisfy our needs for free or with a big discount.
    If they can do that, then let's do it. Otherwise, keep reading.
-   [intrigeri]
+   [WIP: intrigeri]
 
-6. Benchmark how our workload would be handled by the options we have
-   no data about yet:
+6. <strike>Benchmark how our workload would be handled by the options we have
+   no data about yet:</strike>
    - <strike>Rent a bare metal server for a short time, run CI jobs in
      a realistic way, measure.</strike> [CANCELED: we have data about
      Intel E-2134 which is good enough.]
+   - Find a friend who's really into gaming and has a threadripper setup to
+     run some CI jobs in a realistic way, measure.
    - <strike>Rent cloud VMs for a short time, run CI jobs in a realistic way,
      measure.</strike> [CANCELED: we won't do cloud.]
 

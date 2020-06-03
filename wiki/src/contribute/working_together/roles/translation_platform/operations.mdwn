@@ -16,7 +16,7 @@ Else, propose this on the [[tails-l10n mailing list|about/contact#tails-l10n]].
    [[!tails_gitweb ikiwiki.setup]] and [[!tails_gitweb ikiwiki-cgi.setup]]
    and have this change reviewed and merged into our `master` branch.
 2. Add the new language to `$weblate_additional_languages` in
-   <https://git.tails.boum.org/puppet-tails/tree/manifests/website/params.pp>
+   [[!tails_gitweb_puppet_tails manifests/website/params.pp]]
    and have a sysadmin review your changes and deploy them to production.
 3. To create PO files for the new language and commit them to Git,
    run this command on the system that runs our translation platform,
@@ -30,7 +30,8 @@ Else, propose this on the [[tails-l10n mailing list|about/contact#tails-l10n]].
        ~/scripts/weblate_status.py --modify
 
    Note that this script must not be run concurrently with
-   [`cron.sh`](https://git.tails.boum.org/puppet-tails/tree/files/weblate/scripts/cron.sh). Hence, they both use a shared lock file.
+   [[!tails_gitweb_puppet_tails files/weblate/scripts/cron.sh desc="`cron.sh`"]].
+   Hence, they both use a shared lock file.
 4. Finally, to update the Weblate components, run this command as the
    `weblate` user:
 
@@ -137,3 +138,16 @@ To fix that, one can delete the translation change that breaks stuff.
           sp = tailsWeblate.subProject(fpath)
           sp.delete()
           sp = tailsWeblate.addComponent(fpath)
+
+<a id="maintenance-mode"></a>
+
+Maintenance mode
+================
+
+To disable `cron.sh` temporarily, run:
+
+    touch /var/lib/weblate/config/.maintenance
+
+To re-enable `cron.sh`, run:
+
+    rm /var/lib/weblate/config/.maintenance
