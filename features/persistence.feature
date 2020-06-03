@@ -47,8 +47,6 @@ Feature: Tails persistence
   Scenario: Deleting a Tails persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
-    Then Tails is running from USB drive "__internal"
-    And the boot device has safe access rights
     And persistence is disabled
     But a Tails persistence partition exists on USB drive "__internal"
     And all notifications have disappeared

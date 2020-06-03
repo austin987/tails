@@ -25,8 +25,8 @@ Feature: Browsing the web using the Unsafe Browser
   Scenario: The Unsafe Browser can load a web page
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
-    When I open Tails homepage in the Unsafe Browser
-    Then Tails homepage loads in the Unsafe Browser
+    When I open the Tails homepage in the Unsafe Browser
+    Then the Tails homepage loads in the Unsafe Browser
 
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.
     Given I have started Tails from DVD and logged in and the network is connected
@@ -50,10 +50,10 @@ Feature: Browsing the web using the Unsafe Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I configure the Unsafe Browser to use a local proxy
     And I successfully start the Unsafe Browser
-    And I open Tails homepage in the Unsafe Browser
+    And I open the Tails homepage in the Unsafe Browser
     Then I see "BrowserProxyRefused.png" after at most 60 seconds
 
-  Scenario: The Unsafe Browser will not make any connections to the Internet which are not user initiated
+  Scenario: The Unsafe Browser only makes user-initiated connections to the Internet
     Given I have started Tails from DVD and logged in and the network is connected
     And I capture all network traffic
     And Tor is ready

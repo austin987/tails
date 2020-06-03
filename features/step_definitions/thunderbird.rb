@@ -12,7 +12,7 @@ end
 
 def thunderbird_inbox
   folder_view = thunderbird_main.child($config['Icedove']['address'],
-                                   roleName: 'table row').parent
+                                       roleName: 'table row').parent
   folder_view.children(roleName: 'table row', recursive: false).find do |e|
     e.name.match(/^Inbox( .*)?$/)
   end
@@ -23,7 +23,7 @@ When /^I start Thunderbird$/ do
     # When we generate a random subject line it may contain one of the
     # keywords that will make Thunderbird show an extra prompt when trying
     # to send an email. Let's disable this feature.
-    'pref("mail.compose.attachment_reminder", false);'
+    'pref("mail.compose.attachment_reminder", false);',
   ]
   workaround_pref_lines.each do |line|
     $vm.file_append('/etc/thunderbird/pref/thunderbird.js', line)
@@ -54,7 +54,7 @@ Then /^I open Thunderbird's Add-ons Manager$/ do
   thunderbird_main.button('AppMenu')
   # ... then use keyboard shortcuts, with a little delay between both
   # so that the menu has a chance to pop up:
-  @screen.press("alt", 't')
+  @screen.press('alt', 't')
   sleep(1)
   @screen.type('a')
   @thunderbird_addons = thunderbird_app.child(
@@ -79,9 +79,10 @@ end
 Then /^I see that only the (.+) add-on(?:s are| is) enabled in Thunderbird$/ do |addons|
   expected_addons = addons.split(/, | and /)
   actual_addons =
-    @thunderbird_addons.child('Enigmail', roleName: 'label')
+    @thunderbird_addons
+    .child('Enigmail', roleName: 'label')
     .parent.parent.children(roleName: 'list item', recursive: false)
-    .map { |item| item.name }
+    .map(&:name)
   expected_addons.each do |addon|
     result = actual_addons.find { |e| e.start_with?(addon) }
     assert_not_nil(result)
@@ -95,7 +96,8 @@ When /^I enter my email credentials into the autoconfiguration wizard$/ do
   name = address.split('@').first
   password = $config['Icedove']['password']
   thunderbird_wizard.child('Your name:', roleName: 'entry').typeText(name)
-  thunderbird_wizard.child('Email address:', roleName: 'entry').typeText(address)
+  thunderbird_wizard.child('Email address:',
+                           roleName: 'entry').typeText(address)
   thunderbird_wizard.child('Password:', roleName: 'entry').typeText(password)
   thunderbird_wizard.button('Continue').click
   # This button is shown if and only if a configuration has been found
@@ -107,19 +109,19 @@ Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server 
   section = thunderbird_wizard.child(type, roleName: 'section')
   assert_not_nil(section.child(protocol, roleName: 'label'))
   assert(
-    section.children(roleName: 'label').any? { |label|
-      label.text == 'SSL' or label.text == 'STARTTLS'
-    }
+    section.children(roleName: 'label').any? do |label|
+      (label.text == 'SSL') || (label.text == 'STARTTLS')
+    end
   )
 end
 
-def wait_for_thunderbird_progress_bar_to_vanish (thunderbird_frame)
+def wait_for_thunderbird_progress_bar_to_vanish(thunderbird_frame)
   try_for(120) do
     begin
       thunderbird_frame.child(roleName: 'status bar', retry: false)
-        .child(roleName: 'progress bar', retry: false)
+                       .child(roleName: 'progress bar', retry: false)
       false
-    rescue
+    rescue StandardError
       true
     end
   end
@@ -127,12 +129,14 @@ end
 
 When /^I fetch my email$/ do
   account = thunderbird_main.child($config['Icedove']['address'],
-                               roleName: 'table row')
+                                   roleName: 'table row')
   account.click
-  thunderbird_frame = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
+  thunderbird_frame = thunderbird_app.child(
+    "#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame'
+  )
 
   thunderbird_frame.child('Mail Toolbar', roleName: 'tool bar')
-    .button('Get Messages').click
+                   .button('Get Messages').click
   wait_for_thunderbird_progress_bar_to_vanish(thunderbird_frame)
 end
 
@@ -145,7 +149,7 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
         # testing the password).
         thunderbird_wizard.button('Done').click
         false
-      rescue
+      rescue StandardError
         true
       end
     end
@@ -175,42 +179,43 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
 end
 
 When /^I select the autoconfiguration wizard's (IMAP|POP3) choice$/ do |protocol|
-  if protocol == 'IMAP'
-    choice = 'IMAP (remote folders)'
-  else
-    choice = 'POP3 (keep mail on your computer)'
-  end
+  choice = if protocol == 'IMAP'
+             'IMAP (remote folders)'
+           else
+             'POP3 (keep mail on your computer)'
+           end
   thunderbird_wizard.child(choice, roleName: 'radio button').click
   @protocol = protocol
 end
 
 When /^I send an email to myself$/ do
-  thunderbird_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
+  thunderbird_main.child('Mail Toolbar',
+                         roleName: 'tool bar').button('Write').click
   compose_window = thunderbird_app.child('Write: (no subject) - Thunderbird')
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
-    .typeText($config['Icedove']['address'])
+                .typeText($config['Icedove']['address'])
   # The randomness of the subject will make it easier for us to later
   # find *exactly* this email. This makes it safe to run several tests
   # in parallel.
   @subject = "Automated test suite: #{random_alnum_string(32)}"
   compose_window.child('Subject:', roleName: 'entry')
-    .typeText(@subject)
+                .typeText(@subject)
   compose_window = thunderbird_app.child("Write: #{@subject} - Thunderbird")
   compose_window.child('', roleName: 'internal frame')
-    .typeText('test')
+                .typeText('test')
   compose_window.child('Composition Toolbar', roleName: 'tool bar')
-    .button('Send').click
+                .button('Send').click
   try_for(120, delay: 2) do
-    not compose_window.exist?
+    !compose_window.exist?
   end
 end
 
 Then /^I can find the email I sent to myself in my inbox$/ do
-  recovery_proc = Proc.new { step 'I fetch my email' }
+  recovery_proc = proc { step 'I fetch my email' }
   retry_tor(recovery_proc) do
     thunderbird_inbox.click
     filter = thunderbird_main.child('Filter these messages <Ctrl+Shift+K>',
-                                roleName: 'entry')
+                                    roleName: 'entry')
     filter.typeText(@subject)
     hit_counter = thunderbird_main.child('1 message')
     inbox_view = hit_counter.parent
@@ -227,8 +232,8 @@ Then /^my Thunderbird inbox is non-empty$/ do
   thunderbird_inbox.click
   message_list = thunderbird_main.child('Filter these messages <Ctrl+Shift+K>',
                                         roleName: 'entry')
-                   .parent.parent.child(roleName: 'table')
+                                 .parent.parent.child(roleName: 'table')
   visible_messages = message_list.children(recursive: false,
-                                           roleName: 'table row')
-  assert(visible_messages.size > 0)
+                                           roleName:  'table row')
+  assert(!visible_messages.empty?)
 end

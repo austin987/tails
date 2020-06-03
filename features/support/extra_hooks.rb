@@ -2,19 +2,20 @@
 # this differently.
 
 begin
-  if not(Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?))
+  unless Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?)
     require 'cucumber/core/gherkin/tag_expression'
     class Cucumber::Core::Ast::Feature
       # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
       # cucumber-ruby-core 1.1.3, lib/cucumber/core/test/case.rb:~59.
       def accept_hook?(hook)
-        tag_expr = Cucumber::Core::Gherkin::TagExpression.new(hook.tag_expressions.flatten)
+        tag_expr = Cucumber::Core::Gherkin::TagExpression
+                   .new(hook.tag_expressions.flatten)
         tag_expr.evaluate(@tags)
       end
     end
   end
 rescue NameError => e
-  raise e if e.to_s != "uninitialized constant Cucumber::Core"
+  raise e if e.to_s != 'uninitialized constant Cucumber::Core'
 end
 
 # Sort of inspired by Cucumber::RbSupport::RbHook (from cucumber
@@ -44,25 +45,21 @@ def AfterFeature(*tag_expressions, &block)
 end
 
 require 'cucumber/formatter/console'
-if not($at_exit_print_artifacts_dir_patching_done)
+unless $at_exit_print_artifacts_dir_patching_done
   module Cucumber::Formatter::Console
-    if method_defined?(:print_stats)
-      alias old_print_stats print_stats
-    end
+    alias old_print_stats print_stats if method_defined?(:print_stats)
     def print_stats(*args)
       @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
       @io.puts
       @io.puts "Debug log:           #{ARTIFACTS_DIR}/debug.log"
       @io.puts
-      if self.class.method_defined?(:old_print_stats)
-        old_print_stats(*args)
-      end
+      old_print_stats(*args) if self.class.method_defined?(:old_print_stats)
     end
   end
   $at_exit_print_artifacts_dir_patching_done = true
 end
 
-def info_log(message = "", **options)
+def info_log(message = '', **options)
   options[:color] = :clear
   # This trick allows us to use a module's (~private) method on a
   # one-off basis.
@@ -71,16 +68,16 @@ def info_log(message = "", **options)
 end
 
 def debug_log(message, **options)
-  options[:timestamp] = true unless options.has_key?(:timestamp)
-  if $debug_log_fns
-    if options[:timestamp]
-      # Force UTC so the local timezone difference vs UTC won't be
-      # added to the result.
-      elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime("%H:%M:%S.%9N")
-      message = "#{elapsed}: #{message}"
-    end
-    $debug_log_fns.each { |fn| fn.call(message, **options) }
+  options[:timestamp] = true unless options.key?(:timestamp)
+  return unless $debug_log_fns
+
+  if options[:timestamp]
+    # Force UTC so the local timezone difference vs UTC won't be
+    # added to the result.
+    elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime('%H:%M:%S.%9N')
+    message = "#{elapsed}: #{message}"
   end
+  $debug_log_fns.each { |fn| fn.call(message, **options) }
 end
 
 require 'cucumber/formatter/pretty'
@@ -90,7 +87,7 @@ module ExtraFormatters
   # anything. We only use it do hook into the correct events so we can
   # add our extra hooks.
   class ExtraHooks
-    def initialize(runtime, io, options)
+    def initialize(runtime, io, options) # rubocop:disable Naming/MethodParameterName
       # We do not care about any of the arguments.
       # XXX: We should be able to just have `*args` for the arguments
       # in the prototype, but since moving to cucumber 2.4 that breaks
@@ -98,28 +95,28 @@ module ExtraFormatters
     end
 
     def before_feature(feature)
-      if $before_feature_hooks
-        $before_feature_hooks.each do |hook|
-          hook.invoke(feature) if feature.accept_hook?(hook)
-        end
+      return unless $before_feature_hooks
+
+      $before_feature_hooks.each do |hook|
+        hook.invoke(feature) if feature.accept_hook?(hook)
       end
     end
 
     def after_feature(feature)
-      if $after_feature_hooks
-        $after_feature_hooks.reverse.each do |hook|
-          hook.invoke(feature) if feature.accept_hook?(hook)
-        end
+      return unless $after_feature_hooks
+
+      $after_feature_hooks.reverse.each do |hook|
+        hook.invoke(feature) if feature.accept_hook?(hook)
       end
     end
   end
 
   # The pretty formatter with debug logging mixed into its output.
   class PrettyDebug < Cucumber::Formatter::Pretty
-    def initialize(runtime, io, options)
+    def initialize(runtime, io, options) # rubocop:disable Naming/MethodParameterName
       super(runtime, io, options)
       $debug_log_fns ||= []
-      $debug_log_fns << self.method(:debug_log)
+      $debug_log_fns << method(:debug_log)
     end
 
     def debug_log(message, **options)
@@ -128,19 +125,16 @@ module ExtraFormatters
       @io.flush
     end
   end
-
 end
 
-module Cucumber
-  module Cli
-    class Options
-      BUILTIN_FORMATS['pretty_debug'] =
-        [
-          'ExtraFormatters::PrettyDebug',
-          'Prints the feature with debugging information - in colours.'
-        ]
-      BUILTIN_FORMATS['debug'] = BUILTIN_FORMATS['pretty_debug']
-    end
+module Cucumber::Cli
+  class Options
+    BUILTIN_FORMATS['pretty_debug'] =
+      [
+        'ExtraFormatters::PrettyDebug',
+        'Prints the feature with debugging information - in colours.',
+      ]
+    BUILTIN_FORMATS['debug'] = BUILTIN_FORMATS['pretty_debug']
   end
 end
 
@@ -156,6 +150,6 @@ AfterConfiguration do |config|
     ['ExtraFormatters::PrettyDebug', "#{ARTIFACTS_DIR}/debug.log"],
   ]
   extra_hooks.each do |hook|
-    config.formats << hook if not(config.formats.include?(hook))
+    config.formats << hook unless config.formats.include?(hook)
   end
 end
