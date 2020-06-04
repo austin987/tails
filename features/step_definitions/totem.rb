@@ -2,13 +2,13 @@ require 'resolv'
 require 'uri'
 
 Given /^I create sample videos$/ do
-  @video_dir_on_host = "#{$config["TMPDIR"]}/video_dir"
+  @video_dir_on_host = "#{$config['TMPDIR']}/video_dir"
   FileUtils.mkdir_p(@video_dir_on_host)
   add_after_scenario_hook { FileUtils.rm_r(@video_dir_on_host) }
-  fatal_system("#{ffmpeg} -loop 1 -t 30 -f image2 " +
-               "-i 'features/images/USBTailsLogo.png' " +
-               "-an -vcodec libx264 -y " +
-               '-filter:v "crop=in_w-mod(in_w\,2):in_h-mod(in_h\,2)" ' +
+  fatal_system("#{ffmpeg} -loop 1 -t 30 -f image2 " \
+               "-i 'features/images/USBTailsLogo.png' " \
+               '-an -vcodec libx264 -y ' \
+               '-filter:v "crop=in_w-mod(in_w\,2):in_h-mod(in_h\,2)" ' \
                "'#{@video_dir_on_host}/video.mp4' >/dev/null 2>&1")
 end
 
@@ -19,11 +19,11 @@ Given /^I plug and mount a USB drive containing sample videos$/ do
 end
 
 Given /^I copy the sample videos to "([^"]+)" as user "([^"]+)"$/ do |destination, user|
-  for video_on_host in Dir.glob("#{@video_dir_on_host}/*.mp4") do
+  Dir.glob("#{@video_dir_on_host}/*.mp4").each do |video_on_host|
     video_name = File.basename(video_on_host)
     src_on_guest = "#{@video_dir_on_guest}/#{video_name}"
     dst_on_guest = "#{destination}/#{video_name}"
-    step "I copy \"#{src_on_guest}\" to \"#{dst_on_guest}\" as user \"amnesia\""
+    step "I copy \"#{src_on_guest}\" to \"#{dst_on_guest}\" as user \"#{user}\""
   end
 end
 
@@ -41,9 +41,9 @@ def disable_tor_reject_internal_addresses
     'ClientRejectInternalAddresses 0',
   ]
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)
-  $vm.execute("systemctl stop tor@default.service")
-  $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
-  $vm.execute("systemctl start tor@default.service")
+  $vm.execute('systemctl stop tor@default.service')
+  $vm.execute('systemctl --no-block restart tails-tor-has-bootstrapped.target')
+  $vm.execute('systemctl start tor@default.service')
   wait_until_tor_is_working
 end
 
@@ -61,18 +61,16 @@ Then /^I can watch a WebM video over HTTPs$/ do
     # for our current needs. We'll improve it if/as needed.
     addr.class == Resolv::IPv4 && addr.to_s.start_with?('192.168.')
   end
-  if rfc1918_ips.count > 0
-    disable_tor_reject_internal_addresses
-  end
+  disable_tor_reject_internal_addresses if rfc1918_ips.count.positive?
   rfc1918_ips.each do |ip|
     add_extra_allowed_host(ip.to_s, 443)
   end
 
-  recovery_on_failure = Proc.new do
+  recovery_on_failure = proc do
     step 'I close Totem'
   end
   retry_tor(recovery_on_failure) do
     step "I open \"#{test_url}\" with Totem"
-    @screen.wait("SampleRemoteWebMVideoFrame.png", 120)
+    @screen.wait('SampleRemoteWebMVideoFrame.png', 120)
   end
 end

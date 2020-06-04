@@ -20,28 +20,25 @@ require_relative 'lib/tails_build_settings'
 
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-Vagrant.configure("2") do |config|
+Vagrant.configure('2') do |config|
   config.vm.box = box_name
-  config.vm.box_url = "http://127.0.0.1/dev/null"
-  ENV['EXPORTED_VARIABLES'] ||= ""
-  env_vars = ENV.select { |k,v| ENV['EXPORTED_VARIABLES'].split.include?(k) }
-                   .map { |k, v| "#{k}='#{v}'" } .join(' ')
-  config.vm.provision "shell", inline: <<-EOF
-    sudo #{env_vars} /vagrant/provision/setup-tails-builder
-  EOF
-  config.vm.synced_folder '.', '/vagrant', type: '9p', readonly: true
-  config.vm.synced_folder '..', '/amnesia.git', type: '9p', readonly: true
-  config.vm.provider :libvirt do |domain|
+  config.vm.box_url = 'http://127.0.0.1/dev/null'
+  ENV['EXPORTED_VARIABLES'] ||= ''
+  env_vars = ENV.select { |k, _| ENV['EXPORTED_VARIABLES'].split.include?(k) }
+                .map { |k, v| "#{k}='#{v}'" } .join(' ')
+  config.vm.provision(
+    'shell',
+    inline: "sudo #{env_vars} /vagrant/provision/setup-tails-builder"
+  )
+  config.vm.synced_folder('.', '/vagrant', type: '9p', readonly: true)
+  config.vm.synced_folder('..', '/amnesia.git', type: '9p', readonly: true)
+  config.vm.provider(:libvirt) do |domain| # rubocop:disable Metrics/BlockLength
     domain.default_prefix = config.vm.box
     domain.driver = 'kvm'
     domain.management_network_guest_ipv6 = 'no'
     domain.connect_via_ssh = false
     domain.machine_arch = 'x86_64'
-    if ENV['TAILS_BUILD_MACHINE_TYPE']
-      domain.machine_type = ENV['TAILS_BUILD_MACHINE_TYPE']
-    else
-      domain.machine_type = 'q35'
-    end
+    domain.machine_type = ENV['TAILS_BUILD_MACHINE_TYPE'] || 'q35'
     if ENV['TAILS_BUILD_CPU_MODEL']
       domain.cpu_mode  = 'custom'
       domain.cpu_model = ENV['TAILS_BUILD_CPU_MODEL']
@@ -49,17 +46,20 @@ Vagrant.configure("2") do |config|
       domain.cpu_mode = 'host-passthrough'
     end
     domain.emulator_path = '/usr/bin/qemu-system-x86_64'
-    domain.memory = ENV['TAILS_RAM_BUILD'] ? VM_MEMORY_FOR_RAM_BUILDS :
-                                             VM_MEMORY_FOR_DISK_BUILDS
+    domain.memory = if ENV['TAILS_RAM_BUILD']
+                      VM_MEMORY_FOR_RAM_BUILDS
+                    else
+                      VM_MEMORY_FOR_DISK_BUILDS
+                    end
     cpus = ENV['TAILS_BUILD_CPUS']
     domain.cpus = cpus unless cpus.nil?
-    if ENV['TAILS_PROXY_TYPE' ] == 'vmproxy'
+    if ENV['TAILS_PROXY_TYPE'] == 'vmproxy'
       domain.storage(
         :file, size: '15G', allow_existing: true,
         path: 'apt-cacher-ng-data.qcow2'
       )
     end
-    if ENV['TAILS_WEBSITE_CACHE' ] == '1'
+    if ENV['TAILS_WEBSITE_CACHE'] == '1'
       domain.storage(
         :file, size: '5G', allow_existing: true,
         path: 'tails-website-cache.qcow2'

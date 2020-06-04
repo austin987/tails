@@ -5,16 +5,15 @@ end
 
 def count_gpg_subkeys(key)
   output = $vm.execute_successfully("gpg --batch --list-keys #{key}",
-                                    :user => LIVE_USER).stdout
+                                    user: LIVE_USER).stdout
   output.scan(/^sub/).count
 end
 
 def check_for_seahorse_error
-  if @screen.exists('GnomeCloseButton.png')
-    raise OpenPGPKeyserverCommunicationError.new(
-      "Found GnomeCloseButton.png' on the screen"
-    )
-  end
+  return unless @screen.exists('GnomeCloseButton.png')
+
+  raise OpenPGPKeyserverCommunicationError,
+        'Found GnomeCloseButton.png on the screen'
 end
 
 def dirmngr_conf
@@ -24,7 +23,8 @@ end
 def start_or_restart_seahorse
   assert_not_nil(@withgpgapplet)
   if @withgpgapplet
-    seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
+    seahorse_menu_click_helper('GpgAppletIconNormal.png',
+                               'GpgAppletManageKeys.png')
   else
     step 'I start "Passwords and Keys" via GNOME Activities Overview'
   end
@@ -40,9 +40,11 @@ Then /^the key "([^"]+)" has (strictly less than|at least) (\d+) subkeys?$/ do |
   count = count_gpg_subkeys(key)
   case qualifier
   when 'strictly less than'
-    assert(count < num.to_i, "Expected strictly less than #{num} subkeys but found #{count}")
+    assert(count < num.to_i,
+           "Expected strictly less than #{num} subkeys but found #{count}")
   when 'at least'
-    assert(count >= num.to_i, "Expected at least #{num} subkeys but found #{count}")
+    assert(count >= num.to_i,
+           "Expected at least #{num} subkeys but found #{count}")
   else
     raise "Unknown operator #{qualifier} passed"
   end
@@ -50,7 +52,7 @@ end
 
 When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |keyid|
   assert(!$vm.execute("gpg --batch --list-keys '#{keyid}'",
-                      :user => LIVE_USER).success?,
+                      user: LIVE_USER).success?,
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
@@ -81,11 +83,12 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
   retry_tor do
     @gnupg_recv_key_res = $vm.execute_successfully(
       "timeout 120 gpg --batch --recv-key '#{@fetched_openpgp_keyid}'",
-      :user => LIVE_USER)
+      user: LIVE_USER
+    )
     if @gnupg_recv_key_res.failure?
-      raise "Fetching keys with the GnuPG CLI failed with:\n" +
+      raise "Fetching keys with the GnuPG CLI failed with:\n" \
             "#{@gnupg_recv_key_res.stdout}\n" +
-            "#{@gnupg_recv_key_res.stderr}"
+            @gnupg_recv_key_res.stderr.to_s
     end
   end
 end
@@ -96,25 +99,26 @@ When /^the GnuPG fetch is successful$/ do
 end
 
 When /^the Seahorse operation is successful$/ do
-  !@screen.exists('GnomeCloseButton.png')
-  $vm.has_process?('seahorse')
+  assert(!@screen.exists('GnomeCloseButton.png'))
+  $vm.process_running?('seahorse')
 end
 
 When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|
-  delay = 10 unless delay
-  try_for(delay.to_i, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
+  delay ||= 10
+  try_for(delay.to_i,
+          msg: "The '#{keyid}' key is not in the live user's public keyring") do
     $vm.execute("gpg --batch --list-keys '#{keyid}'",
-                :user => LIVE_USER).success?
-  }
+                user: LIVE_USER).success?
+  end
 end
 
 Given /^I delete the "([^"]+)" subkey from the live user's public keyring$/ do |subkeyid|
-    $vm.execute("gpg --batch --delete-keys '#{subkeyid}!'",
-                :user => LIVE_USER).success?
+  $vm.execute("gpg --batch --delete-keys '#{subkeyid}!'",
+              user: LIVE_USER).success?
 end
 
 When /^I start Seahorse( via the OpenPGP Applet)?$/ do |withgpgapplet|
-  @withgpgapplet = !!withgpgapplet
+  @withgpgapplet = !withgpgapplet.nil?
   start_or_restart_seahorse
 end
 
@@ -124,19 +128,21 @@ end
 
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
-  @screen.wait("SeahorseWindow.png", 10).click
-  seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
+  @screen.wait('SeahorseWindow.png', 10).click
+  seahorse_menu_click_helper('GnomeEditMenu.png',
+                             'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait('SeahorsePreferences.png', 20)
-  @screen.press("alt", "p") # Option: "Publish keys to...".
-  @screen.press("Down") # select HKP server
-  @screen.press("Escape") # no "Close" button
+  @screen.press('alt', 'p') # Option: "Publish keys to...".
+  @screen.press('Down') # select HKP server
+  @screen.press('Escape') # no "Close" button
 end
 
 Then /^I synchronize keys in Seahorse$/ do
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     setup_onion_keyserver
-    if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
-      step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
+    if @screen.exists('GnomeCloseButton.png') \
+       || !$vm.process_running?('seahorse')
+      step 'I kill the process "seahorse"' if $vm.process_running?('seahorse')
       debug_log('Restarting Seahorse.')
       start_or_restart_seahorse
     end
@@ -146,28 +152,26 @@ Then /^I synchronize keys in Seahorse$/ do
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
-    if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
-      @screen.exists('GnomeCloseButton.png')  || \
-      !$vm.has_process?('seahorse')
-        true
-    end
+    count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
+      @screen.exists('GnomeCloseButton.png') || \
+      !$vm.process_running?('seahorse')
   end
 
   retry_tor(recovery_proc) do
-    @screen.wait("SeahorseWindow.png", 10).click
+    @screen.wait('SeahorseWindow.png', 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuSync.png',
                                'seahorse')
     @screen.wait('SeahorseSyncKeys.png', 20)
-    @screen.press("alt", "s") # Button: Sync
+    @screen.press('alt', 's') # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
-    try_for(120) {
-      change_of_status?
-    }
+    try_for(120) { change_of_status? }
     check_for_seahorse_error
-    raise OpenPGPKeyserverCommunicationError.new(
-      'Seahorse crashed with a segfault.') unless $vm.has_process?('seahorse')
-   end
+    unless $vm.process_running?('seahorse')
+      raise OpenPGPKeyserverCommunicationError,
+            'Seahorse crashed with a segfault.'
+    end
+  end
 end
 
 When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)?$/ do |keyid, withgpgapplet|
@@ -178,41 +182,43 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     # try_for loop below by returning "true" when there's something we can act
     # upon.
     if $vm.execute_successfully(
-      "gpg --batch --list-keys '#{keyid}'", :user => LIVE_USER) ||
-      @screen.exists('GnomeCloseButton.png')
+      "gpg --batch --list-keys '#{keyid}'", user: LIVE_USER
+    ) || @screen.exists('GnomeCloseButton.png')
       true
     end
   end
 
-  recovery_proc = Proc.new do
+  recovery_proc = proc do
     setup_onion_keyserver
-    @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
-    @screen.press("ctrl", "w")
+    if @screen.exists('GnomeCloseButton.png')
+      @screen.click('GnomeCloseButton.png')
+    end
+    @screen.press('ctrl', 'w')
   end
   retry_tor(recovery_proc) do
-    @screen.wait("SeahorseWindow.png", 10).click
+    @screen.wait('SeahorseWindow.png', 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuFind.png',
                                'seahorse')
     @screen.wait('SeahorseFindKeysWindow.png', 10)
     # Seahorse doesn't seem to support searching for fingerprints
     # (https://gitlab.gnome.org/GNOME/seahorse/issues/177)
-    @screen.type(keyid, ["Return"])
+    @screen.type(keyid, ['Return'])
     begin
       @screen.wait_any(['SeahorseFoundKeyResult.png',
-                       'GnomeCloseButton.png'], 120)
+                        'GnomeCloseButton.png',], 120)
     rescue FindFailed
       # We may end up here if Seahorse appears to be "frozen".
       # Sometimes--but not always--if we click another window
       # the main Seahorse window will unfreeze, allowing us
       # to continue normally.
-      @screen.click("SeahorseSearch.png")
+      @screen.click('SeahorseSearch.png')
     end
     check_for_seahorse_error
-    @screen.click("SeahorseKeyResultWindow.png")
+    @screen.click('SeahorseKeyResultWindow.png')
     # Use the context menu to import the key:
-    @screen.click("SeahorseFoundKeyResult.png", button: 'right')
-    @screen.click("SeahorseImport.png")
+    @screen.click('SeahorseFoundKeyResult.png', button: 'right')
+    @screen.click('SeahorseImport.png')
     try_for(120) do
       change_of_status?(keyid)
     end
@@ -220,7 +226,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
   end
 end
 
-def disable_IPv6_for_dirmngr
+def disable_ipv6_for_dirmngr
   # When dirmngr connects to the Onion service run by Chutney, the
   # isotester redirects the connection to keys.openpgp.org:11371 over
   # IPv4 (see setup_onion_keyserver), and then keys.openpgp.org
@@ -230,14 +236,15 @@ def disable_IPv6_for_dirmngr
   # network that runs on our CI infrastructure, which is IPv4-only, so
   # that would fail. Therefore, let's ensure dirmngr only picks IPv4
   # addresses for keys.openpgp.org.
-  if $vm.execute("grep -F --line-regexp disable-ipv6 '#{dirmngr_conf}'").failure?
+  if $vm.execute("grep -F --line-regexp disable-ipv6 '#{dirmngr_conf}'")
+        .failure?
     $vm.file_append(dirmngr_conf, "disable-ipv6\n")
   end
 end
 
 def restart_dirmngr
-  $vm.execute_successfully("systemctl --user restart dirmngr.service",
-                           :user => LIVE_USER)
+  $vm.execute_successfully('systemctl --user restart dirmngr.service',
+                           user: LIVE_USER)
 end
 
 Given /^GnuPG is configured to use a non-Onion keyserver$/ do
@@ -249,10 +256,12 @@ Given /^GnuPG is configured to use a non-Onion keyserver$/ do
   )
   # ... before replacing it
   $vm.execute_successfully(
-    "sed -i 's|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " +
+    'sed -i ' \
+    "'s|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|" \
+    "hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " \
     "'#{dirmngr_conf}'"
   )
-  disable_IPv6_for_dirmngr
+  disable_ipv6_for_dirmngr
   # Ensure dirmngr picks up the changes we made to its configuration
   restart_dirmngr
 end
@@ -261,7 +270,7 @@ Given /^Seahorse is configured to use Chutney's onion keyserver$/ do
   setup_onion_keyserver unless @onion_keyserver_job
   _, _, onion_address, onion_port = chutney_onionservice_info
   # Validate the shipped configuration ...
-  @gnome_keyservers = YAML.load(
+  @gnome_keyservers = YAML.safe_load(
     $vm.execute_successfully(
       'gsettings get org.gnome.crypto.pgp keyservers',
       user: LIVE_USER
@@ -271,11 +280,12 @@ Given /^Seahorse is configured to use Chutney's onion keyserver$/ do
                'Seahorse should only have one keyserver configured.')
   assert_equal(
     'hkp://' + CONFIGURED_KEYSERVER_HOSTNAME, @gnome_keyservers[0],
-    "Seahorse is not configured to use the correct keyserver"
+    'Seahorse is not configured to use the correct keyserver'
   )
   # ... before replacing it
   $vm.execute_successfully(
-    "gsettings set org.gnome.crypto.pgp keyservers \"['hkp://#{onion_address}:#{onion_port}']\"",
+    'gsettings set org.gnome.crypto.pgp keyservers ' \
+    "\"['hkp://#{onion_address}:#{onion_port}']\"",
     user: LIVE_USER
   )
 end

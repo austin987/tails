@@ -2,94 +2,100 @@ def chutney_src_dir
   "#{GIT_DIR}/submodules/chutney"
 end
 
+# XXX: giving up on a few worst offenders for now
+# rubocop:disable Metrics/AbcSize
+# rubocop:disable Metrics/MethodLength
 def ensure_chutney_is_running
   # Ensure that a fresh chutney instance is running, and that it will
   # be cleaned upon exit. We only do it once, though, since the same
   # setup can be used throughout the same test suite run.
-  if not($chutney_initialized)
-    chutney_listen_address = $vmnet.bridge_ip_addr
-    chutney_script = "#{chutney_src_dir}/chutney"
-    assert(
-      File.executable?(chutney_script),
-      "It does not look like '#{chutney_src_dir}' is the Chutney source tree"
-    )
-    network_definition = "#{GIT_DIR}/features/chutney/test-network"
-    env = {
-      'CHUTNEY_LISTEN_ADDRESS' => chutney_listen_address,
-      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data",
-      # The default value (60s) is too short for "chutney wait_for_bootstrap"
-      # to succeed reliably.
-      'CHUTNEY_START_TIME' => '600',
-    }
+  return if $chutney_initialized
 
-    chutney_data_dir_cleanup = Proc.new do
-      if File.directory?(env['CHUTNEY_DATA_DIR'])
-        FileUtils.rm_r(env['CHUTNEY_DATA_DIR'])
-      end
+  chutney_listen_address = $vmnet.bridge_ip_addr
+  chutney_script = "#{chutney_src_dir}/chutney"
+  assert(
+    File.executable?(chutney_script),
+    "It does not look like '#{chutney_src_dir}' is the Chutney source tree"
+  )
+  network_definition = "#{GIT_DIR}/features/chutney/test-network"
+  env = {
+    'CHUTNEY_LISTEN_ADDRESS' => chutney_listen_address,
+    'CHUTNEY_DATA_DIR'       => "#{$config['TMPDIR']}/chutney-data",
+    # The default value (60s) is too short for "chutney wait_for_bootstrap"
+    # to succeed reliably.
+    'CHUTNEY_START_TIME'     => '600',
+  }
+
+  chutney_data_dir_cleanup = proc do
+    if File.directory?(env['CHUTNEY_DATA_DIR'])
+      FileUtils.rm_r(env['CHUTNEY_DATA_DIR'])
     end
-
-    chutney_cmd = Proc.new do |cmd|
-      debug_log("chutney: #{cmd}")
-      Dir.chdir(chutney_src_dir) do
-        cmd_helper([chutney_script, cmd, network_definition], env)
-      end
-    end
-
-    # After an unclean shutdown of the test suite (e.g. Ctrl+C) the
-    # tor processes are left running, listening on the same ports we
-    # are about to use. If chutney's data dir also was removed, this
-    # will prevent chutney from starting the network unless the tor
-    # processes are killed manually.
-    begin
-      cmd_helper(["pkill", "--full", "--exact",
-                  "tor -f #{env['CHUTNEY_DATA_DIR']}/nodes/.*/torrc --quiet"])
-    rescue
-    end
-
-    if KEEP_SNAPSHOTS
-      begin
-        chutney_cmd.call('start')
-      rescue Test::Unit::AssertionFailedError
-        if File.directory?(env['CHUTNEY_DATA_DIR'])
-          raise "You are running with --keep-snapshots but Chutney failed " +
-                "to start with its current data directory. To recover you " +
-                "likely want to delete '#{env['CHUTNEY_DATA_DIR']}' and " +
-                "all test suite snapshots and then start over."
-        else
-          chutney_cmd.call('configure')
-          chutney_cmd.call('start')
-        end
-      end
-    else
-      chutney_cmd.call('stop')
-      chutney_data_dir_cleanup.call
-      chutney_cmd.call('configure')
-      chutney_cmd.call('start')
-    end
-
-    # Documentation: submodules/chutney/README, "Waiting for the network" section
-    chutney_cmd.call('wait_for_bootstrap')
-
-    at_exit do
-      chutney_cmd.call('stop')
-      chutney_data_dir_cleanup.call unless KEEP_SNAPSHOTS
-    end
-
-    # We have to sanity check that all nodes are running because
-    # `chutney start` will return success even if some nodes fail.
-    running, total = 0, -1
-    status = chutney_cmd.call('status')
-    match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
-    assert_not_nil(match, "Chutney's status did not contain the expected " +
-                          "string listing the number of running nodes")
-    running, total = match[1,2].map { |x| x.to_i }
-    assert_equal(
-      total, running, "Chutney is only running #{running}/#{total} nodes"
-    )
-
-    $chutney_initialized = true
   end
+
+  chutney_cmd = proc do |cmd|
+    debug_log("chutney: #{cmd}")
+    Dir.chdir(chutney_src_dir) do
+      cmd_helper([chutney_script, cmd, network_definition], env)
+    end
+  end
+
+  # After an unclean shutdown of the test suite (e.g. Ctrl+C) the
+  # tor processes are left running, listening on the same ports we
+  # are about to use. If chutney's data dir also was removed, this
+  # will prevent chutney from starting the network unless the tor
+  # processes are killed manually.
+  begin
+    cmd_helper(['pkill', '--full', '--exact',
+                "tor -f #{env['CHUTNEY_DATA_DIR']}/nodes/.*/torrc --quiet",])
+  rescue StandardError
+    # Nothing to kill
+  end
+
+  if KEEP_CHUTNEY
+    begin
+      chutney_cmd.call('start')
+    rescue Test::Unit::AssertionFailedError
+      if File.directory?(env['CHUTNEY_DATA_DIR'])
+        raise 'You are running with --keep-snapshots or --keep-chutney, ' \
+              'but Chutney failed ' \
+              'to start with its current data directory. To recover you ' \
+              "likely want to delete '#{env['CHUTNEY_DATA_DIR']}' and " \
+              'all test suite snapshots and then start over.'
+      else
+        chutney_cmd.call('configure')
+        chutney_cmd.call('start')
+      end
+    end
+  else
+    chutney_cmd.call('stop')
+    chutney_data_dir_cleanup.call
+    chutney_cmd.call('configure')
+    chutney_cmd.call('start')
+  end
+
+  # Documentation: submodules/chutney/README, "Waiting for the network" section
+  chutney_cmd.call('wait_for_bootstrap')
+
+  at_exit do
+    chutney_cmd.call('stop')
+    chutney_data_dir_cleanup.call unless KEEP_CHUTNEY
+  end
+
+  # We have to sanity check that all nodes are running because
+  # `chutney start` will return success even if some nodes fail.
+  status = chutney_cmd.call('status')
+  match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
+  assert_not_nil(match, "Chutney's status did not contain the expected " \
+                        'string listing the number of running nodes')
+  running, total = match[1, 2].map(&:to_i)
+  assert_equal(
+    total, running, "Chutney is only running #{running}/#{total} nodes"
+  )
+
+  $chutney_initialized = true
 end
+# rubocop:enable Metrics/AbcSize
+# rubocop:enable Metrics/MethodLength
 
 When /^I configure Tails to use a simulated Tor network$/ do
   # At the moment this step essentially assumes that we boot with 'the
@@ -117,8 +123,8 @@ When /^I configure Tails to use a simulated Tor network$/ do
   # abstraction impractical and it's better that we avoid it an go
   # with the more explicit, step-based approach.
 
-  assert(not($vm.execute('service tor status').success?),
-         "Running this step when Tor is running is probably not intentional")
+  assert($vm.execute('service tor status').failure?,
+         'Running this step when Tor is running is probably not intentional')
   ensure_chutney_is_running
   # Most of these lines are taken from chutney's client template.
   client_torrc_lines = [
@@ -148,7 +154,7 @@ When /^I configure Tails to use a simulated Tor network$/ do
   client_torrcs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*client/torrc"
   )
-  dir_auth_lines = open(client_torrcs.first) do |f|
+  dir_auth_lines = File.open(client_torrcs.first) do |f|
     f.grep(/^(Alternate)?(Dir|Bridge)Authority\s/)
   end
   client_torrc_lines.concat(dir_auth_lines)
@@ -159,37 +165,33 @@ def chutney_onionservice_info
   hs_hostname_file_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/hidden_service/hostname"
   ).first
-  hs_hostname = open(hs_hostname_file_path, 'r') do |f|
+  hs_hostname = File.open(hs_hostname_file_path) do |f|
     f.read.chomp
   end
   hs_torrc_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/torrc"
   ).first
-  _, hs_port, local_address_port = open(hs_torrc_path, 'r') do |f|
+  _, hs_port, local_address_port = File.open(hs_torrc_path) do |f|
     f.grep(/^HiddenServicePort/).first.split
   end
-  local_address, local_port  = local_address_port.split(':')
+  local_address, local_port = local_address_port.split(':')
   [local_address, local_port, hs_hostname, hs_port]
 end
 
 def chutney_onionservice_redir(remote_address, remote_port)
   redir_unit_name = 'tails-test-suite-redir.service'
-  if ENV['USER'] == 'root'
-    bus = '--system'
-  else
-    bus = '--user'
-  end
-  kill_redir = Proc.new do
+  bus = ENV['USER'] == 'root' ? '--system' : '--user'
+  kill_redir = proc do
     begin
       if system('/bin/systemctl', bus, '--quiet', 'is-active', redir_unit_name)
         system('/bin/systemctl', bus, 'stop', redir_unit_name)
       end
-    rescue
+    rescue StandardError
       # noop
     end
   end
   kill_redir.call
-  local_address, local_port, _ = chutney_onionservice_info
+  local_address, local_port, = chutney_onionservice_info
   $chutney_onionservice_job = fatal_system(
     '/usr/bin/systemd-run',
     bus,
@@ -201,8 +203,8 @@ def chutney_onionservice_redir(remote_address, remote_port)
     # '--collect',
     '/usr/bin/redir',
     "#{local_address}:#{local_port}",
-    "#{remote_address}:#{remote_port}",
+    "#{remote_address}:#{remote_port}"
   )
   add_after_scenario_hook { kill_redir.call }
-  return $chutney_onionservice_job
+  $chutney_onionservice_job
 end

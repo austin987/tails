@@ -3,6 +3,6 @@ Given /^I am in the Git branch being tested$/ do
 end
 
 Then /^all the PO files should be correct$/ do
-  File.exists?('./submodules/jenkins-tools/slaves/check_po')
+  File.exist?('./submodules/jenkins-tools/slaves/check_po')
   cmd_helper(['./submodules/jenkins-tools/slaves/check_po'])
 end

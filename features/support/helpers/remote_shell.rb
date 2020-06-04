@@ -14,14 +14,15 @@ module RemoteShell
   class Timeout < ServerFailure
   end
 
-  DEFAULT_TIMEOUT = 20*60
+  DEFAULT_TIMEOUT = 20 * 60
+  private_constant :DEFAULT_TIMEOUT
 
   # Counter providing unique id:s for each communicate() call.
   @@request_id ||= 0
 
   def communicate(vm, *args, **opts)
     opts[:timeout] ||= DEFAULT_TIMEOUT
-    socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
+    socket = TCPSocket.new('127.0.0.1', vm.get_remote_shell_port)
     id = (@@request_id += 1)
     # Since we already have defined our own Timeout in the current
     # scope, we have to be more careful when referring to the Timeout
@@ -32,19 +33,21 @@ module RemoteShell
       socket.flush
       loop do
         line = socket.readline("\n").chomp("\n")
-        response_id, status, *rest = JSON.load(line)
+        response_id, status, *rest = JSON.parse(line)
         if response_id == id
-          if status != "success"
-            if status == "error" and rest.class == Array and rest.size == 1
+          if status != 'success'
+            # rubocop:disable Style/GuardClause
+            if (status == 'error') && (rest.class == Array) && (rest.size == 1)
               msg = rest.first
-              raise ServerFailure.new("#{msg}")
+              raise ServerFailure, msg.to_s
             else
-              raise ServerFailure.new("Uncaught exception: #{status}: #{rest}")
+              raise ServerFailure, "Uncaught exception: #{status}: #{rest}"
             end
+            # rubocop:enable Style/GuardClause
           end
           return rest
         else
-          debug_log("Dropped out-of-order remote shell response: " +
+          debug_log('Dropped out-of-order remote shell response: ' \
                     "got id #{response_id} but expected id #{id}")
         end
       end
@@ -65,13 +68,13 @@ module RemoteShell
     # background (or running scripts that does the same) or any
     # application we want to interact with.
     def self.execute(vm, cmd, **opts)
-      opts[:user] ||= "root"
-      opts[:spawn] = false unless opts.has_key?(:spawn)
-      type = opts[:spawn] ? "spawn" : "call"
+      opts[:user] ||= 'root'
+      opts[:spawn] = false unless opts.key?(:spawn)
+      type = opts[:spawn] ? 'spawn' : 'call'
       debug_log("Remote shell: #{type}ing as #{opts[:user]}: #{cmd}")
       ret = RemoteShell.communicate(vm, 'sh_' + type, opts[:user], cmd, **opts)
-      debug_log("Remote shell: #{type} returned: #{ret}") if not(opts[:spawn])
-      return ret
+      debug_log("Remote shell: #{type} returned: #{ret}") unless opts[:spawn]
+      ret
     end
 
     attr_reader :cmd, :returncode, :stdout, :stderr
@@ -82,15 +85,15 @@ module RemoteShell
     end
 
     def success?
-      return @returncode == 0
+      @returncode.zero?
     end
 
     def failure?
-      return not(success?)
+      !success?
     end
 
     def to_s
-      "Return status: #{@returncode}\n" +
+      "Return status: #{@returncode}\n" \
         "STDOUT:\n" +
         @stdout +
         "STDERR:\n" +
@@ -100,17 +103,20 @@ module RemoteShell
 
   class PythonCommand
     def self.execute(vm, code, **opts)
-      opts[:user] ||= "root"
+      opts[:user] ||= 'root'
       show_code = code.chomp
       if show_code["\n"]
-        show_code = "\n" + show_code.lines.map { |l| " "*4 + l.chomp } .join("\n")
+        show_code = "\n" +
+                    show_code.lines
+                             .map { |l| ' ' * 4 + l.chomp }
+                             .join("\n")
       end
       debug_log("executing Python as #{opts[:user]}: #{show_code}")
       ret = RemoteShell.communicate(
         vm, 'python_execute', opts[:user], code, **opts
       )
-      debug_log("execution complete")
-      return ret
+      debug_log('execution complete')
+      ret
     end
 
     attr_reader :code, :exception, :stdout, :stderr
@@ -121,15 +127,15 @@ module RemoteShell
     end
 
     def success?
-      return @exception == nil
+      @exception.nil?
     end
 
     def failure?
-      return not(success?)
+      !success?
     end
 
     def to_s
-      "Exception: #{@exception}\n" +
+      "Exception: #{@exception}\n" \
         "STDOUT:\n" +
         @stdout +
         "STDERR:\n" +
@@ -144,20 +150,24 @@ module RemoteShell
       debug_log("opening file #{path} in '#{mode}' mode")
       ret = RemoteShell.communicate(vm, 'file_' + mode, path, *args, **opts)
       if ret.size != 1
-        raise ServerFailure.new("expected 1 value but got #{ret.size}")
+        raise ServerFailure, "expected 1 value but got #{ret.size}"
       end
+
       debug_log("#{mode} complete")
-      return ret.first
+      ret.first
     end
 
     attr_reader :vm, :path
 
     def initialize(vm, path)
-      @vm, @path = vm, path
+      @vm = vm
+      @path = path
     end
 
-    def read()
-      Base64.decode64(self.class.open(@vm, 'read', @path)).force_encoding('utf-8')
+    def read
+      Base64.decode64(
+        self.class.open(@vm, 'read', @path)
+      ).force_encoding('utf-8')
     end
 
     def write(data)
