@@ -46,7 +46,10 @@ if __name__ == '__main__':
                    .format(path=key_path, error=e.stderr.decode()))
             sys.exit(e.returncode)
         keys = gnupg.GPG().scan_keys(key_path)
-        uids = set([uid for key in keys for uid in key['uids']])
+        uids = set()
+        for key in keys:
+            for uid in key['uids']:
+                uids.add(uid)
         title = ngettext("Key Imported", "Keys Imported", len(keys))
         # Translators: Don't translate {uids}, it's a placeholder and
         # will be replaced.
