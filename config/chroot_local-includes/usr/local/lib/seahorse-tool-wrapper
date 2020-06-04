@@ -40,12 +40,16 @@ if __name__ == '__main__':
                            check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
             notify(gettext("Import Failed"),
+                   # Translators: Don't translate {path} or {error},
+                   # they are placeholders and will be replaced.
                    gettext("Failed to import keys from {path}:\n{error}")
                    .format(path=key_path, error=e.stderr.decode()))
             sys.exit(e.returncode)
         keys = gnupg.GPG().scan_keys(key_path)
         uids = set([uid for key in keys for uid in key['uids']])
         title = ngettext("Key Imported", "Keys Imported", len(keys))
+        # Translators: Don't translate {uids}, it's a placeholder and
+        # will be replaced.
         message = ngettext("Imported a key for {uids}",
                            "Imported keys for {uids}",
                            len(keys)) \
