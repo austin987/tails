@@ -38,15 +38,13 @@ To release Tails you need:
         [global]
         ssl_verify = true
 
-        [Tails]
+        [TailsRM]
         url = https://gitlab.tails.boum.org
         per_page = 100
         private_token = XXX
 
-   [[!tails_gitlab profile/personal_access_tokens
-   desc="Generate a _Personal Access Token_"]] with at least the `api` scope
-   enabled, and set it as the value of the `private_token` option
-   in your `~/.python-gitlab.cfg`.
+   Set the value of the `private_token` option to the `role-release-automation`
+   GitLab user's API token, which you'll find in `rm.git`'s keyringer.
 
 Environment
 ===========
@@ -1709,7 +1707,7 @@ be resolved in this release.
     find wiki/src/{doc,support} ! -path wiki/src/support/known_issues/graphics.mdwn -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
-            ticket_status="$(python-gitlab --gitlab Tails -o json --fields state project-issue get --project-id 2 --iid "$ticket" | jq --raw-output .state)"
+            ticket_status="$(python-gitlab --gitlab TailsRM -o json --fields state project-issue get --project-id 2 --iid "$ticket" | jq --raw-output .state)"
             if [ -z "${ticket_status:-}" ]; then
                 echo "Failed to find the status of #${ticket:?}" >&2
                 continue
