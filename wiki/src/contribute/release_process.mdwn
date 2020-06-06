@@ -17,7 +17,7 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `gitlab-cli jq tidy mktorrent transmission-cli`
+* `docker.io gitlab-cli jq tidy mktorrent transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
@@ -96,6 +96,8 @@ Export the following environment variables:
   release).
 * `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
   scheduled *bugfix* Tails release
+* `NEXT_PLANNED_VERSION`: use whichever is the next scheduled release
+   among `$NEXT_PLANNED_BUGFIX_VERSION` and `$NEXT_PLANNED_MAJOR_VERSION`
 * `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
   to the next emergency release if we have to put one out; unset for a
   release candidate
@@ -1663,39 +1665,30 @@ Bug tracker
 
 Skip this part if preparing a release candidate.
 
-Sign in on GitLab as the `role-release-automation` user (credentials are
-in `rm.git`'s keyringer).
-
-Postpone to next release any remaining open issue for the version
-you've just released:
-
 1. Verify there's a `missed:$VERSION` label
    on [[!tails_gitlab groups/tails/-/labels]]; if there's none,
    ask sysadmins to create one via `gitlab-config.git`.
-2. Visit the [[!tails_gitlab groups/tails/-/milestones desc="milestone"]]
-   for the version you've just released.
-3. In the right side bar, in the _Issues_ section, click on the _Open: NN_
-   link.
-4. Click the _Edit issues_ link in the top right corner.
-5. In the right side bar:
-    - select the milestone for the next scheduled release
-    - select the `missed:$VERSION` label
-6. On the top left of the list of issues, click the checkbox
-   that will select all issues.
-7. In the right side bar, click _Update all_.
-8. If some issues still appear on the list, go through these steps again:
-   there's pagination involved and
-   [[!tails_gitlab help/user/project/bulk_editing.html desc="bulk editing"]]
-   only applies to issues that are displayed.
 
-Then, do the same for MRs.
+2. Ensure you have an up-to-date `tails:gitlab-triage-stable` Docker image:
 
-Ideally we would [[!tails_ticket 17589 desc="automate this"]].
+        cd "${MASTER_CHECKOUT:?}" && \
+        git checkout master && \
+        sudo ./config/gitlab-triage/bin/ensure-up-to-date-Docker-image
 
-Then, close the just-released [[!tails_gitlab groups/tails/-/milestones
-desc="milestone"]].
+3. Postpone to the next scheduled release any remaining open issue and merge
+   request for the version you've just released:
 
-Finally, sign out from the `role-release-automation` GitLab user.
+        cd "${MASTER_CHECKOUT:?}" && \
+        git checkout master && \
+        sudo \
+            VERSION="${VERSION:?}" \
+            NEXT_PLANNED_VERSION="${NEXT_PLANNED_VERSION:?}" \
+            ./bin/gitlab-triage-post-release \
+                --host-url "$(bin/gitlab-url TailsRM)" \
+                --token "$(bin/gitlab-api-token TailsRM)"
+
+4. Finally, ask sysadmins to close the just-released [[!tails_gitlab
+   groups/tails/-/milestones desc="milestone"]] via `gitlab-config.git`.
 
 ### Tickets linked from the website
 

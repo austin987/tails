@@ -1,0 +1,18 @@
+#! /bin/sh
+
+# Wrapper to run gitlab-triage (https://gitlab.com/gitlab-org/gitlab-triage)
+# in Docker
+
+set -e
+set -u
+set -x
+
+GITLAB_TRIAGE_POLICIES_DIR="$(readlink -f "$(dirname "$0")"/../policies)"
+
+docker run \
+    --name tails-gitlab-triage \
+    --rm \
+    --volume "${GITLAB_TRIAGE_POLICIES_DIR}":/etc/gitlab-triage-policies \
+    ${DOCKER_ARGS:-} \
+    tails:gitlab-triage-stable \
+    /usr/local/bin/gitlab-triage "${@}"
