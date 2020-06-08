@@ -13,17 +13,17 @@ that situation with `gpg --import`.
 
 """
 
+import gettext
 import gi
 import gnupg
 import os
 import os.path
 import subprocess
 import sys
-from gettext import gettext, ngettext
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
 
-os.environ['TEXTDOMAIN'] = 'tails'
+tr = gettext.translation("tails", '/usr/share/locale', fallback=True)
 
 
 def notify(title, message):
@@ -39,10 +39,10 @@ if __name__ == '__main__':
             subprocess.run(['/usr/bin/gpg', '--import', key_path],
                            check=True, capture_output=True)
         except subprocess.CalledProcessError as e:
-            notify(gettext("Import Failed"),
+            notify(tr.gettext("Import Failed"),
                    # Translators: Don't translate {path} or {error},
                    # they are placeholders and will be replaced.
-                   gettext("Failed to import keys from {path}:\n{error}")
+                   tr.gettext("Failed to import keys from {path}:\n{error}")
                    .format(path=key_path, error=e.stderr.decode()))
             sys.exit(e.returncode)
         keys = gnupg.GPG().scan_keys(key_path)
@@ -50,12 +50,12 @@ if __name__ == '__main__':
         for key in keys:
             for uid in key['uids']:
                 uids.add(uid)
-        title = ngettext("Key Imported", "Keys Imported", len(keys))
+        title = tr.ngettext("Key Imported", "Keys Imported", len(keys))
         # Translators: Don't translate {uids}, it's a placeholder and
         # will be replaced.
-        message = ngettext("Imported a key for {uids}",
-                           "Imported keys for {uids}",
-                           len(keys)) \
+        message = tr.ngettext("Imported a key for {uids}",
+                              "Imported keys for {uids}",
+                              len(keys)) \
                   .format(uids=", ".join(uids))
         notify(title, message)
     else:
