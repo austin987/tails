@@ -1667,7 +1667,8 @@ Skip this part if preparing a release candidate.
 
 1. Verify there's a `missed:$VERSION` label
    on [[!tails_gitlab groups/tails/-/labels]]; if there's none,
-   ask sysadmins to create one via `gitlab-config.git`.
+   submit a MR against [[!tails_gitlab tails/gitlab-config]]
+   to create one.
 
 2. Ensure you have an up-to-date `tails:gitlab-triage-stable` Docker image:
 
@@ -1687,8 +1688,13 @@ Skip this part if preparing a release candidate.
                 --host-url "$(bin/gitlab-url TailsRM)" \
                 --token "$(bin/gitlab-api-token TailsRM)"
 
-4. Finally, ask sysadmins to close the just-released [[!tails_gitlab
-   groups/tails/-/milestones desc="milestone"]] via `gitlab-config.git`.
+4. Finally, submit a MR against [[!tails_gitlab tails/gitlab-config]] to:
+
+    - close the just-released [[!tails_gitlab groups/tails/-/milestones
+      desc="milestone"]]
+    - set the *Due date* for the [[!tails_gitlab groups/tails/-/milestones
+      desc="*Holes in the Roof* milestone"]] to a date between the next
+      2 releases
 
 ### Tickets linked from the website
 
@@ -1872,10 +1878,6 @@ If you just released a final release
    <https://jenkins.tails.boum.org/>.
 1. Make sure you pushed all changes in every of our Git repo (including our
    Debian packages ones).
-1. Ask sysadmins to set the *Due date* for the [[!tails_gitlab
-   groups/tails/-/milestones
-   desc="*Holes in the Roof* milestone"]] to a date between
-   the next 2 releases, via `gitlab-config.git`.
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
 1. Check the Mozilla release calendars:
