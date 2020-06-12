@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.bin.thunderbird	2019-09-12 14:52:34.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.thunderbird	2019-10-03 13:30:05.876482204 +0000
+--- a/etc/apparmor.d/usr.bin.thunderbird	2020-06-12 13:56:44.453139641 +0200
++++ b/etc/apparmor.d/usr.bin.thunderbird	2020-06-12 14:01:43.694759478 +0200
 @@ -15,7 +15,6 @@
    # TODO: finetune this for required accesses
    #include <abstractions/dbus>
@@ -16,7 +16,7 @@
    #include <abstractions/ubuntu-browsers.d/java>
    #include <abstractions/ubuntu-helpers>
  
-@@ -45,26 +43,19 @@
+@@ -45,32 +43,21 @@
  
    # Allow opening attachments
    # TODO: create and use abstractions for opening various file formats
@@ -27,6 +27,11 @@
    /usr/lib/libreoffice/program/soffice Cxr -> sanitized_helper,
  
    # Allow opening links
+-  # GDesktopAppInfo in GLib 2.64.x uses a very small shell script
+-  # to launch .desktop files, instead of gio-launch-desktop
+-  /{usr/,}bin/{dash,bash} ixr,
+   # With older GLib we might still be on the fallback code path
+   # (remove this after Debian 11 and Ubuntu 20.04)
    /usr/lib/@{multiarch}/glib-[0-9]*/gio-launch-desktop ix,
  
 -  # For Xubuntu to launch the browser
@@ -34,6 +39,7 @@
 -  /usr/lib/@{multiarch}/xfce4/exo-[1-9]/exo-helper-[1-9] ixr,
 -  /etc/xdg/xdg-xubuntu/xfce4/helpers.rc r,
 -  /etc/xdg/xfce4/helpers.rc r,
+-  owner @{HOME}/.config/xfce4/helpers.rc r,
 -
    # for crash reports?
    ptrace (read,trace) peer=@{profile_name},
@@ -46,7 +52,7 @@
    owner @{HOME}/.{cache,config}/dconf/user rw,
    owner @{HOME}/.cache/thumbnails/** r,
    owner /run/user/[0-9]*/dconf/user rw,
-@@ -140,6 +131,10 @@
+@@ -146,6 +133,10 @@
    deny /boot/vmlinuz* r,
    deny /var/cache/fontconfig/ w,
  
@@ -57,10 +63,16 @@
    # noisy file dialog:
    #
    # TODO: remove these rules when file dialogs becomes "trusted helpers" that can
-@@ -264,7 +259,6 @@
+@@ -270,7 +261,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
    /usr/lib/thunderbird/crashreporter ix,
 -  /usr/bin/expr ix,
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/** r,
+ 
+@@ -430,4 +420,3 @@
+   # Site-specific additions and overrides. See local/README for details.
+   #include <local/usr.bin.thunderbird>
+ }
+-
