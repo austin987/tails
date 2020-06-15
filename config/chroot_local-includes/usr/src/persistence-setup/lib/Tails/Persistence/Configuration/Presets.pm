@@ -67,9 +67,9 @@ method _build__presets () {
         },
         {
             id          => 'GreeterSettings',
-            name        => $self->encoding->decode(gettext(q{Tails Greeter Settings})),
+            name        => $self->encoding->decode(gettext(q{Settings on the Welcome Screen})),
             description => $self->encoding->decode(gettext(
-                q{Startup options configured in Tails Greeter}
+                q{Language, administration password, and additional settings}
             )),
             icon_name   => 'preferences-system',
             enabled     => 0,
