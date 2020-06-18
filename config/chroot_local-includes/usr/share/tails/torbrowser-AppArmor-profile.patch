@@ -1,3 +1,5 @@
+diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
+index ece3159..c1ff8bf 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,11 +1,12 @@
@@ -14,7 +16,7 @@
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -14,6 +15,7 @@
+@@ -14,6 +15,7 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
  
    # Audio support
    /{,usr/}bin/pulseaudio Pixr,
@@ -22,7 +24,7 @@
  
    #dbus,
    network netlink raw,
-@@ -29,6 +31,8 @@
+@@ -29,6 +31,8 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny /etc/passwd r,
    deny /etc/group r,
    deny /etc/mailcap r,
@@ -31,7 +33,7 @@
  
    /etc/machine-id r,
    /var/lib/dbus/machine-id r,
-@@ -44,37 +48,35 @@
+@@ -44,38 +48,35 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -59,6 +61,7 @@
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profiles.ini r,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/{,**} rwk,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/fontconfig/fonts.conf r,
+-  owner @{torbrowser_home_dir}/fonts/* l,
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/tor px,
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/ r,
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so mr,
@@ -96,7 +99,7 @@
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -98,12 +100,6 @@
+@@ -99,12 +100,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -109,7 +112,7 @@
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
    owner /dev/shm/org.mozilla.ipc.[0-9]*.[0-9]* rw, # for Chromium IPC
-@@ -118,6 +114,25 @@
+@@ -119,6 +114,25 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
@@ -135,9 +138,9 @@
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -134,5 +149,10 @@
-   /etc/xfce4/defaults.list r,
-   /usr/share/xfce4/applications/ r,
+@@ -145,5 +159,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+   # Yubikey NEO also needs this:
+   /sys/devices/**/hidraw/hidraw*/uevent r,
  
 -  #include <local/torbrowser.Browser.firefox>
 +  # Deny access to global tmp directories, that's granted by the user-tmp
@@ -147,6 +150,8 @@
 +  deny owner /tmp/**         rwklx,
 +  deny /tmp/                 rwklx,
  }
+diff --git a/etc/apparmor.d/tunables/torbrowser b/etc/apparmor.d/tunables/torbrowser
+index 9b31139..f77e082 100644
 --- a/etc/apparmor.d/tunables/torbrowser
 +++ b/etc/apparmor.d/tunables/torbrowser
 @@ -1,2 +1 @@
