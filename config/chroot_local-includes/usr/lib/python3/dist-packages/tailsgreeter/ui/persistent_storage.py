@@ -1,9 +1,11 @@
 import logging
 import gi
+import os
 import threading
 from typing import TYPE_CHECKING, Callable
 
 from tailsgreeter.ui import _
+from tailsgreeter.config import settings_dir
 
 gi.require_version('GLib', '2.0')
 gi.require_version('Gtk', '3.0')
@@ -14,9 +16,10 @@ if TYPE_CHECKING:
 
 
 class PersistentStorage(object):
-    def __init__(self, persistence_setting: "PersistenceSettings", load_settings_cb: Callable, builder):
+    def __init__(self, persistence_setting: "PersistenceSettings", load_settings_cb, apply_settings_cb: Callable, builder):
         self.persistence_setting = persistence_setting
         self.load_settings_cb = load_settings_cb
+        self.apply_settings_cb = apply_settings_cb
 
         self.box_storage = builder.get_object('box_storage')
         self.box_storage_unlock = builder.get_object('box_storage_unlock')
@@ -110,7 +113,10 @@ class PersistentStorage(object):
         self.box_storage_unlocked.set_visible(True)
         self.button_start.set_sensitive(True)
 
-        self.load_settings_cb()
+        if not os.listdir(settings_dir):
+            self.apply_settings_cb()
+        else:
+            self.load_settings_cb()
 
     def cb_checkbutton_storage_show_passphrase_toggled(self, widget):
         self.entry_storage_passphrase.set_visibility(widget.get_active())

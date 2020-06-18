@@ -133,7 +133,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.listbox_settings.set_placeholder(self.label_settings_default)
 
         # Persistent storage
-        self.persistent_storage = PersistentStorage(self.persistence_setting, self.load_settings, builder)
+        self.persistent_storage = PersistentStorage(self.persistence_setting, self.load_settings, self.apply_settings, builder)
 
         # Add children to ApplicationWindow
         self.add(self.box_main)
@@ -177,6 +177,10 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 self.box_settings_header])
 
     # Actions
+
+    def apply_settings(self):
+        for setting in self.settings:
+            setting.apply()
 
     def load_settings(self):
         # We have to load formats and keyboard before language, because
