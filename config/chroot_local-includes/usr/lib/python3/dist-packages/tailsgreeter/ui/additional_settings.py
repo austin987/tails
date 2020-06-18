@@ -208,6 +208,12 @@ class MACSpoofSettingUI(AdditionalSetting):
         except SettingNotFoundError:
             raise
 
+        # Select the correct listboxrow (used in the popover)
+        if value:
+            self.listbox_macspoof_controls.select_row(self.listboxrow_macspoof_on)
+        else:
+            self.listbox_macspoof_controls.select_row(self.listboxrow_macspoof_off)
+
         if self.spoofing_enabled == value:
             return False
 
@@ -278,6 +284,14 @@ class NetworkSettingUI(AdditionalSetting):
             value = self._network_setting.load()
         except SettingNotFoundError:
             raise
+
+        # Select the correct listboxrow (used in the popover)
+        if value == NETCONF_DIRECT:
+            self.listbox_network_controls.select_row(self.listboxrow_network_clear)
+        elif value == NETCONF_OBSTACLE:
+            self.listbox_network_controls.select_row(self.listboxrow_network_specific)
+        elif value == NETCONF_DISABLED:
+            self.listbox_network_controls.select_row(self.listboxrow_network_off)
 
         if self.value == value:
             return False
