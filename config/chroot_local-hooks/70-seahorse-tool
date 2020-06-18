@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+echo 'Configuring seahorse-tool'
+
+mkdir -p /usr/lib/seahorse
+dpkg-divert --add --rename --divert /usr/lib/seahorse/seahorse-tool \
+                                    /usr/bin/seahorse-tool
+ln -s /usr/local/lib/seahorse-tool-wrapper /usr/bin/seahorse-tool
