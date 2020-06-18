@@ -217,9 +217,17 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 # We only add the setting to the list of additional settings
                 # if it was actually changed. Else it is either already added or
                 # it has the default value.
-                if changed:
+                if not changed:
+                    continue
+                settings_loaded = True
+                # Add the setting to the listbox of added settings, if it was
+                # not added before (by the user, before unlocking perrsistence).
+                if self.setting_added(setting.id):
+                    # The setting was already added, we only have to call apply()
+                    # to update the label
+                    setting.apply()
+                else:
                     self.add_setting(setting.id)
-                    settings_loaded = True
             except SettingNotFoundError as e:
                 logging.debug(e)
                 # The settings file does not exist, so we create it by
@@ -265,6 +273,10 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             self.settings[id_].listboxrow.emit("activate")
         else:
             self.run_add_setting_dialog(id_)
+
+    def setting_added(self, id_):
+        setting = self.settings.additional_settings[id_]
+        return setting.listboxrow in self.listbox_settings.get_children()
 
     def show(self):
         super().show()
