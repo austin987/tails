@@ -53,5 +53,8 @@ network_setting_path = os.path.join(settings_dir, 'tails.network')
 # File where the MAC address spoofing setting is stored
 macspoof_setting_path = os.path.join(settings_dir, 'tails.macspoof')
 
+# File where the unsafe browser setting is stored
+unsafe_browser_setting_path = os.path.join(settings_dir, 'tails.unsafe-browser')
+
 # World-readable file where Tails persistence status is stored
 persistence_state_file = '/var/lib/live/config/tails.persistence'

@@ -47,6 +47,12 @@ class AdditionalSetting(GreeterSetting):
     def load(self) -> bool:
         pass
 
+    def cb_listbox_button_press(self, widget, event, user_data=None):
+        # On double-click: Close the window and apply chosen setting
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.close_window(Gtk.ResponseType.YES)
+        return False
+
 
 class AdminSettingUI(AdditionalSetting):
     @property
@@ -194,7 +200,7 @@ class MACSpoofSettingUI(AdditionalSetting):
         self.image_macspoof_off = self.builder.get_object('image_macspoof_off')
         self.listbox_macspoof_controls = self.builder.get_object('listbox_macspoof_controls')
         self.listbox_macspoof_controls.connect('row-activated', self.cb_listbox_macspoof_row_activated)
-        self.listbox_macspoof_controls.connect('button-press-event', self.cb_listbox_macspoof_button_press)
+        self.listbox_macspoof_controls.connect('button-press-event', self.cb_listbox_button_press)
         self.listboxrow_macspoof_on = self.builder.get_object('listboxrow_macspoof_on')
         self.listboxrow_macspoof_off = self.builder.get_object('listboxrow_macspoof_off')
 
@@ -229,12 +235,6 @@ class MACSpoofSettingUI(AdditionalSetting):
             self.popover.close(Gtk.ResponseType.YES)
         return False
 
-    def cb_listbox_macspoof_button_press(self, widget, event, user_data=None):
-        # On double-click: Close the window and apply chosen setting
-        if event.type == Gdk.EventType._2BUTTON_PRESS:
-            self.close_window(Gtk.ResponseType.YES)
-        return False
-
 
 class NetworkSettingUI(AdditionalSetting):
     @property
@@ -267,7 +267,7 @@ class NetworkSettingUI(AdditionalSetting):
         self.icon_network_specific_chosen = self.builder.get_object('image_network_specific')
         self.icon_network_off_chosen = self.builder.get_object('image_network_off')
         self.listbox_network_controls = self.builder.get_object('listbox_network_controls')
-        self.listbox_network_controls.connect('button-press-event', self.cb_listbox_network_button_press)
+        self.listbox_network_controls.connect('button-press-event', self.cb_listbox_button_press)
         self.listbox_network_controls.connect('row-activated', self.cb_listbox_network_row_activated)
         self.listboxrow_network_clear = self.builder.get_object('listboxrow_network_clear')
         self.listboxrow_network_specific = self.builder.get_object('listboxrow_network_specific')
@@ -299,12 +299,6 @@ class NetworkSettingUI(AdditionalSetting):
         self.value = value
         return True
 
-    def cb_listbox_network_button_press(self, widget, event, user_data=None):
-        # On double-click: Close the window and apply chosen setting
-        if event.type == Gdk.EventType._2BUTTON_PRESS:
-            self.close_window(Gtk.ResponseType.YES)
-        return False
-
     def cb_listbox_network_row_activated(self, listbox, row, user_data=None):
         self.icon_network_clear_chosen.set_visible(False)
         self.icon_network_specific_chosen.set_visible(False)
@@ -319,6 +313,69 @@ class NetworkSettingUI(AdditionalSetting):
         elif row == self.listboxrow_network_off:
             self.value = NETCONF_DISABLED
             self.icon_network_off_chosen.set_visible(True)
+
+        if self.has_popover() and self.popover.is_open():
+            self.popover.close(Gtk.ResponseType.YES)
+        return False
+
+
+class UnsafeBrowserSettingUI(AdditionalSetting):
+    @property
+    def id(self) -> str:
+        return "unsafe_browser"
+
+    @property
+    def title(self) -> str:
+        return _("_Unsafe Browser")
+
+    @property
+    def icon_name(self) -> str:
+        return "web-browser-symbolic"
+
+    @property
+    def value_for_display(self) -> str:
+        return get_on_off_string(self.unsafe_browser_enabled, default=False)
+
+    def __init__(self, unsafe_browser_setting):
+        self._unsafe_browser_setting = unsafe_browser_setting
+        self.unsafe_browser_enabled = False
+        super().__init__()
+        self.accel_key = Gdk.KEY_u
+        self.listbox_unsafe_browser_controls = self.builder.get_object('listbox_unsafe_browser_controls')
+        self.listbox_unsafe_browser_controls.connect('button-press-event', self.cb_listbox_button_press)
+        self.listbox_unsafe_browser_controls.connect('row-activated', self.cb_listbox_unsafe_browser_row_activated)
+        self.listboxrow_unsafe_browser_off = self.builder.get_object('listboxrow_unsafe_browser_off')
+        self.listboxrow_unsafe_browser_on = self.builder.get_object('listboxrow_unsafe_browser_on')
+        self.icon_unsafe_browser_off = self.builder.get_object('image_unsafe_browser_off')
+        self.icon_unsafe_browser_on = self.builder.get_object('image_unsafe_browser_on')
+        self.label_unsafe_browser_value = self.builder.get_object('label_unsafe_browser_value')
+
+    def apply(self):
+        self._unsafe_browser_setting.save(self.unsafe_browser_enabled)
+        super().apply()
+
+    def load(self) -> bool:
+        try:
+            value = self._unsafe_browser_setting.load()
+        except SettingNotFoundError:
+            raise
+
+        # Select the correct listboxrow (used in the popover)
+        if value:
+            self.listbox_unsafe_browser_controls.select_row(self.listboxrow_unsafe_browser_on)
+        else:
+            self.listbox_unsafe_browser_controls.select_row(self.listboxrow_unsafe_browser_off)
+
+        if self.unsafe_browser_enabled == value:
+            return False
+
+        self.unsafe_browser_enabled = value
+        return True
+
+    def cb_listbox_unsafe_browser_row_activated(self, listbox, row, user_data=None):
+        self.unsafe_browser_enabled = row == self.listboxrow_unsafe_browser_on
+        self.icon_unsafe_browser_on.set_visible(self.unsafe_browser_enabled)
+        self.icon_unsafe_browser_off.set_visible(not self.unsafe_browser_enabled)
 
         if self.has_popover() and self.popover.is_open():
             self.popover.close(Gtk.ResponseType.YES)

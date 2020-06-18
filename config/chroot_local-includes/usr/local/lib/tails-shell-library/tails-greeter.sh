@@ -3,6 +3,7 @@
 PERSISTENCE_SETTING='/var/lib/live/config/tails.persistence'
 MACSPOOF_SETTING='/var/lib/live/config/tails.macspoof'
 NETWORK_SETTING='/var/lib/live/config/tails.network'
+UNSAFE_BROWSER_SETTING='/var/lib/live/config/tails.unsafe-browser'
 
 _get_tg_setting() {
     if [ -r "${1}" ]; then
@@ -32,4 +33,8 @@ mac_spoof_is_enabled() {
 
 tails_netconf() {
     _get_tg_setting "${NETWORK_SETTING}" TAILS_NETCONF
+}
+
+unsafe_browser_is_enabled() {
+    [ "$(_get_tg_setting "${UNSAFE_BROWSER_SETTING}" TAILS_UNSAFE_BROWSER_ENABLED)" = true ]
 }

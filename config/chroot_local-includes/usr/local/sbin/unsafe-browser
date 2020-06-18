@@ -20,6 +20,9 @@ export TEXTDOMAIN
 # and run_browser_in_chroot().
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
+# Import unsafe_browser_is_enabled
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
 error () {
     local cli_text="${CMD}: `gettext \"error:\"` ${@}"
     local dialog_text="<b><big>`gettext \"Error\"`</big></b>
@@ -81,6 +84,13 @@ BROWSER_USER="clearnet"
 HUMAN_READABLE_NAME="`gettext \"Unsafe Browser\"`"
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
 HOME_PAGE="$(localized_tails_doc_page "${WARNING_PAGE}")"
+
+# Check if the Unsafe Browser was disabled in the startup options
+if ! unsafe_browser_is_enabled; then
+    error "`gettext \"The Unsafe Browser was not enabled on the Welcome Screen.\n\n\
+If you want to use the Unsafe Browser, you have to restart Tails and enable \
+it in the settings on the Welcome Screen.\"`"
+fi
 
 # Prevent multiple instances of the script.
 exec 9>"${LOCK}"

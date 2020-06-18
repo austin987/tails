@@ -30,8 +30,9 @@ from tailsgreeter.settings.localization_settings import LocalisationSettings
 from tailsgreeter.settings.macspoof import MacSpoofSetting
 from tailsgreeter.settings.network import NetworkSetting
 from tailsgreeter.settings.persistence import PersistenceSettings
+from tailsgreeter.settings.unsafe_browser import UnsafeBrowserSetting
 from tailsgreeter.translatable_window import TranslatableWindow
-from tailsgreeter.ui.additional_settings import AdminSettingUI, MACSpoofSettingUI, NetworkSettingUI
+from tailsgreeter.ui.additional_settings import AdminSettingUI, MACSpoofSettingUI, NetworkSettingUI, UnsafeBrowserSettingUI
 from tailsgreeter.ui.main_window import GreeterMainWindow
 from tailsgreeter.ui.region_settings import LanguageSettingUI, KeyboardSettingUI, FormatsSettingUI
 from tailsgreeter.ui.settings_collection import GreeterSettingsCollection
@@ -73,8 +74,9 @@ class GreeterApplication(object):
             usermanager_loaded_cb=self.usermanager_loaded,
         )
         self.admin_setting = AdminSetting()
-        self.network_setting = NetworkSetting()
         self.macspoof_setting = MacSpoofSetting()
+        self.network_setting = NetworkSetting()
+        self.unsafe_browser_setting = UnsafeBrowserSetting()
 
         # Initialize the settings
         self.settings = GreeterSettingsCollection(
@@ -84,6 +86,7 @@ class GreeterApplication(object):
             AdminSettingUI(self.admin_setting),
             MACSpoofSettingUI(self.macspoof_setting),
             NetworkSettingUI(self.network_setting),
+            UnsafeBrowserSettingUI(self.unsafe_browser_setting),
         )
 
         # Initialize main window
