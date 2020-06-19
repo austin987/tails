@@ -330,11 +330,14 @@ class UnsafeBrowserSettingUI(AdditionalSetting):
 
     @property
     def icon_name(self) -> str:
-        return "web-browser-symbolic"
+        return "dialog-warning"
 
     @property
     def value_for_display(self) -> str:
-        return get_on_off_string(self.unsafe_browser_enabled, default=False)
+        if self.unsafe_browser_enabled:
+            return _("Enabled")
+        else:
+            return _("Disabled (default)")
 
     def __init__(self, unsafe_browser_setting):
         self._unsafe_browser_setting = unsafe_browser_setting
