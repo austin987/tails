@@ -16,7 +16,8 @@ if TYPE_CHECKING:
 
 
 class PersistentStorage(object):
-    def __init__(self, persistence_setting: "PersistenceSettings", load_settings_cb, apply_settings_cb: Callable, builder):
+    def __init__(self, persistence_setting: "PersistenceSettings",
+                 load_settings_cb, apply_settings_cb: Callable, builder):
         self.persistence_setting = persistence_setting
         self.load_settings_cb = load_settings_cb
         self.apply_settings_cb = apply_settings_cb
@@ -33,7 +34,8 @@ class PersistentStorage(object):
         self.spinner_storage_unlock = builder.get_object('spinner_storage_unlock')
         self.button_start = builder.get_object("button_start")
 
-        self.checkbutton_storage_show_passphrase.connect('toggled', self.cb_checkbutton_storage_show_passphrase_toggled)
+        self.checkbutton_storage_show_passphrase.connect(
+            'toggled', self.cb_checkbutton_storage_show_passphrase_toggled)
 
         self.box_storage.set_focus_chain([
             self.box_storage_unlock,
