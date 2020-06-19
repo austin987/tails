@@ -1,11 +1,12 @@
 import logging
 import gi
 import os
+import sh
 import threading
 from typing import TYPE_CHECKING, Callable
 
 from tailsgreeter.ui import _
-from tailsgreeter.config import settings_dir
+from tailsgreeter.config import settings_dir, persistent_settings_dir, unsafe_browser_setting_filename
 
 gi.require_version('GLib', '2.0')
 gi.require_version('Gtk', '3.0')
@@ -114,6 +115,12 @@ class PersistentStorage(object):
         self.image_storage_state.set_visible(True)
         self.box_storage_unlocked.set_visible(True)
         self.button_start.set_sensitive(True)
+
+        # Cherry-pick the settings we want to load from the persistent settings
+        # (currently only the Unsafe Browser setting)
+        sh.cp("-a",
+              os.path.join(persistent_settings_dir, unsafe_browser_setting_filename),
+              settings_dir)
 
         if not os.listdir(settings_dir):
             self.apply_settings_cb()

@@ -35,6 +35,9 @@ system_locale_dir = '/usr/share/locale/'
 # Directory where the Greeter settings are stored
 settings_dir = '/var/lib/gdm3/settings'
 
+# Directory where the persistent Greeter settings are stored
+persistent_settings_dir = '/var/lib/gdm3/settings/persistent'
+
 # File where the session language setting is stored
 language_setting_path = os.path.join(settings_dir, 'tails.language')
 
@@ -54,7 +57,8 @@ network_setting_path = os.path.join(settings_dir, 'tails.network')
 macspoof_setting_path = os.path.join(settings_dir, 'tails.macspoof')
 
 # File where the unsafe browser setting is stored
-unsafe_browser_setting_path = os.path.join(settings_dir, 'tails.unsafe-browser')
+unsafe_browser_setting_filename = 'tails.unsafe-browser'
+unsafe_browser_setting_path = os.path.join(settings_dir, unsafe_browser_setting_filename)
 
 # World-readable file where Tails persistence status is stored
 persistence_state_file = '/var/lib/live/config/tails.persistence'

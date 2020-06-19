@@ -20,9 +20,11 @@ import logging
 from typing import TYPE_CHECKING
 import gi
 import os
+import sh
 
 import tailsgreeter                                             # NOQA: E402
 import tailsgreeter.config                                      # NOQA: E402
+from tailsgreeter.config import settings_dir, persistent_settings_dir, unsafe_browser_setting_filename
 import tailsgreeter.utils                                       # NOQA: E402
 from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.translatable_window import TranslatableWindow
@@ -348,6 +350,12 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         return False
 
     def cb_button_start_clicked(self, widget, user_data=None):
+        # Cherry-pick the settings we want to persist
+        # (currently only the Unsafe Browser setting)
+        sh.cp("-a",
+              os.path.join(settings_dir, unsafe_browser_setting_filename),
+              persistent_settings_dir)
+
         self.greeter.login()
         return False
 

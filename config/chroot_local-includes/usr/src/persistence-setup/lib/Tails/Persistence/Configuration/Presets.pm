@@ -75,7 +75,7 @@ method _build__presets () {
             enabled     => 0,
             atoms_args  => [
                 {
-                    destination => '/var/lib/gdm3/settings',
+                    destination => '/var/lib/gdm3/settings/persistent',
                     options     => [ 'source=greeter-settings' ],
                 },
             ]

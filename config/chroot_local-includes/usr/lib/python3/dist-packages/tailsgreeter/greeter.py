@@ -22,7 +22,7 @@ import gi
 import logging
 import os
 
-from tailsgreeter.config import settings_dir
+from tailsgreeter.config import settings_dir, persistent_settings_dir
 from tailsgreeter.gdmclient import GdmClient
 from tailsgreeter.settings import localization
 from tailsgreeter.settings.admin import AdminSetting
@@ -65,6 +65,9 @@ class GreeterApplication(object):
 
         # Create the settings directory
         os.makedirs(settings_dir, mode=0o700, exist_ok=True)
+
+        # Create the persistent settings directory
+        os.makedirs(persistent_settings_dir, mode=0o700, exist_ok=True)
 
         # Load models
         self.gdmclient = GdmClient(session_opened_cb=self.close_app)
