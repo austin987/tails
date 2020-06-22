@@ -378,6 +378,13 @@ Given /^I set an administration password$/ do
   @screen.press('Return')
 end
 
+Given /^I allow the Unsafe Browser to be started$/ do
+  open_greeter_additional_settings
+  @screen.wait('TailsGreeterUnsafeBrowser.png', 20).click
+  @screen.wait('TailsGreeterUnsafeBrowserEnable.png', 20).click
+  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
+end
+
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{$language}.png"
   @screen.wait(desktop_started_picture, 180)

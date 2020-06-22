@@ -12,5 +12,5 @@ Feature: Localization
     Then the support documentation page opens in Tor Browser
 
   Scenario: The Unsafe Browser can be used in all languages supported in Tails
-    Given I have started Tails from DVD and logged in and the network is connected
+    Given I have started Tails from DVD and logged in with the Unsafe Browser enabled and the network is connected
     Then the Unsafe Browser works in all supported languages

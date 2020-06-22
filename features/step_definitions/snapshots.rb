@@ -62,6 +62,28 @@ CHECKPOINTS =
       ],
     },
 
+    'no-network-logged-in-unsafe-browser'        => {
+      temporary:         true,
+      description:       'I have started Tails from DVD without network and logged in with the Unsafe Browser enabled',
+      parent_checkpoint: 'tails-greeter',
+      steps:             [
+        'I allow the Unsafe Browser to be started',
+        'I log in to a new session',
+      ],
+    },
+
+    'with-network-logged-in-unsafe-browser'      => {
+      temporary:         true,
+      description:       'I have started Tails from DVD and logged in with the Unsafe Browser enabled and the network is connected',
+      parent_checkpoint: 'no-network-logged-in-unsafe-browser',
+      steps:             [
+        'the network is plugged',
+        'Tor is ready',
+        'all notifications have disappeared',
+        'available upgrades have been checked',
+      ],
+    },
+
     'usb-install-tails-greeter'                  => {
       description:       "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen",
       parent_checkpoint: nil,
