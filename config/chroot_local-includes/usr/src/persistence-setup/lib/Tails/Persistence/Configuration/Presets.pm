@@ -67,7 +67,7 @@ method _build__presets () {
         },
         {
             id          => 'GreeterSettings',
-            name        => $self->encoding->decode(gettext(q{Settings on the Welcome Screen})),
+            name        => $self->encoding->decode(gettext(q{Welcome Screen})),
             description => $self->encoding->decode(gettext(
                 q{Language, administration password, and additional settings}
             )),
