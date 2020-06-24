@@ -81,10 +81,10 @@ mac_spoof_panic() {
     if nic_exists "${nic}"; then
         log "Failed to unload module ${module} of NIC ${nic}."
         stop_and_disable_NM
-        notify_panic_failure "${nic}" "${nic_name}"
+        notify_panic_failure "${nic}" "${nic_name}" &
     else
         log "Successfully unloaded module ${module} of NIC ${nic}."
-        notify_panic_success "${nic}" "${nic_name}"
+        notify_panic_success "${nic}" "${nic_name}" &
     fi
 }
 
