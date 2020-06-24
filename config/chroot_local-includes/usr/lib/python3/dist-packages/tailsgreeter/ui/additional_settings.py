@@ -330,7 +330,7 @@ class UnsafeBrowserSettingUI(AdditionalSetting):
 
     @property
     def icon_name(self) -> str:
-        return "dialog-warning"
+        return "dialog-warning-symbolic"
 
     @property
     def value_for_display(self) -> str:
