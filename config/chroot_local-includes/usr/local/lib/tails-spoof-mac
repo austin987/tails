@@ -149,6 +149,11 @@ then
         log "Panic mode failed for NIC ${NIC}."
         stop_and_disable_NM
     fi
+    # Wait for the notification subprocess to exit before quitting to
+    # prevent them being interupted by underlying process manager (udev)
+    # once we quit. Note that it could make us wait indefinitely.
+    # Fortunately, udev will interupts rules tasks after 120 seconds.
+    wait
     exit 1
 fi
 
