@@ -1,3 +1,4 @@
+import logging
 import os
 import shlex
 from typing import Dict, Union
@@ -23,7 +24,8 @@ def read_settings(filename: str) -> Dict[str, str]:
     for line in lines:
         try:
             key, value = line.split('=', 1)
-        except ValueError:
+        except ValueError as e:
+            logging.warning("Error parsing settings file \"%s\", line \"%s\": %s", filename, line, e)
             continue
         settings[key] = value.rstrip()
     return settings
