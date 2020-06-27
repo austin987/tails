@@ -273,9 +273,9 @@ class NetworkSettingUI(AdditionalSetting):
         self.listbox_network_controls = self.builder.get_object('listbox_network_controls')
         self.listbox_network_controls.connect('button-press-event', self.cb_listbox_button_press)
         self.listbox_network_controls.connect('row-activated', self.cb_listbox_network_row_activated)
-        self.listboxrow_network_clear = self.builder.get_object('listboxrow_network_clear')
-        self.listboxrow_network_specific = self.builder.get_object('listboxrow_network_specific')
-        self.listboxrow_network_off = self.builder.get_object('listboxrow_network_off')
+        self.listboxrow_netconf_direct = self.builder.get_object('listboxrow_netconf_direct')
+        self.listboxrow_netconf_obstacle = self.builder.get_object('listboxrow_netconf_obstacle')
+        self.listboxrow_netconf_disabled = self.builder.get_object('listboxrow_netconf_disabled')
 
     def apply(self):
         self._network_setting.save(self.value)
@@ -291,11 +291,11 @@ class NetworkSettingUI(AdditionalSetting):
 
         # Select the correct listboxrow (used in the popover)
         if value == NETCONF_DIRECT:
-            self.listbox_network_controls.select_row(self.listboxrow_network_clear)
+            self.listbox_network_controls.select_row(self.listboxrow_netconf_direct)
         elif value == NETCONF_OBSTACLE:
-            self.listbox_network_controls.select_row(self.listboxrow_network_specific)
+            self.listbox_network_controls.select_row(self.listboxrow_netconf_obstacle)
         elif value == NETCONF_DISABLED:
-            self.listbox_network_controls.select_row(self.listboxrow_network_off)
+            self.listbox_network_controls.select_row(self.listboxrow_netconf_disabled)
 
         if self.value == value:
             return False
@@ -308,13 +308,13 @@ class NetworkSettingUI(AdditionalSetting):
         self.icon_network_specific_chosen.set_visible(False)
         self.icon_network_off_chosen.set_visible(False)
 
-        if row == self.listboxrow_network_clear:
+        if row == self.listboxrow_netconf_direct:
             self.value = NETCONF_DIRECT
             self.icon_network_clear_chosen.set_visible(True)
-        elif row == self.listboxrow_network_specific:
+        elif row == self.listboxrow_netconf_obstacle:
             self.value = NETCONF_OBSTACLE
             self.icon_network_specific_chosen.set_visible(True)
-        elif row == self.listboxrow_network_off:
+        elif row == self.listboxrow_netconf_disabled:
             self.value = NETCONF_DISABLED
             self.icon_network_off_chosen.set_visible(True)
 
