@@ -69,7 +69,7 @@ class AdminSettingUI(AdditionalSetting):
 
     @property
     def value_for_display(self) -> str:
-        return get_on_off_string(self.password, default=None)
+        return get_on_off_string(self.new_password or self.use_saved_password, default=None)
 
     def update_check_icon(self):
         password = self.password_entry.get_text()
@@ -89,7 +89,8 @@ class AdminSettingUI(AdditionalSetting):
 
     def __init__(self, admin_setting: "AdminSetting"):
         self._admin_setting = admin_setting
-        self.password = None
+        self.new_password = ""
+        self.use_saved_password = False
         super().__init__()
         self.accel_key = Gdk.KEY_a
 
@@ -110,7 +111,7 @@ class AdminSettingUI(AdditionalSetting):
 
     def cb_popover_opened(self, popover, user_data=None):
         self.password_verify_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
-        password_already_set = bool(self.password)
+        password_already_set = bool(self.new_password) or self.use_saved_password
         self.box_admin_password.set_visible(not password_already_set)
         self.box_admin_verify.set_visible(not password_already_set)
         self.button_admin_disable.set_visible(password_already_set)
@@ -123,15 +124,15 @@ class AdminSettingUI(AdditionalSetting):
         return password == self.password_verify_entry.get_text()
 
     def apply(self):
-        if self.password is True:
+        if self.use_saved_password:
             # This should only be the case if the persistent storage was
             # unlocked and a persistent password settings file was found.
             # In that case, we just want to keep the existing settings file.
             pass
-        elif self.password:
+        elif self.new_password:
             # Write the password to a file from which it will be set
             # as the amnesia password when the greeter is closed.
-            self._admin_setting.save(self.password)
+            self._admin_setting.save(self.new_password)
         else:
             self._admin_setting.delete()
         super().apply()
@@ -141,14 +142,15 @@ class AdminSettingUI(AdditionalSetting):
             self._admin_setting.load()
         except SettingNotFoundError:
             raise
-        self.password = True
+        self.use_saved_password = True
         return True
 
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
         passwords_match = self.passwords_match()
         if passwords_match:
-            self.password = self.password_entry.get_text()
+            self.new_password = self.password_entry.get_text()
+            self.use_saved_password = False
         if self.dialog:
             self.dialog.button_add.set_sensitive(passwords_match)
         return False
@@ -160,12 +162,14 @@ class AdminSettingUI(AdditionalSetting):
             self.password_verify_entry.grab_focus()
             return False
 
-        self.password = self.password_entry.get_text()
+        self.new_password = self.password_entry.get_text()
+        self.use_saved_password = False
         self.close_window(Gtk.ResponseType.YES)
         return False
 
     def cb_button_admin_disable_clicked(self, widget, user_data=None):
-        self.password = None
+        self.new_password = None
+        self.use_saved_password = False
         self.password_entry.set_text("")
         self.password_verify_entry.set_text("")
 
