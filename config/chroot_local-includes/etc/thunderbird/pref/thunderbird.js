@@ -364,8 +364,8 @@ pref("media.cache_size", 0);
 // Disable CSS :visited selector.
 pref("layout.css.visited_links_enabled", false);
 
-// Disable downloadable fonts.
-pref("gfx.downloadable_fonts.enabled", false);
+// downloadable fonts are NOT disabled: disabling them cause bug #17328: "Find in Message" stops working
+//pref("gfx.downloadable_fonts.enabled", false);
 
 // Disable third-party images.
 pref("permissions.default.image", 3);
