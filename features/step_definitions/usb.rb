@@ -588,6 +588,9 @@ Then /^all persistent directories(| from the old Tails version) have safe access
       if dest.start_with?("/home/#{LIVE_USER}")
         expected_perms = '700'
         expected_owner = LIVE_USER
+      elsif File.basename(src) == 'greeter-settings'
+        expected_perms = '700'
+        expected_owner = 'Debian-gdm'
       else
         expected_perms = '755'
         expected_owner = 'root'

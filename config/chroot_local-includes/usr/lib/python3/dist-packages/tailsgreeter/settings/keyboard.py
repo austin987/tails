@@ -1,8 +1,11 @@
-import logging
 import gi
+import logging
 
+import tailsgreeter.config
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.settings.localization import LocalizationSetting, ln_iso639_tri, \
     ln_iso639_2_T_to_B, language_from_locale, country_from_locale
+from tailsgreeter.settings.utils import read_settings, write_settings
 
 gi.require_version('Gio', '2.0')
 gi.require_version('GLib', '2.0')
@@ -17,7 +20,40 @@ class KeyboardSetting(LocalizationSetting):
     def __init__(self):
         super().__init__()
         self.xkbinfo = GnomeDesktop.XkbInfo()
-        self.value = 'us'
+        self.settings_file = tailsgreeter.config.keyboard_setting_path
+
+    def save(self, value: str, is_default: bool):
+        try:
+            layout, variant = value.split('+')
+        except ValueError:
+            layout = value
+            variant = ''
+
+        write_settings(self.settings_file, {
+            # The default value from /etc/default/keyboard
+            'TAILS_XKBMODEL': 'pc105',
+            'TAILS_XKBLAYOUT': layout,
+            'TAILS_XKBVARIANT': variant,
+            'IS_DEFAULT': is_default,
+        })
+
+    def load(self) -> (str, bool):
+        try:
+            settings = read_settings(self.settings_file)
+        except FileNotFoundError:
+            raise SettingNotFoundError("No persistent keyboard settings file found (path: %s)" % self.settings_file)
+
+        keyboard_layout = settings.get('TAILS_XKBLAYOUT')
+        if keyboard_layout is None:
+            raise SettingNotFoundError("No keyboard setting found in settings file (path: %s)" % self.settings_file)
+
+        keyboard_variant = settings.get('TAILS_XKBVARIANT')
+        if keyboard_variant:
+            keyboard_layout += "+" + keyboard_variant
+
+        is_default = settings.get('IS_DEFAULT') == 'true'
+        logging.debug("Loaded keyboard setting '%s' (is default: %s)", keyboard_layout, is_default)
+        return keyboard_layout, is_default
 
     def get_tree(self, layout_codes=None) -> Gtk.TreeStore:
         if not layout_codes:
@@ -40,19 +76,14 @@ class KeyboardSetting(LocalizationSetting):
                     treestore.set(treeiter_layout, 1, self._layout_name(layout_code))
         return treestore
 
-    def get_name(self) -> str:
-        return self._layout_name(self.get_value())
+    def get_name(self, value: str) -> str:
+        return self._layout_name(value)
 
     def get_all(self) -> [str]:
         """Return a list of all keyboard layout codes
 
         """
         return self.xkbinfo.get_all_layouts()
-
-    def set_value(self, layout, chosen_by_user=False):
-        super().set_value(layout)
-        self.value_changed_by_user = chosen_by_user
-        self._apply_layout_to_current_screen()
 
     def _layout_name(self, layout_code) -> str:
         layout_exists, display_name, short_name, xkb_layout, xkb_variant = \
@@ -153,13 +184,7 @@ class KeyboardSetting(LocalizationSetting):
                 layouts = filtered_layouts
         return layouts
 
-    def on_language_changed(self, locale: str):
-        """Set the keyboard layout according to the new language"""
-
-        # Don't overwrite a user chosen value
-        if self.value_changed_by_user:
-            return
-
+    def get_layout_for_locale(self, locale: str):
         language = language_from_locale(locale)
         country = country_from_locale(locale)
 
@@ -204,11 +229,10 @@ class KeyboardSetting(LocalizationSetting):
         else:
             default_layout = 'us'
             logging.debug("Using us as fallback default layout")
-        self.set_value(default_layout)
+        return default_layout
 
-    def _apply_layout_to_current_screen(self):
-        layout = self.get_value()
-        logging.debug("layout=%s", layout)
+    def apply_layout_to_current_screen(self, layout: str):
+        logging.debug("applying keyboard layout '%s'", layout)
 
         settings = Gio.Settings('org.gnome.desktop.input-sources')
         settings.set_value('sources', GLib.Variant('a(ss)', [('xkb', layout)]))

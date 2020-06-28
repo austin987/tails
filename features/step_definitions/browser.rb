@@ -1,4 +1,4 @@
-When /^I start the Unsafe Browser(?: through the GNOME menu)?$/ do
+When /^I (?:try to )?start the Unsafe Browser(?: through the GNOME menu)?$/ do
   step 'I start "Unsafe Browser" via GNOME Activities Overview'
 end
 

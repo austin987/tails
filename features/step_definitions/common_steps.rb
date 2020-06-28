@@ -378,6 +378,13 @@ Given /^I set an administration password$/ do
   @screen.press('Return')
 end
 
+Given /^I allow the Unsafe Browser to be started$/ do
+  open_greeter_additional_settings
+  @screen.wait('TailsGreeterUnsafeBrowser.png', 20).click
+  @screen.wait('TailsGreeterUnsafeBrowserEnable.png', 20).click
+  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
+end
+
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{$language}.png"
   @screen.wait(desktop_started_picture, 180)
@@ -1194,4 +1201,11 @@ end
 When /^I disable the (.*) (system|user) unit$/ do |unit, scope|
   options = scope == 'system' ? '' : '--global'
   $vm.execute_successfully("systemctl #{options} disable '#{unit}'")
+end
+
+# Since the Unsafe Browser is disabled in most snapshots, this is
+# a little "cheat" to enable it any way.
+Given /^I magically allow the Unsafe Browser to be started$/ do
+  $vm.file_overwrite('/var/lib/live/config/tails.unsafe-browser',
+                     'TAILS_UNSAFE_BROWSER_ENABLED=true')
 end
