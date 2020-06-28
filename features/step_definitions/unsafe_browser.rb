@@ -29,7 +29,12 @@ end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
   failed = []
-  supported_torbrowser_languages.sample(3).each do |lang|
+  # We always want the locale which we verify the startup page warning
+  # for ...
+  languages = ['fr_FR.UTF-8']
+  # ... then we just pick two *other* random locales.
+  languages += (supported_torbrowser_languages - languages).sample(2)
+  languages.each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
       step "the Unsafe Browser has started in the \"#{lang}\" locale"
@@ -156,6 +161,14 @@ Then /^the Unsafe Browser complains that no DNS server is configured$/ do
     Dogtail::Application.new('zenity')
     .child(roleName: 'label')
     .text['No DNS server was obtained']
+  )
+end
+
+Then /^the Unsafe Browser complains that it is disabled$/ do
+  assert_not_nil(
+    Dogtail::Application.new('zenity')
+    .child(roleName: 'label')
+    .text['The Unsafe Browser was not enabled in the Welcome Screen']
   )
 end
 

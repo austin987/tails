@@ -13,4 +13,5 @@ Feature: Localization
 
   Scenario: The Unsafe Browser can be used in all languages supported in Tails
     Given I have started Tails from DVD and logged in and the network is connected
+    And I magically allow the Unsafe Browser to be started
     Then the Unsafe Browser works in all supported languages

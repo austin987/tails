@@ -1,8 +1,10 @@
+import gi
 import logging
 
-import gi
-
+import tailsgreeter.config
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.settings.localization import LocalizationSetting, language_from_locale, country_from_locale
+from tailsgreeter.settings.utils import read_settings, write_settings
 
 gi.require_version('GObject', '2.0')
 gi.require_version('GnomeDesktop', '3.0')
@@ -13,8 +15,28 @@ from gi.repository import GObject, GnomeDesktop, Gtk
 class FormatsSetting(LocalizationSetting):
     def __init__(self, language_codes: [str]):
         super().__init__()
-        self.value = 'en_US'
         self.locales_per_country = self._make_locales_per_country_dict(language_codes)
+        self.settings_file = tailsgreeter.config.formats_setting_path
+
+    def save(self, locale: str, is_default: bool):
+        write_settings(self.settings_file, {
+            'TAILS_FORMATS': locale,
+            'IS_DEFAULT': is_default,
+        })
+
+    def load(self) -> (str, bool):
+        try:
+            settings = read_settings(self.settings_file)
+        except FileNotFoundError:
+            raise SettingNotFoundError("No persistent formats settings file found (path: %s)" % self.settings_file)
+
+        formats = settings.get('TAILS_FORMATS')
+        if formats is None:
+            raise SettingNotFoundError("No formats setting found in settings file (path: %s)" % self.settings_file)
+
+        is_default = settings.get('IS_DEFAULT') == 'true'
+        logging.debug("Loaded formats setting '%s' (is default: %s)", formats, is_default)
+        return formats, is_default
 
     def get_tree(self) -> Gtk.TreeStore:
         treestore = Gtk.TreeStore(GObject.TYPE_STRING,  # id
@@ -41,8 +63,8 @@ class FormatsSetting(LocalizationSetting):
                     treestore.set(treeiter_locale, 1, self._locale_name(locale))
         return treestore
 
-    def get_name(self) -> str:
-        return self._locale_name(self.get_value())
+    def get_name(self, locale: str) -> str:
+        return self._locale_name(locale)
 
     def get_default_locale(self, country_code=None) -> str:
         """Return default locale for given country
@@ -117,12 +139,3 @@ class FormatsSetting(LocalizationSetting):
             if language_code not in res[country_code]:
                 res[country_code].append(language_code)
         return res
-
-    def on_language_changed(self, language_code: str):
-        """Set the formats according to the new language"""
-        # Don't overwrite user chosen values
-        if self.value_changed_by_user:
-            return
-
-        logging.debug("setting formats to %s", language_code)
-        self.set_value(language_code)

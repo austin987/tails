@@ -45,7 +45,14 @@ Then /^I create a persistent storage and activate the Additional Software featur
 end
 
 Then /^The Additional Software persistence option is enabled$/ do
-  @screen.wait('ASPPersistenceSetupOptionEnabled.png', 60)
+  @screen.wait('PersistenceWizardPresets.png', 60)
+  begin
+    @screen.find('ASPPersistenceSetupOptionEnabled.png')
+  rescue FindFailed
+    # We might have to scroll down to find it
+    @screen.press('Page_Down')
+    @screen.wait('ASPPersistenceSetupOptionEnabled.png', 10)
+  end
 end
 
 Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |package|

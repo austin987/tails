@@ -20,7 +20,9 @@
 
 import gi
 import logging
+import os
 
+from tailsgreeter.config import settings_dir, persistent_settings_dir
 from tailsgreeter.gdmclient import GdmClient
 from tailsgreeter.settings import localization
 from tailsgreeter.settings.admin import AdminSetting
@@ -28,8 +30,9 @@ from tailsgreeter.settings.localization_settings import LocalisationSettings
 from tailsgreeter.settings.macspoof import MacSpoofSetting
 from tailsgreeter.settings.network import NetworkSetting
 from tailsgreeter.settings.persistence import PersistenceSettings
+from tailsgreeter.settings.unsafe_browser import UnsafeBrowserSetting
 from tailsgreeter.translatable_window import TranslatableWindow
-from tailsgreeter.ui.additional_settings import AdminSettingUI, MACSpoofSettingUI, NetworkSettingUI
+from tailsgreeter.ui.additional_settings import AdminSettingUI, MACSpoofSettingUI, NetworkSettingUI, UnsafeBrowserSettingUI
 from tailsgreeter.ui.main_window import GreeterMainWindow
 from tailsgreeter.ui.region_settings import LanguageSettingUI, KeyboardSettingUI, FormatsSettingUI
 from tailsgreeter.ui.settings_collection import GreeterSettingsCollection
@@ -60,30 +63,41 @@ class GreeterApplication(object):
                 "/org/gnome/SessionManager",
                 "org.gnome.SessionManager")
 
+        # Create the settings directory
+        os.makedirs(settings_dir, mode=0o700, exist_ok=True)
+
+        # Create the persistent settings directory
+        os.makedirs(persistent_settings_dir, mode=0o700, exist_ok=True)
+
         # Load models
         self.gdmclient = GdmClient(session_opened_cb=self.close_app)
 
         persistence = PersistenceSettings()
         self.localisationsettings = LocalisationSettings(
             usermanager_loaded_cb=self.usermanager_loaded,
-            locale_selected_cb=self.on_language_changed
         )
         self.admin_setting = AdminSetting()
-        self.network_setting = NetworkSetting()
         self.macspoof_setting = MacSpoofSetting()
+        self.network_setting = NetworkSetting()
+        self.unsafe_browser_setting = UnsafeBrowserSetting()
 
         # Initialize the settings
-        settings = GreeterSettingsCollection(
-            LanguageSettingUI(self.localisationsettings.language),
+        self.settings = GreeterSettingsCollection(
+            LanguageSettingUI(self.localisationsettings.language, self.on_language_changed),
             KeyboardSettingUI(self.localisationsettings.keyboard),
             FormatsSettingUI(self.localisationsettings.formats),
             AdminSettingUI(self.admin_setting),
             MACSpoofSettingUI(self.macspoof_setting),
             NetworkSettingUI(self.network_setting),
+            UnsafeBrowserSettingUI(self.unsafe_browser_setting),
         )
 
         # Initialize main window
-        self.mainwindow = GreeterMainWindow(self, persistence, settings)
+        self.mainwindow = GreeterMainWindow(self, persistence, self.settings)
+
+        # Apply the default settings
+        for setting in self.settings:
+            setting.apply()
 
         # Inhibit the session being marked as idle
         self.inhibit_idle()
@@ -95,13 +109,6 @@ class GreeterApplication(object):
     def login(self):
         """Login GDM to the server"""
         logging.debug("login called")
-
-        # Apply settings
-        self.localisationsettings.apply_to_upcoming_session()
-        self.admin_setting.apply_to_upcoming_session()
-        self.macspoof_setting.apply_to_upcoming_session()
-        self.network_setting.apply_to_upcoming_session()
-
         self.mainwindow.hide()
         self.gdmclient.do_login()
 
@@ -114,8 +121,9 @@ class GreeterApplication(object):
 
     def on_language_changed(self, locale_code: str):
         """Translate to the given locale"""
-        self.localisationsettings.formats.on_language_changed(locale_code)  # XXX: notify
-        self.localisationsettings.keyboard.on_language_changed(locale_code)  # XXX: notify
+        for setting in self.settings.region_settings:
+            setting.on_language_changed(locale_code)
+
         self.translate_to(locale_code)
         self.mainwindow.current_language = localization.language_from_locale(locale_code)
 
