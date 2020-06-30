@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
@@ -19,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'date'
+require 'English'
 require 'libvirt'
 require 'open3'
 require 'rbconfig'
@@ -27,10 +27,10 @@ require 'uri'
 require_relative 'vagrant/lib/tails_build_settings'
 
 # Path to the directory which holds our Vagrantfile
-VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
+VAGRANT_PATH = File.expand_path('vagrant', __dir__)
 
 # Branches that are considered 'stable' (used to select SquashFS compression)
-STABLE_BRANCH_NAMES = ['stable', 'testing']
+STABLE_BRANCH_NAMES = ['stable', 'testing'].freeze
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
@@ -47,13 +47,13 @@ EXPORTED_VARIABLES = [
   'GIT_COMMIT',
   'GIT_REF',
   'BASE_BRANCH_GIT_COMMIT',
-]
+].freeze
 ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
 # In-VM proxy URL
-INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
+INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142".freeze
 
 ENV['ARTIFACTS'] ||= '.'
 
@@ -62,31 +62,31 @@ ENV['APT_SNAPSHOTS_SERIALS'] ||= ''
 class CommandError < StandardError
   attr_reader :status, :stderr
 
-  def initialize(message = nil, opts = {})
+  def initialize(message, **opts)
     opts[:status] ||= nil
     opts[:stderr] ||= nil
     @status = opts[:status]
     @stderr = opts[:stderr]
-    super(message % {status: @status, stderr: @stderr})
+    super(format(message, status: @status, stderr: @stderr))
   end
 end
 
 def run_command(*args)
   Process.wait Kernel.spawn(*args)
-  if $?.exitstatus != 0
-    raise CommandError.new("command #{args} failed with exit status " +
-                           "%{status}", status: $?.exitstatus)
-  end
+  return if $CHILD_STATUS.exitstatus.zero?
+
+  raise CommandError.new("command #{args} failed with exit status %<status>s",
+                         status: $CHILD_STATUS.exitstatus)
 end
 
 def capture_command(*args)
   stdout, stderr, proc_status = Open3.capture3(*args)
   if proc_status.exitstatus != 0
-    raise CommandError.new("command #{args} failed with exit status " +
-                           "%{status}: %{stderr}",
+    raise CommandError.new("command #{args} failed with exit status " \
+                           '%<status>s: %<stderr>s',
                            stderr: stderr, status: proc_status.exitstatus)
   end
-  return stdout, stderr
+  [stdout, stderr]
 end
 
 def git_helper(*args)
@@ -95,15 +95,11 @@ def git_helper(*args)
   status = 0
   stdout = ''
   begin
-    stdout, _ = capture_command('auto/scripts/utils.sh', *args)
+    stdout, = capture_command('auto/scripts/utils.sh', *args)
   rescue CommandError => e
     status = e.status
   end
-  if question
-    return status == 0
-  else
-    return stdout.chomp
-  end
+  question ? status.zero? : stdout.chomp
 end
 
 class VagrantCommandError < CommandError
@@ -112,18 +108,18 @@ end
 # Runs the vagrant command, letting stdout/stderr through. Throws an
 # exception unless the vagrant command succeeds.
 def run_vagrant(*args)
-  run_command('vagrant', *args, :chdir => './vagrant')
+  run_command('vagrant', *args, chdir: './vagrant')
 rescue CommandError => e
-  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
+  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " \
                              "status #{e.status}")
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
 # returns [stdout, stderr, Process::Status].
 def capture_vagrant(*args)
-  capture_command('vagrant', *args, :chdir => './vagrant')
+  capture_command('vagrant', *args, chdir: './vagrant')
 rescue CommandError => e
-  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
+  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " \
                              "status #{e.status}: #{e.stderr}")
 end
 
@@ -136,8 +132,9 @@ end
 def vagrant_ssh_config(key)
   # Cache results
   if $vagrant_ssh_config.nil?
-    $vagrant_ssh_config = capture_vagrant('ssh-config').first.split("\n") \
-                           .map { |line| line.strip.split(/\s+/, 2) } .to_h
+    $vagrant_ssh_config = capture_vagrant('ssh-config')
+                          .first.split("\n") \
+                          .map { |line| line.strip.split(/\s+/, 2) } .to_h
     # The path in the ssh-config output is quoted, which is not what
     # is expected outside of a shell, so let's get rid of the quotes.
     $vagrant_ssh_config['IdentityFile'].gsub!(/^"|"$/, '')
@@ -150,16 +147,16 @@ def current_vm_cpus
 end
 
 def vm_state
-  out, _ = capture_vagrant('status')
+  out, = capture_vagrant('status')
   status_line = out.split("\n")[2]
   if    status_line['not created']
-    return :not_created
+    :not_created
   elsif status_line['shutoff']
-    return :poweroff
+    :poweroff
   elsif status_line['running']
-    return :running
+    :running
   else
-    raise "could not determine VM state"
+    raise 'could not determine VM state'
   end
 end
 
@@ -169,7 +166,7 @@ def enough_free_host_memory_for_ram_build?
   begin
     usable_free_mem = `free`.split[12].to_i
     usable_free_mem > VM_MEMORY_FOR_RAM_BUILDS * 1024
-  rescue
+  rescue StandardError
     false
   end
 end
@@ -190,41 +187,38 @@ def enough_free_memory_for_ram_build?
   end
 end
 
-def is_release?
+def releasing?
   git_helper('git_on_a_tag?')
 end
 
 def system_cpus
-  return nil unless RbConfig::CONFIG['host_os'] =~ /linux/i
+  return unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
   begin
     File.read('/proc/cpuinfo').scan(/^processor\s+:/).count
-  rescue
+  rescue StandardError
     nil
   end
 end
 
-ENV['TAILS_WEBSITE_CACHE'] = is_release? ? '0' : '1'
+ENV['TAILS_WEBSITE_CACHE'] = releasing? ? '0' : '1'
 
 task :parse_build_options do
   options = []
 
   # Default to in-memory builds if there is enough RAM available
   options << 'ram' if enough_free_memory_for_ram_build?
-
   # Default to build using the in-VM proxy
   options << 'vmproxy'
-
   # Default to fast compression on development branches
-  options << 'fastcomp' unless is_release?
-
+  options << 'fastcomp' unless releasing?
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
   options << "cpus=#{cpus}" if cpus
 
   options += ENV['TAILS_BUILD_OPTIONS'].split if ENV['TAILS_BUILD_OPTIONS']
 
-  options.uniq.each do |opt|
+  options.uniq.each do |opt| # rubocop:disable Metrics/BlockLength
     case opt
     # Memory build settings
     when 'ram'
@@ -234,14 +228,20 @@ task :parse_build_options do
     # Bootstrap cache settings
     # HTTP proxy settings
     when 'extproxy'
-      abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+      unless EXTERNAL_HTTP_PROXY
+        abort 'No HTTP proxy set, but one is required by ' \
+              'TAILS_BUILD_OPTIONS. Aborting.'
+      end
       ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'extproxy'
     when 'vmproxy', 'vmproxy+extproxy'
       ENV['TAILS_PROXY'] = INTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
       if opt == 'vmproxy+extproxy'
-        abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+        unless EXTERNAL_HTTP_PROXY
+          abort 'No HTTP proxy set, but one is required by ' \
+                'TAILS_BUILD_OPTIONS. Aborting.'
+        end
         ENV['TAILS_ACNG_PROXY'] = EXTERNAL_HTTP_PROXY
       end
     when 'noproxy'
@@ -250,9 +250,9 @@ task :parse_build_options do
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     when /cachewebsite(?:=([a-z]+))?/
-      value = $1
-      if is_release?
-        $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
+      value = Regexp.last_match(1)
+      if releasing?
+        warn "Building a release ⇒ ignoring #{opt} build option"
         ENV['TAILS_WEBSITE_CACHE'] = '0'
       else
         value = 'yes' if value.nil?
@@ -267,8 +267,8 @@ task :parse_build_options do
       end
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
-      if is_release?
-        $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
+      if releasing?
+        warn "Building a release ⇒ ignoring #{opt} build option"
         ENV['MKSQUASHFS_OPTIONS'] = nil
       else
         ENV['MKSQUASHFS_OPTIONS'] = '-comp xz -no-exports'
@@ -277,16 +277,16 @@ task :parse_build_options do
       ENV['MKSQUASHFS_OPTIONS'] = nil
     # Virtual hardware settings
     when /machinetype=([a-zA-Z0-9_.-]+)/
-      ENV['TAILS_BUILD_MACHINE_TYPE'] = $1
+      ENV['TAILS_BUILD_MACHINE_TYPE'] = Regexp.last_match(1)
     when /cpus=(\d+)/
-      ENV['TAILS_BUILD_CPUS'] = $1
+      ENV['TAILS_BUILD_CPUS'] = Regexp.last_match(1)
     when /cpumodel=([a-zA-Z0-9_-]+)/
-      ENV['TAILS_BUILD_CPU_MODEL'] = $1
+      ENV['TAILS_BUILD_CPU_MODEL'] = Regexp.last_match(1)
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
     when /dateoffset=([-+]\d+)/
-      ENV['TAILS_DATE_OFFSET'] = $1
+      ENV['TAILS_DATE_OFFSET'] = Regexp.last_match(1)
     # Developer convenience features
     when 'keeprunning'
       $keep_running = true
@@ -307,7 +307,7 @@ task :parse_build_options do
 
   if ENV['TAILS_OFFLINE_MODE'] == '1'
     if ENV['TAILS_PROXY'].nil?
-      abort "You must use a caching proxy when building offline"
+      abort 'You must use a caching proxy when building offline'
     end
   end
 end
@@ -316,7 +316,7 @@ task :ensure_clean_repository do
   git_status = `git status --porcelain`
   unless git_status.empty?
     if ENV['TAILS_BUILD_IGNORE_CHANGES']
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         You have uncommitted changes in the Git repository. They will
         be ignored for the upcoming build:
@@ -324,7 +324,7 @@ task :ensure_clean_repository do
 
       END_OF_MESSAGE
     else
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         You have uncommitted changes in the Git repository. Due to limitations
         of the build system, you need to commit them before building Tails:
@@ -342,12 +342,12 @@ end
 
 def list_artifacts
   user = vagrant_ssh_config('User')
-  stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " +
-                                        "-name 'tails-amd64-*' " +
-                                        "-o -name tails-build-env.list").first
+  stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " \
+                                        "-name 'tails-amd64-*' " \
+                                        '-o -name tails-build-env.list').first
   stdout.split("\n")
 rescue VagrantCommandError
-  return Array.new
+  []
 end
 
 def remove_artifacts
@@ -356,7 +356,7 @@ def remove_artifacts
   end
 end
 
-task :ensure_clean_home_directory => ['vm:up'] do
+task ensure_clean_home_directory: ['vm:up'] do
   remove_artifacts
 end
 
@@ -366,43 +366,46 @@ task :validate_http_proxy do
 
     if proxy_host.nil?
       ENV['TAILS_PROXY'] = nil
-      $stderr.puts "Ignoring invalid HTTP proxy."
+      warn 'Ignoring invalid HTTP proxy.'
       return
     end
 
-    if ['localhost', '[::1]'].include?(proxy_host) || proxy_host.start_with?('127.0.0.')
-      abort 'Using an HTTP proxy listening on the loopback is doomed to fail. Aborting.'
+    if ['localhost', '[::1]'].include?(proxy_host) \
+       || proxy_host.start_with?('127.0.0.')
+      abort 'Using an HTTP proxy listening on the loopback is doomed ' \
+            'to fail. Aborting.'
     end
 
-    $stderr.puts "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
+    warn "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
   else
-    $stderr.puts "No HTTP proxy set."
+    warn 'No HTTP proxy set.'
   end
 end
 
 task :validate_git_state do
-  if git_helper('git_in_detached_head?') && not(git_helper('git_on_a_tag?'))
+  if git_helper('git_in_detached_head?') && !git_helper('git_on_a_tag?')
     raise 'We are in detached head but the current commit is not tagged'
   end
 end
 
-task :setup_environment => ['validate_git_state'] do
+task setup_environment: ['validate_git_state'] do
   ENV['GIT_COMMIT'] ||= git_helper('git_current_commit')
   ENV['GIT_REF'] ||= git_helper('git_current_head_name')
   if on_jenkins?
-    jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(/^origin\//, '')
-    if not(is_release?) && jenkins_branch != ENV['GIT_REF']
-      raise "We expected to build the Git ref '#{ENV['GIT_REF']}', but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"
+    jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(%r{^origin/}, '')
+    if !releasing? && jenkins_branch != ENV['GIT_REF']
+      raise "We expected to build the Git ref '#{ENV['GIT_REF']}', " \
+            "but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"
     end
   end
 
   ENV['BASE_BRANCH_GIT_COMMIT'] ||= git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
-    if ENV[var].empty?
-      raise "Variable '#{var}' is empty, which should not be possible: " +
-            "either validate_git_state is buggy or the 'origin' remote " +
-            "does not point to the official Tails Git repository."
-    end
+    next unless ENV[var].empty?
+
+    raise "Variable '#{var}' is empty, which should not be possible: " \
+          "either validate_git_state is buggy or the 'origin' remote " \
+          'does not point to the official Tails Git repository.'
   end
 end
 
@@ -438,11 +441,20 @@ task :ensure_correct_permissions do
 end
 
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'ensure_correct_permissions', 'vm:up', 'ensure_clean_home_directory'] do
-
+task build: [
+  'parse_build_options',
+  'ensure_clean_repository',
+  'maybe_clean_up_builder_vms',
+  'validate_git_state',
+  'setup_environment',
+  'validate_http_proxy',
+  'ensure_correct_permissions',
+  'vm:up',
+  'ensure_clean_home_directory',
+] do
   begin
-    if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+    if ENV['TAILS_RAM_BUILD'] && !enough_free_memory_for_ram_build?
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         The virtual machine is not currently set with enough memory to
         perform an in-memory build. Either remove the `ram` option from
@@ -450,11 +462,13 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
         virtual machine down using `rake vm:halt` before trying again.
 
       END_OF_MESSAGE
-      abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
+      abort 'Not enough memory for the virtual machine to run an in-memory ' \
+            'build. Aborting.'
     end
 
-    if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+    if ENV['TAILS_BUILD_CPUS'] \
+       && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
+      warn <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         The virtual machine is currently running with #{current_vm_cpus}
         virtual CPU(s). In order to change that number, you need to
@@ -462,20 +476,22 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
         adjust the `cpus` options accordingly.
 
       END_OF_MESSAGE
-      abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
+      abort 'The virtual machine needs to be reloaded to change the number ' \
+            'of CPUs. Aborting.'
     end
 
-    exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
-                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+    exported_env = EXPORTED_VARIABLES
+                   .select { |k| ENV[k] }
+                   .map    { |k| "#{k}='#{ENV[k]}'" }.join(' ')
 
     begin
       retrieved_artifacts = false
       run_vagrant_ssh("#{exported_env} build-tails")
     rescue VagrantCommandError
-      retrieve_artifacts(:missing_ok => true)
+      retrieve_artifacts(missing_ok: true)
       retrieved_artifacts = true
     ensure
-      retrieve_artifacts(:missing_ok => false) unless retrieved_artifacts
+      retrieve_artifacts(missing_ok: false) unless retrieved_artifacts
       clean_up_builder_vms unless $keep_running
     end
   ensure
@@ -483,7 +499,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
   end
 end
 
-desc "Retrieve build artifacts from the Vagrant box"
+desc 'Retrieve build artifacts from the Vagrant box'
 task :retrieve_artifacts do
   retrieve_artifacts
 end
@@ -492,17 +508,15 @@ def retrieve_artifacts(missing_ok: false)
   artifacts = list_artifacts
   if artifacts.empty?
     msg = 'No build artifacts were found!'
-    if missing_ok
-      $stderr.puts msg
-      return
-    else
-      raise msg
-    end
+    raise msg unless missing_ok
+
+    warn msg
+    return
   end
-  user     = vagrant_ssh_config('User')
+  user = vagrant_ssh_config('User')
   hostname = vagrant_ssh_config('HostName')
   key_file = vagrant_ssh_config('IdentityFile')
-  $stderr.puts "Retrieving artifacts from Vagrant build box."
+  warn 'Retrieving artifacts from Vagrant build box.'
   run_vagrant_ssh(
     "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
   )
@@ -523,23 +537,27 @@ def retrieve_artifacts(missing_ok: false)
   run_command(*fetch_command)
 end
 
-def has_box?
-  not(capture_vagrant('box', 'list').grep(/^#{box_name}\s+\(libvirt,/).empty?)
+def box?
+  !capture_vagrant('box', 'list').grep(/^#{box_name}\s+\(libvirt,/).empty?
 end
 
 def domain_name
   "#{box_name}_default"
 end
 
+# XXX: giving up on a few worst offenders for now
+# rubocop:disable Metrics/AbcSize
+# rubocop:disable Metrics/MethodLength
 def clean_up_builder_vms
-  $virt = Libvirt::open("qemu:///system")
+  libvirt = Libvirt.open('qemu:///system')
 
-  clean_up_domain = Proc.new do |domain|
+  clean_up_domain = proc do |domain|
     next if domain.nil?
+
     domain.destroy if domain.active?
     domain.undefine
     begin
-      $virt
+      libvirt
         .lookup_storage_pool_by_name('default')
         .lookup_volume_by_name("#{domain.name}.img")
         .delete
@@ -549,24 +567,24 @@ def clean_up_builder_vms
   end
 
   # Let's ensure that the VM we are about to create is cleaned up ...
-  previous_domain = $virt.list_all_domains.find { |d| d.name == domain_name }
-  if previous_domain && previous_domain.active?
+  previous_domain = libvirt.list_all_domains.find { |d| d.name == domain_name }
+  if previous_domain&.active?
     begin
-      run_vagrant_ssh("mountpoint -q /var/cache/apt-cacher-ng")
+      run_vagrant_ssh('mountpoint -q /var/cache/apt-cacher-ng')
     rescue VagrantCommandError
     # Nothing to unmount.
     else
-      run_vagrant_ssh("sudo systemctl stop apt-cacher-ng.service")
-      run_vagrant_ssh("sudo umount /var/cache/apt-cacher-ng")
-      run_vagrant_ssh("sudo sync")
+      run_vagrant_ssh('sudo systemctl stop apt-cacher-ng.service')
+      run_vagrant_ssh('sudo umount /var/cache/apt-cacher-ng')
+      run_vagrant_ssh('sudo sync')
     end
     begin
-      run_vagrant_ssh("mountpoint -q /var/cache/tails-website")
+      run_vagrant_ssh('mountpoint -q /var/cache/tails-website')
     rescue VagrantCommandError
     # Nothing to unmount.
     else
-      run_vagrant_ssh("sudo umount /var/cache/tails-website")
-      run_vagrant_ssh("sudo sync")
+      run_vagrant_ssh('sudo umount /var/cache/tails-website')
+      run_vagrant_ssh('sudo sync')
     end
   end
   clean_up_domain.call(previous_domain)
@@ -576,9 +594,9 @@ def clean_up_builder_vms
   old_domain =
     begin
       old_domain_uuid =
-        open('vagrant/.vagrant/machines/default/libvirt/id', 'r') { |f| f.read }
+        open('vagrant/.vagrant/machines/default/libvirt/id', 'r', &:read)
         .strip
-      $virt.lookup_domain_by_uuid(old_domain_uuid)
+      libvirt.lookup_domain_by_uuid(old_domain_uuid)
     rescue Errno::ENOENT, Libvirt::RetrieveError
       # Expected if we don't have vagrant/.vagrant, or if the VM was
       # undefined for other reasons (e.g. manually).
@@ -595,45 +613,45 @@ def clean_up_builder_vms
   #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/746
   FileUtils.rm_rf('vagrant/.vagrant')
 ensure
-  $virt.close
+  libvirt.close
 end
+# rubocop:enable Metrics/AbcSize
+# rubocop:enable Metrics/MethodLength
 
-desc "Remove all libvirt volumes named tails-builder-* (run at your own risk!)"
+desc 'Remove all libvirt volumes named tails-builder-* (run at your own risk!)'
 task :clean_up_libvirt_volumes do
-  $virt = Libvirt::open("qemu:///system")
+  libvirt = Libvirt.open('qemu:///system')
   begin
-    pool = $virt.lookup_storage_pool_by_name('default')
+    pool = libvirt.lookup_storage_pool_by_name('default')
   rescue Libvirt::RetrieveError
     # Expected if the pool does not exist
   else
-    for disk in pool.list_volumes do
-      if /^tails-builder-/.match(disk)
-        begin
-          pool.lookup_volume_by_name(disk).delete
-        rescue Libvirt::RetrieveError
-          # Expected if the disk does not exist
-        end
+    pool.list_volumes.each do |disk|
+      next unless /^tails-builder-/.match(disk)
+
+      begin
+        pool.lookup_volume_by_name(disk).delete
+      rescue Libvirt::RetrieveError
+        # Expected if the disk does not exist
       end
     end
   ensure
-    $virt.close
+    libvirt.close
   end
 end
 
 def on_jenkins?
-  !!ENV['JENKINS_URL']
+  !ENV['JENKINS_URL'].nil?
 end
 
 desc 'Test Tails'
 task :test do
-  args = ARGV.drop_while { |x| x == 'test' || x == '--' }
+  args = ARGV.drop_while { |x| ['test', '--'].include?(x) }
   if on_jenkins?
     args += ['--'] unless args.include? '--'
-    if not(is_release?)
-      args += ['--tag', '~@fragile']
-    end
+    args += ['--tag', '~@fragile'] unless releasing?
     base_branch = git_helper('base_branch')
-    if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}") then
+    if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}")
       args += ['--tag', '@doc']
     end
   end
@@ -641,11 +659,16 @@ task :test do
 end
 
 desc 'Clean up all build related files'
-task :clean_all => ['vm:destroy', 'basebox:clean_all']
+task clean_all: ['vm:destroy', 'basebox:clean_all']
 
 namespace :vm do
   desc 'Start the build virtual machine'
-  task :up => ['parse_build_options', 'validate_http_proxy', 'setup_environment', 'basebox:create'] do
+  task up: [
+    'parse_build_options',
+    'validate_http_proxy',
+    'setup_environment',
+    'basebox:create',
+  ] do
     case vm_state
     when :not_created
       clean_up_builder_vms
@@ -669,22 +692,27 @@ namespace :vm do
   end
 
   desc 'Re-run virtual machine setup'
-  task :provision => ['parse_build_options', 'validate_http_proxy', 'setup_environment'] do
+  task provision: [
+    'parse_build_options',
+    'validate_http_proxy',
+    'setup_environment',
+  ] do
     run_vagrant('provision')
   end
 
-  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data and the website cache)"
+  desc 'Destroy build virtual machine (clean up all files except the ' \
+       "vmproxy's apt-cacher-ng data and the website cache)"
   task :destroy do
     clean_up_builder_vms
   end
 end
 
 namespace :basebox do
-
   desc 'Create and import the base box unless already done'
   task :create do
-    next if has_box?
-    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+    next if box?
+
+    warn <<-END_OF_MESSAGE.gsub(/^      /, '')
 
       This is the first time we are using this Vagrant base box so we
       will have to bootstrap by building it from scratch. This will
@@ -699,14 +727,15 @@ namespace :basebox do
     box_path = "#{box_dir}/#{box_name}.box"
     run_vagrant('box', 'add', '--name', box_name, box_path)
     File.delete(box_path)
-    end
+  end
 
   def basebox_date(box)
     Date.parse(/^tails-builder-[^-]+-[^-]+-(\d{8})/.match(box)[1])
   end
 
   def baseboxes
-    capture_vagrant('box', 'list').first.lines
+    capture_vagrant('box', 'list')
+      .first.lines
       .grep(/^tails-builder-.*/)
       .map { |x| x.chomp.sub(/\s.*$/, '') }
   end
@@ -714,15 +743,15 @@ namespace :basebox do
   def clean_up_basebox(box)
     run_vagrant('box', 'remove', '--force', box)
     begin
-      $virt = Libvirt::open("qemu:///system")
-      $virt
+      libvirt = Libvirt.open('qemu:///system')
+      libvirt
         .lookup_storage_pool_by_name('default')
         .lookup_volume_by_name("#{box}_vagrant_box_image_0.img")
         .delete
     rescue Libvirt::RetrieveError
       # Expected if the pool or disk does not exist
     ensure
-      $virt.close
+      libvirt.close
     end
   end
 
@@ -738,9 +767,7 @@ namespace :basebox do
     boxes.sort! { |a, b| basebox_date(a) <=> basebox_date(b) }
     boxes.pop
     boxes.each do |box|
-      if basebox_date(box) < Date.today - 365.0/2.0
-        clean_up_basebox(box)
-      end
+      clean_up_basebox(box) if basebox_date(box) < Date.today - 365.0 / 2.0
     end
   end
 end

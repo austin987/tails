@@ -64,25 +64,6 @@ Feature: Upgrading an old Tails USB installation
     Then only the expected files are present on the persistence partition on USB drive "old"
 
   # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
-  Scenario: Upgrading an old Tails USB installation from a Tails DVD
-    Given I have started Tails from DVD without network and logged in
-    And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And I plug USB drive "to_upgrade"
-    When I upgrade Tails to USB drive "to_upgrade" by cloning
-    Then the running Tails is installed on USB drive "to_upgrade"
-    And I unplug USB drive "to_upgrade"
-
-  # Depends on scenario: Upgrading an old Tails USB installation from a Tails DVD
-  Scenario: Booting Tails from a USB drive upgraded from DVD with persistence enabled
-    Given a computer
-    And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence enabled
-    Then all persistence presets from the old Tails version are enabled
-    And Tails is running from USB drive "to_upgrade"
-    And the boot device has safe access rights
-    And the expected persistent files created with the old Tails version are present in the filesystem
-    And all persistent directories from the old Tails version have safe access rights
-
-  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
@@ -145,7 +126,8 @@ Feature: Upgrading an old Tails USB installation
     And Tor is ready
     Then the Upgrader considers the system as up-to-date
     # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
-    And I successfully start the Unsafe Browser
+    Given I magically allow the Unsafe Browser to be started
+    Then I successfully start the Unsafe Browser
     And the file system changes introduced in version 2.3~testoverlayfs are present in the Unsafe Browser's chroot
 
   @automatic_upgrade

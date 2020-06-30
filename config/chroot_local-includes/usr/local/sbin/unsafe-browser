@@ -20,6 +20,9 @@ export TEXTDOMAIN
 # and run_browser_in_chroot().
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
+# Import unsafe_browser_is_enabled
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
 error () {
     local cli_text="${CMD}: `gettext \"error:\"` ${@}"
     local dialog_text="<b><big>`gettext \"Error\"`</big></b>
@@ -32,9 +35,9 @@ ${@}"
 
 verify_start () {
     # Make sure the user really wants to start the browser
-    local dialog_msg="<b><big>`gettext \"Do you really want to launch the Unsafe Browser?\"`</big></b>
+    local dialog_msg="<b><big>`gettext \"Launch the Unsafe Browser?\"`</big></b>
 
-`gettext \"Network activity within the Unsafe Browser is <b>not anonymous</b>.\\nOnly use the Unsafe Browser if necessary, for example\\nif you have to login or register to activate your Internet connection.\"`"
+`gettext \"The Unsafe Browser is not anonymous and the websites that you visit can see your real IP address.\\n\nOnly use the Unsafe Browser to log in to a captive portal or browse trusted web pages on the local network.\"`"
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"
     if ! sudo -u "${SUDO_USER}" \
@@ -81,6 +84,14 @@ BROWSER_USER="clearnet"
 HUMAN_READABLE_NAME="`gettext \"Unsafe Browser\"`"
 WARNING_PAGE='/usr/share/doc/tails/website/misc/unsafe_browser_warning'
 HOME_PAGE="$(localized_tails_doc_page "${WARNING_PAGE}")"
+
+# Check if the Unsafe Browser was disabled in the startup options
+if ! unsafe_browser_is_enabled; then
+    error "`gettext \"The Unsafe Browser was not enabled in the Welcome Screen.\n\n\
+To use the Unsafe Browser, restart Tails and enable \
+the Unsafe Browser in the additional settings of the Welcome Screen.\n
+To always enable the Unsafe Browser, turn on the Welcome Screen feature of the Persistent Storage."`"
+fi
 
 # Prevent multiple instances of the script.
 exec 9>"${LOCK}"

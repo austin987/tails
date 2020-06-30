@@ -1,13 +1,14 @@
+require 'English'
+
 class OpenCVInternalError < StandardError
 end
 
 module OpenCV
-
-  if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
-    @python = 'python2.7'
-  else
-    @python = 'python3'
-  end
+  @python = if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
+              'python2.7'
+            else
+              'python3'
+            end
 
   def self.matchTemplate(image, screen, sensitivity, show_match)
     assert(sensitivity < 1.0)
@@ -20,18 +21,17 @@ module OpenCV
     end
     p = popen_wait(
       [env, @python, "#{GIT_DIR}/features/scripts/opencv_match_template.py",
-       screen, image, sensitivity.to_s, show_match.to_s],
+       screen, image, sensitivity.to_s, show_match.to_s,],
       err: [:child, :out]
     )
     out = p.readlines.join("\n")
-    case $?.exitstatus
+    case $CHILD_STATUS.exitstatus
     when 0
-      return out.chomp.split.map { |s| s.to_i }
+      out.chomp.split.map(&:to_i)
     when 1
-      return nil
+      nil
     else
-      raise OpenCVInternalError.new(out)
+      raise OpenCVInternalError, out
     end
   end
-
 end
