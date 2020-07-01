@@ -45,7 +45,7 @@ Feature: Time syncing
     And the computer reboots Tails
     Then the hardware clock is still off by "-15 days"
 
-  Scenario: Boot with a hardware clock set way in the past and make sure that Tails sets the clock to the source date
+  Scenario: The clock is set to the source date when the hardware clock is way in the past
     Given a computer
     And the network is unplugged
     And the hardware clock is set to "01 Jan 2000 12:34:56"

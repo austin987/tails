@@ -66,6 +66,21 @@ method _build__presets () {
             ]
         },
         {
+            id          => 'GreeterSettings',
+            name        => $self->encoding->decode(gettext(q{Welcome Screen})),
+            description => $self->encoding->decode(gettext(
+                q{Beta: only the additional setting to enable the Unsafe Browser is made persistent}
+            )),
+            icon_name   => 'preferences-system',
+            enabled     => 0,
+            atoms_args  => [
+                {
+                    destination => '/var/lib/gdm3/settings/persistent',
+                    options     => [ 'source=greeter-settings' ],
+                },
+            ]
+        },
+        {
             id          => 'BrowserBookmarks',
             name        => $self->encoding->decode(gettext(q{Browser Bookmarks})),
             description => $self->encoding->decode(gettext(

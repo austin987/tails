@@ -7,9 +7,11 @@
 # =====
 #
 # * /etc/live/config.d/username.conf : $LIVE_USERNAME
-# * /var/lib/gdm3/tails.locale : $TAILS_LOCALE_NAME, $TAILS_XKBMODEL,
-#   $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT, $TAILS_XKBOPTIONS, $CODESET
-# * /var/lib/gdm3/tails.password : $TAILS_USER_PASSWORD
+# * /var/lib/gdm3/settings/tails.language: $TAILS_LOCALE_NAME
+# * /var/lib/gdm3/settings/tails.formats: $TAILS_FORMATS
+# * /var/lib/gdm3/settings/tails.keyboard: $TAILS_XKBMODEL,
+#   $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT, $TAILS_XKBOPTIONS
+# * /var/lib/gdm3/settings/tails.password : $TAILS_USER_PASSWORD
 
 # For whatever reason, /usr/sbin (needed by at least chpasswd)
 # is not in our PATH
@@ -22,6 +24,7 @@ KBDSET=/etc/default/keyboard
 CONSET=/etc/default/console-setup
 LOCALE_CFG=/etc/default/locale
 CODSET="Uni1" # universal codeset to properly display glyphs in localized console
+GREETER_EXPORTED_SETTINGS="tails.macspoof tails.network tails.unsafe-browser"
 
 log() {
     echo "$1" >&2
@@ -60,6 +63,17 @@ grep_n_set() {
 
 log "Entering PostLogin"
 
+### Export the Greeter settings
+# It's important we export the settings from tails.macspoof before
+# unblocking the network below; doing so will make the user-set MAC
+# spoofing option apply (via the custom udev rule) when loading the
+# modules for the previously blocked network devices.
+for setting in ${GREETER_EXPORTED_SETTINGS}; do
+    /usr/bin/install -m 0640 -o root -g root \
+        "/var/lib/gdm3/settings/$setting" \
+        "/var/lib/live/config/$setting"
+done
+
 ### Gather general configuration
 
 # Import the name of the live user
@@ -75,8 +89,10 @@ log "tails-unblock-network has exited (status=$?)."
 
 ### Localization
 
-# Import locale name
-. /var/lib/gdm3/tails.locale || log_n_exit "Locale file not found."
+# Import locale settings
+. /var/lib/gdm3/settings/tails.language || log_n_exit "Language settings file not found."
+. /var/lib/gdm3/settings/tails.formats || log_n_exit "Formats settings file not found."
+. /var/lib/gdm3/settings/tails.keyboard || log_n_exit "Keyboard settings file not found."
 if [ -z "${TAILS_LOCALE_NAME}" ] ; then
     log_n_exit "Locale variable not found."
 fi
@@ -112,12 +128,9 @@ EOF
 ### Password
 
 # Import password for superuser access
-if [ -e /var/lib/gdm3/tails.password ] ; then
-    . /var/lib/gdm3/tails.password
+if [ -e /var/lib/gdm3/settings/tails.password ] ; then
+    . /var/lib/gdm3/settings/tails.password
 fi
-
-# Remove password file
-rm --interactive=never -f /var/lib/gdm3/tails.password
 
 # Check if password is actually set
 if [ -z "${TAILS_USER_PASSWORD}" ] ; then
@@ -132,7 +145,7 @@ if [ -z "${TAILS_USER_PASSWORD}" ] ; then
 fi
 
 # Sets the password
-echo "${LIVE_USERNAME}:${TAILS_USER_PASSWORD}" | chpasswd
+echo "${LIVE_USERNAME}:${TAILS_USER_PASSWORD}" | chpasswd -e
 
 # Add sudoers entry
 echo "${LIVE_USERNAME} ALL = (ALL) ALL" >> "${SUDOERS}"

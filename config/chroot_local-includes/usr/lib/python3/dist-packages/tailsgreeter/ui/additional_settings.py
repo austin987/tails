@@ -3,6 +3,8 @@ import gi
 from tailsgreeter import TRANSLATION_DOMAIN
 import tailsgreeter.config
 import tailsgreeter.utils
+from tailsgreeter.settings import SettingNotFoundError
+from tailsgreeter.settings.network import NETCONF_DIRECT, NETCONF_DISABLED, NETCONF_OBSTACLE
 from tailsgreeter.ui import _
 from tailsgreeter.ui.setting import GreeterSetting
 from tailsgreeter.ui.popover import Popover
@@ -39,11 +41,17 @@ class AdditionalSetting(GreeterSetting):
         else:
             self.dialog.response(response)
 
-    def apply(self):
-        pass
-
     def on_opened_in_dialog(self):
         pass
+
+    def load(self) -> bool:
+        pass
+
+    def cb_listbox_button_press(self, widget, event, user_data=None):
+        # On double-click: Close the window and apply chosen setting
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.close_window(Gtk.ResponseType.YES)
+        return False
 
 
 class AdminSettingUI(AdditionalSetting):
@@ -61,7 +69,7 @@ class AdminSettingUI(AdditionalSetting):
 
     @property
     def value_for_display(self) -> str:
-        return get_on_off_string(self.password, default=None)
+        return get_on_off_string(self.new_password or self.use_saved_password, default=None)
 
     def update_check_icon(self):
         password = self.password_entry.get_text()
@@ -81,7 +89,8 @@ class AdminSettingUI(AdditionalSetting):
 
     def __init__(self, admin_setting: "AdminSetting"):
         self._admin_setting = admin_setting
-        self.password = None
+        self.new_password = ""
+        self.use_saved_password = False
         super().__init__()
         self.accel_key = Gdk.KEY_a
 
@@ -102,7 +111,7 @@ class AdminSettingUI(AdditionalSetting):
 
     def cb_popover_opened(self, popover, user_data=None):
         self.password_verify_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
-        password_already_set = bool(self.password)
+        password_already_set = bool(self.new_password) or self.use_saved_password
         self.box_admin_password.set_visible(not password_already_set)
         self.box_admin_verify.set_visible(not password_already_set)
         self.button_admin_disable.set_visible(password_already_set)
@@ -115,30 +124,52 @@ class AdminSettingUI(AdditionalSetting):
         return password == self.password_verify_entry.get_text()
 
     def apply(self):
-        # This writes the password to a file from which it will be set
-        # as the amnesia password when the greeter is closed.
-        self._admin_setting.password = self.password
+        if self.use_saved_password:
+            # This should only be the case if the persistent storage was
+            # unlocked and a persistent password settings file was found.
+            # In that case, we just want to keep the existing settings file.
+            pass
+        elif self.new_password:
+            # Write the password to a file from which it will be set
+            # as the amnesia password when the greeter is closed.
+            self._admin_setting.save(self.new_password)
+        else:
+            self._admin_setting.delete()
+        super().apply()
+
+    def load(self) -> bool:
+        try:
+            self._admin_setting.load()
+        except SettingNotFoundError:
+            raise
+        self.use_saved_password = True
+        return True
 
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
         passwords_match = self.passwords_match()
-        self.dialog.button_add.set_sensitive(passwords_match)
         if passwords_match:
-            self.password = self.password_entry.get_text()
+            self.new_password = self.password_entry.get_text()
+            self.use_saved_password = False
+        if self.dialog:
+            self.dialog.button_add.set_sensitive(passwords_match)
         return False
 
     def cb_entry_admin_activate(self, widget, user_data=None):
         if not self.passwords_match():
-            self.dialog.button_add.set_sensitive(False)
+            if self.dialog:
+                self.dialog.button_add.set_sensitive(False)
             self.password_verify_entry.grab_focus()
             return False
 
-        self.password = self.password_entry.get_text()
+        self.new_password = self.password_entry.get_text()
+        self.use_saved_password = False
         self.close_window(Gtk.ResponseType.YES)
         return False
 
     def cb_button_admin_disable_clicked(self, widget, user_data=None):
-        self.password = None
+        self.new_password = None
+        self.use_saved_password = False
         self.password_entry.set_text("")
         self.password_verify_entry.set_text("")
 
@@ -173,12 +204,31 @@ class MACSpoofSettingUI(AdditionalSetting):
         self.image_macspoof_off = self.builder.get_object('image_macspoof_off')
         self.listbox_macspoof_controls = self.builder.get_object('listbox_macspoof_controls')
         self.listbox_macspoof_controls.connect('row-activated', self.cb_listbox_macspoof_row_activated)
-        self.listbox_macspoof_controls.connect('button-press-event', self.cb_listbox_macspoof_button_press)
+        self.listbox_macspoof_controls.connect('button-press-event', self.cb_listbox_button_press)
         self.listboxrow_macspoof_on = self.builder.get_object('listboxrow_macspoof_on')
         self.listboxrow_macspoof_off = self.builder.get_object('listboxrow_macspoof_off')
 
     def apply(self):
-        self._macspoof_setting.value = self.spoofing_enabled
+        self._macspoof_setting.save(self.spoofing_enabled)
+        super().apply()
+
+    def load(self) -> bool:
+        try:
+            value = self._macspoof_setting.load()
+        except SettingNotFoundError:
+            raise
+
+        # Select the correct listboxrow (used in the popover)
+        if value:
+            self.listbox_macspoof_controls.select_row(self.listboxrow_macspoof_on)
+        else:
+            self.listbox_macspoof_controls.select_row(self.listboxrow_macspoof_off)
+
+        if self.spoofing_enabled == value:
+            return False
+
+        self.spoofing_enabled = value
+        return True
 
     def cb_listbox_macspoof_row_activated(self, listbox, row, user_data=None):
         self.spoofing_enabled = row == self.listboxrow_macspoof_on
@@ -187,12 +237,6 @@ class MACSpoofSettingUI(AdditionalSetting):
 
         if self.has_popover() and self.popover.is_open():
             self.popover.close(Gtk.ResponseType.YES)
-        return False
-
-    def cb_listbox_macspoof_button_press(self, widget, event, user_data=None):
-        # On double-click: Close the window and apply chosen setting
-        if event.type == Gdk.EventType._2BUTTON_PRESS:
-            self.close_window(Gtk.ResponseType.YES)
         return False
 
 
@@ -211,53 +255,134 @@ class NetworkSettingUI(AdditionalSetting):
 
     @property
     def value_for_display(self) -> str:
-        if self.value == self._network_setting.NETCONF_DIRECT:
+        if self.value == NETCONF_DIRECT:
             return _("Direct (default)")
-        if self.value == self._network_setting.NETCONF_OBSTACLE:
+        if self.value == NETCONF_OBSTACLE:
             return _("Bridge & Proxy")
-        if self.value == self._network_setting.NETCONF_DISABLED:
+        if self.value == NETCONF_DISABLED:
             return _("Offline")
 
     def __init__(self, network_setting: "NetworkSetting"):
         self._network_setting = network_setting
-        self.value = self._network_setting.NETCONF_DIRECT
+        self.value = NETCONF_DIRECT
         super().__init__()
         self.accel_key = Gdk.KEY_n
         self.icon_network_clear_chosen = self.builder.get_object('image_network_clear')
         self.icon_network_specific_chosen = self.builder.get_object('image_network_specific')
         self.icon_network_off_chosen = self.builder.get_object('image_network_off')
         self.listbox_network_controls = self.builder.get_object('listbox_network_controls')
-        self.listbox_network_controls.connect('button-press-event', self.cb_listbox_network_button_press)
+        self.listbox_network_controls.connect('button-press-event', self.cb_listbox_button_press)
         self.listbox_network_controls.connect('row-activated', self.cb_listbox_network_row_activated)
-        self.listboxrow_network_clear = self.builder.get_object('listboxrow_network_clear')
-        self.listboxrow_network_specific = self.builder.get_object('listboxrow_network_specific')
-        self.listboxrow_network_off = self.builder.get_object('listboxrow_network_off')
+        self.listboxrow_netconf_direct = self.builder.get_object('listboxrow_netconf_direct')
+        self.listboxrow_netconf_obstacle = self.builder.get_object('listboxrow_netconf_obstacle')
+        self.listboxrow_netconf_disabled = self.builder.get_object('listboxrow_netconf_disabled')
 
     def apply(self):
-        self._network_setting.value = self.value
-        is_bridge = self.value == self._network_setting.NETCONF_OBSTACLE
+        self._network_setting.save(self.value)
+        is_bridge = self.value == NETCONF_OBSTACLE
         self.main_window.set_bridge_infobar_visibility(is_bridge)
+        super().apply()
 
-    def cb_listbox_network_button_press(self, widget, event, user_data=None):
-        # On double-click: Close the window and apply chosen setting
-        if event.type == Gdk.EventType._2BUTTON_PRESS:
-            self.close_window(Gtk.ResponseType.YES)
-        return False
+    def load(self):
+        try:
+            value = self._network_setting.load()
+        except SettingNotFoundError:
+            raise
+
+        # Select the correct listboxrow (used in the popover)
+        if value == NETCONF_DIRECT:
+            self.listbox_network_controls.select_row(self.listboxrow_netconf_direct)
+        elif value == NETCONF_OBSTACLE:
+            self.listbox_network_controls.select_row(self.listboxrow_netconf_obstacle)
+        elif value == NETCONF_DISABLED:
+            self.listbox_network_controls.select_row(self.listboxrow_netconf_disabled)
+
+        if self.value == value:
+            return False
+
+        self.value = value
+        return True
 
     def cb_listbox_network_row_activated(self, listbox, row, user_data=None):
         self.icon_network_clear_chosen.set_visible(False)
         self.icon_network_specific_chosen.set_visible(False)
         self.icon_network_off_chosen.set_visible(False)
 
-        if row == self.listboxrow_network_clear:
-            self.value = self._network_setting.NETCONF_DIRECT
+        if row == self.listboxrow_netconf_direct:
+            self.value = NETCONF_DIRECT
             self.icon_network_clear_chosen.set_visible(True)
-        elif row == self.listboxrow_network_specific:
-            self.value = self._network_setting.NETCONF_OBSTACLE
+        elif row == self.listboxrow_netconf_obstacle:
+            self.value = NETCONF_OBSTACLE
             self.icon_network_specific_chosen.set_visible(True)
-        elif row == self.listboxrow_network_off:
-            self.value = self._network_setting.NETCONF_DISABLED
+        elif row == self.listboxrow_netconf_disabled:
+            self.value = NETCONF_DISABLED
             self.icon_network_off_chosen.set_visible(True)
+
+        if self.has_popover() and self.popover.is_open():
+            self.popover.close(Gtk.ResponseType.YES)
+        return False
+
+
+class UnsafeBrowserSettingUI(AdditionalSetting):
+    @property
+    def id(self) -> str:
+        return "unsafe_browser"
+
+    @property
+    def title(self) -> str:
+        return _("_Unsafe Browser")
+
+    @property
+    def icon_name(self) -> str:
+        return "dialog-warning-symbolic"
+
+    @property
+    def value_for_display(self) -> str:
+        if self.unsafe_browser_enabled:
+            return _("Enabled")
+        else:
+            return _("Disabled (default)")
+
+    def __init__(self, unsafe_browser_setting):
+        self._unsafe_browser_setting = unsafe_browser_setting
+        self.unsafe_browser_enabled = False
+        super().__init__()
+        self.accel_key = Gdk.KEY_u
+        self.listbox_unsafe_browser_controls = self.builder.get_object('listbox_unsafe_browser_controls')
+        self.listbox_unsafe_browser_controls.connect('button-press-event', self.cb_listbox_button_press)
+        self.listbox_unsafe_browser_controls.connect('row-activated', self.cb_listbox_unsafe_browser_row_activated)
+        self.listboxrow_unsafe_browser_off = self.builder.get_object('listboxrow_unsafe_browser_off')
+        self.listboxrow_unsafe_browser_on = self.builder.get_object('listboxrow_unsafe_browser_on')
+        self.icon_unsafe_browser_off = self.builder.get_object('image_unsafe_browser_off')
+        self.icon_unsafe_browser_on = self.builder.get_object('image_unsafe_browser_on')
+        self.label_unsafe_browser_value = self.builder.get_object('label_unsafe_browser_value')
+
+    def apply(self):
+        self._unsafe_browser_setting.save(self.unsafe_browser_enabled)
+        super().apply()
+
+    def load(self) -> bool:
+        try:
+            value = self._unsafe_browser_setting.load()
+        except SettingNotFoundError:
+            raise
+
+        # Select the correct listboxrow (used in the popover)
+        if value:
+            self.listbox_unsafe_browser_controls.select_row(self.listboxrow_unsafe_browser_on)
+        else:
+            self.listbox_unsafe_browser_controls.select_row(self.listboxrow_unsafe_browser_off)
+
+        if self.unsafe_browser_enabled == value:
+            return False
+
+        self.unsafe_browser_enabled = value
+        return True
+
+    def cb_listbox_unsafe_browser_row_activated(self, listbox, row, user_data=None):
+        self.unsafe_browser_enabled = row == self.listboxrow_unsafe_browser_on
+        self.icon_unsafe_browser_on.set_visible(self.unsafe_browser_enabled)
+        self.icon_unsafe_browser_off.set_visible(not self.unsafe_browser_enabled)
 
         if self.has_popover() and self.popover.is_open():
             self.popover.close(Gtk.ResponseType.YES)

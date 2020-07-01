@@ -4,7 +4,7 @@ Feature: Electrum Bitcoin client
   I might want to use a Bitcoin client
   And all Internet traffic should flow only through Tor
 
-  Scenario: A warning will be displayed if Electrum is not persistent
+  Scenario: I am warned if Electrum is not persistent
     Given I have started Tails from DVD without network and logged in
     When I start Electrum through the GNOME menu
     But persistence for "electrum" is not enabled

@@ -38,15 +38,17 @@ class LocalizationSetting(GObject.Object, object):
     def get_value(self) -> str:
         return self.value
 
-    def set_value(self, value, chosen_by_user=False):
-        self.value = value
-        self.value_changed_by_user = chosen_by_user
-
-    def get_name(self) -> str:
+    def get_name(self, value: str) -> str:
         raise NotImplementedError
 
     def get_tree(self) -> "Gtk.Treestore":
         raise NotImplementedError
+
+    def save(self, value: str, is_default: bool):
+        pass
+
+    def load(self) -> (str, bool):
+        pass
 
 
 def ln_iso639_tri(ln_CC):
