@@ -4,6 +4,87 @@ tails (4.11) UNRELEASED; urgency=medium
 
  -- Tails developers <tails@boum.org>  Fri, 27 Mar 2020 18:59:04 +0100
 
+tails (4.8) unstable; urgency=medium
+
+  * Major changes
+    - Welcome Screen: after a large refactoring we now can persist
+      settings (See: #17136)! Currently it is limited to the newly
+      added option that controls whether the Unsafe Browser is allowed
+      to start (#17085). In the next major release we'll support all
+      options.
+
+  * Security fixes
+    - Allow to disable the Unsafe Browser in the Welcome Screen
+      (Closes: #17085). The Unsafe Browser can be used by exploits to
+      deanonymize the Tails user (for details, see: #15635).
+    - Upgrade Tor Browser to 9.5.1-build2 (Closes: 17782).
+    - Thunderbird:
+      * Upgrade to Thunderbird 68.9.0 (DSA-4702).
+      * Disable unsafe MX automatic configuration method (Closes:
+        #17277).
+      * Disable unsafe MS Exchange automatic configuration method
+        (Closes: #17654).
+    - Upgrade Linux kernel to linux-image-5.6.0-2 at 5.6.14-2 (Closes:
+      #17611, #17620).
+    - Upgrade gnutls28-based packages to 3.6.7-4+deb10u4 (DSA-4697).
+    - Upgrade intel-microcode to 3.20200609.2~deb10u1 (DSA-4701).
+    
+  * Bugfixes
+    - Trigger emergency shutdown on resume when the boot device was
+      removed while suspended (Closes: #16787).
+    - Thunderbird: make searching in messages (Find bar and Find in
+      This Message) work again (Closes: #17328).
+    - Ensure Mac Spoofing Panic messages will be correctly displayed
+      (Closes: #17779). udev may close child processes when a process
+      associated with a rule (/etc/udev/rules) terminates so we wait
+      for those processes before exiting.
+    - Wrap `seahorse-tool --import` so it is handled by `gpg --import`
+      (Closes: #17183). This makes importing binary keys via GNOME
+      Files integration possible again.
+
+  * Minor improvements and updates
+    - Upgrade to tor 0.4.3.5-1 (Closes: #17741).
+    - Upgrade LibreOffice to 1:6.1.5-3+deb10u6.
+    - Upgrade VirtualBox guest modules to 6.1.10-dfsg-1.
+    - Append Unsafe Browser setting to WhisperBack debug info.
+
+  * Build system
+    - Upgrade snapshot of the Debian archive to 2020061003, including
+      the 10.4 point release of Debian Buster (Closes: #17620).
+    - Tor Browser AppArmor profile: update patch to apply on top of
+      0.3.2-11 (Closes: #17612)
+    - Thunderbird AppArmor profile: update patch to apply on top of
+      68.9.0 (Closes: #17769).
+
+  * Test suite
+    - Establish a coding standards baseline on our Ruby code base
+      using Rubocop (Closes: #17646). This *MASSIVE* change includes
+      mainly stylistic fixes and linting but also a few bug fixes,
+      some dead code removal and code simplifications/refactorings,
+      spelling fixes, improved gherkin and even removal the of
+      a few duplicated tests and merging of very similar tests.
+    - Improve robustness of navigating the GRUB menu in UEFI mode, and
+      consequently drop the @fragile tag on the UEFI boot scenario
+      (Closes: #13459).
+    - Allow configuring the number of vCPUs given to TailsToaster.
+      Based on work done by kytv (♥) on #6729. On powerful hardware
+      with many CPUs, Tails boots much faster with >2 vCPUs given to
+      TailsToaster.
+    - Disable desktop size and clipboard interference between the host
+      system and the system under test when using --view.
+    - Ensure we run post_snapshot_restore_hook every time it's needed.
+    - Fix running with XDG_SESSION_TYPE unset (Closes: #17596).
+    - Always test the localized start up page of the Unsafe Browser.
+    - Add --keep-chutney option to keep Chutney data, but no
+      snapshots, between runs.
+    - Revert "Test suite: disable tests about notifications in case of
+      MAC spoofing failure (refs: #10774)"
+    - Verify that the Unsafe Browser is disabled by default.
+    - Test suite: fix --image-bumping-mode.
+
+ -- Tails developers <tails@boum.org>  Mon, 29 Jun 2020 16:02:18 +0200
+>>>>>>> stable
+
 tails (4.7) unstable; urgency=medium
 
   * Security fixes
