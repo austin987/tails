@@ -344,6 +344,11 @@ ask your question in a comment there, mentioning them
 with their GitLab login name: `@nick`. GitLab will send them
 an email notification about it and add it to their To-Do list.
 
+If you want to raise attention of every single member of a team, mention it with
+the name of the corresponding [[!tails_gitlab explore/groups desc="group"]]:
+`@xyz-team`. GitLab will send an email notification about it to every member
+of this group, and add it to their To-Do list.
+
 ## Acting upon input requests
 
 It's important to provide requested information as quickly as you can,
@@ -393,6 +398,8 @@ you can:
    See [[!tails_gitlab help/user/project/issues/managing_issues.html#new-issue-via-email desc="New issue via email"]]
    in the GitLab documentation.
 
+<a id="core-work"></a>
+
 # Core teams' work
 
 Some of the teams who do
@@ -431,6 +438,22 @@ instance"]].
 The Tails [[system administrators|working_together/roles/sysadmins]]
 administrate this GitLab instance.
 
+## Configuration of GitLab
+
+The configuration of our GitLab instance lives in the private [[!tails_gitlab
+tails/gitlab-config]] GitLab project.
+
+If you have access to this project, you can propose configuration changes:
+push a topic branch and submit a merge request.
+
+This can be useful, for example:
+
+ - to modify group membership when someone joins or leaves a team
+ - to propose new [[!tails_gitlab groups/tails/-/labels desc="group labels"]]
+   shared by all our GitLab projects
+ - to propose a new project under the `tails/` namespace, ensuring our common
+   project settings & permission model are applied
+
 <a id="access-control"></a>
 
 ## Access control
@@ -466,11 +489,13 @@ administrate this GitLab instance.
 
 ### Subjects
 
- - An _admin_ can do anything that other roles can, and:
-   - can delete issues
-   - can edit team membership
+ - An _admin_:
+   - can configure GitLab
+     - As a consequence, an admin can grant themselves
+       any permission they want if an emergency requires it;
+       in other situations, better follow due process to request
+       such status or permissions :)
    - MUST comply with our "Level 3" security policy
-   - can view issues that contain particularly sensitive data
 
  - A _committer_:
    - can push and force-push to any ref in the canonical Git repo,

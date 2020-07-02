@@ -341,7 +341,7 @@ class ImageBumpingScreen
             if c == 'y'
               FileUtils.cp("#{$config['TMPDIR']}/last_opencv_match.png",
                            "#{OPENCV_IMAGE_PATH}/#{image}")
-              return p
+              return Match.new(image, @screen, *p)
             elsif ['n', 3.chr].include?(c) # Ctrl+C => 3
               break
             end
@@ -356,7 +356,7 @@ class ImageBumpingScreen
         else
           warn 'Found match! Accept? (y/n)'
           c = STDIN.getch
-          return p if c == 'y'
+          return Match.new(image, @screen, *p) if c == 'y'
         end
       when 'i'
         $interactive_image_bump_ignores << image
