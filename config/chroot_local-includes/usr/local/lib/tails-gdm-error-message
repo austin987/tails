@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+
+from subprocess import check_call, check_output
+
+MAX_LENGTH = 254  # this depends on a limit of plymouth
+
+
+def run_lspci(lspci_args: list) -> str:
+    """
+    get lspci output
+    """
+    s = check_output(["lspci", "-vmm"] + lspci_args, encoding="utf8")
+    return s
+
+
+def parse_lspci(text: str) -> list:
+    """
+    parse lspci output
+    """
+    ret = []
+    blocks = text.split("\n\n")
+    for block in blocks:
+        parsed_block = parse_block(block)
+        if parsed_block:
+            ret.append(parsed_block)
+    return ret
+
+
+def parse_block(text: str) -> dict:
+    """
+    sub-parser for parse_lspci. Don't use it standalone
+
+
+    >>> parse_block("")
+    {}
+    >>> parse_block("foo:bar")
+    {'foo': 'bar'}
+    >>> parse_block("foo:bar:zap")
+    {'foo': 'bar:zap'}
+    >>> parse_block("foo:bar\\nasd:xyz")
+    {'foo': 'bar', 'asd': 'xyz'}
+    """
+    text = text.strip()
+    ret = {}
+    for line in text.split("\n"):
+        if ":" not in line:
+            continue
+        key, value = line.strip().split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        ret[key] = value
+    return ret
+
+
+def sort_gpus(gpus: list) -> list:
+    """
+    Sort GPUs putting the most probable at top.
+    Specifically, this means putting Intel last.
+
+    >>> gpus = [{"Vendor": "Intel Corporation [8086]"}, {"Vendor": "Anyone"}]
+    >>> sort_gpus(gpus)[0]["Vendor"]
+    'Anyone'
+    >>> gpus.reverse()
+    >>> sort_gpus(gpus)[0]["Vendor"]
+    'Anyone'
+    """
+    return sorted(gpus, key=lambda g: g["Vendor"].endswith("[8086]"))
+
+
+def format_gpus(gpus: list) -> str:
+    """
+    >>> 'No GPU' in format_gpus([])
+    True
+    >>> len(format_gpus([{"Vendor": "X", "Device": "Y"}]))
+    136
+
+    The output is cropped to 254 chars
+    >>> len(format_gpus([{"Vendor": "VendorX", "Device": "DevY"}] * 100))
+    254
+
+    Pluralization
+    >>> 'your 100 graphics card' in format_gpus([{"Vendor": "VendorX", "Device": "DevY"}] * 100)
+    True
+    """
+    if gpus:
+        msg = "\n".join("{Vendor} {Device}".format(**dev) for dev in gpus)
+    else:
+        msg = "No GPUs detected"
+
+    if len(gpus) <= 1:
+        header = "Error starting GDM with your graphics card:\n"
+    else:
+        header = "Error starting GDM with your %d graphics cards:\n" % len(gpus)
+    footer = "\nPlease take note of this error and visit https://tails.boum.org/gdm for troubleshooting."
+    msg = msg[: MAX_LENGTH - len(header) - len(footer)]
+    msg = header + msg + footer
+    return msg
+
+
+def main():
+    output = run_lspci(["-d::0300", "-nn"])
+    parsed = parse_lspci(output)
+    gpus = [
+        device
+        for device in parsed
+        if "Class" in device and device["Class"].startswith("VGA")
+    ]
+    gpus = sort_gpus(gpus)
+    msg = format_gpus(gpus)
+    check_call(["/bin/plymouth", "display-message", "--text", msg])
+
+
+if __name__ == "__main__":
+    # fmt: off
+    # uncomment these lines to run doctests
+    # import sys, doctest;  doctest.testmod(verbose=True); sys.exit(0)
+    main()
