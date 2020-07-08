@@ -27,12 +27,3 @@ Feature: Thunderbird email client
     And I send an email to myself
     And I fetch my email
     Then I can find the email I sent to myself in my inbox
-
-  Scenario: Thunderbird can download the inbox with POP3
-    When I enter my email credentials into the autoconfiguration wizard
-    Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
-    When I select the autoconfiguration wizard's POP3 choice
-    Then the autoconfiguration wizard's choice for the incoming server is secure POP3
-    When I accept the autoconfiguration wizard's configuration
-    And I fetch my email
-    Then my Thunderbird inbox is non-empty
