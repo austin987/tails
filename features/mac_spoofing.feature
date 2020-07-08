@@ -32,8 +32,6 @@ Feature: Spoofing MAC addresses
     And the 2nd network device has a spoofed MAC address configured
     And no network device leaked the real MAC address
 
-  #10774
-  @fragile
   Scenario: MAC address spoofing fails and macchanger returns false
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I capture all network traffic
@@ -45,8 +43,6 @@ Feature: Spoofing MAC addresses
     # XXX: workaround for #11941
     And I see the "Network card  disabled" notification after at most 60 seconds
 
-  #10774
-  @fragile
   Scenario: MAC address spoofing fails and macchanger returns true
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I capture all network traffic
@@ -58,8 +54,6 @@ Feature: Spoofing MAC addresses
     # XXX: workaround for #11941
     And I see the "Network card  disabled" notification after at most 60 seconds
 
-  #10774
-  @fragile
   Scenario: MAC address spoofing fails and the module is not removed
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I capture all network traffic
