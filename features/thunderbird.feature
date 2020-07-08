@@ -15,14 +15,10 @@ Feature: Thunderbird email client
     And I open the Extensions tab
     Then I see that only the Enigmail add-on is enabled in Thunderbird
 
-  Scenario: Thunderbird's autoconfiguration wizard defaults to IMAP and secure protocols
+  Scenario: I can send emails, and receive emails over IMAP
     When I enter my email credentials into the autoconfiguration wizard
     Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
-    Then the autoconfiguration wizard's choice for the outgoing server is secure SMTP
-
-  Scenario: Thunderbird can send emails, and receive emails over IMAP
-    When I enter my email credentials into the autoconfiguration wizard
-    Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
+    And the autoconfiguration wizard's choice for the outgoing server is secure SMTP
     When I accept the autoconfiguration wizard's configuration
     And I send an email to myself
     And I fetch my email
