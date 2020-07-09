@@ -139,7 +139,8 @@ done
 # point we have to take some drastic measures in order to prevent
 # potential leaks.
 if [ -z "${OLD_MAC:-}" ] || [ -z "${NEW_MAC:-}" ] || \
-   [ "${OLD_MAC:-}" = "${NEW_MAC:-}" ]
+   [ "${OLD_MAC:-}" = "${NEW_MAC:-}" ] || \
+   grep -qs -w 'debug=test_mac_spoof_panic' /proc/cmdline
 then
     log "Failed to spoof MAC address of NIC ${NIC}. Going into panic mode."
     if ! mac_spoof_panic "${NIC}"; then
