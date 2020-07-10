@@ -111,7 +111,16 @@ def main():
 
 
 if __name__ == "__main__":
-    # fmt: off
-    # uncomment these lines to run doctests
-    # import sys, doctest;  doctest.testmod(verbose=True); sys.exit(0)
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "doctest":
+        p = ArgumentParser(sys.argv[0].split(os.path.sep)[-1] + ' doctest')
+        p.add_argument('--verbose', action='store_true', default=False)
+        args = p.parse_args(sys.argv[2:])
+        import doctest
+
+        results = doctest.testmod(verbose=args.verbose)
+        if results.failed > 0:
+            sys.exit(1)
+        else:
+            sys.exit(0)
     main()
