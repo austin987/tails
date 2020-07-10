@@ -28,7 +28,7 @@ def parse_lspci(text: str) -> list:
     return ret
 
 
-DEVCODE_RE = re.compile(r"""(.*)\[([0-9a-f]{4})\]""")
+DEVCODE_RE = re.compile(r"""(.*)\[([0-9a-f]{4})\]([^[]*)$""")
 
 
 def parse_block(text: str) -> dict:
@@ -48,9 +48,17 @@ def parse_block(text: str) -> dict:
     Device codes are understood
 
     >>> parse_block("Device:bar")
-    {'Device-code': 'NONE', 'Device': 'bar'}
+    {'Device-code': 'NO', 'Device': 'bar'}
     >>> parse_block("Device:bar [123a]")
     {'Device-code': '123a', 'Device': 'bar'}
+
+    If anything follows the device codes, the parsing is still valid
+    >>> parse_block("Device:bar [123a] (rev v2)")
+    {'Device-code': '123a', 'Device': 'bar (rev v2)'}
+
+    And the last square parenthesis is taken]
+    >>> parse_block("Device:bar [1234] [123a] (rev v2)")
+    {'Device-code': '123a', 'Device': 'bar [1234] (rev v2)'}
     """
     text = text.strip()
     ret = {}
@@ -64,11 +72,13 @@ def parse_block(text: str) -> dict:
             m = DEVCODE_RE.match(value)
             if m is not None:
                 value = m.group(1).strip()
+                if m.group(2).strip():
+                    value += " " + m.group(3).strip()
                 ret[key + "-code"] = m.group(2)
             else:
-                ret[key + "-code"] = 'NONE'
+                ret[key + "-code"] = "NO"
 
-        ret[key] = value
+        ret[key] = value.strip()
     return ret
 
 
@@ -91,20 +101,21 @@ def format_gpus(gpus: list) -> str:
     """
     >>> 'No GPU' in format_gpus([])
     True
-    >>> len(format_gpus([{"Vendor": "X",  "Device": "Y", 'Vendor-code': 'NONE','Device-code': 'NONE'}]))
-    147
+    >>> gpu = {"Vendor": "X",  "Device": "Y", 'Vendor-code': 'NO','Device-code': 'NO'}
+    >>> len(format_gpus([gpu]))
+    143
 
     The output is cropped to 254 chars
-    >>> len(format_gpus([{"Vendor": "VendorX", "Device": "DevY", 'Vendor-code': 'NONE','Device-code': 'NONE'}] * 100))
+    >>> len(format_gpus([gpu] * 100))
     254
 
     Pluralization
-    >>> 'your 100 graphics card' in format_gpus([{"Vendor": "VendorX", "Device": "DevY"}] * 100)
+    >>> 'your 100 graphics card' in format_gpus([gpu] * 100)
     True
     """
     if gpus:
         msg = "\n".join(
-            "{Vendor}[{Vendor-code}:{Device-code}] {Device}".format(**dev)
+            "{Vendor} [{Vendor-code}:{Device-code}] {Device}".format(**dev)
             for dev in gpus
         )
     else:
