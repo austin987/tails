@@ -97,7 +97,18 @@ def format_gpus(gpus: list) -> str:
     return msg
 
 
+from argparse import ArgumentParser
+
+
 def main():
+    p = ArgumentParser()
+    p.add_argument(
+        "--dry-run",
+        help="Don't actually run plymouth, just show the command",
+        action="store_true",
+        default=False,
+    )
+    args = p.parse_args()
     output = run_lspci(["-d::0300", "-nn"])
     parsed = parse_lspci(output)
     gpus = [
@@ -107,11 +118,16 @@ def main():
     ]
     gpus = sort_gpus(gpus)
     msg = format_gpus(gpus)
-    check_call(["/bin/plymouth", "display-message", "--text", msg])
+    cmd = ["/bin/plymouth", "display-message", "--text", msg]
+    if not args.dry_run:
+        check_call(cmd)
+    else:
+        print("would run `%s`, but --dry-run is selected" % " ".join(cmd))
 
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1 and sys.argv[1] == "doctest":
         p = ArgumentParser(sys.argv[0].split(os.path.sep)[-1] + ' doctest')
         p.add_argument('--verbose', action='store_true', default=False)
