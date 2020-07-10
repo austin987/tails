@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import re
+import os.path
 from subprocess import check_call, check_output
 
 MAX_LENGTH = 254  # this depends on a limit of plymouth
@@ -26,6 +28,9 @@ def parse_lspci(text: str) -> list:
     return ret
 
 
+DEVCODE_RE = re.compile(r"""(.*)\[([0-9a-f]{4})\]""")
+
+
 def parse_block(text: str) -> dict:
     """
     sub-parser for parse_lspci. Don't use it standalone
@@ -39,6 +44,13 @@ def parse_block(text: str) -> dict:
     {'foo': 'bar:zap'}
     >>> parse_block("foo:bar\\nasd:xyz")
     {'foo': 'bar', 'asd': 'xyz'}
+
+    Device codes are understood
+
+    >>> parse_block("Device:bar")
+    {'Device-code': 'NONE', 'Device': 'bar'}
+    >>> parse_block("Device:bar [123a]")
+    {'Device-code': '123a', 'Device': 'bar'}
     """
     text = text.strip()
     ret = {}
@@ -48,6 +60,14 @@ def parse_block(text: str) -> dict:
         key, value = line.strip().split(":", 1)
         key = key.strip()
         value = value.strip()
+        if key in ("Vendor", "Device"):
+            m = DEVCODE_RE.match(value)
+            if m is not None:
+                value = m.group(1).strip()
+                ret[key + "-code"] = m.group(2)
+            else:
+                ret[key + "-code"] = 'NONE'
+
         ret[key] = value
     return ret
 
@@ -71,11 +91,11 @@ def format_gpus(gpus: list) -> str:
     """
     >>> 'No GPU' in format_gpus([])
     True
-    >>> len(format_gpus([{"Vendor": "X", "Device": "Y"}]))
-    136
+    >>> len(format_gpus([{"Vendor": "X",  "Device": "Y", 'Vendor-code': 'NONE','Device-code': 'NONE'}]))
+    147
 
     The output is cropped to 254 chars
-    >>> len(format_gpus([{"Vendor": "VendorX", "Device": "DevY"}] * 100))
+    >>> len(format_gpus([{"Vendor": "VendorX", "Device": "DevY", 'Vendor-code': 'NONE','Device-code': 'NONE'}] * 100))
     254
 
     Pluralization
@@ -83,7 +103,10 @@ def format_gpus(gpus: list) -> str:
     True
     """
     if gpus:
-        msg = "\n".join("{Vendor} {Device}".format(**dev) for dev in gpus)
+        msg = "\n".join(
+            "{Vendor}[{Vendor-code}:{Device-code}] {Device}".format(**dev)
+            for dev in gpus
+        )
     else:
         msg = "No GPUs detected"
 
@@ -124,8 +147,8 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 1 and sys.argv[1] == "doctest":
-        p = ArgumentParser(sys.argv[0].split(os.path.sep)[-1] + ' doctest')
-        p.add_argument('--verbose', action='store_true', default=False)
+        p = ArgumentParser(sys.argv[0].split(os.path.sep)[-1] + " doctest")
+        p.add_argument("--verbose", action="store_true", default=False)
         args = p.parse_args(sys.argv[2:])
         import doctest
 
