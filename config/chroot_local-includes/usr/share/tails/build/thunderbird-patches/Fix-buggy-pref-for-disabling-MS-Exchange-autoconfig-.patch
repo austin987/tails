@@ -23,11 +23,9 @@ when disabled either.
  .../content/exchangeAutoDiscover.js           | 10 ---
  2 files changed, 45 insertions(+), 46 deletions(-)
 
-diff --git a/comm/mail/components/accountcreation/content/emailWizard.js b/comm/mail/components/accountcreation/content/emailWizard.js
-index 3780792641a..0b53b0a498d 100644
 --- a/comm/mail/components/accountcreation/content/emailWizard.js
 +++ b/comm/mail/components/accountcreation/content/emailWizard.js
-@@ -677,44 +677,53 @@ EmailConfigWizard.prototype = {
+@@ -757,46 +757,55 @@
        );
        call.setAbortable(fetch);
  
@@ -66,7 +64,9 @@ index 3780792641a..0b53b0a498d 100644
 -        (e, allErrors) => {
 -          // Must call error callback in any case to stop the discover mode.
 -          let errorCallback = call.errorCallback();
--          if (allErrors && allErrors.some(e => e.code == 401)) {
+-          if (e instanceof CancelledException) {
+-            errorCallback(e);
+-          } else if (allErrors && allErrors.some(e => e.code == 401)) {
 -            // Auth failed.
 -            // Ask user for username.
 -            this.onStartOver();
@@ -95,7 +95,9 @@ index 3780792641a..0b53b0a498d 100644
 +          (e, allErrors) => {
 +            // Must call error callback in any case to stop the discover mode.
 +            let errorCallback = call.errorCallback();
-+            if (allErrors && allErrors.some(e => e.code == 401)) {
++            if (e instanceof CancelledException) {
++              errorCallback(e);
++            } else if (allErrors && allErrors.some(e => e.code == 401)) {
 +              // Auth failed.
 +              // Ask user for username.
 +              this.onStartOver();
@@ -117,11 +119,9 @@ index 3780792641a..0b53b0a498d 100644
      } catch (e) {
        // e.g. when entering an invalid domain like "c@c.-com"
        this.showErrorMsg(e);
-diff --git a/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js b/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
-index f9d2a6e0d3e..efe9966a600 100644
 --- a/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
 +++ b/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
-@@ -47,16 +47,6 @@ function fetchConfigFromExchange(
+@@ -48,16 +48,6 @@
  ) {
    assert(typeof successCallback == "function");
    assert(typeof errorCallback == "function");
@@ -138,6 +138,3 @@ index f9d2a6e0d3e..efe9966a600 100644
    // <https://technet.microsoft.com/en-us/library/bb124251(v=exchg.160).aspx#Autodiscover%20services%20in%20Outlook>
    // <https://docs.microsoft.com/en-us/previous-versions/office/developer/exchange-server-interoperability-guidance/hh352638(v%3Dexchg.140)>, search for "The Autodiscover service uses one of these four methods"
    let url1 =
--- 
-2.26.1
-
