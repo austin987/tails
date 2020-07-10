@@ -110,12 +110,7 @@ def main():
     )
     args = p.parse_args()
     output = run_lspci(["-d::0300", "-nn"])
-    parsed = parse_lspci(output)
-    gpus = [
-        device
-        for device in parsed
-        if "Class" in device and device["Class"].startswith("VGA")
-    ]
+    gpus = parse_lspci(output)
     gpus = sort_gpus(gpus)
     msg = format_gpus(gpus)
     cmd = ["/bin/plymouth", "display-message", "--text", msg]
