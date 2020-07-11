@@ -1209,3 +1209,7 @@ Given /^I magically allow the Unsafe Browser to be started$/ do
   $vm.file_overwrite('/var/lib/live/config/tails.unsafe-browser',
                      'TAILS_UNSAFE_BROWSER_ENABLED=true')
 end
+
+Given /^I am in the Git branch being tested$/ do
+  Dir.chdir(GIT_DIR)
+end
