@@ -728,7 +728,7 @@ method cancel_download () {
             q{Error while cancelling the upgrade download}
         )),
         error_msg => $self->encoding->decode(gettext(
-            q{Failed to cancell the upgrade download}
+            q{Failed to cancel the upgrade download}
         )),
         as        => 'root',
     )) unless $ENV{HARNESS_ACTIVE};
