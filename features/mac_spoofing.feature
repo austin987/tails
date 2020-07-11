@@ -40,7 +40,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     Then no network interfaces are enabled
     And no network device leaked the real MAC address
-    # XXX: workaround for #11941
+    # XXX: workaround for #17784
     And I see the "Network card  disabled" notification after at most 60 seconds
 
   Scenario: MAC address spoofing fails and macchanger returns true
@@ -51,7 +51,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     Then no network interfaces are enabled
     And no network device leaked the real MAC address
-    # XXX: workaround for #11941
+    # XXX: workaround for #17784
     And I see the "Network card  disabled" notification after at most 60 seconds
 
   Scenario: MAC address spoofing fails and the module is not removed
