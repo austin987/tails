@@ -577,7 +577,10 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             $exit_code = $?;
         }
         else {
-	    local $SIG{HUP} = sub {exit(0) unless ($self->cancel_download)};
+	    local $SIG{HUP} = sub {
+		$self->cancel_download;
+		exit(0);
+	    };
 	    IPC::Run::run \@cmd, '2>', \$stderr,
                 '|', [qw{zenity --progress --percentage=0 --auto-close
 		        --auto-kill}, '--title', $title, '--text', $info]
@@ -722,7 +725,7 @@ method shutdown_network () {
 
 method cancel_download () {
     $self->info("Cancelling the upgrade download");
-    my ($exit_code) =  reverse($self->fatal_run_cmd(
+    $self->fatal_run_cmd(
         cmd       => ['tails-iuk-cancel-download'],
         error_title => $self->encoding->decode(gettext(
             q{Error while cancelling the upgrade download}
@@ -731,8 +734,8 @@ method cancel_download () {
             q{Failed to cancel the upgrade download}
         )),
         as        => 'root',
-    )) unless $ENV{HARNESS_ACTIVE};
-    return $exit_code;
+    ) unless $ENV{HARNESS_ACTIVE};
+    
 }
 
 method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
