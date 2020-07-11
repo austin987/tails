@@ -18,6 +18,9 @@ output_apt_binary_source() {
 output_overlay_apt_binary_sources() {
 	cd config/APT_overlays.d/
 	for suite in * ; do
+		# handle the case when no APT overlay is enabled
+		[[ -e "$suite" ]] || break
+
 		output_apt_binary_source "$suite"
 	done
 	cd ../../
