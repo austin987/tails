@@ -12,11 +12,6 @@ Pre-requisites
 
 * a Debian Stretch (or newer) system
 * [[Install perl5lib's dependencies|perl5lib#build-deps]]
-* Environment:
-  - Export location of a checkout of the `stable` branch of the main
-    Tails Git repository:
-
-        export TAILS_GIT_CHECKOUT="/path/to/your/tails/git/repo"
 
 Install test dependencies
 =========================
@@ -35,7 +30,8 @@ Run the test suite
 ==================
 
     cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/persistence-setup"
-    PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
+    PERL5LIB="$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/perl5lib/lib" \
+       TAILS_GIT_CHECKOUT="$(git rev-parse --show-toplevel)" \
        RELEASE_TESTING=1 \
        LC_ALL=C \
        fakeroot dzil test
