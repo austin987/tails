@@ -43,9 +43,9 @@ get_module_used_by_nic() {
 }
 
 get_name_of_nic() {
-  vendor=$(udevadm info -x --query=property /sys/class/net/${1} | sed -n "s/ID_VENDOR_FROM_DATABASE='\(.*\)'/\\1/p")
-  device=$(udevadm info -x --query=property /sys/class/net/${1} | sed -n "s/ID_MODEL_FROM_DATABASE='\(.*\)'/\\1/p")
-  echo "$vendor $device"
+  vendor=$(udevadm info -x --query=property /sys/class/net/${1} | sed -n "s/ID_VENDOR_FROM_DATABASE='\(.*\)'/\\1/p" || : )
+  device=$(udevadm info -x --query=property /sys/class/net/${1} | sed -n "s/ID_MODEL_FROM_DATABASE='\(.*\)'/\\1/p" || : )
+  echo "${vendor} ${device}"
 }
 
 # Auxillary function for mod_rev_dep(). It recurses over the graph of
