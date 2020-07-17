@@ -34,8 +34,8 @@ describe 'A configuration object' => sub {
         it 'has a GnuPG atom' => sub {
             is(scalar(grep { $_->destination eq '/home/amnesia/.gnupg' } $configuration->all_atoms), 1);
         };
-        it 'has 12 atoms' => sub {
-            is(scalar($configuration->all_atoms), 12);
+        it 'has 13 atoms' => sub {
+            is(scalar($configuration->all_atoms), 13);
         };
         it 'has 1 enabled atom' => sub {
             is(scalar($configuration->all_enabled_atoms), 1);
@@ -59,8 +59,8 @@ EOF
                 config_file_path => $config_filename
             );
         };
-        it 'has 13 atoms' => sub {
-            is(scalar($configuration->all_atoms), 13);
+        it 'has 14 atoms' => sub {
+            is(scalar($configuration->all_atoms), 14);
         };
         it 'has 4 enabled atoms' => sub {
             is(scalar($configuration->all_enabled_atoms), 4);

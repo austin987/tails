@@ -7,9 +7,9 @@ Feature: configure step
     Given I have a Configuration object
     And I have a Step::Configure object
     Then I should have a defined Step::Configure object
-    And the list of displayed settings should contain 11 elements
-    And the list of configuration atoms should contain 12 elements
-    And the list box should have 22 children including separators
+    And the list of displayed settings should contain 12 elements
+    And the list of configuration atoms should contain 13 elements
+    And the list box should have 24 children including separators
     And there should be 1 active setting
     And there should be 1 setting with a configuration button
     And every active setting's atoms should be enabled
