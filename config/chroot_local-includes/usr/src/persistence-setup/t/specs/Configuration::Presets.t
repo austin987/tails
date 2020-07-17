@@ -17,8 +17,8 @@ describe 'A configuration presets object' => sub {
     it 'can return all presets' => sub {
         ok($presets->all);
     };
-    it 'has 11 elements' => sub {
-        is(scalar($presets->all), 11);
+    it 'has 12 elements' => sub {
+        is(scalar($presets->all), 12);
     };
     it 'has a GnuPG preset' => sub {
         is(scalar(grep { $_->{name} eq 'GnuPG' } $presets->all), 1);
