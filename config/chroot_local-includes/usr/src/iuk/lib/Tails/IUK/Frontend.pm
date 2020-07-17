@@ -577,17 +577,17 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             $exit_code = $?;
         }
         else {
-	    local $SIG{HUP} = sub {
-		$self->cancel_download;
-		exit(0);
-	    };
-	    IPC::Run::run \@cmd, '2>', \$stderr,
+            local $SIG{HUP} = sub {
+                $self->cancel_download;
+                exit(0);
+            };
+            IPC::Run::run \@cmd, '2>', \$stderr,
                 '|', [qw{zenity --progress --percentage=0 --auto-close
-		        --auto-kill}, '--title', $title, '--text', $info]
+                        --auto-kill}, '--title', $title, '--text', $info]
                 or $success = 0;
             $exit_code = $?;
         }
-	
+        
         $success or $self->fatal(
             errf("<b>%{error_msg}s</b>\n\n%{details}s",
                  {
