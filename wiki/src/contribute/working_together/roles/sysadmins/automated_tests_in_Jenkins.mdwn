@@ -36,13 +36,19 @@ get the test suite running eventually:
    test suite feedback we want.
 
 Thankfully, there is a way to trigger a test suite run without having
-to rebuild images first. To do so, start a "build" of the
-corresponding `test_Tail_ISO_*` job, passing to the
-`UPSTREAMJOB_BUILD_NUMBER` parameter the ID of the `build_Tail_ISO_*`
-job build you want to test.
+to rebuild images first. To do so:
 
-When doing so, you may also pass arbitrary arguments to Cucumber
-via the `EXTRA_CUCUMBER_ARGS` job parameter.
+1. On the corresponding `test_Tail_ISO_*` job page, click _Build with
+   Parameters_.
+2. Set the `UPSTREAMJOB_BUILD_NUMBER` parameter the ID of the `build_Tail_ISO_*`
+   job build you want to test, for example `10`.
+3. Optionally, you may also pass arbitrary arguments to Cucumber
+   via the `EXTRA_CUCUMBER_ARGS` job parameter. For example:
+
+   - If you set this parameter to `features/mac_spoofing.feature`, then Cucumber
+     will run only the scenarios from the `mac_spoofing.feature` feature.
+   - If you set this parameter to `@automatic_upgrade`, then Cucumber
+     will run only the scenarios that are tagged `@automatic_upgrade`.
 
 ## Known usability issues
 

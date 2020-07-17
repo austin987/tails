@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<TMPL_IF HTML_LANG_CODE>
+<html lang="<TMPL_VAR HTML_LANG_CODE>" dir="<TMPL_VAR HTML_LANG_DIR>" xmlns="http://www.w3.org/1999/xhtml">
+<TMPL_ELSE>
+<html xmlns="http://www.w3.org/1999/xhtml">
+</TMPL_IF>
+<head>
+<TMPL_IF DYNAMIC>
+<TMPL_IF FORCEBASEURL><base href="<TMPL_VAR FORCEBASEURL>" /><TMPL_ELSE>
+<TMPL_IF BASEURL><base href="<TMPL_VAR BASEURL>" /></TMPL_IF>
+</TMPL_IF>
+</TMPL_IF>
+<TMPL_IF HTML5><meta charset="utf-8" /><TMPL_ELSE><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></TMPL_IF>
+<title>Tails report<TMPL_VAR TITLE></title>
+<TMPL_IF RESPONSIVE_LAYOUT><meta name="viewport" content="width=device-width, initial-scale=1" /></TMPL_IF>
+<TMPL_IF FAVICON>
+<link rel="icon" href="<TMPL_VAR BASEURL><TMPL_VAR FAVICON>" type="image/x-icon" />
+</TMPL_IF>
+
+</head>
+
+<style>
+.inlineheader {
+  margin-bottom: 3em;
+}
+.inlineheader a {
+  font-size: 48px;
+  font-weight: bold;
+}
+body {
+  margin: 5em 10%;
+}
+p, ul, ol, blockquote, .toc {
+  max-width: 40em;
+}
+.pagedate {
+  display: none;
+}
+</style>
+
+<TMPL_IF HTML_LANG_CODE>
+<body class="<TMPL_VAR HTML_LANG_CODE>">
+<TMPL_ELSE>
+<body>
+</TMPL_IF>
+
+<TMPL_IF HTML5><article class="page"><TMPL_ELSE><div class="page"></TMPL_IF>
+
+<TMPL_IF HTML5><section class="pageheader"><TMPL_ELSE><div class="pageheader"></TMPL_IF>
+
+<TMPL_IF HTML5><header class="header"><TMPL_ELSE><div class="header"></TMPL_IF>
+<span class="title">
+<TMPL_VAR TITLE>
+</span>
+<TMPL_IF HTML5></header><TMPL_ELSE></div></TMPL_IF>
+
+<TMPL_UNLESS DYNAMIC>
+<TMPL_VAR TRAILS>
+</TMPL_UNLESS>
+
+<TMPL_IF HTML5></section><TMPL_ELSE></div></TMPL_IF>
+
+<div id="pagebody">
+
+<TMPL_IF HTML5><section<TMPL_ELSE><div</TMPL_IF> id="content" role="main">
+<TMPL_VAR CONTENT>
+<TMPL_IF HTML5></section><TMPL_ELSE></div></TMPL_IF>
+
+</div>
+
+<TMPL_IF HTML5></article><TMPL_ELSE></div></TMPL_IF>
+
+</body>
+</html>
