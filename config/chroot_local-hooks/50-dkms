@@ -18,7 +18,8 @@ ensure_hook_dependency_is_installed dkms
 ensure_hook_dependency_is_installed \
    virtualbox-guest-dkms
 
-for log in $(ls /var/lib/dkms/*/*/build/make.log); do
+for log in /var/lib/dkms/*/*/build/make.log; do
+   [ -e "$log" ] || break  # handle the case when no file matched the glob
    echo "---- $log"
    cat "$log"
 done
