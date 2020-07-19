@@ -480,6 +480,8 @@ Given /^the Tor Browser (?:has started|starts)$/ do
     @torbrowser = Dogtail::Application.new('Firefox')
     @torbrowser.child?(roleName: 'frame', recursive: false)
   end
+  browser_info = xul_application_info('Tor Browser')
+  @screen.wait(browser_info[:new_tab_button_image], 10)
 end
 
 Given /^the Tor Browser loads the (startup page|Tails homepage|Tails GitLab)$/ do |page|
