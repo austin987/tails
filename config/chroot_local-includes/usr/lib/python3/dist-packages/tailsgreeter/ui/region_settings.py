@@ -273,4 +273,4 @@ class KeyboardSettingUI(LocalizationSettingUI):
         self.value = layout
         self.update_value_label()
         self._setting.save(layout, is_default=True)
-        self.apply()
+        self._setting.apply_layout_to_current_screen(self.value)
