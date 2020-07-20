@@ -38,7 +38,7 @@ Then /^the Unsafe Browser works in all supported languages$/ do
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
       step "the Unsafe Browser has started in the \"#{lang}\" locale"
-    rescue RuntimeError
+    rescue StandardError
       failed << lang
       next
     end
