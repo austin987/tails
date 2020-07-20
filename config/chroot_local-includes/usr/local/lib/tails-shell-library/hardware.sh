@@ -56,7 +56,7 @@ get_name_of_nic() {
 mod_rev_dep_aux() {
   local mod
   local rev_deps
-  for mod in ${@}; do
+  for mod in "${@}"; do
     if echo ${MOD_REV_DEP_VISITED} | grep -qw ${mod}; then
         continue
     fi
