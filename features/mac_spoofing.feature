@@ -40,8 +40,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     Then no network interfaces are enabled
     And no network device leaked the real MAC address
-    # XXX: workaround for #17784
-    And I see the "Network card  disabled" notification after at most 60 seconds
+    And I see the "Network card eth0 disabled" notification after at most 60 seconds
 
   Scenario: MAC address spoofing fails and macchanger returns true
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
@@ -51,8 +50,7 @@ Feature: Spoofing MAC addresses
     When I log in to a new session
     Then no network interfaces are enabled
     And no network device leaked the real MAC address
-    # XXX: workaround for #17784
-    And I see the "Network card  disabled" notification after at most 60 seconds
+    And I see the "Network card eth0 disabled" notification after at most 60 seconds
 
   Scenario: MAC address spoofing fails and the module is not removed
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
