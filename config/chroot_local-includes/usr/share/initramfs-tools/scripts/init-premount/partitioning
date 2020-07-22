@@ -13,6 +13,18 @@ esac
 
 set -eu
 
+# We will run this after each action that alters the device/partition
+# in any way in an attempt to avoid various races that has caused this
+# script to fail at various points. Examples:
+#  * `partprobe /dev/sda` exiting before /dev/sda1 exists, causing
+#    errors in subsequent commands attempting to use /dev/sda1
+#  * `mlabel` complaining that it "could not read boot sector"
+settle() {
+    sync
+    udevadm settle
+    sync
+}
+
 # Print executed commands for debugging
 if [ -n "$debug" ]; then
 	set -x
@@ -99,29 +111,36 @@ sgdisk \
 	--typecode="1:${ESP_GUID}" \
 	--change-name=1:Tails \
 	"${PARENT_DEVICE}"
+settle
 log_end_msg
 
 # Tell the kernel to reload the partition table
 partprobe "${PARENT_DEVICE}"
+settle
 
 # fatresize overwrites the VBR, so we have to back it up to be able to
 # restore the boot code later
 dd if="${SYSTEM_PARTITION}" of=/tmp/vbr bs=512 count=1
+settle
 
 # Grow the filesystem
 # Note that fatresize resets partition attributes
 # fatresize uses "Mi" for MiB, so we have to append an "i"
 FS_SIZE="${SYSTEM_PARTITION_SIZE}"i
 fatresize --size="${FS_SIZE}" "${SYSTEM_PARTITION}"
+settle
 
 # Restore boot code overwritten by fatresize
 dd if=/tmp/vbr of="${SYSTEM_PARTITION}" bs=1 skip=90 seek=90 count=414
+settle
 
 # Restore JMP instruction which jumps to the bootcode
 dd if=/tmp/vbr of="${SYSTEM_PARTITION}" bs=3 count=1
+settle
 
 # Set a random filesystem UUID (aka. FAT "Volume ID" / "serial number")
 MTOOLS_SKIP_CHECK=1 mlabel -i "${SYSTEM_PARTITION}" -n ::Tails
+settle
 
 # Recompute CHS values for the hybrid MBR (see #16389) and set the
 # following attributes on the system partition (we have to set them
@@ -139,6 +158,8 @@ sgdisk \
 	--attributes=1:set:63 \
 	--recompute-chs \
 	"${PARENT_DEVICE}"
+settle
 
 # Tell the kernel to reload the partition table
 partprobe "${PARENT_DEVICE}"
+settle

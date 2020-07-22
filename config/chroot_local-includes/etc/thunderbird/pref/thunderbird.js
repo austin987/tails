@@ -51,6 +51,11 @@ pref("mailnews.auto_config.fetchFromISP.sslOnly", true);
 pref("mailnews.auto_config.sslOnly", true);
 pref("mailnews.auto_config.guess.sslOnly", true);
 
+// Disable automatic configuration methods that could be serving
+// configurations without authentication.
+pref("mailnews.auto_config.fetchFromExchange.enabled", false);
+pref("mailnews.auto_config.mx.enabled", false);
+
 // Drop auto-fetched configurations using Oauth2 -- they do not work
 // since we disable needed functionality (like JavaScript and cookies)
 // in the embedded browser.
@@ -359,8 +364,8 @@ pref("media.cache_size", 0);
 // Disable CSS :visited selector.
 pref("layout.css.visited_links_enabled", false);
 
-// Disable downloadable fonts.
-pref("gfx.downloadable_fonts.enabled", false);
+// downloadable fonts are NOT disabled: disabling them cause bug #17328: "Find in Message" stops working
+//pref("gfx.downloadable_fonts.enabled", false);
 
 // Disable third-party images.
 pref("permissions.default.image", 3);

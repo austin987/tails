@@ -62,6 +62,13 @@ do_stop() {
 
 BOOT_DEVICE=$(boot_device)
 
+# If the boot_device is not present, shutdown immediately
+# This typically happens when the boot device is removed _during_ a suspend
+if test -z "$BOOT_DEVICE" || ! test -e "$BOOT_DEVICE"; then
+    do_stop
+fi
+
+
 # Assign to QUERY_SELECTOR an option that can be passed as a query selector
 # to udevadm info --query commands.
 if using_fromiso ; then

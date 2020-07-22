@@ -1,7 +1,7 @@
 [[!meta title="Building a Tails image"]]
 
 The following instructions will lead you through the process of building
-a Tails ISO image with [Rake], [Vagrant] and [vagrant-libvirt].
+Tails USB and ISO image with [Rake], [Vagrant] and [vagrant-libvirt].
 
 [Rake]: http://rake.rubyforge.org/
 [Vagrant]: http://vagrantup.com/
@@ -15,8 +15,12 @@ To build Tails you need:
 
  * Debian 9 (Stretch) or newer
  * the KVM virtual machine hypervisor
- * at least 1 GiB of free RAM
- * 20 GB of free storage
+ * at least 1.5 GiB of free RAM
+ * storage:
+   - 20 GB in `$HOME`
+   - 5 GB in `/tmp`
+   - 5 GB in `/var/lib` if the system has at least 16 GiB of RAM;
+     else, 20 GB in `/var/lib`
 
 # Setup the build environment
 
@@ -58,15 +62,20 @@ To build Tails you need:
         git checkout devel && \
         git submodule update --init
 
-2. To build an ISO image, execute the following command:
+2. To build Tails USB and ISO images, execute the following command:
 
         rake build && rake vm:halt
 
    When the build completes, several `tails-*` files
    will appear in the current directory.
 
-You may also want to [[contribute/customize]] the content of the ISO
-image before building it.
+You may also want to [[contribute/customize]] the content of the
+Tails image before building it.
+
+Finally, you can test your Tails image:
+
+ - manually [[in a virtual machine|doc/advanced_topics/virtualization]]
+ - [[with our automated test suite|contribute/release_process/test/automated_tests]]
 
 <a id="vagrant-known-issues"></a>
 
@@ -103,7 +112,7 @@ image before building it.
 
 You can customize the build system using two environment variables:
 
- * `ARTIFACTS` is the path where the ISO image is stored once the
+ * `ARTIFACTS` is the path where the USB and ISO images are stored once the
    build completes; for example:
 
         ARTIFACTS='/path/to/directory'
@@ -111,8 +120,8 @@ You can customize the build system using two environment variables:
  * `APT_SNAPSHOTS_SERIALS` can be set to specify which [[time-based APT
    snapshots|contribute/APT_repository/time-based_snapshots]]
    repositories will be used as 'latest' during the build, and will set
-   it accordingly in the resulting ISO image if necessary. This can be
-   useful to reproduce an ISO build that did not use tagged APT
+   it accordingly in the resulting USB and ISO images if necessary. This can be
+   useful to reproduce a build that did not use tagged APT
    snapshots. The value must be JSON, for example:
 
         APT_SNAPSHOTS_SERIALS='{"torproject":"2017120803","debian-security":"2017120902","debian":"2017120903"}'
@@ -182,7 +191,7 @@ way:
 ## Variations useful for testing build reproducibility
 
 These options allow one to vary the build environment in ways that may
-affect reproducibility of the ISO image:
+affect reproducibility of the images:
 
  * **dateoffset=_+n_**, **dateoffset=_-n_**: change the virtual
    machine system time by _+n_ or _-n_ days.
@@ -254,8 +263,8 @@ the following build options:
 
  * **noproxy**: do not use any HTTP proxy.
 
-Verify if the resulting ISO is reproducible
-===========================================
+Verify if the resulting images are reproducible
+===============================================
 
 See [[verification|contribute/build/reproducible#verify-iso]] section.
 

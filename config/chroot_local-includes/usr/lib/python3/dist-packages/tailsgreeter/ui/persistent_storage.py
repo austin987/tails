@@ -1,9 +1,12 @@
 import logging
 import gi
+import os
+import sh
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from tailsgreeter.ui import _
+from tailsgreeter.config import settings_dir, persistent_settings_dir, unsafe_browser_setting_filename
 
 gi.require_version('GLib', '2.0')
 gi.require_version('Gtk', '3.0')
@@ -14,8 +17,11 @@ if TYPE_CHECKING:
 
 
 class PersistentStorage(object):
-    def __init__(self, persistence_setting: "PersistenceSettings", builder):
+    def __init__(self, persistence_setting: "PersistenceSettings",
+                 load_settings_cb, apply_settings_cb: Callable, builder):
         self.persistence_setting = persistence_setting
+        self.load_settings_cb = load_settings_cb
+        self.apply_settings_cb = apply_settings_cb
 
         self.box_storage = builder.get_object('box_storage')
         self.box_storage_unlock = builder.get_object('box_storage_unlock')
@@ -27,8 +33,10 @@ class PersistentStorage(object):
         self.infobar_persistence = builder.get_object('infobar_persistence')
         self.label_infobar_persistence = builder.get_object('label_infobar_persistence')
         self.spinner_storage_unlock = builder.get_object('spinner_storage_unlock')
+        self.button_start = builder.get_object("button_start")
 
-        self.checkbutton_storage_show_passphrase.connect('toggled', self.cb_checkbutton_storage_show_passphrase_toggled)
+        self.checkbutton_storage_show_passphrase.connect(
+            'toggled', self.cb_checkbutton_storage_show_passphrase_toggled)
 
         self.box_storage.set_focus_chain([
             self.box_storage_unlock,
@@ -52,12 +60,7 @@ class PersistentStorage(object):
         # Remove warning icon
         editable.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
 
-    def unlock(self, unlocked_cb=None, failed_cb=None):
-        if not unlocked_cb:
-            unlocked_cb = self.cb_unlocked
-        if not failed_cb:
-            failed_cb = self.cb_unlock_failed
-
+    def unlock(self):
         self.entry_storage_passphrase.set_sensitive(False)
         self.button_storage_unlock.set_sensitive(False)
         self.button_storage_unlock.set_label(_("Unlocking…"))
@@ -79,9 +82,8 @@ class PersistentStorage(object):
                 target=do_unlock_storage,
                 args=(self.persistence_setting.unlock,
                       passphrase,
-                      unlocked_cb,
-                      failed_cb)
-
+                      self.cb_unlocked,
+                      self.cb_unlock_failed)
                 )
         unlocking_thread.start()
 
@@ -112,6 +114,18 @@ class PersistentStorage(object):
                                                     Gtk.IconSize.BUTTON)
         self.image_storage_state.set_visible(True)
         self.box_storage_unlocked.set_visible(True)
+        self.button_start.set_sensitive(True)
+
+        # Cherry-pick the settings we want to load from the persistent settings
+        # (currently only the Unsafe Browser setting)
+        sh.cp("-a",
+              os.path.join(persistent_settings_dir, unsafe_browser_setting_filename),
+              settings_dir)
+
+        if not os.listdir(settings_dir):
+            self.apply_settings_cb()
+        else:
+            self.load_settings_cb()
 
     def cb_checkbutton_storage_show_passphrase_toggled(self, widget):
         self.entry_storage_passphrase.set_visibility(widget.get_active())
