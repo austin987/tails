@@ -213,12 +213,22 @@ affect reproducibility of the images:
  * **keeprunning**: do not clean up the builder VM on build
    success.
 
+ * **rescue**: implies **keeprunning** and will also not clean up the
+   build directory, which is useful for investigating build failures and as
+   gateway for useful development tricks. For example, if you have failures in
+   the build process, you might want to enter the chroot at the stage where the
+   build failed.
+   This can be done with:
+
+   ```
+   rake vm:ssh
+   # inside the vm
+   sudo chroot "$(ls /tmp/tails-build.* -dt|head -n1)/chroot/"
+   ```
+
  * **forcecleanup**: ensure a new builder VM is used for `rake build`,
    and also clean up this VM after the build, no matter if it
    succeeded or not.
-
- * **rescue**: implies **keeprunning** and will also not clean up the
-   build directory, which is useful for investigating build failures.
 
  * **cachewebsite=**:
    - If set to "yes" (the default, unless building from a tag), enable caching
