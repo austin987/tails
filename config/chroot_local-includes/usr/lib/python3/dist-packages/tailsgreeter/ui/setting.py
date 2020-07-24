@@ -47,7 +47,12 @@ class GreeterSetting(object):
         self.title_label = self.builder.get_object("label_caption")
         self.value_label = self.builder.get_object("label_value")
         self.title_label.set_label(self.title)
+
+    def apply(self):
         self.update_value_label()
+
+    def load(self):
+        pass
 
     def update_value_label(self):
         self.value_label.set_label(self.value_for_display)

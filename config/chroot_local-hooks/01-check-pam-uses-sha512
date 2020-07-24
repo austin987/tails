@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+echo "Checking if PAM uses SHA512 to hash passwords"
+
+if ! grep -q -E "^password\s.*\ssha512" /etc/pam.d/common-password; then
+    echo "PAM does not seem to use SHA512 anymore. Please adjust the
+    Tails Greeter code which hashes the admin password."
+    exit 1
+fi

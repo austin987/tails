@@ -60,7 +60,7 @@ class PythonSession:
         if not user:
             user = pwd.getpwuid(os.getuid()).pw_name
         env = get_user_env(user)
-        cwd = env['HOME']
+        cwd = env.get('HOME', '/')
         self.process = subprocess.Popen(
             ["python3", "-u", "-c", interactive_shell_code],
             bufsize = 0,
@@ -115,7 +115,7 @@ class PythonSession:
 def run_cmd_as_user(cmd, user):
     switch_user_fn = mk_switch_user_fn(user)
     env = get_user_env(user)
-    cwd = env['HOME']
+    cwd = env.get('HOME', '/')
     return subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         shell=True, env=env, cwd=cwd, preexec_fn=switch_user_fn

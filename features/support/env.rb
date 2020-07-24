@@ -11,12 +11,12 @@ Encoding.default_internal = Encoding::UTF_8
 
 def fatal_system(str, *args)
   unless system(str, *args)
-    raise StandardError.new("Command exited with #{$?}")
+    raise StandardError, "Command exited with #{$CHILD_STATUS}"
   end
 end
 
 def git_exists?
-  File.exists? '.git'
+  File.exist? '.git'
 end
 
 def create_git
@@ -29,31 +29,31 @@ def create_git
   end
   Dir.mkdir 'debian'
   File.open('debian/changelog', 'w') do |changelog|
-    changelog.write(<<END_OF_CHANGELOG)
-tails (0) stable; urgency=low
+    changelog.write(<<~END_OF_CHANGELOG)
+      tails (0) stable; urgency=low
 
-  * First release.
+        * First release.
 
- -- Tails developers <tails@boum.org>  Mon, 30 Jan 2012 01:00:00 +0000
-END_OF_CHANGELOG
+       -- Tails developers <tails@boum.org>  Mon, 30 Jan 2012 01:00:00 +0000
+    END_OF_CHANGELOG
   end
 
-  fatal_system "git init --quiet"
+  fatal_system 'git init --quiet'
   fatal_system "git config user.email 'tails@boum.org'"
   fatal_system "git config user.name 'Tails developers'"
-  fatal_system "git add debian/changelog"
+  fatal_system 'git add debian/changelog'
   fatal_system "git commit --quiet debian/changelog -m 'First release'"
-  fatal_system "git branch -M stable"
-  fatal_system "git branch testing stable"
-  fatal_system "git branch devel stable"
-  fatal_system "git branch feature/jessie devel"
+  fatal_system 'git branch -M stable'
+  fatal_system 'git branch testing stable'
+  fatal_system 'git branch devel stable'
+  fatal_system 'git branch feature/jessie devel'
 end
 
 def current_branch
   cmd = 'git rev-parse --symbolic-full-name --abbrev-ref HEAD'.split
   branch = cmd_helper(cmd).strip
-  assert_not_equal("HEAD", branch, "We are in 'detached HEAD' state")
-  return branch
+  assert_not_equal('HEAD', branch, "We are in 'detached HEAD' state")
+  branch
 end
 
 # In order: if git HEAD is tagged, return its name; if a branch is
@@ -65,7 +65,7 @@ rescue Test::Unit::AssertionFailedError
   begin
     current_branch
   rescue Test::Unit::AssertionFailedError
-    ""
+    ''
   end
 end
 
@@ -80,7 +80,8 @@ end
 RSpec::Matchers.define :have_suite do |suite|
   match do |string|
     # e.g.: `deb http://deb.tails.boum.org/ 0.10 main contrib non-free`
-    %r{^deb +http://deb\.tails\.boum\.org/ +#{Regexp.escape(suite)} main}.match(string)
+    %r{^deb +http://deb\.tails\.boum\.org/ +#{Regexp.escape(suite)} main}
+      .match(string)
   end
   failure_message_for_should do |string|
     "expected the sources to include #{suite}\nCurrent sources : #{string}"
@@ -96,7 +97,9 @@ end
 RSpec::Matchers.define :have_tagged_snapshot do |tag|
   match do |string|
     # e.g.: `http://tagged.snapshots.deb.tails.boum.org/0.10`
-    %r{^http://tagged\.snapshots\.deb\.tails\.boum\.org/#{Regexp.escape(tag)}/[a-z-]+$}.match(string)
+    base_uri = 'http://tagged.snapshots.deb.tails.boum.org'
+    %r{^#{Regexp.escape(base_uri)}/#{Regexp.escape(tag)}/[a-z-]+$}
+      .match(string)
   end
   failure_message_for_should do |string|
     "expected the mirror to be #{tag}\nCurrent mirror: #{string}"
@@ -109,18 +112,20 @@ RSpec::Matchers.define :have_tagged_snapshot do |tag|
   end
 end
 
-RSpec::Matchers.define :have_time_based_snapshot do |tag|
+RSpec::Matchers.define :have_time_based_snapshot do
   match do |string|
     # e.g.: `http://time-based.snapshots.deb.tails.boum.org/debian/2016060602`
-    %r{^http://time\-based\.snapshots\.deb\.tails\.boum\.org/[^/]+/\d+}.match(string)
+    %r{^http://time\-based\.snapshots\.deb\.tails\.boum\.org/[^/]+/\d+}
+      .match(string)
   end
   failure_message_for_should do |string|
     "expected the mirror to be a time-based snapshot\nCurrent mirror: #{string}"
   end
   failure_message_for_should_not do |string|
-    "expected the mirror not to be a time-based snapshot\nCurrent mirror: #{string}"
+    "expected the mirror not to be a time-based snapshot\n" \
+    "Current mirror: #{string}"
   end
   description do
-    "expected a time-based snapshot"
+    'expected a time-based snapshot'
   end
 end

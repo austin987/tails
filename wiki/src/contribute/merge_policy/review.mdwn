@@ -1,18 +1,31 @@
-[[!meta title="Git merge policy: review and merge process"]]
+[[!meta title="How to review and merge proposed changes"]]
+
+We use [[!tails_gitlab desc="GitLab"]] for tracking issues, merge requests, and
+code. Please ensure you are familiar with [[how we use GitLab at
+Tails|contribute/working_together/GitLab]].
+
+In particular, see
+[[how to participate in discussions|working_together/GitLab#discussions]].
 
 <a id="review"></a>
 
 ## Review
 
-- When you start doing a review'n'merge, assign the relevant ticket
-  and merge request to you, in order to avoid duplicated work.
-- Merge the base branch (the one you're supposed to merge the reviewed
-  topic branch into, as specified in `config/base_branch` and in the
-  pull request -- they must match) into the topic branch.
+- Assign the [[!tails_gitlab help/user/project/merge_requests/index.md desc="Merge
+  Request"]] to you. This avoids duplicating work.
+- Verify that the destination branch matches what's in `config/base_branch` on
+  the branch, and is correct:
+  - for a new feature: into `devel`
+  - for a fix on top on the last RC: into `testing`; then merge
+    `testing` into `devel`
+  - for a fix on top of the last stable: into `stable`; then merge
+    `stable` into `devel`
+- Merge the destination branch of the MR into the topic branch.
 - Build the topic branch and test the feature.
 - Check automated ISO build and test results on
   <https://jenkins.tails.boum.org/>.
-- Check the diff e.g. with `git log -p`. Beware of changes introduced
+- Review the diff, either in the GitLab interface or on the command line.
+  If you're using the command line, beware of changes introduced
   by merge commits: either add the `--cc` option to `git log`, or use
   `git diff` after reviewing the individual patches.
 - Check the contents of every APT overlay that the branch enables:
@@ -29,7 +42,11 @@
     - <https://deb.tails.boum.org/dists/${APT_overlay}/main/binary-amd64/Packages>
 
 - Check the user and design documentation.
-- Check the ticket.
+- Check the corresponding GitLab issue.
+- Ensure the description of the MR includes `Closes #NNNN`
+  statements for the issues fixed by this MR.
+  <a id="closes"></a>
+  <a id="fix-committed"></a>
 - Changes proposed by new contributors, or by the patch'n'forget kind,
   shall respectively be applied once they are in *good enough* state.
   That is, once the core developers team feels like maintaining it on
@@ -40,51 +57,45 @@
 - As reviewer, you are allowed to commit trivial fixes on top of the
   proposed branch to avoid round-trips: for example, fixing typos
   and improving phrasing of comments and strings.
-  Then, report back about these changes on the ticket.
-- Remember that it's hard to receive negative feedback. Don't forget
-  to note the good parts, be constructive and precise in your
-  comments, and never use reviews to make personal attacks. You can
-  read these blog posts on review and feedback:
+  Then, report back about these changes on the MR.
+
+## Give feedback
+
+First, remember that it's hard to receive negative feedback. Don't forget
+to note the good parts, be constructive and precise in your
+comments, and never use reviews to make personal attacks. You can
+read these blog posts on review and feedback:
+
   - [Kate Heddleston: Criticism and ineffective feedback](https://www.kateheddleston.com/blog/criticism-and-ineffective-feedback) (blog post on how to do a good review)
   - [Liane Davey: Maybe you shouldn't give feedback](http://www.3coze.com/2016/07/17/bite-your-tongue/)
+
+As part of your review, if you spot problems that block the merge
+in your opinion:
+
+1. Give feedback about these problems.
+2. Reassign the MR to the person who proposed the branch.
+3. On the corresponding issue: replace the *Needs Validation* label
+   with *Doing*.
 
 <a id="merge"></a>
 
 ## Merge
 
-<div class="note">
-If the proposed change was submitted as a merge request on <a
-href="https://salsa.debian.org/tails-team/tails">Salsa</a>, don't
-click <i>Merge</i> there: while we can use GitLab for reviews, our
-infrastructure is not ready to consume merge operations done there, so
-you need to merge on the command line.
-</div>
+1. Click the *Merge* button on the MR.
 
-Merge the branch with `--no-ff`:
+   If you are not authorized to do so, instead:
 
-- for a new feature: into `devel`
-- for a fix on top on the last RC: into `testing`; then merge
-  `testing` into `devel`
-- for a fix on top of the last stable: into `stable`; then merge
-  `stable` into `devel`
+    - Add a comment on the MR to say you have reviewed the branch.
+      If you approve its merging, say so.
+    - De-assign yourself from the MR.
 
-<a id="closes"></a>
-<a id="fix-committed"></a>
+2. Close the issues fixed by this MR.
 
-Please consider including `Closes: #NNNN` in the commit
-message, _NNNN_ being the ticket number that is fixed by the branch
-you are merging. Then, Redmine will automatically close the
-corresponding ticket once you push the results of
-your merge to our main [[Git repository|contribute/Git]]. For example:
+   You don't need to do this if the destination branch of the MR
+   is `stable`: these issues will be closed automatically.
 
-    Merge branch 'bugfix/8470-clean-up-apt-pinning' (Closes: #8470)
+3. If the destination branch of the MR was `stable`, then
+   pull `stable` locally, merge it into `devel`, and push `devel`.
 
-## Book keeping
-
-1. Update the *Status* field on the ticket. If there is no remaining
-   tasks listed on the ticket, then change its status to *Resolved*
-   (unless you used the `Closes` keyword documented
-   above); else, set it back to *In Progress* and ask the branch submitter
-   to split the remaining tasks into other tickets.
-1. Push the updated branch to the master Git repository.
-1. Reply to the email that requested the review, if any.
+   Rationale: `devel` must also contain all the improvements that have been
+   applied on `stable`.

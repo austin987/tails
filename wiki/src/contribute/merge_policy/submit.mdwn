@@ -1,51 +1,64 @@
-[[!meta title="Git merge policy: how to submit code"]]
+[[!meta title="How to propose changes"]]
 
-All development should happen in topic branches. For a new feature XXX, it should
-be named `feature/XXX`. For a bugfix about YYY, it should be named
-`bugfix/YYY`. Ideally, include the relevant ticket number in the topic
-branch name, e.g. `bugfix/7173-upgrade-syslinux`.
+We use [[!tails_gitlab desc="GitLab"]] for tracking issues, merge requests, and
+code. Please ensure you are familiar with [[how we use GitLab at
+Tails|contribute/working_together/GitLab]].
 
-When you think it is good enough and have tested it, you have to:
+All proposed changes should be prepared in topic branches. For a new feature XXX
+tracked by issue number NNNN, it should be named `feature/NNNN-XXX`.
+For a bugfix about YYY, it should be named `bugfix/NNNN-YYY`.
 
-1. Push your branch
-   - If you have commit access to the official Tails Git repository,
-     push your branch there so our CI picks it up.
-   - Else, push to your personal Git repository:
-     [fork us on Salsa](https://salsa.debian.org/tails-team/tails).
-2. Set the ticket's *Status* field to *In Progress* (if you do not see
-   this field when editing the ticket, ask the [[sysadmin team|contribute/working_together/roles/sysadmins]]
-   to grant you the necessary permissions).
-3. Point the ticket's *Feature Branch* field either to your branch
-   or to a merge request on [Salsa](https://salsa.debian.org/tails-team/tails).
-4. Set the ticket's *Target version* field to the release you would
-   like your changes to be in.
-5. Make it clear what you're requesting: merging? some advice? an initial
-   code review of work that's not finished yet?
-6. If you have access to our Jenkins instance and you are requesting a merge:
-   - Ensure your branch builds on Jenkins.
-   - Either report about the test suite scenarios you've seen pass
-     successfully locally, or check that the test suite passes
-     on Jenkins.
-7. Set the ticket's *Status* field to *Needs Validation*.
-8. Set the ticket's *Assignee* field appropriately:
-   - If it's already obvious to you who can and should review your branch:
-     assign the ticket to this person.
-   - Else, assign the ticket to nobody, i.e. unassign it from yourself.
-     The [[Foundations Team|working_together/roles/foundations_team]]
-     will either handle the review themselves or help you find a suitable
-     reviewer.
-8. For important changes, if you feel the need to ask input from the
-   greater development community, notify the [[tails-dev@boum.org|about/contact#tails-dev]]
-   mailing list.
+To submit your branch for review:
 
-Then, if the [[reviewer|contribute/merge_policy/review]] asks for more
-development to be done before
-merging, they should set the ticket's *Status* field back to *In Progress*;
-from now on it's the responsibility of the branch/ticket "holder" to
-change it back to *Needs Validation* once they consider the issues raised by
-the reviewer are fixed.
+1. Test your branch. If your branch contains code changes, test it with its
+   target branch (`config/base_branch`) merged into it.
 
-The reviewer is allowed to commit trivial fixes on top of the
-proposed branch to avoid round-trips: for example, fixing typos
-and improving phrasing of comments and strings. They must
-report back about these changes on the ticket.
+2. Push your branch
+
+   If you have commit access to the official Tails Git repository,
+   push your branch there so our CI picks it up.
+
+   Else, push to your own fork of the Tails
+   [[!tails_gitweb_repo tails desc="Git repository"]].
+
+3. Once you would like your branch to be reviewed, and possibly merged,
+   submit it:
+
+   1. If your branch contains code changes and you have access to our Jenkins
+      instance:
+
+      - Ensure your branch builds on Jenkins.
+      - Either take note of the test suite scenarios you've seen pass
+        successfully locally, or check that the test suite passes on Jenkins.
+
+   2. On the corresponding GitLab issue:
+
+      - Set the *Milestone* field to the release you would like your changes to
+        land in.
+      - If there's a *To Do* or *Doing* label, replace it with the *Needs
+        Validation* label.
+
+   3. Create a [[!tails_gitlab help/user/project/merge_requests/index.md desc="Merge
+      Request"]] (aka. MR). There are [[!tails_gitlab
+      help/user/project/merge_requests/creating_merge_requests.html desc="many
+      ways"]] to do so. For example, you can click the *Create merge request*
+      button on the corresponding issue.
+
+      In this new MR:
+
+      - Use the description to:
+         - Summarize what problem this MR will fix, in terms of impact on users.
+         - Reference the issues this MR will solve: `Closes #xxx, #yyyy`.
+      - Set the target branch your branch should be merged into.
+        See the [[documentation for our main branches|contribute/git#branches]].
+      - If it's obvious to you who can, and should, review your branch,
+        and you're allowed to assign MRs: assign the MR to that person.<br/>
+        Else, leave the MR unassigned:
+        the [[Foundations Team|working_together/roles/foundations_team]] will
+        either handle the review themselves or help you find a suitable reviewer.
+      - If you have run some test suite scenarios locally: report about your
+        results in a new comment.
+
+Then, for every subsequent submit/review/fix cycle: once you've fixed all
+problems raised by the reviewer, update the issue and MR metadata again as
+documented above (milestone, assignee, and labels).

@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'fileutils'
 
 def post_vm_start_hook
@@ -6,7 +5,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click(@screen.w - 1, @screen.h/2)
+  @screen.click(@screen.w - 1, @screen.h / 2)
   sleep 1
 end
 
@@ -18,8 +17,15 @@ def post_snapshot_restore_hook(snapshot_name)
   # seems virt-viewer's auto-resolution feature moves the Greeter's
   # window outside of the visible screen.
   if snapshot_name.end_with?('tails-greeter')
-    if ! @screen.exists('TailsGreeter.png')
-      $vm.execute_successfully("env $(tr '\\0' '\\n' < /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ | grep -E '(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') sudo -u Debian-gdm xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0")
+    unless @screen.exists('TailsGreeter.png')
+      $vm.execute_successfully(
+        "env $(tr '\\0' '\\n' " \
+        '< /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ ' \
+        '| grep -E ' \
+        "'(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') " \
+        'sudo -u Debian-gdm ' \
+        "xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0"
+      )
     end
   end
 
@@ -30,16 +36,16 @@ def post_snapshot_restore_hook(snapshot_name)
   # trouble may arise: for example, pressing SUPER to open the
   # Activities Overview would fail (SUPER has no effect when the
   # Applications menu is still opened).
-  @screen.press("Escape")
+  @screen.press('Escape')
 
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  if $vm.has_network?
-    if $vm.execute("systemctl --quiet is-active tor@default.service").success?
-      $vm.execute("systemctl stop tor@default.service")
+  if $vm.connected_to_network?
+    if $vm.execute('systemctl --quiet is-active tor@default.service').success?
+      $vm.execute('systemctl stop tor@default.service')
       $vm.host_to_guest_time_sync
-      $vm.execute("systemctl start tor@default.service")
+      $vm.execute('systemctl start tor@default.service')
       wait_until_tor_is_working
     end
   else
@@ -48,7 +54,7 @@ def post_snapshot_restore_hook(snapshot_name)
 end
 
 Given /^a computer$/ do
-  $vm.destroy_and_undefine if $vm
+  $vm&.destroy_and_undefine
   $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
@@ -61,7 +67,7 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
 end
 
 Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) (?:([[:alpha:]]+) )?disk named "([^"]+)"$/ do |temporary, size, unit, type, name|
-  type ||= "qcow2"
+  type ||= 'qcow2'
   begin
     $vm.storage.create_new_disk(name, size: size, unit: unit, type: type)
   rescue NoSpaceLeftError => e
@@ -75,14 +81,13 @@ end
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   $vm.plug_drive(name, bus.downcase)
   sleep 1
-  if $vm.is_running?
-    step "drive \"#{name}\" is detected by Tails"
-  end
+  step "drive \"#{name}\" is detected by Tails" if $vm.running?
 end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
-  raise "Tails is not running" unless $vm.is_running?
-  try_for(20, :msg => "Drive '#{name}' is not detected by Tails") do
+  raise 'Tails is not running' unless $vm.running?
+
+  try_for(20, msg: "Drive '#{name}' is not detected by Tails") do
     $vm.disk_detected?(name)
   end
 end
@@ -97,7 +102,7 @@ end
 
 Given /^the network connection is ready(?: within (\d+) seconds)?$/ do |timeout|
   timeout ||= 30
-  try_for(timeout.to_i) { $vm.has_network? }
+  try_for(timeout.to_i) { $vm.connected_to_network? }
 end
 
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
@@ -105,7 +110,7 @@ Given /^the hardware clock is set to "([^"]*)"$/ do |time|
 end
 
 Given /^I capture all network traffic$/ do
-  @sniffer = Sniffer.new("sniffer", $vmnet)
+  @sniffer = Sniffer.new('sniffer', $vmnet)
   @sniffer.capture
   add_after_scenario_hook do
     @sniffer.stop
@@ -118,84 +123,81 @@ Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
 end
 
 When /^I start the computer$/ do
-  assert(!$vm.is_running?,
-         "Trying to start a VM that is already running")
+  assert(!$vm.running?,
+         'Trying to start a VM that is already running')
   $vm.start
-  post_vm_start_hook
 end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and genuine APT sources)?( and I login)?$/ do |dvd_boot, network_unplugged, keep_apt_sources, do_login|
-  step "the computer is set to boot from the Tails DVD" if dvd_boot
+  step 'the computer is set to boot from the Tails DVD' if dvd_boot
   if network_unplugged
-    step "the network is unplugged"
+    step 'the network is unplugged'
   else
-    step "the network is plugged"
+    step 'the network is plugged'
   end
-  step "I start the computer"
+  step 'I start the computer'
   if keep_apt_sources
-    step "the computer boots Tails with genuine APT sources"
+    step 'the computer boots Tails with genuine APT sources'
   else
-    step "the computer boots Tails"
+    step 'the computer boots Tails'
   end
   if do_login
-    step "I log in to a new session"
+    step 'I log in to a new session'
     if network_unplugged
-      step "all notifications have disappeared"
+      step 'all notifications have disappeared'
     else
-      step "Tor is ready"
-      step "all notifications have disappeared"
-      step "available upgrades have been checked"
+      step 'Tor is ready'
+      step 'all notifications have disappeared'
+      step 'available upgrades have been checked'
     end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?( (?:and|with) an administration password)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, admin_password|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?( (?:and|with) an administration password)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, admin_password| # rubocop:disable Metrics/ParameterLists
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
   if network_unplugged
-    step "the network is unplugged"
+    step 'the network is unplugged'
   else
-    step "the network is plugged"
+    step 'the network is plugged'
   end
-  step "I start the computer"
-  step "the computer boots Tails"
+  step 'I start the computer'
+  step 'the computer boots Tails'
   if do_login
-    step "I enable persistence" if persistence_on
-    step "I set an administration password" if admin_password
-    step "I log in to a new session"
-    step "the Additional Software installation service has started"
+    step 'I enable persistence' if persistence_on
+    step 'I set an administration password' if admin_password
+    step 'I log in to a new session'
+    step 'the Additional Software installation service has started'
     if network_unplugged
-      step "all notifications have disappeared"
+      step 'all notifications have disappeared'
     else
-      step "Tor is ready"
-      step "all notifications have disappeared"
-      step "available upgrades have been checked"
+      step 'Tor is ready'
+      step 'all notifications have disappeared'
+      step 'available upgrades have been checked'
     end
   end
 end
 
 Given /^I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login$/ do
-  step "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen"
-  step "I set an administration password"
-  step "I log in to a new session"
-  step "the network is plugged"
-  step "Tor is ready"
-  step "all notifications have disappeared"
-  step "available upgrades have been checked"
+  step 'I have started Tails without network from a USB drive ' \
+       'without a persistent partition ' \
+       "and stopped at Tails Greeter's login screen"
+  step 'I set an administration password'
+  step 'I log in to a new session'
+  step 'the network is plugged'
+  step 'Tor is ready'
+  step 'all notifications have disappeared'
+  step 'available upgrades have been checked'
 end
 
 When /^I power off the computer$/ do
-  assert($vm.is_running?,
-         "Trying to power off an already powered off VM")
+  assert($vm.running?,
+         'Trying to power off an already powered off VM')
   $vm.power_off
 end
 
 When /^I cold reboot the computer$/ do
-  step "I shutdown Tails and wait for the computer to power off"
-  step "I start the computer"
-end
-
-When /^I destroy the computer$/ do
-  $vm.destroy_and_undefine
+  step 'I shutdown Tails and wait for the computer to power off'
+  step 'I start the computer'
 end
 
 def boot_menu_cmdline_image
@@ -216,17 +218,13 @@ def boot_menu_image
   end
 end
 
-Given /^Tails is at the boot menu's cmdline$/ do
-  boot_timeout = 3 * 60
-  # Simply looking for the boot splash image is not robust; sometimes
-  # our image matching is not fast enough to see it. Here we hope that spamming
-  # UP, which will halt the boot process, will make this a bit more robust.
-  up_spammer_code = <<-SCRIPT
+def up_spammer_code(domain_name)
+  <<-SCRIPT
     require 'libvirt'
     up_key_code = 0x67
     virt = Libvirt::open("qemu:///system")
     begin
-      domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
+      domain = virt.lookup_domain_by_name('#{domain_name}')
       loop do
         domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [up_key_code])
         sleep 1
@@ -235,45 +233,101 @@ Given /^Tails is at the boot menu's cmdline$/ do
       virt.close
     end
   SCRIPT
+end
+
+def start_up_spammer(domain_name)
+  up_spammer_unit_name = 'tails-test-suite-up-spammer.service'
+  bus = ENV['USER'] == 'root' ? '--system' : '--user'
+  systemctl = ['/bin/systemctl', bus]
+  kill_up_spammer = proc do
+    begin
+      if system(*systemctl, '--quiet', 'is-active', up_spammer_unit_name)
+        system(*systemctl, 'stop', up_spammer_unit_name)
+      end
+    rescue StandardError
+      # noop
+    end
+  end
+  kill_up_spammer.call
+  up_spammer_job = fatal_system(
+    '/usr/bin/systemd-run',
+    bus,
+    "--unit=#{up_spammer_unit_name}",
+    '--quiet',
+    # XXX: enable this once we require systemd v236 or newer
+    # for running our test suite
+    # '--collect',
+    '/usr/bin/ruby',
+    '-e', up_spammer_code(domain_name)
+  )
+  add_after_scenario_hook { kill_up_spammer.call }
+  [up_spammer_job, kill_up_spammer]
+end
+
+def enter_boot_menu_cmdline
+  boot_timeout = 3 * 60
+  # Simply looking for the boot splash image is not robust; sometimes
+  # our image matching is not fast enough to see it. Here we hope that spamming
+  # UP, which will halt the boot process, will make this a bit more robust.
   # The below code is not completely reliable, so we might have to
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
-      up_spammer = IO.popen(['ruby', '-e', up_spammer_code])
+      _up_spammer_job, kill_up_spammer = start_up_spammer($vm.domain_name)
       @screen.wait(boot_menu_image, 15)
+      kill_up_spammer.call
+
+      # Navigate to the end of the kernel command-line
+      case @os_loader
+      when 'UEFI'
+        @screen.type('e')
+        3.times { @screen.press('Down') }
+        @screen.press('End')
+      else
+        @screen.press('Tab')
+      end
+      @screen.wait(boot_menu_cmdline_image, 5)
     rescue FindFailed => e
       debug_log('We missed the boot menu before we could deal with it, ' \
                 'resetting...')
+      @has_been_reset = true
       $vm.reset
       raise e
     ensure
-      Process.kill('TERM', up_spammer.pid)
-      up_spammer.close
+      kill_up_spammer.call
     end
     true
   end
-
-  # Navigate to the end of the kernel command-line
-  case @os_loader
-  when 'UEFI'
-    @screen.type('e')
-    3.times { @screen.press('Down') }
-    @screen.press('End')
-  else
-    @screen.press('Tab')
-  end
-  @screen.wait(boot_menu_cmdline_image, 5)
 end
 
 Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_apt_sources|
-  step "Tails is at the boot menu's cmdline"
+  enter_boot_menu_cmdline
   boot_key = @os_loader == 'UEFI' ? 'F10' : 'Return'
   @screen.type(' autotest_never_use_this_option' \
                ' blacklist=psmouse' \
                " #{@boot_options}",
                [boot_key])
   @screen.wait('TailsGreeter.png', 5 * 60)
+  # When enter_boot_menu_cmdline has rebooted the system after the Greeter
+  # had already been displayed, after the reboot:
+  # 1. The Greeter shows up, but it's an artifact of the previous boot
+  #    (from graphics memory?)
+  # 2. The screen turns black (for a few seconds on my system).
+  # 3. Finally, the Greeter from this boot starts (one can see the animation).
+  #
+  # In such a situation, the previous instruction will erroneously
+  # succeed at step 1, and then following steps that interact with
+  # the Greeter can fail, if they're performed before step 3 happens.
+  #
+  # To workaround this problem, let's wait a bit for the transition
+  # steps 1 and 3 happens, when we know we had to reboot the VM
+  # in enter_boot_menu_cmdline.
+  if @has_been_reset
+    sleep 15
+    @screen.find('TailsGreeter.png')
+  end
   $vm.wait_until_remote_shell_is_up
+  post_vm_start_hook
   step 'I configure Tails to use a simulated Tor network'
   # This is required to use APT in the test suite as explained in
   # commit e2510fae79870ff724d190677ff3b228b2bf7eac
@@ -283,12 +337,12 @@ end
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   case lang
   when 'German'
-    $language = "German"
+    $language = 'German'
     @screen.wait('TailsGreeterLanguage.png', 10).click
     @screen.wait('TailsGreeterLanguagePopover.png', 10)
     @screen.type($language)
     sleep(2) # Gtk needs some time to filter the results
-    @screen.press("Return")
+    @screen.press('Return')
     @screen.wait("TailsGreeterLoginButton#{$language}.png", 10).click
   when ''
     @screen.wait('TailsGreeterLoginButton.png', 10).click
@@ -304,41 +358,48 @@ def open_greeter_additional_settings
 end
 
 Given /^I open Tails Greeter additional settings dialog$/ do
-  open_greeter_additional_settings()
+  open_greeter_additional_settings
 end
 
 Given /^I enable the specific Tor configuration option$/ do
-  open_greeter_additional_settings()
+  open_greeter_additional_settings
   @screen.wait('TailsGreeterNetworkConnection.png', 30).click
-  @screen.wait("TailsGreeterSpecificTorConfiguration.png", 10).click
-  @screen.wait("TailsGreeterAdditionalSettingsAdd.png", 10).click
+  @screen.wait('TailsGreeterSpecificTorConfiguration.png', 10).click
+  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
 Given /^I set an administration password$/ do
-  open_greeter_additional_settings()
-  @screen.wait("TailsGreeterAdminPassword.png", 20).click
-  @screen.wait("TailsGreeterAdminPasswordDialog.png", 10)
+  open_greeter_additional_settings
+  @screen.wait('TailsGreeterAdminPassword.png', 20).click
+  @screen.wait('TailsGreeterAdminPasswordDialog.png', 10)
   @screen.type(@sudo_password)
-  @screen.press("Tab")
+  @screen.press('Tab')
   @screen.type(@sudo_password)
-  @screen.press("Return")
+  @screen.press('Return')
+end
+
+Given /^I allow the Unsafe Browser to be started$/ do
+  open_greeter_additional_settings
+  @screen.wait('TailsGreeterUnsafeBrowser.png', 20).click
+  @screen.wait('TailsGreeterUnsafeBrowserEnable.png', 20).click
+  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{$language}.png"
   @screen.wait(desktop_started_picture, 180)
-  @screen.wait("DesktopTailsDocumentation.png", 30)
+  @screen.wait('DesktopTailsDocumentation.png', 30)
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can cause problems when we are
   # waiting for an image for a very long time.
   $vm.execute_successfully(
     'gsettings set org.gnome.desktop.session idle-delay 0',
-    :user => LIVE_USER
+    user: LIVE_USER
   )
   # We need to enable the accessibility toolkit for dogtail.
   $vm.execute_successfully(
     'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
-    :user => LIVE_USER,
+    user: LIVE_USER
   )
 end
 
@@ -354,12 +415,12 @@ When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |titl
 end
 
 Given /^Tor is ready$/ do
-  step "Tor has built a circuit"
-  step "the time has synced"
+  step 'Tor has built a circuit'
+  step 'the time has synced'
   # When we test for ASP upgrade failure the following tests would fail,
   # so let's skip them in this case.
-  if !$vm.file_exist?('/run/live-additional-software/doomed_to_fail')
-    step "the Additional Software upgrade service has started"
+  unless $vm.file_exist?('/run/live-additional-software/doomed_to_fail')
+    step 'the Additional Software upgrade service has started'
     begin
       try_for(30) { $vm.execute('systemctl is-system-running').success? }
     rescue Timeout::Error
@@ -379,58 +440,60 @@ end
 
 Given /^the time has synced$/ do
   begin
-    ["/run/tordate/done", "/run/htpdate/success"].each do |file|
+    ['/run/tordate/done', '/run/htpdate/success'].each do |file|
       try_for(300) { $vm.execute("test -e #{file}").success? }
     end
-  rescue
-    File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') do |file|
+  rescue StandardError
+    File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |file|
       file.write($vm.execute('cat /var/log/htpdate.log').stdout)
     end
-    raise TimeSyncingError.new("Time syncing failed")
+    raise TimeSyncingError, 'Time syncing failed'
   end
 end
 
 Given /^available upgrades have been checked$/ do
-  try_for(300) {
+  try_for(300) do
     $vm.execute("test -e '/run/tails-upgrader/checked_upgrades'").success?
-  }
+  end
 end
 
 When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   step 'I start "Tor Browser" via GNOME Activities Overview'
   if offline
-    start_button = Dogtail::Application.new('zenity')
-                       .dialog('Tor is not ready', showingOnly: true)
-                       .button('Start Tor Browser', showingOnly: true)
+    start_button = Dogtail::Application
+                   .new('zenity')
+                   .dialog('Tor is not ready', showingOnly: true)
+                   .button('Start Tor Browser', showingOnly: true)
     # Sometimes this click is lost. Maybe the dialog is not fully setup yet?
     sleep 2
     start_button.click
   end
-  step "the Tor Browser has started#{offline}"
+  step 'the Tor Browser has started'
   if offline
-    step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+    step 'the Tor Browser shows the ' \
+         '"The proxy server is refusing connections" error'
   end
 end
 
-Given /^the Tor Browser (?:has started|starts)( in offline mode)?$/ do |offline|
+Given /^the Tor Browser (?:has started|starts)$/ do
   try_for(60) do
     @torbrowser = Dogtail::Application.new('Firefox')
     @torbrowser.child?(roleName: 'frame', recursive: false)
   end
 end
 
-Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails homepage|Tails GitLab)$/ do |page|
   case page
-  when "startup page"
+  when 'startup page'
     titles = ['Tails', 'Tails - Trying a testing version of Tails']
-  when "Tails homepage"
-    titles = ['Tails - Privacy for anyone anywhere']
-  when "Tails roadmap"
-    titles = ['Roadmap - Tails - Tails Ticket Tracker']
+  when 'Tails homepage'
+    titles = ['Tails']
+  when 'Tails GitLab'
+    titles = ['tails · GitLab']
   else
     raise "Unsupported page: #{page}"
   end
-  page_has_loaded_in_the_Tor_Browser(titles, $language)
+  page_has_loaded_in_the_tor_browser(titles)
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -444,45 +507,48 @@ When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
 end
 
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
-  url = "https://www.eff.org"
+  url = 'https://www.eff.org'
   step "I open the address \"#{url}\" in the Tor Browser"
-  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
-  @screen.press("ctrl", "d")
-  @screen.wait("TorBrowserBookmarkPrompt.png", 10)
+  step 'the Tor Browser shows the ' \
+       '"The proxy server is refusing connections" error'
+  @screen.press('ctrl', 'd')
+  @screen.wait('TorBrowserBookmarkPrompt.png', 10)
   @screen.type(url)
   # The new default location for bookmarks is "Other Bookmarks", but our test
   # expects the new entry is available in "Bookmark Menu", that's why we need
   # to select the location explicitly.
-  @screen.wait("TorBrowserBookmarkLocation.png", 10).click
-  @screen.wait("TorBrowserBookmarkLocationBookmarksMenu.png", 10).click
+  @screen.wait('TorBrowserBookmarkLocation.png', 10).click
+  @screen.wait('TorBrowserBookmarkLocationBookmarksMenu.png', 10).click
   # Need to sleep here, otherwise the changed Bookmark location is not taken
   # into account and we end up creating a bookmark in "Other Bookmark" location.
   sleep 1
-  @screen.press("Return")
+  @screen.press('Return')
 end
 
 Given /^the Tor Browser has a bookmark to eff.org$/ do
-  @screen.press("alt", "b")
-  @screen.wait("TorBrowserEFFBookmark.png", 10)
+  @screen.press('alt', 'b')
+  @screen.wait('TorBrowserEFFBookmark.png', 10)
 end
 
 Given /^all notifications have disappeared$/ do
   # These magic coordinates always locates GNOME's clock in the top
   # bar, which when clicked opens the calendar.
-  x, y = 512, 10
+  x = 512
+  y = 10
   gnome_shell = Dogtail::Application.new('gnome-shell')
-  retry_action(10, recovery_proc: Proc.new { @screen.press("Escape") }) do
+  retry_action(10, recovery_proc: proc { @screen.press('Escape') }) do
     @screen.click(x, y)
     begin
-      gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
-    rescue
+      gnome_shell.child('Clear All', roleName:    'push button',
+                                     showingOnly: true).click
+    rescue StandardError
       # Ignore exceptions: there might be no notification to clear, in
       # which case there will be a "No Notifications" label instead of
       # a "Clear All" button.
     end
     gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
-  @screen.press("Escape")
+  @screen.press('Escape')
   # Increase the chances that by the time we leave this step, the
   # notifications menu was closed and the desktop is back to its
   # normal state. Otherwise, all kinds of trouble may arise: for
@@ -517,7 +583,7 @@ def deal_with_polkit_prompt(password, **opts)
   opts[:expect_success] = true if opts[:expect_success].nil?
   image = 'PolicyKitAuthPrompt.png'
   @screen.wait(image, 60)
-  @screen.type(password, ["Return"])
+  @screen.type(password, ['Return'])
   if opts[:expect_success]
     @screen.wait_vanish(image, 20)
   else
@@ -531,46 +597,49 @@ end
 
 Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
   if not_running
-    assert(!$vm.has_process?(process), "Process '#{process}' is running")
+    assert(!$vm.process_running?(process), "Process '#{process}' is running")
   else
-    assert($vm.has_process?(process), "Process '#{process}' is not running")
+    assert($vm.process_running?(process), "Process '#{process}' is not running")
   end
 end
 
 Given /^process "([^"]+)" is running within (\d+) seconds$/ do |process, time|
-  try_for(time.to_i, :msg => "Process '#{process}' is not running after " +
+  try_for(time.to_i, msg: "Process '#{process}' is not running after " \
                              "waiting for #{time} seconds") do
-    $vm.has_process?(process)
+    $vm.process_running?(process)
   end
 end
 
 Given /^process "([^"]+)" has stopped running after at most (\d+) seconds$/ do |process, time|
-  try_for(time.to_i, :msg => "Process '#{process}' is still running after " +
+  try_for(time.to_i, msg: "Process '#{process}' is still running after " \
                              "waiting for #{time} seconds") do
-    not $vm.has_process?(process)
+    !$vm.process_running?(process)
   end
 end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
   $vm.execute("killall #{process}")
-  try_for(10, :msg => "Process '#{process}' could not be killed") {
-    !$vm.has_process?(process)
-  }
+  try_for(10, msg: "Process '#{process}' could not be killed") do
+    !$vm.process_running?(process)
+  end
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  try_for(3*60) do
+  # In the Additional Software feature, we need to wait enough for
+  # tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
+  # to complete: see its custom, higher-than-default, TimeoutStopSec=.
+  try_for(6 * 60) do
     if mode == 'restarts'
       @screen.find('TailsGreeter.png')
       true
     else
-      ! $vm.is_running?
+      !$vm.running?
     end
   end
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
-  $vm.spawn("poweroff")
+  $vm.spawn('poweroff')
   step 'Tails eventually shuts down'
 end
 
@@ -586,7 +655,7 @@ When /^I request a shutdown using the emergency shutdown applet$/ do
 end
 
 When /^I warm reboot the computer$/ do
-  $vm.spawn("reboot")
+  $vm.spawn('reboot')
 end
 
 When /^I request a reboot using the emergency shutdown applet$/ do
@@ -602,32 +671,32 @@ Given /^the package "([^"]+)" is( not)? installed( after Additional Software has
   if absent
     wait_for_package_removal(package)
   else
-    if asp
-      step 'the Additional Software installation service has started'
-    end
+    step 'the Additional Software installation service has started' if asp
     wait_for_package_installation(package)
   end
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
-  if not version.empty?
-    raise "Unsupported version '#{version}'"
-  else
-    $vm.execute_successfully(
-      "nmcli connection add con-name #{con_name} " + \
-      "type ethernet autoconnect yes ifname eth0"
-    )
+  raise "Unsupported version '#{version}'" unless version.empty?
+
+  $vm.execute_successfully(
+    "nmcli connection add con-name #{con_name} " \
+    'type ethernet autoconnect yes ifname eth0'
+  )
+
+  try_for(10) do
+    nm_con_list = $vm.execute('nmcli --terse --fields NAME connection show')
+                     .stdout
+    nm_con_list.split("\n").include? con_name.to_s
   end
-  try_for(10) {
-    nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
-    nm_con_list.split("\n").include? "#{con_name}"
-  }
 end
 
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
   $vm.execute("nmcli connection up id #{con_name}")
   try_for(60) do
-    $vm.execute("nmcli --terse --fields NAME,STATE connection show").stdout.chomp.split("\n").include?("#{con_name}:activated")
+    $vm.execute(
+      'nmcli --terse --fields NAME,STATE connection show'
+    ).stdout.chomp.split("\n").include?("#{con_name}:activated")
   end
 end
 
@@ -637,26 +706,26 @@ When /^I start and focus GNOME Terminal$/ do
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
-  if !$vm.has_process?("gnome-terminal-server")
-    step "I start and focus GNOME Terminal"
+  if !$vm.process_running?('gnome-terminal-server')
+    step 'I start and focus GNOME Terminal'
   else
     @screen.wait('GnomeTerminalWindow.png', 20).click
   end
-  @screen.type(command, ["Return"])
+  @screen.type(command, ['Return'])
 end
 
 When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
   timeout = 10 if timeout.nil?
   try_for(
     timeout.to_i,
-    :msg => "The file #{file} does not exist after #{timeout} seconds"
-  ) {
+    msg: "The file #{file} does not exist after #{timeout} seconds"
+  ) do
     $vm.file_exist?(file)
-  }
+  end
 end
 
 When /^the file "([^"]+)" does not exist$/ do |file|
-  assert(! ($vm.file_exist?(file)))
+  assert(!$vm.file_exist?(file))
 end
 
 When /^the directory "([^"]+)" exists$/ do |directory|
@@ -664,26 +733,26 @@ When /^the directory "([^"]+)" exists$/ do |directory|
 end
 
 When /^the directory "([^"]+)" does not exist$/ do |directory|
-  assert(! ($vm.directory_exist?(directory)))
+  assert(!$vm.directory_exist?(directory))
 end
 
 When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination, user|
-  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", :user => LIVE_USER)
+  c = $vm.execute("cp \"#{source}\" \"#{destination}\"", user: user)
   assert(c.success?, "Failed to copy file:\n#{c.stdout}\n#{c.stderr}")
 end
 
-def is_persistent?(app)
-  conf = get_persistence_presets_config(true)["#{app}"]
+def persistent?(app)
+  conf = get_persistence_presets_config(true)[app.to_s]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
-  c.success? and c.stdout.chomp != "overlay"
+  c.success? && (c.stdout.chomp != 'overlay')
 end
 
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   case enabled
   when ''
-    assert(is_persistent?(app), "Persistence should be enabled.")
+    assert(persistent?(app), 'Persistence should be enabled.')
   when 'not '
-    assert(!is_persistent?(app), "Persistence should not be enabled.")
+    assert(!persistent?(app), 'Persistence should not be enabled.')
   end
 end
 
@@ -710,7 +779,7 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   # Type the rest of the search query
   @screen.type(app_name[1..-1])
   sleep 2
-  @screen.press("ctrl", "Return")
+  @screen.press('ctrl', 'Return')
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -723,9 +792,9 @@ end
 
 Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/ do |persistent_or_not, mode|
   case persistent_or_not
-  when "amnesiac"
+  when 'amnesiac'
     dir = "/home/#{LIVE_USER}/Tor Browser"
-  when "persistent"
+  when 'persistent'
     dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
   end
   step "the directory \"#{dir}\" #{mode}"
@@ -733,109 +802,116 @@ end
 
 Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser directory$/ do |persistent_or_not|
   case persistent_or_not
-  when "amnesiac"
+  when 'amnesiac'
     bookmark_image = 'TorBrowserAmnesicFilesBookmark.png'
-  when "persistent"
+  when 'persistent'
     bookmark_image = 'TorBrowserPersistentFilesBookmark.png'
   end
   @screen.wait('GnomePlaces.png', 10).click
   @screen.wait(bookmark_image, 40)
-  @screen.press("Escape")
+  @screen.press('Escape')
 end
 
 Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
   try_for(65) do
     @screen.wait('GnomePlaces.png', 10).click
-    @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 10)
-    @screen.press("Escape")
+    @screen.wait('GnomePlacesWithoutTorBrowserPersistent.png', 10)
+    @screen.press('Escape')
     true
   end
 end
 
 def pulseaudio_sink_inputs
-  pa_info = $vm.execute_successfully('pacmd info', :user => LIVE_USER).stdout
+  pa_info = $vm.execute_successfully('pacmd info', user: LIVE_USER).stdout
   sink_inputs_line = pa_info.match(/^\d+ sink input\(s\) available\.$/)[0]
-  return sink_inputs_line.match(/^\d+/)[0].to_i
+  sink_inputs_line.match(/^\d+/)[0].to_i
 end
 
 When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) seconds)$/ do |nb, wait_time|
-  nb = 0 if nb == "no"
-  sleep wait_time.to_i if ! wait_time.nil?
+  nb = 0 if nb == 'no'
+  sleep wait_time.to_i unless wait_time.nil?
   assert_equal(nb.to_i, pulseaudio_sink_inputs)
 end
 
 When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
-  image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
+  image = 'Desktop' + launcher.split.map(&:capitalize) .join + '.png'
   info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
-    @screen.wait(image, 10).click(double: true) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    if $vm.execute(
+      "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
+    ).failure?
+      @screen.wait(image, 10).click(double: true)
+    end
     step 'the Tor Browser has started'
   end
 end
 
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
-  should_work = should_work == 'can' ? true : false
-  @screen.press("ctrl", "s")
-  @screen.wait("Gtk3SaveFileDialog.png", 10)
-  if output_dir == "persistent Tor Browser"
+  should_work = should_work == 'can'
+  @screen.press('ctrl', 's')
+  @screen.wait('Gtk3SaveFileDialog.png', 10)
+  if output_dir == 'persistent Tor Browser'
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
-    @screen.wait("GtkTorBrowserPersistentBookmark.png", 10).click
-    @screen.wait("GtkTorBrowserPersistentBookmarkSelected.png", 10)
+    @screen.wait('GtkTorBrowserPersistentBookmark.png', 10).click
+    @screen.wait('GtkTorBrowserPersistentBookmarkSelected.png', 10)
     # The output filename (without its extension) is already selected,
     # let's use the keyboard shortcut to focus its field
-    @screen.press("alt", "n")
-    @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
-  elsif output_dir == "default downloads"
+    @screen.press('alt', 'n')
+    @screen.wait('TorBrowserSaveOutputFileSelected.png', 10)
+  elsif output_dir == 'default downloads'
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
   else
     @screen.type(output_dir + '/')
   end
-  # Only the part of the filename before the .html extension can be easily replaced
-  # so we have to remove it before typing it into the arget filename entry widget.
-  @screen.type(output_file.sub(/[.]html$/, ''), ["Return"])
+  # Only the part of the filename before the .html extension can be easily
+  # replaced so we have to remove it before typing it into the arget filename
+  # entry widget.
+  @screen.type(output_file.sub(/[.]html$/, ''), ['Return'])
   if should_work
-    try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+    try_for(20,
+            msg: "The page was not saved to #{output_dir}/#{output_file}") do
       $vm.file_exist?("#{output_dir}/#{output_file}")
-    }
+    end
   else
-    @screen.wait("TorBrowserCannotSavePage.png", 10)
+    @screen.wait('TorBrowserCannotSavePage.png', 10)
   end
 end
 
 When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads|persistent Tor Browser) directory$/ do |output_file, output_dir|
-  if output_dir == "persistent Tor Browser"
-    output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
-  else
-    output_dir = "/home/#{LIVE_USER}/Tor Browser"
-  end
-  @screen.press("ctrl", "p")
+  output_dir = if output_dir == 'persistent Tor Browser'
+                 "/home/#{LIVE_USER}/Persistent/Tor Browser"
+               else
+                 "/home/#{LIVE_USER}/Tor Browser"
+               end
+  @screen.press('ctrl', 'p')
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
   print_dialog.child('Print to File', 'table cell').click
-  print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click()
+  print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click
   # Yes, TorBrowserPrintFileDialog.png != Gtk3PrintFileDialog.png.
   # If you try to unite them, make sure this does not break the tests
   # that use either.
-  @screen.wait("TorBrowserPrintFileDialog.png", 10)
+  @screen.wait('TorBrowserPrintFileDialog.png', 10)
   # Only the file's basename is selected when the file selector dialog opens,
   # so we type only the desired file's basename to replace it
   $vm.set_clipboard(output_dir + '/' + output_file.sub(/[.]pdf$/, ''))
-  @screen.press("ctrl", 'v')
-  @screen.press("Return")
+  @screen.press('ctrl', 'v')
+  @screen.press('Return')
   # Yes, TorBrowserPrintButton.png != Gtk3PrintButton.png.
   # If you try to unite them, make sure this does not break the tests
   # that use either.
-  @screen.wait("TorBrowserPrintButton.png", 10).click
-  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
+  @screen.wait('TorBrowserPrintButton.png', 10).click
+  try_for(30,
+          msg: "The page was not printed to #{output_dir}/#{output_file}") do
     $vm.file_exist?("#{output_dir}/#{output_file}")
-  }
+  end
 end
 
 Given /^a web server is running on the LAN$/ do
   @web_server_ip_addr = $vmnet.bridge_ip_addr
   @web_server_port = 8000
   @web_server_url = "http://#{@web_server_ip_addr}:#{@web_server_port}"
-  web_server_hello_msg = "Welcome to the LAN web server!"
+  web_server_hello_msg = 'Welcome to the LAN web server!'
 
   # I've tested ruby Thread:s, fork(), etc. but nothing works due to
   # various strange limitations in the ruby interpreter. For instance,
@@ -845,7 +921,7 @@ Given /^a web server is running on the LAN$/ do
   # lot of complex cucumber stuff (like our hooks!) ending up in the
   # child process, breaking stuff in the parent process. After asking
   # some supposed ruby pros, I've settled on the following.
-  code = <<-EOF
+  code = <<-CODE
   require "webrick"
   STDOUT.reopen("/dev/null", "w")
   STDERR.reopen("/dev/null", "w")
@@ -856,15 +932,15 @@ Given /^a web server is running on the LAN$/ do
     res.body = "#{web_server_hello_msg}"
   end
   server.start
-EOF
+  CODE
   add_extra_allowed_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
-  try_for(10, :msg => "It seems the LAN web server failed to start") do
+  try_for(10, msg: 'It seems the LAN web server failed to start') do
     Process.kill(0, proc.pid) == 1
   end
 
   add_after_scenario_hook do
-    Process.kill("TERM", proc.pid)
+    Process.kill('TERM', proc.pid)
     Process.wait(proc.pid)
   end
 
@@ -876,9 +952,9 @@ EOF
   # more consistent result, so let's rely on that instead. Note that
   # this forces us to capture traffic *after* this step in case
   # accessing this server matters, like when testing the Tor Browser..
-  try_for(30, :msg => "Something is wrong with the LAN web server") do
+  try_for(30, msg: 'Something is wrong with the LAN web server') do
     msg = $vm.execute_successfully("curl #{@web_server_url}",
-                                   :user => LIVE_USER).stdout.chomp
+                                   user: LIVE_USER).stdout.chomp
     web_server_hello_msg == msg
   end
 end
@@ -888,11 +964,11 @@ When /^I open a page on the LAN web server in the (.*)$/ do |browser|
 end
 
 Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
-  if min
-    time = rand(max.to_i - min.to_i + 1) + min.to_i
-  else
-    time = max.to_i
-  end
+  time = if min
+           rand(max.to_i - min.to_i + 1) + min.to_i
+         else
+           max.to_i
+         end
   puts "Slept for #{time} seconds"
   sleep(time)
 end
@@ -904,29 +980,34 @@ Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
   # We will only care about entries for this profile from this time
   # and on.
   guest_time = $vm.execute_successfully(
-    'date +"%Y-%m-%d %H:%M:%S"').stdout.chomp
-  @apparmor_profile_monitoring_start ||= Hash.new
+    'date +"%Y-%m-%d %H:%M:%S"'
+  ).stdout.chomp
+  @apparmor_profile_monitoring_start ||= {}
   @apparmor_profile_monitoring_start[profile] = guest_time
 end
 
 When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_test, profile, file|
   assert(@apparmor_profile_monitoring_start &&
          @apparmor_profile_monitoring_start[profile],
-         "It seems the profile '#{profile}' isn't being monitored by the " +
+         "It seems the profile '#{profile}' isn't being monitored by the " \
          "'I monitor the AppArmor log of ...' step")
-  audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
+  audit_line_regex = format(
+    'apparmor="DENIED" operation="open" profile="%<profile>s" name="%<file>s"',
+    profile: profile,
+    file:    file
+  )
   begin
-    try_for(10, delay: 1) {
+    try_for(10, delay: 1) do
       audit_log = $vm.execute(
-        "journalctl --full --no-pager " +
-        "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
+        'journalctl --full --no-pager ' \
+        "--since='#{@apparmor_profile_monitoring_start[profile]}' " \
         "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
       ).stdout.chomp
       assert(audit_log.empty? == (anti_test ? true : false))
       true
-    }
+    end
   rescue Timeout::Error, Test::Unit::AssertionFailedError => e
-    raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
+    raise e, "AppArmor has #{anti_test ? '' : 'not '}denied the operation"
   end
 end
 
@@ -950,9 +1031,9 @@ end
 
 Given /^Tails is fooled to think it is running version (.+)$/ do |version|
   $vm.execute_successfully(
-    "sed -i " +
-    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
-    "/etc/os-release"
+    'sed -i ' \
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " \
+    '/etc/os-release'
   )
 end
 
@@ -960,10 +1041,10 @@ Given /^Tails is fooled to think that version (.+) was initially installed$/ do 
   initial_os_release_file =
     '/lib/live/mount/rootfs/filesystem.squashfs/etc/os-release'
   fake_os_release_file = $vm.execute_successfully('mktemp').stdout.chomp
-  fake_os_release_content = <<-EOF
-TAILS_PRODUCT_NAME="Tails"
-TAILS_VERSION_ID="#{version}"
-  EOF
+  fake_os_release_content = <<~OSRELEASE
+    TAILS_PRODUCT_NAME="Tails"
+    TAILS_VERSION_ID="#{version}"
+  OSRELEASE
   $vm.file_overwrite(fake_os_release_file, fake_os_release_content)
   $vm.execute_successfully("chmod a+r #{fake_os_release_file}")
   $vm.execute_successfully(
@@ -987,7 +1068,7 @@ Then /^Tails is running version (.+)$/ do |version|
   v1 = running_tails_version
   assert_equal(version, v1, "The version doesn't match tails-version's output")
   v2 = $vm.file_content('/etc/os-release')
-       .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
+          .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
   assert_equal(version, v2, "The version doesn't match /etc/os-release")
 end
 
@@ -997,7 +1078,7 @@ def size_of_shared_disk_for(files)
   disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
   # Let's add some extra space for filesystem overhead etc.
   disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.15).ceil].max
-  return disk_size
+  disk_size
 end
 
 def share_host_files(files)
@@ -1006,12 +1087,12 @@ def share_host_files(files)
   disk_size = size_of_shared_disk_for(files)
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
-  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
+  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " \
        "filesystem on disk \"#{disk}\""
   $vm.storage.guestfs_disk_helper(disk) do |g, _|
-    partition = g.list_partitions().first
-    g.mount(partition, "/")
-    files.each { |f| g.upload(f, "/" + File.basename(f)) }
+    partition = g.list_partitions.first
+    g.mount(partition, '/')
+    files.each { |f| g.upload(f, '/' + File.basename(f)) }
   end
   step "I plug USB drive \"#{disk}\""
   mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
@@ -1019,10 +1100,10 @@ def share_host_files(files)
   partition = dev + '1'
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
-  return mount_dir
+  mount_dir
 end
 
-def mount_USB_drive(disk, **fs_options)
+def mount_usb_drive(disk, **fs_options)
   fs_options[:encrypted] ||= false
   @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
   dev = $vm.disk_dev(disk)
@@ -1032,7 +1113,7 @@ def mount_USB_drive(disk, **fs_options)
     assert_not_nil(password)
     luks_mapping = "#{disk}_unlocked"
     $vm.execute_successfully(
-      "echo #{password} | " +
+      "echo #{password} | " \
       "cryptsetup luksOpen #{partition} #{luks_mapping}"
     )
     $vm.execute_successfully(
@@ -1044,14 +1125,14 @@ def mount_USB_drive(disk, **fs_options)
   @tmp_filesystem_disk = disk
   @tmp_filesystem_options = fs_options
   @tmp_filesystem_partition = partition
-  return @tmp_usb_drive_mount_dir
+  @tmp_usb_drive_mount_dir
 end
 
 When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
   disk_size = convert_to_bytes(size_MiB.to_i, 'MiB')
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
-  step "I create a gpt partition labeled \"#{disk}\" with " +
+  step "I create a gpt partition labeled \"#{disk}\" with " \
        "an #{fs} on disk \"#{disk}\""
   step "I plug USB drive \"#{disk}\""
   fs_options = {}
@@ -1060,7 +1141,7 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
     fs_options[:encrypted] = true
     fs_options[:password] = /encrypted with password "([^"]+)"/.match(fs)[1]
   end
-  mount_dir = mount_USB_drive(disk, **fs_options)
+  mount_dir = mount_usb_drive(disk, **fs_options)
   @tmp_filesystem_size_b = convert_to_bytes(
     avail_space_in_mountpoint_kB(mount_dir),
     'KB'
@@ -1068,13 +1149,14 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
 end
 
 When(/^I mount the USB drive again$/) do
-  mount_USB_drive(@tmp_filesystem_disk, **@tmp_filesystem_options)
+  mount_usb_drive(@tmp_filesystem_disk, **@tmp_filesystem_options)
 end
 
 When(/^I umount the USB drive$/) do
   $vm.execute_successfully("umount #{@tmp_usb_drive_mount_dir}")
   if @tmp_filesystem_options[:encrypted]
-    $vm.execute_successfully("cryptsetup luksClose #{@tmp_filesystem_disk}_unlocked")
+    $vm.execute_successfully('cryptsetup luksClose ' \
+                             "#{@tmp_filesystem_disk}_unlocked")
   end
 end
 
@@ -1094,13 +1176,14 @@ end
 # so that $FILE is put in place (obviously this depends on that no
 # extra steps are needed to make $FILE's changes go "live").
 When /^I upload "([^"]*)" to "([^"]*)"$/ do |source, destination|
-  [source, destination].each { |s| s.sub!(/\/*$/, '') }
+  [source, destination].each { |s| s.sub!(%r{/*$}, '') }
   Dir.glob(source).each do |path|
     if File.directory?(path)
       new_destination = "#{destination}/#{File.basename(path)}"
       $vm.execute_successfully("mkdir -p '#{new_destination}'")
       Dir.new(path).each do |child|
-        next if child == '.' or child == '..'
+        next if (child == '.') || (child == '..')
+
         step "I upload \"#{path}/#{child}\" to \"#{new_destination}\""
       end
     else
@@ -1118,4 +1201,11 @@ end
 When /^I disable the (.*) (system|user) unit$/ do |unit, scope|
   options = scope == 'system' ? '' : '--global'
   $vm.execute_successfully("systemctl #{options} disable '#{unit}'")
+end
+
+# Since the Unsafe Browser is disabled in most snapshots, this is
+# a little "cheat" to enable it any way.
+Given /^I magically allow the Unsafe Browser to be started$/ do
+  $vm.file_overwrite('/var/lib/live/config/tails.unsafe-browser',
+                     'TAILS_UNSAFE_BROWSER_ENABLED=true')
 end

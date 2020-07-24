@@ -224,7 +224,8 @@ class Volume(object):
                 logger.exception(e)
 
                 if "No key available with this passphrase" in e.message or \
-                   "No device header detected with this passphrase" in e.message:
+                   "No device header detected with this passphrase" in e.message or \
+                   "Failed to load device's parameters" in e.message:
                     title = _("Wrong passphrase or parameters")
                 else:
                     title = _("Error unlocking volume")

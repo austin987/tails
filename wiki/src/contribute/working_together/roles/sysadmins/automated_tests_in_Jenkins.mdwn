@@ -36,13 +36,19 @@ get the test suite running eventually:
    test suite feedback we want.
 
 Thankfully, there is a way to trigger a test suite run without having
-to rebuild images first. To do so, start a "build" of the
-corresponding `test_Tail_ISO_*` job, passing to the
-`UPSTREAMJOB_BUILD_NUMBER` parameter the ID of the `build_Tail_ISO_*`
-job build you want to test.
+to rebuild images first. To do so:
 
-When doing so, you may also pass arbitrary arguments to Cucumber
-via the `EXTRA_CUCUMBER_ARGS` job parameter.
+1. On the corresponding `test_Tail_ISO_*` job page, click _Build with
+   Parameters_.
+2. Set the `UPSTREAMJOB_BUILD_NUMBER` parameter the ID of the `build_Tail_ISO_*`
+   job build you want to test, for example `10`.
+3. Optionally, you may also pass arbitrary arguments to Cucumber
+   via the `EXTRA_CUCUMBER_ARGS` job parameter. For example:
+
+   - If you set this parameter to `features/mac_spoofing.feature`, then Cucumber
+     will run only the scenarios from the `mac_spoofing.feature` feature.
+   - If you set this parameter to `@automatic_upgrade`, then Cucumber
+     will run only the scenarios that are tagged `@automatic_upgrade`.
 
 ## Known usability issues
 
@@ -79,7 +85,7 @@ use the ISO being tested instead of the last released one:
    for our [[Puppet modules|contribute/git#puppet]].
 
    See for example
-   [commit 371be73](https://git-tails.immerda.ch/jenkins-jobs/commit/?id=371be73).
+   [commit 371be73](https://gitlab.tails.boum.org/tails/jenkins-jobs/-/commit/371be73).
 
    <div class="note">
    Treat the repository at immerda as a read-only mirror: any change
@@ -91,7 +97,7 @@ use the ISO being tested instead of the last released one:
    ISO being tested (instead of the last released one) to
    `run_test_suite`'s `--old-iso` argument.
 
-2. File a ticket to ensure this temporarily change gets reverted
+2. File an issue to ensure this temporarily change gets reverted
    in due time.
 
 ## Restarting slave VMs between test suite jobs

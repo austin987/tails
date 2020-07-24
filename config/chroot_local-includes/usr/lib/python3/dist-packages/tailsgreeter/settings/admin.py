@@ -1,34 +1,54 @@
-
 import os
 import os.path
 import logging
-import pipes
+import shlex
+import subprocess
 
 import tailsgreeter.config
+from tailsgreeter.settings import SettingNotFoundError
+from tailsgreeter.settings.utils import read_settings, write_settings
 
 
 class AdminSetting(object):
     """Setting controlling the sudo password"""
 
-    def __init__(self):
-        self.password = None
+    settings_file = tailsgreeter.config.admin_password_path
 
-    def apply_to_upcoming_session(self):
-        setting_file = tailsgreeter.config.admin_password_output_path
+    def save(self, password: str):
+        proc = subprocess.run(
+            # mkpasswd generates a salt if none is provided (even though the
+            # man page doesn't explicitly state this).
+            ["mkpasswd", "--stdin", "--method=sha512crypt"],
+            input=shlex.quote(password).encode(),
+            capture_output=True,
+            check=True,
+        )
+        hashed_and_salted_pw = proc.stdout.decode().strip()
 
-        if self.password:
-            with open(setting_file, 'w') as f:
-                os.chmod(setting_file, 0o600)
-                f.write('TAILS_USER_PASSWORD=%s\n' % pipes.quote(self.password))
-                logging.debug('password written to %s', setting_file)
-            return
+        write_settings(self.settings_file, {
+            'TAILS_USER_PASSWORD': hashed_and_salted_pw,
+            'TAILS_PASSWORD_HASH_FUNCTION': 'SHA512',
+        })
+        logging.debug('password written to %s', self.settings_file)
 
+    def delete(self):
         # Try to remove the password file
         try:
-            os.unlink(setting_file)
-            logging.debug('removed %s', setting_file)
+            os.unlink(self.settings_file)
+            logging.debug('removed %s', self.settings_file)
         except OSError:
             # It's bad if the file exists and couldn't be removed, so we
-            # we raise the exception in that case (which prevents the login)
-            if os.path.exists(setting_file):
+            # we raise the exception in that case
+            if os.path.exists(self.settings_file):
                 raise
+
+    def load(self):
+        # We don't return the stored value, because the UI can't do
+        # anything with it since it's hashed.
+        try:
+            settings = read_settings(self.settings_file)
+        except FileNotFoundError:
+            raise SettingNotFoundError("No persistent admin settings file found (path: %s)" % self.settings_file)
+
+        if settings.get('TAILS_USER_PASSWORD') is None:
+            raise SettingNotFoundError("No admin password setting found in settings file (path: %s)" % self.settings_file)

@@ -14,14 +14,23 @@ The Tails Foundations Team is responsible for:
   - keeping our core code base up-to-date and maintainable, e.g.
     refactor or clean up stuff that has bit-rotted, migrate code that
     would otherwise rely on obsolete technologies;
-  - maintaining the ISO build system;
+  - maintaining the Tails ISO and USB images build system;
   - doing the _extra_ peer-review and
     [[release management|release manager]] work that corresponds to
     the above bullet points;
 
 * welcoming and mentoring new code contributors;
 
-* reviewing code contributions that are on nobody else's plate;
+* reviewing code contributions
+  in a timely manner (1 week in general, up to 2 weeks if needed in exceptional
+  cases). If nobody on the Foundations Team can take care of a given MR,
+  it's the Foundations Team's responsibility to ask for help:
+  - [[!tails_gitlab groups/tails/-/merge_requests desc="Merge Requests (MRs)"]],
+    and in particular
+    [[!tails_gitlab groups/tails/-/merge_requests?scope=all&utf8=✓&state=opened&assignee_id=None&wip=no
+    desc="unassigned Merge Requests (MRs) that are not WIP"]]
+  - [[!tails_gitlab groups/tails/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name%5B%5D=Needs%20Validation
+    desc="issues with the _Needs Validation_ label"]]
 
 * checking how important each issue forwarded by Help Desk is, whether
   it's worth documenting it, and validating the workarounds. If it's
@@ -29,9 +38,11 @@ The Tails Foundations Team is responsible for:
   put it on our Technical Writers' plate, or draft something directly,
   or merge a draft proposed by Technical Writer apprentices;
 
-* handling new tickets when they are more technical than feature
+* triaging
+  [newly created issues](https://gitlab.tails.boum.org/groups/tails/-/issues?scope=all&utf8=%E2%9C%93&state=opened&not[label_name][]=To%20Do&not[label_name][]=Doing&not[label_name][]=Needs%20Validation&sort=created_date)
+  when they are more technical than feature
   request (those are handled by the UX designers) or about bugs;
-  reassigning to whoever is on Help Desk duty any new ticket that's
+  reassigning to whoever is on Help Desk duty any new issue that's
   really a support request;
 
 * ensuring that development discussions started on
@@ -47,18 +58,6 @@ The Tails Foundations Team is responsible for:
 
   - An emergency release is often needed shortly after [[!wikipedia Pwn2Own]].
 
-* reviewing'n'merging proposed branches in a timely manner (1 week in
-  general, up to 2 weeks if needed in exceptional cases). If a ticket
-  is flagged *Needs Validation*, but nobody on the Foundations Team can
-  take care of the review'n'merge, it's the Foundations Team's
-  responsibility to ask for help. These tickets can be tracked using:
-
-  - the "Release Manager View: VERSION";
-  - the
-    [Needs Validation, with no assignee](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=194)
-    view;
-  - [Needs Validation](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=117);
-
 * deal with last minute emergency fixes needed during release process,
   e.g. [[!tails_ticket 14962]];
 
@@ -67,23 +66,34 @@ The Tails Foundations Team is responsible for:
   implementing a feature that is needed to keep Tails relevant.
 
 * Maintain Tails relevant Debian packages in Debian
-  - as long as we ship these packages in Tails
-  - until the EOL of the last Debian stable release (including
-    LTS) we put it in, even if we drop the package from Tails:
-    including a package in a stable Debian release implies
-    a commitment to maintain it during its lifetime.
-  - [Maintain a bunch of packages](https://udd.debian.org/dmd/?email1=&email2=&email3=&packages=libgsecuredelete+libotr+mat+nautilus-wipe+onioncircuits+onionshare+pidgin-otr+seahorse-nautilus+torsocks&ignpackages=&format=html#todo).
-  - [Review and sponsor a few more packages](https://udd.debian.org/dmd/?email1=&email2=&email3=&packages=bilibop+keyringer&ignpackages=&format=html#todo).
-  - Track bugs related to these packages in Tails and forward them to
-    Debian.
-  - Track Debian bugs and forward them upstream.
+  - Role: being the fallback, on behalf of Tails, to ensure these packages are
+    well maintained in Debian (it's OK, and even great, if other pkg-privacy
+    members do part of the work).
+  - Tasks:
+     - [Maintain a bunch of packages](https://udd.debian.org/dmd/?email1=&email2=&email3=&packages=libgsecuredelete+libotr+mat+nautilus-wipe+onioncircuits+onionshare+pidgin-otr+seahorse-nautilus+torsocks&ignpackages=&format=html#todo).
+     - [Review and sponsor a few more packages](https://udd.debian.org/dmd/?email1=&email2=&email3=&packages=bilibop+keyringer&ignpackages=&format=html#todo).
+     - Track Debian bugs and forward them upstream.
+  - Duration:
+     - as long as we ship these packages in Tails
+     - until the EOL of the last Debian stable release (including
+       LTS) we put it in, even if we drop the package from Tails:
+       including a package in a stable Debian release implies
+       a commitment to maintain it during its lifetime.
+  - In order to communicate expectations to the person wears this hat,
+    Tails contributors can:
+      - use the Debian BTS
+      - mention `@debian-packages-maintainers` on our [[!tails_gitlab
+        desc="GitLab"]]
   - Not in the scope of this work:
-    * [Debian AppArmor team](https://qa.debian.org/developer.php?email=pkg-apparmor-team%40lists.alioth.debian.org)'s packages:
-    * Perl libraries our custom software depends on: intrigeri does it
-      with his Debian hat.
+    * [Debian AppArmor team](https://qa.debian.org/developer.php?email=pkg-apparmor-team%40lists.alioth.debian.org)'s packages,
+      Perl libraries our custom software depends on: intrigeri does it
+      as a volunteer with his Debian hat.
     * [[!debpts torbrowser-launcher]]: we only use its AppArmor
       profiles, that we could easily take from upstream if the Debian
       package was not maintained.
+
+* Track bugs related to the aforementioned packages in Tails and forward them
+  to Debian.
 
 <a id="meetings"></a>
 
@@ -101,7 +111,7 @@ Each month the Tails Foundations Team gathers for an online meeting.
 As a Foundations Team member, if you cannot make one of these
 meetings, please send the team before the meeting:
 
- - a brief status update about life, work and tickets;
+ - a brief status update about life, work and issues;
  - information about how much more or less work you want for the
    following month(s).
 
@@ -112,27 +122,31 @@ meetings, please send the team before the meeting:
 
 # Tasks management
 
-This section documents the principles and guidelines we use for
-tracking [our
-tasks](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=307).
+This section documents the principles and guidelines we use for tracking
+[[!tails_gitlab
+tails/tails/-/boards/4?&label_name%5B%5D=Core%20Work%3AFoundations%20Team
+desc="our tasks"]].
 
 This applies on top of the broader Tails project's tasks management
 guidelines:
 
- - [[contribute/working_together/Redmine]]
- - [[contribute/working_together/document_progress]]
+ - [[contribute/working_together/GitLab]]
+ - [[How to document progress|contribute/working_together/GitLab#document-progress]]
 
+<a id="tasks-management-milestone"></a>
 <a id="tasks-management-target-version"></a>
 
-## Target version
+## Milestone
 
-The Foundation Team treats the _Target version_ field as a commitment.
+The Foundation Team treats the _Milestone_ field as a commitment.
 Other Tails teams, contributors, and users should be able to rely on
 the value of this field.
 
-A ticket [owned by the Foundations
-Team](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=307)
-should have the _Target version_ field set if, and only if, at least
+An issue
+[[!tails_gitlab
+tails/tails/-/boards/4?&label_name%5B%5D=Core%20Work%3AFoundations%20Team
+desc="owned by the Foundations Team"]]
+should have a milestone set if, and only if, at least
 one of these conditions is met:
 
  - External constraints determine the timeline of our work.
@@ -145,110 +159,131 @@ one of these conditions is met:
    as opposed to starting work on a new task.
 
  - The task is on the Tails [[!tails_roadmap]]. In this case, the
-   _Target version_ should be a year, unless one of the above
+   milestone should be a year, unless one of the above
    conditions makes us target a specific release.
 
-Postponing a task to the next _Target version_ more than once is not
+Postponing a task to the next milestone more than once is not
 business as usual — it's a red flag. Such a change should be
 justified. The underlying problem should be identified and addressed:
 for example, the assignee might need help or be over-committed; the
 team could be under-staffed; or perhaps the task should simply not
-have a _Target version_ in the first place.
+have any milestone in the first place.
 
 <a id="tasks-management-assignee"></a>
 
 ## Assignee
 
-We use the _Assignee_ field in a way that helps us organize share our
-work as a team, focus on what matters most currently, and avoid
-individual over-commitment & feelings of failure.
-
-To this aim, most tasks should be up for grabs for anyone who has
-spare capacity and the required skills: [Don't Lick the
-Cookie](https://www.benday.com/2016/10/21/scrum-dont-lick-the-cookie/).
-
-A ticket [owned by the Foundations
-Team](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=307)
-should not be assigned to anyone in general. But we do assign a ticket
-if at least one of these conditions is met:
-
- - The task is both important and urgent.
-
- - The _Target version_ is set to the next Tails release.
-   See the "Target version" section above for details.
-
- - We did all the work we could on this task already and now have to
-   track progress on a blocker that we cannot address ourselves.
-   For example, regularly tracking progress and pinging on patches
-   we've submitted upstream.
-
- - Only one of us can complete the task. This helps identify
-   bottlenecks, high bus factor, and over-commitment.
-
- - This task is the assignee's current top priority wrt. Tails work.
-
- - Sponsor deliverables that are managed under the "let's decide
-   a long time in advance who exactly will do each task" paradigm.
-
- - It is about the parent ticket for a large project with several
-   subtasks that will be tackled by different people, and we need
-   someone to coordinate the project.
+See [[contribute/working_together/GitLab#assignee]].
 
 <a id="tasks-management-ux-improvements"></a>
 
 ## UX improvements
 
-Our [[UX designers|roles/ux]] maintain a list of UX improvements that
-would be welcome, as tickets related to [[!tails_ticket 14544]].
+Our [[UX designers|roles/ux]] maintain a
+[[!tails_gitlab groups/tails/-/issues?scope=all&utf8=✓&state=opened&label_name%5B%5D=UX%3Adebt
+desc="list of UX improvements"]] that would be welcome,
+using the "UX:debt" label.
 
 From time to time, some Foundations Team members meet with UX
-designers and do a value/cost analysis of these tickets. Then, those
+designers and do a value/cost analysis of these issues. Then, those
 with the best value/cost, that we can work on without waiting for lots
-of UX design work to be done, are added to [our list of
-tasks](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=332).
+of UX design work to be done, are added to
+[[!tails_gitlab groups/tails/-/issues?scope=all&utf8=✓&state=opened&label_name%5B%5D=Core%20Work%3AFoundations%20Team&label_name%5B%5D=UX%3Adebt
+desc="our list of tasks"]].
 That is, working on them automatically qualifies as Foundations Team work.
 
 In general, before looking for other UX improvements we could work on,
-we should first focus on these selected tickets and on the most
+we should first focus on these selected issues and on the most
 important or urgent of our other [[duties|foundations_team#duties]].
 
 Still, while keeping this in mind, you might personally be
-particularly interested in working on a ticket related to
-[[!tails_ticket 14544]], that was not added to our plate yet.
-It is an option to turn one such ticket into Foundations Team work,
+particularly interested in working on an issue that has the "UX:debt" label,
+but that was not added to our plate yet.
+It is an option to turn one such issue into Foundations Team work,
 provided a few conditions are met.
-The Foundations Team lead maintains a list of tickets that meet
-these conditions, in the description of [[!tails_ticket 14544]].
 
-You can check yourself if a particular ticket meets all these
+The Foundations Team lead maintains a list of issues that meet
+these conditions:
+
+ - [[!tails_ticket 15169]]
+ - [[!tails_ticket 12638]]
+ - [[!tails_ticket 15573]]
+ - [[!tails_ticket 16384]]
+
+These tickets are not part of the top ones in terms of value/cost but could
+nevertheless be turned into Foundations Team work if you are particularly
+interested in working on them:
+
+ - [[!tails_ticket 6084]]
+ - [[!tails_ticket 8061]]
+ - [[!tails_ticket 15028]]
+
+You can check yourself if a particular issue meets all these
 conditions:
 
- - It was marked as related to [[!tails_ticket 14544]] by our UX designers.
+ - Our UX designers added the `UX:debt` label.
 
  - It is possible work on it without waiting for lots of UX work to be done first.
    To determine whether that's the case:
     - Look at the "UX" cost column in the spreadsheet attached to
-      [[!tails_ticket 14544]]. A ticket with a UX cost of 2 or more
+      [[!tails_ticket 14544]]. An issue with a UX cost of 2 or more
       probably does not qualify.
     - In doubt, ask our UX designers.
 
  - The P×S/Cdev value is 1.0 or greater, in the spreadsheet that's
    attached to [[!tails_ticket 14544]].
 
-When you start working on such a ticket:
+When you start working on such an issue:
 
  - Assign it to yourself.
 
  - Notify our [[UX designers|roles/ux]] with a `@sajolida` mention on
-   the ticket: then they can explain what kind of work they have to do
+   the issue: then they can explain what kind of work they have to do
    before you can complete your part of the work.
+
+<a id="tasks-management-useful-links"></a>
+
+## Useful links
+
+ - [[!tails_gitlab
+   tails/tails/-/boards/4?&label_name%5B%5D=Core%20Work%3AFoundations%20Team&milestone_title=%23upcoming
+   desc="Board: our tasks scheduled for the upcoming milestone"]]
+
+ - [[!tails_gitlab
+   tails/tails/-/boards/4?&label_name%5B%5D=Core%20Work%3AFoundations%20Team&milestone_title=%23started
+   desc="Board: our tasks scheduled for any started milestone"]]
+
+# Internal tools
+
+## Team mailing list
+
+Foundations Team members are on the <tails-foundations@boum.org>
+Schleuder mailing list.
+
+## Private Git repository
+
+To set it up:
+
+1. Install needed tools
+
+        apt install git-remote-gcrypt
+
+2. Clone it the repo
+
+        git clone gcrypt::git@gitlab-ssh.tails.boum.org:tails/foundations.git
+
+3. Follow the setup documentation: `README.md` in the Git repository.
 
 <a id="contact"></a>
 
 # Contact
 
-To get in touch with the Foundations Team, write to
-<tails-foundations@boum.org>.
+To get in touch with the entire Foundations Team, you can:
+
+ - write to <tails-foundations@boum.org>;
+ - mention `@foundations-team` on GitLab: GitLab will send an email notification
+   about it to every member of the Foundations Team, and add it to their
+   To-Do list.
 
 You can encrypt your email with our [[OpenPGP key|tails-foundations.key]]
 ([[details|doc/about/openpgp_keys#foundations]]).
