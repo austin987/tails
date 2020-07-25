@@ -946,9 +946,10 @@ before starting the wrapper from `puppet-tails`:
        set -eu
        WORK_DIR=$(mktemp -d)
        TAILS_REMOTE="$(git -C "${RELEASE_CHECKOUT?:}" remote get-url origin)"
+       PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails/tails(?:[.]git)?\z,:tails/puppet-tails,')
        cd "${WORK_DIR?:}"
-       git clone git@gitlab-ssh.tails.boum.org:tails/puppet-tails
-       sudo                                                                   \
+       git clone "$PUPPET_TAILS_REMOTE"
+       sudo -l
        time                                                                   \
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
            --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
