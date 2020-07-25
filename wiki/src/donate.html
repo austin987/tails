@@ -46,6 +46,8 @@
 
 <div id="paypal-with-js">
 
+<div id="variant-default">
+
 <form method="post" action="https://www.paypal.com/cgi-bin/webscr">
 
   <!-- HTML Variables for PayPal Payments Standard:
@@ -54,11 +56,12 @@
   <input type="hidden" name="business" value="tailsriseuplabs@riseup.net" id="business"/>
   <input type="hidden" name="currency_code" value="USD" id="currency_code"/>
   <input type="hidden" name="item_name" value="Donation to Tails"/>
+  <input type="hidden" name="custom" value="default"/>
   <input type="hidden" name="no_note" value="1"/>
 
   <!-- Note for translators: adapt the URLs to return to the page in your language. -->
-  <input type="hidden" name="return" class="return-url" value="https://tails.boum.org/donate/thanks"/>
-  <input type="hidden" name="cancel_return" class="return-url" value="https://tails.boum.org/donate/canceled"/>
+  <input type="hidden" name="return" class="return-url" value="https://tails.boum.org/donate/thanks?v=default"/>
+  <input type="hidden" name="cancel_return" class="return-url" value="https://tails.boum.org/donate/canceled?v=default"/>
 
   <!-- Note for translators: adapt the value of 'lc' to your language. -->
   <input name="lc" type="hidden" value="US"/>
@@ -184,6 +187,143 @@ permitted by law.</strong></p>
 
 </div>
 
+<div id="variant-forced">
+
+<form method="post" action="https://www.paypal.com/cgi-bin/webscr">
+
+  <!-- HTML Variables for PayPal Payments Standard:
+       https://developer.paypal.com/docs/classic/paypal-payments-standard/integration-guide/Appx_websitestandard_htmlvariables/ -->
+  <input type="hidden" name="cmd" value="_xclick-subscriptions" id="cmd"/>
+  <input type="hidden" name="business" value="tailsriseuplabs@riseup.net" id="business"/>
+  <input type="hidden" name="currency_code" value="USD" id="currency_code"/>
+  <input type="hidden" name="item_name" value="Donation to Tails"/>
+  <input type="hidden" name="custom" value="forced"/>
+  <input type="hidden" name="no_note" value="1"/>
+
+  <!-- Note for translators: adapt the URLs to return to the page in your language. -->
+  <input type="hidden" name="return" class="return-url" value="https://tails.boum.org/donate/thanks?v=forced"/>
+  <input type="hidden" name="cancel_return" class="return-url" value="https://tails.boum.org/donate/canceled?v=forced"/>
+
+  <!-- Note for translators: adapt the value of 'lc' to your language. -->
+  <input name="lc" type="hidden" value="US"/>
+
+  <!-- For recurring donations only. -->
+  <input type="hidden" name="a3" value="5" id="a3"/>
+  <input type="hidden" name="t3" value="M" id="t3"/>
+  <input type="hidden" name="p3" value="1"/>
+  <input type="hidden" name="src" value="1"/>
+
+  <!-- For one-time donation only. -->
+  <input type="hidden" name="amount" value="5" id="amount"/>
+
+  <div id="currency">
+  <div class="col-md-12 btn-group btn-group-justified" data-toggle="buttons" role="group">
+    <label class="btn btn-lg btn-primary active" id="currency-dollar">
+      <input type="radio" id="dollars" autocomplete="off" checked data-complete-text="finished!"/> Dollars
+    </label>
+    <label class="btn btn-lg btn-primary" id="currency-euro">
+      <input type="radio" id="euros" autocomplete="off" checked data-complete-text="finished!"/> Euros
+    </label>
+  </div>
+  </div>
+
+  <div id="dollar-amounts" class="amounts donate-dollars" data-toggle="buttons" role="group">
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 5 active">
+      <input type="radio" autocomplete="off" value="5"/>$5
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 10">
+      <input type="radio" autocomplete="off" value="10"/>$10
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 25">
+      <input type="radio" autocomplete="off" value="25"/>$25
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 50">
+      <input type="radio" autocomplete="off" value="50"/>$50
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 100">
+      <input type="radio" autocomplete="off" value="100"/>$100
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 150">
+      <input type="radio" autocomplete="off" value="150"/>$150
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 200">
+      <input type="radio" autocomplete="off" value="200"/>$200
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 other">
+      <div class="input-group">
+        <span class="input-group-addon">$</span>
+        <input type="text" pattern="\d+" class="form-control" id="other-dollar" placeholder="Other"/>
+      </div>
+    </label>
+  </div>
+
+  <div id="euro-amounts" class="amounts donate-euros" data-toggle="buttons" role="group">
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 5 active">
+      <input type="radio" autocomplete="off" value="5"/>5€
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 10">
+      <input type="radio" autocomplete="off" value="10"/>10€
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 25">
+      <input type="radio" autocomplete="off" value="25"/>25€
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 50">
+      <input type="radio" autocomplete="off" value="50"/>50€
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 100">
+      <input type="radio" autocomplete="off" value="100"/>100€
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 150">
+      <input type="radio" autocomplete="off" value="150"/>150€
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 200">
+      <input type="radio" autocomplete="off" value="200"/>200€
+    </label>
+    <label class="btn btn-amount btn-lg btn-primary col-md-3 col-xs-6 other">
+      <div class="input-group">
+        <input type="text" pattern="\d+" class="form-control text-right" id="other-euro" placeholder="Other"/>
+        <span class="input-group-addon">€</span>
+      </div>
+    </label>
+  </div>
+
+  <div id="frequency-buttons">
+    <div class="col-sm-4 col-xs-12"><input type="radio" name="frequency" id="one-time"/>One-time</div>
+    <div class="col-sm-4 col-xs-12"><input type="radio" name="frequency" id="monthly"/>Monthly</div>
+    <div class="col-sm-4 col-xs-12"><input type="radio" name="frequency" id="yearly"/>Yearly</div>
+  </div>
+
+  <div id="frequency-explanation">
+    Monthly and yearly donations, even the smallest, are the most valuable for
+    the sustainability of Tails. They require a [[!img paypal-inline.png
+    link="no" class="paypal-inline" alt="PayPal"]] account.
+  </div>
+
+  <div id="donate-paypal-button">
+    <button class="btn btn-primary btn-lg btn-block col-md-12">Donate</button>
+  </div>
+
+</form>
+
+<p id="dollar-tax" class="tax-deductible donate-dollars">Your donation goes entirely to Tails
+and will be handled by RiseupLabs which is a 501(c)(3) non-profit organization
+in the USA.<br/><strong>Donations are [[!toggle id="tax-deductible" text="tax-deductible"]] to the full extent
+permitted by law.</strong></p>
+
+<p id="euro-tax" class="tax-deductible donate-euros">Your donation goes entirely to Tails
+and will be handled by CCT which is a non-profit organization
+in Germany.<br/><strong>Donations are [[!toggle id="tax-deductible" text="tax-deductible"]] to the full extent
+permitted by law.</strong></p>
+
+[[!toggleable id="tax-deductible" text="""
+<p>If you need a donation receipt, ask<br/>
+<a href="mailto:tails-accounting@boum.org">tails-accounting@boum.org</a>.</p>
+"""]]
+
+</div>
+
+</div>
+
 <div id="paypal-without-js">
 
 <div id="dollars-without-js">
@@ -191,6 +331,10 @@ permitted by law.</strong></p>
 <h2>Donate in dollars</h2>
 
 <h3>Recurring donation</h3>
+
+<p>Monthly and yearly donations, even the smallest, are the most valuable for
+the sustainability of Tails. They require a [[!img paypal-inline.png
+link="no" class="paypal-inline" alt="PayPal"]] account.</p>
 
 <form method="post" action="https://www.paypal.com/cgi-bin/webscr">
 
@@ -212,21 +356,23 @@ permitted by law.</strong></p>
 
   <input type="radio" name="a3" value="5" id="sub5" checked="checked"/><label for="sub5">$5</label>
   <input type="radio" name="a3" value="10" id="sub10"/><label for="sub10">$10</label>
-  <input type="radio" name="a3" value="20" id="sub20"/><label for="sub20">$20</label>
+  <input type="radio" name="a3" value="25" id="sub25"/><label for="sub25">$25</label>
   <input type="radio" name="a3" value="50" id="sub50"/><label for="sub50">$50</label>
   <br/>
   <input type="radio" name="a3" value="100" id="sub100"/><label for="sub100">$100</label>
-  <input type="radio" name="a3" value="250" id="sub250"/><label for="sub250">$250</label>
-  <input type="radio" name="a3" value="500" id="sub500"/><label for="sub500">$500</label>
+  <input type="radio" name="a3" value="150" id="sub150"/><label for="sub150">$150</label>
+  <input type="radio" name="a3" value="500" id="sub500"/><label for="sub500">$200</label>
   <br/>
   <input type="radio" name="t3" value="M" id="sub_m" checked="checked"/><label for="sub_m">Monthly</label>
   <input type="radio" name="t3" value="Y" id="sub_y"/><label for="sub_y">Yearly</label>
   <br/>
-  <input type="submit" value="Donate"/> (Requires a [[!img paypal-inline.png link="no" class="paypal-inline" alt="PayPal"]] account.)
+  <input type="submit" value="Donate"/>
 
 </form>
 
 <h3>One-time donation</h3>
+
+<p>Does not require a [[!img paypal-inline.png link="no" class="paypal-inline" alt="PayPal"]] account.</p>
 
 <form method="post" action="https://www.paypal.com/cgi-bin/webscr">
 
@@ -248,10 +394,12 @@ permitted by law.</strong></p>
 
   <input type="radio" name="amount" value="5" id="pp_5" checked="checked"/><label for="pp_5">$5</label>
   <input type="radio" name="amount" value="10" id="pp_10"/><label for="pp_10">$10</label>
-  <input type="radio" name="amount" value="20" id="pp_20"/><label for="pp_20">$20</label>
+  <input type="radio" name="amount" value="25" id="pp_25"/><label for="pp_25">$25</label>
   <input type="radio" name="amount" value="50" id="pp_50"/><label for="pp_50">$50</label>
   <br/>
   <input type="radio" name="amount" value="100" id="pp_100"/><label for="pp_100">$100</label>
+  <input type="radio" name="amount" value="150" id="pp_150"/><label for="pp_150">$150</label>
+  <input type="radio" name="amount" value="200" id="pp_200"/><label for="pp_200">$200</label>
   <input type="radio" name="amount" value="" id="pp_cust"/><label for="pp_cust">Custom amount</label>
   <br/>
   <input type="submit" value="Donate"/>
