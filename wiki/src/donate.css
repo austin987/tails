@@ -42,16 +42,29 @@
   display: none;
 }
 
-/* JavaScript version */
+/* A/B testing: default version */
 
-#currency .col-md-12, #frequency .col-md-12 {
+#variant-default #frequency .col-md-12 {
   margin-bottom: 1em;
   padding: 0;
   border: solid 3px white;
 }
 
-#donate-paypal-button .col-md-12 {
+#variant-default #donate-paypal-button .col-md-12 {
   margin-top: 1em;
+}
+
+/* JavaScript version */
+
+#currency .col-md-12 {
+  margin-bottom: 1em;
+  padding: 0;
+  border: solid 3px white;
+}
+
+#donate-paypal-button {
+  width: 100%;
+  margin-top: 0.5em;
   border: solid 3px white;
 }
 
@@ -77,13 +90,45 @@
   color: black;
 }
 
-#require-paypal, #paypay-with-js .tax-deductible {
+#currency, #dollar-amounts, #euro-amounts, #frequency-buttons,
+#frequency-explanation #donate-paypal-button, .tax-deductible {
+  display: inline-block;
+}
+
+#frequency-buttons, #frequency-explanation, #require-paypal, #paypay-with-js .tax-deductible {
   padding: 0 4px;
 }
 
-#require-paypal {
-  font-size: 12px;
-  font-style: italic;
+#frequency-buttons {
+  margin-top: 0.5em;
+  padding-bottom: 0.2em;
+  border-bottom: 2px solid transparent;
+  width: 100%;
+  text-align: center;
+}
+
+#frequency-buttons input {
+  position: relative;
+  top: 2px;
+  margin-right: 6px;
+}
+
+.shake {
+  animation: shake 1s;
+  display: inline-block;
+  border-color: red !important;
+}
+
+@keyframes shake {
+  10% { transform: translateX(-1px); }
+  20% { transform: translateX(2px); }
+  30% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  70% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+  90% { transform: translateX(-1px); }
 }
 
 .tax-deductible {
@@ -118,6 +163,7 @@
 
 #paypal-without-js h3 {
   font-size: 14px;
+  margin-top: 5px;
 }
 
 #paypal-without-js form {
