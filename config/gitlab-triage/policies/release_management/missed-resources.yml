@@ -1,0 +1,21 @@
+.label-missed-resources: &label-missed-resources
+  rules:
+    - name: Postpone resources that missed their milestone
+      conditions:
+        state: opened
+        milestone: any
+        ruby: |
+          return false unless ENV['VERSION']
+          return false unless ENV['NEXT_PLANNED_VERSION']
+          return false unless milestone&.title == "Tails_#{ENV['VERSION']}"
+          Date.today >= milestone.due_date
+      actions:
+        comment: |
+          /label ~"missed:#{ENV['VERSION']}"
+          /milestone %"Tails_#{ENV['NEXT_PLANNED_VERSION']}"
+
+resource_rules:
+  issues:
+    *label-missed-resources
+  merge_requests:
+    *label-missed-resources
