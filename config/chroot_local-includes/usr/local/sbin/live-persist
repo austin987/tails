@@ -2,13 +2,13 @@
 
 error ()
 {
-	echo "error: ${@}" >&2
+	echo "error: ${*}" >&2
 	exit 1
 }
 
 warning ()
 {
-	echo "warning: ${@}" >&2
+	echo "warning: ${*}" >&2
 }
 
 # import Cmdline_old()
@@ -131,13 +131,13 @@ migrate_persistence_preset()
 # We override live-boot's logging facilities to get more useful error messages
 log_warning_msg ()
 {
-	warning ${@}
+	warning "${@}"
 }
 
 # We override live-boot's panic() since it does a lot of crazy stuff
 panic ()
 {
-	error ${@}
+	error "${@}"
 }
 
 list_gpt_volumes ()
@@ -567,7 +567,7 @@ main ()
 			list_gpt_volumes ${labels}
 			;;
 		activate|close)
-			if ! echo ${@} | grep -qe "[^[:space:]]"
+			if ! echo "${@}" | grep -qe "[^[:space:]]"
 			then
 				error "you must specify at least one volume"
 			fi
@@ -582,4 +582,4 @@ main ()
 	esac
 }
 
-main ${@}
+main "${@}"

@@ -242,8 +242,10 @@ Before('@product') do |scenario|
   # English will be assumed if this is not overridden
   $language = ''
   @os_loader = 'MBR'
-  @sudo_password = 'asdf'
-  @persistence_password = 'asdf'
+  # Passwords includes shell-special chars (space, "!")
+  # as a regression test for #17792
+  @sudo_password = 'asdf !'
+  @persistence_password = 'asdf !'
   @has_been_reset = false
   # See comment for add_extra_allowed_host() above.
   @extra_allowed_hosts ||= []
