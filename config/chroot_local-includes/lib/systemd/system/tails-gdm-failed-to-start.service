@@ -11,6 +11,8 @@ After=plymouth-quit.service
 Requires=plymouth-quit-wait.service
 After=plymouth-quit-wait.service
 
+# for instructions on how to test this unit, see config/chroot_local-includes/usr/lib/gdm3/gdm-x-session.tails
+
 [Service]
 Type=oneshot
 # We use VT5 that is clean of boot messages and does not get a getty started
@@ -26,11 +28,4 @@ ExecStart=/bin/sh -c \
         --kernel-command-line="plymouth.ignore-udev $(cat /proc/cmdline)"'
 ExecStart=/bin/chvt 5
 ExecStart=/bin/plymouth show-splash
-ExecStart=/bin/sh -c \
-    'MAX_LENGTH=254 ; \
-     PREFIX="Error starting GDM with your graphics card: " ; \
-     SUFFIX=". Please take note of this error and visit https://tails.boum.org/gdm for troubleshooting." ; \
-     MAX_VIDEO_CARD_LENGTH=$(($MAX_LENGTH - $(echo -n "$PREFIX$SUFFIX" | wc -c))) ; \
-     VIDEO_CARD=$(lspci -d::0300 -nn | sed -E "s,.* VGA compatible controller \\[0300\\]:\s*,," | cut -c "1-$MAX_VIDEO_CARD_LENGTH") ; \
-     /bin/plymouth display-message --text="$PREFIX$VIDEO_CARD$SUFFIX" \
-    '
+ExecStart=/usr/local/lib/tails-gdm-error-message

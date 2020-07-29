@@ -50,7 +50,7 @@ Feature: configuration model
   Scenario: merge empty file with default presets
     Given the file is empty
     When I merge the presets and the file
-    Then the list of configuration atoms should contain 12 elements
+    Then the list of configuration atoms should contain 13 elements
     And there should be 1 enabled configuration line
 
   Scenario: merge non-empty file with enabled-by-default preset in
@@ -60,7 +60,7 @@ Feature: configuration model
       /home/amnesia/.myapp source=myapp
       """
     When I merge the presets and the file
-    Then the list of configuration atoms should contain 13 elements
+    Then the list of configuration atoms should contain 14 elements
     And there should be 2 enabled configuration lines
 
   Scenario: merge non-empty file with disabled-by-default preset in
@@ -70,5 +70,5 @@ Feature: configuration model
       /home/amnesia/.myapp source=myapp
       """
     When I merge the presets and the file
-    Then the list of configuration atoms should contain 13 elements
+    Then the list of configuration atoms should contain 14 elements
     And there should be 3 enabled configuration lines
