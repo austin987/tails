@@ -374,42 +374,52 @@ Networking
 Can I use Tails with a VPN?
 ---------------------------
 
-Three possible scenarios need to be distinguished:
+Tails does not work with VPNs.
 
-  - Using a VPN instead of Tor
-  - Using a VPN to connect to Tor (VPN before Tor)
-  - Connecting to a VPN using Tor (VPN after Tor)
+There are three scenarios where a VPN would be involved in Tails:
 
-For more information, see our [[blueprint on VPN
-support|blueprint/vpn_support/]].
+  - Using a VPN instead of Tor.
+  - Using a VPN to connect to Tor (VPN before Tor).
+  - Connecting to a VPN using Tor (VPN after Tor).
+
+For more information, see our [[blueprint on VPN support|blueprint/vpn_support]].
 
 ### Using a VPN instead of Tor
 
-It is a very [[fundamental assumption of Tails|about#tor]] to force all outgoing
-traffic to anonymity networks such as Tor. VPN are not anonymity
-networks, because the administrators of the VPN can know both where you are
-connecting from and where you are connecting to. Tor provides anonymity by
-making it impossible for a single point in the network to know both the origin
-and the destination of a connection.
+Unlike Tor, using a VPN does not provide anonymity.
+
+Tor provides anonymity by making it impossible for a single point in the
+network to know both the origin and destination of a connection.
+
+With VPNs, the administrators of the VPN can know both where you are
+connecting from and where you are connecting to.
+
+It is [[fundamental to Tails|doc/about/tor]] that all outgoing traffic be
+forced through Tor. We will never make it possible to use a VPN
+*instead* of Tor.
 
 ### Using a VPN to connect to Tor (VPN before Tor)
 
-In some situations, you might be forced to use a VPN to connect to the Internet,
-for example by your ISP. This is currently not possible using Tails. See
-[[!tails_ticket 5858]].
+In some situations, you might need to use a VPN to connect to Tor.
+For example, your Internet Service Provider (ISP) might restrict connections to Tor relays.
 
-[[Tor bridges|doc/first_steps/welcome_screen/bridge_mode]] can also be useful
-to bypass the limitations imposed by your ISP.
+In these situations, try using
+[[Tor bridges|doc/first_steps/welcome_screen/bridge_mode]] to
+bypass the restrictions imposed by your ISP or local network.
+
+It is currently impossible to use a VPN in Tails to connect to Tor.
+We might make this possible in the future. ([[!tails_ticket 17843]])
 
 ### Connecting to a VPN using Tor (VPN after Tor)
 
 In some situations, it can be useful to connect to a VPN through Tor:
 
   - To access services that block connections coming from Tor.
-  - To access resources only available inside a VPN, for example at your
-    company or University.
+  - To access resources only available inside a VPN, for example, a server at
+    your company or university.
 
-This is currently not possible easily using Tails.
+It is currently impossible to connect to a VPN in Tails using Tor.
+We might make this possible in the future. ([[!tails_ticket 5858]])
 
 <a id="torrc"></a>
 

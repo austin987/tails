@@ -19,7 +19,7 @@ class AdminSetting(object):
             # mkpasswd generates a salt if none is provided (even though the
             # man page doesn't explicitly state this).
             ["mkpasswd", "--stdin", "--method=sha512crypt"],
-            input=shlex.quote(password).encode(),
+            input=password.encode(),
             capture_output=True,
             check=True,
         )
