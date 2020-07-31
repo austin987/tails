@@ -577,17 +577,30 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             $exit_code = $?;
         }
         else {
-            local $SIG{HUP} = sub {
-                $self->cancel_download;
-                exit(0);
+            my ($download_h,$zenity_h,$download_out);
+            $download_h =  IPC::Run::start \@cmd,\undef,\$download_out, '2>',\$stderr; 
+            $zenity_h = IPC::Run::start [qw{zenity --progress --percentage=0 --auto-close}, '--title', $title, '--text', $info],\$download_out;
+            try {
+                while ($zenity_h->pumpable && $download_h->pumpable ) {
+                    $download_h->pump_nb;
+                    $zenity_h->pump_nb;
+                }
+            }
+            catch {
+                $stderr = $_;
+            }
+            finally {
+                $zenity_h->kill_kill;
+                if ($zenity_h->result) {
+                    $self->cancel_download;
+                    kill TERM => -getpgrp();
+                }
+                else {
+                    $success =  $download_h->finish;
+                    $exit_code = $download_h->result;
+                }
             };
-            IPC::Run::run \@cmd, '2>', \$stderr,
-                '|', [qw{zenity --progress --percentage=0 --auto-close
-                        --auto-kill}, '--title', $title, '--text', $info]
-                or $success = 0;
-            $exit_code = $?;
         }
-        
         $success or $self->fatal(
             errf("<b>%{error_msg}s</b>\n\n%{details}s",
                  {
