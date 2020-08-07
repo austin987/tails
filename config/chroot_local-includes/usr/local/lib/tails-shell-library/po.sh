@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 # This shell library is meant to be used with `set -e` and `set -u`.
 
 po_languages () {

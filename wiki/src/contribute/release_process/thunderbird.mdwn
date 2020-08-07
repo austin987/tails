@@ -9,14 +9,12 @@ We need to follow the following instructions whenever the patch series
 we have exported to tails.git does not apply anymore, therefore breaking
 the Tails images build process.
 
-1. Create, checkout and push a branch in `tails.git` with the
-   `+force-all-tests` suffix (most of `features/thunderbird.feature`
-   is tagged `@fragile`).
+1. Create, checkout and push a branch in `tails.git`.
 
 1. The first time you do this requires some additional steps (WARNING!
    this will download almost 2 GiB of data):
 
-   1. Clone [Tails' Thunderbird repo](http://git.tails.boum.org/thunderbird/).
+   1. Clone [Tails' Thunderbird repo](https://git.tails.boum.org/icedove/).
 
    1. Add a remote for Debian:
 
@@ -24,10 +22,10 @@ the Tails images build process.
 
 1. Set environment variables:
 
-   Let's pretend the scenario is that Thunderbird 60.0-3 has just been
+   Let's pretend the scenario is that Thunderbird 68.10.0-1~deb10u1 has just been
    released:
 
-        VERSION="60.0-3"
+        VERSION="68.10.0-1~deb10u1"
         TAG="debian/1%$(echo ${VERSION:?} | tr '~' '_')"
 
 1. `git fetch && git fetch debian-upstream`
@@ -45,7 +43,7 @@ the Tails images build process.
 
 1. Let's update our branch to the new version:
 
-        git checkout tails/stretch && git merge origin/tails/stretch && \
+        git checkout tails/buster && git merge origin/tails/buster && \
         git merge --no-edit "${TAG:?}"
 
 1. Let's ensure our patches still apply cleanly:
@@ -73,10 +71,7 @@ the Tails images build process.
 
 1. Git push:
 
-        git push --follow-tags origin \
-           tails/stretch \
-           upstream-60.x \
-           pristine-tar
+        git push --follow-tags origin tails/buster
 
    Note: pushing some tags will fail due to [[!tails_ticket 11531]].
 
@@ -87,11 +82,11 @@ the Tails images build process.
 
 1. Update the patches in tails.git:
 
-        THUNDERBIRD_GIT_COMMIT=$(git --git-dir="$THUNDERBIRD_GIT_CHECKOUT" rev-parse --verify HEAD)
+        THUNDERBIRD_GIT_COMMIT=$(git --git-dir="${THUNDERBIRD_GIT_CHECKOUT}/.git" rev-parse --verify HEAD)
         TAILS_GIT_PATCHES_DIR="config/chroot_local-includes/usr/share/tails/build/thunderbird-patches"
 		cd "$TAILS_GIT_CHECKOUT" && \
         git rm -r "$TAILS_GIT_PATCHES_DIR" && \
-		cp -r "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/secure-account-creation \
+		cp -r "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/secure-account-creation" \
 		   "$TAILS_GIT_PATCHES_DIR" && \
 		grep -E '^secure-account-creation/' "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/series" \
            | perl -pE 's{^secure-account-creation/}{}' \

@@ -14,6 +14,10 @@ set -u
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
+# Get LANG
+. /etc/default/locale
+export LANG
+
 . /usr/bin/gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
@@ -49,7 +53,7 @@ notify_panic_success() {
     local nic_name
     nic="${1}"
     nic_name="${2}"
-    show_notification "`gettext \"Network card \\\${nic} disabled\"`" \
+    show_notification "`eval_gettext \"Network card \\\${nic} disabled\"`" \
 "`eval_gettext \"MAC spoofing failed for network card \\\${nic_name} (\\\${nic}) so it is temporarily disabled.
 You might prefer to restart Tails and disable MAC spoofing.\"`"
 }
@@ -139,7 +143,8 @@ done
 # point we have to take some drastic measures in order to prevent
 # potential leaks.
 if [ -z "${OLD_MAC:-}" ] || [ -z "${NEW_MAC:-}" ] || \
-   [ "${OLD_MAC:-}" = "${NEW_MAC:-}" ]
+   [ "${OLD_MAC:-}" = "${NEW_MAC:-}" ] || \
+   grep -qs -w 'debug=test_mac_spoof_panic' /proc/cmdline
 then
     log "Failed to spoof MAC address of NIC ${NIC}. Going into panic mode."
     if ! mac_spoof_panic "${NIC}"; then

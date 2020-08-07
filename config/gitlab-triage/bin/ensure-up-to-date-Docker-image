@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+set -u
+set -x
+
+# Update Docker image tails:gitlab-triage-stable is based on
+docker image pull debian:stable
+
+# Build our own Docker image
+docker build --tag tails:gitlab-triage-stable "$(dirname "$0")/.."
+
+# Remove dangling Docker images
+docker image prune --force
