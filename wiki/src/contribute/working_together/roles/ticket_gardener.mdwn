@@ -74,23 +74,50 @@ Whether it's appropriate to drop the milestone depends on:
 We have a [[template message|ticket_gardener/inadequate_target_version.textile]]
 that we can use as a basis to explain why we're removing the milestone.
 
-## Existing automation
+## Automated tasks
 
-* **WIP stalled for a while**
+To run the automated triaging processes described below, execute
+the following commands:
 
-  Issues assigned to somebody, labeled *Doing*, and not updated in the last
-  180 days.
+    sudo ./config/gitlab-triage/bin/ensure-up-to-date-Docker-image && \
+    ./bin/gitlab-triage-gardener \
+        --host-url "$(bin/gitlab-url TailsGardener)" \
+        --token "$(bin/gitlab-api-token TailsGardener)"
 
-  An email reminder sends everyone the list of such issues that are assigned to
-  them, asking them if they think they can realistically come back to it and
-  finish the work in the next 6 months. If yes, they should set a suitable
-  milestone and when relevant, the relevant "Core work: $team" label. Else, the
-  contributor should clear the _Assignee_ field and bring it to the attention of
-  the relevant team.
+This can take a few dozens of minutes to complete.
+You can pass any extra `gitlab-triage` option, such as `--dry-run`.
 
-* **Stalled merge requests**
+Implementation:
 
-  Merge requests assigned to somebody not updated in the last 45 days.
+ - uses [GitLab Triage](https://gitlab.com/gitlab-org/gitlab-triage)
+ - [[!tails_gitweb bin/gitlab-triage-gardener]]
+ - [[!tails_gitweb_dir config/gitlab-triage]]
 
-  An email reminder sends everyone the list of such MRs that are assigned to
-  them, suggesting them to take a look there.
+### Stalled WIP
+
+* Scope = issues assigned to somebody, labeled *Doing*,
+  and not updated for a while
+
+* Output = a summary issue, which:
+   - mentions each GitLab user who has such issues assigned to them;
+     this adds an item to the To-Do list of these users
+   - lists these issues, grouped by assignee
+
+### Stalled validation
+
+* Scope = issues assigned to somebody, labeled *Needs Validation*,
+  and not updated for a while
+
+* Output = a summary issue, which:
+   - mentions each GitLab user who has such issues assigned to them;
+     this adds an item to the To-Do list of these users
+   - lists these issues, grouped by assignee
+
+### Stalled merge requests
+
+* Scope = merge requests assigned to somebody not updated for a while
+
+* Output = a summary issue, which:
+   - mentions each GitLab user who has such MRs assigned to them;
+     this adds an item to the To-Do list of these users
+   - lists these MRs, grouped by assignee
