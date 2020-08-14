@@ -1,0 +1,230 @@
+[[!meta title="Improvements to the donation process"]]
+
+Calendar until the campaign:
+
+  - Week 32, Aug  3: summit
+  - Week 33, Aug 10: team member unavailable
+  - Week 34, Aug 17: team member unavailable
+  - Week 35, Aug 24
+  - Week 36, Aug 31
+  - Week 37, Sep  7
+  - Week 38, Sep 14
+  - Week 39, Sep 21: sajolida unavailable
+  - Week 40, Sep 28: sajolida unavailable
+  - Week 41, Oct  5: sajolida unavailable
+  - Week 42, Oct 12: launch the campaign
+
+I think that we should do, in this rough order:
+
+### Skip any in-person usability tests for now
+
+It's quite time consuming and the Covid situation makes it more
+complicated. We can do other things and keep this for next year.
+
+Week 32
+-------
+
+### Brainstorm on images with Andrés
+
+Week 33
+-------
+
+### Survey lapsed donors
+
+Goals:
+
+* Learn about motivation to better frame our message
+* Identify low hanging fruits in how we could steward them better
+
+Call:
+
+<pre>
+Subject: Tell us how you feel about your donation to Tails
+
+Hi,
+
+Thank you so much for donating to Tails in the past!
+
+Donations from individuals like you are our most precious source of
+income as they guarantee our independence.
+
+Today, we want to ask you a few questions about how satisfied you are
+with your donation and Tails in general.
+
+We will use your feedback to improve our relationship with donors like
+you and encourage more people to donate to Tails. This will help us
+continue building the world's most popular secure operating system.
+
+To help us, please answer this survey of 7 simple questions before
+Thursday, August 20:
+
+{SURVEYURL}
+
+Your opinion matters to us!
+
+Our achievements in 2020 so far
+-------------------------------
+
+* In 2020, Tails was started 30 000 times every day on average, 18% more
+  than in 2019.
+
+* We completely redesigned our Home and About pages, making it more
+  engaging and easier to understand what Tails is and why people should
+  use it:
+
+  https://tails.boum.org/
+  https://tails.boum.org/about/
+
+* We added support to Secure Boot, now required by most modern laptops.
+
+* We improved automatic upgrades to remove the need for most manual
+  upgrades, which was one of the major pain points for users.
+
+* We simplified the instructions on how to start Tails, which was
+  another major pain point for users.
+
+* We created and printed outreach material in 5 languages to tell
+  the world about Tails:
+
+  https://tails.boum.org/contribute/how/promote/material/leaflets/
+
+* We migrated our issue tracker to GitLab to make it easier to
+  contribute to Tails and speed up our work.
+
+In solidarity,
+
+--
+Tails
+
+To stop receiving emails from us, click the following link:
+{OPTOUTURL}
+</pre>
+
+List:
+
+    ./scripts/donors-report -c ' ' \
+      -p data/PayPal_RiseupLabs_2019-01-01_to_2019-12-31.csv \
+      -p data/PayPal_RiseupLabs_2020-01-01_to_2020_02_03.csv | sed 's/^ : //' > /tmp/2019
+
+    echo "firstname,lastname,email" > ~/Tor\ Browser/lapsed.csv
+
+    ./scripts/donors-report -c ' ' -x exclude.dat -x /tmp/2019 \
+       -p data/PayPal_RiseupLabs_2016-10-01_to_2016-12-31.csv \
+       -p data/PayPal_RiseupLabs_2017-01-01_to_2017-12-31.csv \
+       -p data/PayPal_RiseupLabs_2018-01-01_to_2018-12-31.csv \
+       -p data/PayPal_RiseupLabs_2019-01-01_to_2019-12-31.csv | sed 's/^ : /,,/' >> ~/Tor\ Browser/lapsed.csv
+
+Questions:
+
+1. **Why did you donate to Tails?** (Short free text)
+
+1. **Which part of our mission appeals to you most?** (Single choice)
+
+   * Protecting against surveillance
+   * Protecting against censorship
+   * Building a secure operating system
+   * Other:
+
+1. **Did you donate to Tails because you use it yourself or because you
+   want other people to be able to use it?** (5-point Likert scale)
+
+   * I use Tails myself
+   * I want other people to be able to use Tails
+
+1. **How much of an impact do you feel your donation had?** (5-point Likert scale)
+
+1. **Do you feel like you received too much or not enough communication
+  from us?** (Multiple choice)
+
+   * Not enough
+   * The right amount
+   * Too much
+
+  If "*Not enough*":
+
+  1. **How many times a year would you like to receive information from us?** (5-point Likert scale)
+
+  1. **What would like us to communicate more about?** (Short text)
+
+1. **If you didn't renew your donation last year, would you mind telling us why?** (Multiple choice)
+
+   * I did renew my donation
+   * I was not aware
+   * I couldn't afford it
+   * I had a problem while donating
+   * I donated to a different project instead
+   * I lost interest in Tails
+   * I got irritated with too much communication
+   * I felt pressurized to donate
+   * I was not sure how my money was used
+   * Other:
+
+   If *I had a problem while donating*:
+
+   1. **What problem did you have while donating?** (Short text)
+
+1. **Do you have any questions, concerns, or possible improvements for us to take into account?** (Open ended)
+
+Week 34
+-------
+
+### Add an image to /donate
+
+And work on how to put the image on the page.
+
+At some point we should show the draft images to people. This should
+be easy to do remotely with a handful of past donors that we know a
+bit better and can ask a favor to. We could also skip this testing
+step and fallback on A/B testing during the campaign.
+
+### Give some love to /donate/thanks and /donate/canceled
+
+These pages look crap and we don't spend time on them because we don't
+see them ourselves. But I think that they are critical and low-hanging
+fruits. Some [psychological
+foundations](https://www.nngroup.com/articles/peak-end-rule/) for that.
+
+Add to each of them:
+
+* A feedback mechanism, especially on /donate/canceled!
+* An image
+* Better text
+
+These are things that are better studied in usability tests but they
+are so bad right now that it should be easy to agree on possible
+improvements while keeping them cheap.
+
+Weeks 35-38
+-----------
+
+### Do non-controversial changes on /donate
+
+Since we won't do usability tests and to avoid a situation à la
+[[!tails_ticket 16830]], we will limit our changes to:
+
+* Things we agree on easily
+* Research-based recommendations from experts
+* Things we can A/B test during the campaign
+
+Ideas:
+
+* Add an image.
+* Improve "How we spend our money" to tell more about the impact.
+* Improve the headline.
+
+### Plan some A/B testing during the campaign (if needed)
+
+Like I did for [[!tails_ticket 16830]], we could do more such things
+during the campaign. For example, we could test different images, text,
+or controversial changes.
+
+Weeks 42
+--------
+
+### Analyze the results of the A/B testing on frequency buttons ([[!tails_ticket 16830]])
+
+Compare the conversion rates between Tor Browser, Tails, and mobile.
+I'll be analyzing logs when looking at the results of the A/B testing on
+the monthly buttons anyway.
+
+Anything else worth analyzing in the logs?

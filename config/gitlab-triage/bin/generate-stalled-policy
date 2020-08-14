@@ -1,0 +1,28 @@
+#! /usr/bin/python3
+
+import gitlab
+import os
+
+from jinja2 import Environment, FileSystemLoader
+from pathlib import Path
+
+PYTHON_GITLAB_CONFIG_FILE = os.getenv('PYTHON_GITLAB_CONFIG_FILE',
+                                      default=Path.home() /
+                                      '.python-gitlab.cfg')
+
+PYTHON_GITLAB_NAME = os.getenv('GITLAB_NAME', default='TailsGardener')
+
+gl = gitlab.Gitlab.from_config(PYTHON_GITLAB_NAME,
+                               config_files=[PYTHON_GITLAB_CONFIG_FILE])
+gl.auth()
+usernames = [user.username for user in gl.users.list(
+    all=True
+)]
+
+env = Environment(loader=FileSystemLoader('config/gitlab-triage/templates'),
+                  block_start_string='[[%',
+                  block_end_string='%]]',
+                  variable_start_string='[[',
+                  variable_end_string=']]')
+
+print(env.get_template('stalled.yml').render(usernames=usernames))

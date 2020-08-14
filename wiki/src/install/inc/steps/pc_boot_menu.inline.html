@@ -1,52 +1,38 @@
-<h2>Make the computer start on the USB stick</h2>
+<p>Most computers do not start on the Tails USB stick automatically but you can
+press a Boot Menu key to display a list of possible devices to start from.</p>
 
-<p>This step is the most complicated one as it depends a lot on the
-model of the computer:</p>
+<div class="tip">
 
-<ul>
-<li>On most computers, our basic instructions to get to the Boot Menu
-work fine.</li>
-<li>On some computers, you might have to do more advanced techniques,
-like editing the BIOS settings.</li>
-<li>On a few computers, it might currently be impossible to start Tails.
-But, it is very hard to know without trying.</li>
-</ul>
-
-<p>The goal is to reach the Boot Loader of Tails. Depending on the
-computer, the Boot Loader might be either <em>GRUB</em> or
-<em>SYSLINUX</em>.</p>
-
-<p>This is what <em>GRUB</em> looks like:</p>
-
-<p>[[!img install/inc/screenshots/grub.png link="no" alt="Black screen ('GNU GRUB') with Tails
-logo and 2 options: 'Tails' and 'Tails (Troubleshooting Mode)'."]]</p>
-
-<p>This is what <em>SYSLINUX</em> looks like:</p>
-
-<p>[[!img install/inc/screenshots/syslinux.png link="no" alt="Black screen ('SYSLINUX') with Tails
-logo and 2 options: 'Tails' and 'Tails (Troubleshooting Mode)'."]]</p>
-
-<div class="next">
-
-<p>After you reach the Boot Loader, either <em>GRUB</em> or <em>SYSLINUX</em>, you
-can skip the rest of this section and <a href="#welcome-screen">wait until
-the Welcome Screen appears</a>.</p>
+<p>If Windows 8 or 10 is
+<span class="linux upgrade-linux">also</span>
+installed on the computer, you can refer instead to the [[instructions
+on starting Tails from Windows 8 or 10|doc/first_steps/start/pc#windows-restart]].
+Starting Tails from Windows is easier than using the Boot Menu key.</p>
 
 </div>
 
-<h3 id="boot-menu">Getting to the Boot Menu</h3>
+<p>The following screenshot is an example of a Boot Menu:</p>
 
-<p>On most computers, you can press a <em>Boot Menu key</em> to display
-a list of possible devices to start from. The following instructions
-explain how to display the Boot Menu and start on the USB stick. The
-following screenshot is an example of a Boot Menu:</p>
+<p>[[!img install/inc/screenshots/boot_menu.png link="no" alt=""]]</p>
 
-<p>[[!img install/inc/screenshots/bios_boot_menu.png link="no" alt=""]]</p>
+<p id="animation">This animation summarizes how to use the Boot Menu key to
+start on the USB stick:</p>
+
+<p>
+  <video controls="true" width="640" height="360" poster="https://tails.boum.org/install/inc/videos/boot-menu-key.png">
+    <source src="https://tails.boum.org/install/inc/videos/boot-menu-key.webm" type="video/webm" />
+    <source src="https://tails.boum.org/install/inc/videos/boot-menu-key.mp4" type="video/mp4" />
+  </video>
+</p>
+
+<p>The following instructions explain in detail how to use the Boot Menu key
+to start on the USB stick:</p>
 
 <ol>
 
 <li>
-  <p class="usb upgrade-windows">Shut down the computer while leaving the USB stick plugged in.</p>
+  <p class="usb upgrade-linux">Shut down the computer while leaving the USB stick plugged in.</p>
+  <p class="standalone">Shut down the computer and plug in the Tails USB stick.</p>
   <p class="clone upgrade-tails">Shut down the computer.</p>
   <p class="clone">Plug in the other Tails USB stick that you want to
   <span class="install-clone">install</span>
@@ -98,81 +84,12 @@ following screenshot is an example of a Boot Menu:</p>
   the first in the list, please let us know so we can improve the list. You can write to
   [[sajolida@pimienta.org]] (private email).</p>
   </div>
+
 </li>
 
+<li><p>If the computer starts on Tails, the Boot Loader appears and Tails
+    starts automatically after 4 seconds.</p>
+
+    <p>[[!img install/inc/screenshots/grub.png link="no" alt="Black screen ('GNU GRUB') with Tails logo and 2 options: 'Tails' and 'Tails (Troubleshooting Mode)'."]]</p></li>
+
 </ol>
-
-<p id="animation">This animation explains how to use the Boot Menu key:</p>
-
-<video controls="true" width="640" height="360" poster="https://tails.boum.org/install/inc/videos/boot-menu-key.png">
-  <source src="https://tails.boum.org/install/inc/videos/boot-menu-key.webm" type="video/webm" />
-  <source src="https://tails.boum.org/install/inc/videos/boot-menu-key.mp4" type="video/mp4" />
-</video>
-
-<h3>Check our list of known issues</h3>
-
-<p>Similar problems might have been reported already for your model of computer
-in our [[list of known issues|support/known_issues]].</p>
-
-<h3 id="bios-settings">Edit the BIOS settings (advanced users)</h3>
-
-<p>If none of the possible Boot Menu keys from the previous technique work, or if
-the USB stick does not appear in the Boot Menu, you might need to edit your BIOS
-settings. To learn how to edit the BIOS settings, search for the user manual of
-the computer on the support website of the manufacturer.</p>
-
-<div class="caution">
-<p>Take note of the changes that you apply to the BIOS settings. That way, you
-can revert the changes if they prevent the computer from starting on its usual
-operating system.</p>
-</div>
-
-<p>In the BIOS settings, try to apply the following changes. Some changes might not
-apply to certain computer models.</p>
-
-<ul>
-  <li>
-   <p>There might be an option in your BIOS to enable the Boot Menu key. Make
-   sure that the Boot Menu key is enabled. This option might be called
-   <strong>Boot Device List</strong> or differently depending on the
-   computer.</p>
-  </li>
-
-  <li>
-   <p>Edit the <strong>Boot Order</strong>. Depending on the computer, you might
-   see an entry for <strong>removable devices</strong> or <strong>USB media</strong>. Move this entry
-   to the top of the list to force the computer to try to start from
-   the USB stick before starting from the internal hard disk.</p>
-  </li>
-
-  <li>
-    <p>Disable <strong>Fast boot</strong>.</p>
-  </li>
-
-  <li>
-    <p>Enable <strong>CSM boot</strong>.</p>
-  </li>
-
-  <li>
-    <p>Enable <strong>Legacy boot</strong> in addition to UEFI.
-    The computer might not start anymore on its regular operating system
-    if you disable UEFI completely or if you only enable Legacy boot.</p>
-  </li>
-
-  <li>
-    <p>Try to upgrade the BIOS. To do so, refer to the support website of
-    the computer manufacturer.</p></li>
-</ul>
-
-<div class="bug" id="report">
-<p>If none of these options work, we are sorry but you might not be
-able to use Tails on this computer. Feel free to
-[[!toggle id="report-toggle-2" text="report the problem to our help desk"]].</p>
-</div>
-
-[[!toggleable id="report-toggle-2" text="""
-<span class="hide">[[!toggle id="report-toggle-2" text=""]]</span>
-
-[[!inline pages="install/inc/steps/reporting.inline" raw="yes"]]
-
-"""]]

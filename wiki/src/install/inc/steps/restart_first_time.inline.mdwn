@@ -66,7 +66,13 @@ the rest of the instructions afterwards, we recommend you either:
 [[!img install/inc/infography/restart-on-upgrade-usb.png link="no" class="upgrade-tails" alt="USB stick unplugged on the right and computer restarted on USB stick on the left"]]
 </div>
 
-<div class="windows linux expert install-clone upgrade-clone upgrade-tails upgrade-windows upgrade-linux">
+<h2>Make the computer start on the USB stick</h2>
+
+<div class="windows upgrade-windows">
+[[!inline pages="install/inc/steps/windows_boot_menu.inline" raw="yes" sort="age"]]
+</div>
+
+<div class="linux expert install-clone upgrade-clone upgrade-tails upgrade-linux">
 [[!inline pages="install/inc/steps/pc_boot_menu.inline" raw="yes" sort="age"]]
 </div>
 
@@ -74,107 +80,59 @@ the rest of the instructions afterwards, we recommend you either:
 [[!inline pages="install/inc/steps/mac_startup_disks.inline" raw="yes" sort="age"]]
 </div>
 
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<ul>
+
+<li class="windows upgrade-windows">
+<p>If no Boot Menu appears, or if your USB stick is not listed in the Boot
+Menu, refer to the [[instructions on starting Tails using the Boot Menu
+key|doc/first_steps/start/pc#boot-menu-key]].</p>
+</li>
+
+<li class="linux expert install-clone upgrade-clone upgrade-tails upgrade-linux">
+<p>If none of the possible Boot Menu keys from the previous technique work, or
+if your USB stick is not listed in the Boot Menu, refer to the
+[[troubleshooting instructions about Tails not starting at
+all|doc/first_steps/start/pc#not-at-all]].</p>
+</li>
+
+<li>
+<p class="windows upgrade-windows linux expert install-clone upgrade-clone upgrade-tails upgrade-linux">If your USB stick is listed in the Boot Menu but the Boot Loader does not appear, or if Tails fails to start after the Boot Loader:</p>
+<p class="mac mac-clone upgrade-mac">If your USB stick appears in the list of startup disks but the Boot Loader does not appear, or if Tails fails to start after the Boot Loader:</p>
+[[!inline pages="install/inc/steps/basic_troubleshooting.inline" raw="yes" sort="age"]]
+<p>If your computer still does not display the Boot Loader, it might currently be impossible to start Tails on your computer.</p>
+</li>
+
+<li>
+<p>If the computer stops responding or displays other error messages before
+getting to the Welcome Screen, refer to
+<span class="windows upgrade-windows linux expert install-clone upgrade-clone upgrade-tails upgrade-linux">[[the troubleshooting section about Tails not starting after the Boot Loader|doc/first_steps/start/pc#not-entirely]].</span>
+<span class="mac mac-clone upgrade-mac">[[the troubleshooting section about Tails not starting after the Boot Loader|doc/first_steps/start/mac#not-entirely]].</span></p>
+</li>
+
+<li>
+<p>If the computer displays the error message
+<span class="guilabel">Error starting GDM with your graphics
+card</span>, refer to our [[list of known issues with graphics
+cards|support/known_issues/graphics]].</p>
+</li>
+
+</ul>
+
+<div class="tip windows upgrade-windows">
+<p>Starting the computer using a Boot Menu key can be faster than
+starting the computer on Windows first and then on Tails. We
+recommend you learn how to [[start Tails using the Boot Menu
+key|doc/first_steps/start/pc#boot-menu-key]] if you use Tails
+regularly.</p>
+</div>
+
 <a id="greeter"></a>
 
 <h2 id="welcome-screen">Welcome Screen</h2>
 
 1. One to two minutes after the Boot Loader, the Welcome Screen appears.
-
-   <div class="note">
-   <p>If the computer display the error message
-   <span class="guilabel">Error starting GDM with your graphics
-   card</span>, refer to our [[list of known issues with graphics
-   cards|support/known_issues/graphics]].</p>
-
-   <p>If the computer stops responding or displays other error messages before
-   getting to the Welcome Screen, refer to
-   [[!toggle id="not_entirely" text="the troubleshooting section about
-   Tails not starting entirely"]].</p>
-   </div>
-
-   [[!toggleable id="not_entirely" text="""
-   <span class="hide">[[!toggle id="not_entirely" text=""]]</span>
-
-   Troubleshooting
-   ---------------
-
-   Tails does not start entirely
-   -----------------------------
-
-   The following section applies if the Boot Loader appears but not
-   the Welcome Screen when starting Tails.
-
-   1. Restart the computer on the first USB stick.
-
-   1. In the Boot Loader, choose the
-   <span class="guilabel">Troubleshooting Mode</span>
-   which might work better on some computers.
-
-   1. If the <span class="guilabel">Troubleshooting Mode</span> does not work
-   better, restart the computer again on the first USB stick.
-
-   1. Depending on whether the Boot Loader is *GRUB* or *SYSLINUX*:
-
-      If the Boot Loader is *GRUB*:
-
-        1. Press **e** when GRUB appears.
-
-           A new screen appears with more options.
-
-           [[!img doc/advanced_topics/boot_options/grub-with-options.png link="no" alt="GRUB with a list of
-           options starting with 'setparams Tails'"]]
-
-        1. Navigate with the arrows of the keyboard to the end of the line that
-           starts with <span class="code">linux</span>. The line is most likely
-           wrapped and displayed on several lines on the screen but it is a
-           single configuration line.
-
-        1. Press the <span class="keycap">Backspace</span> key several times to
-           remove the <span class="code">quiet</span> option from the command line.
-
-        1. Type <span class="code">debug nosplash</span> to add these options to the command line.
-
-        1. If Tails previously failed to start and displayed the
-           following error:
-
-           <p class="pre">Probing EDD (edd=off to disable)...</span>
-
-           Then type `edd=off` to add this option to the command line.
-
-        1. Press **Ctrl+X** to start Tails.
-
-        1. Hopefully, new error messages now appear when starting Tails. You can
-           [[send them to our help desk by email|support/talk]], for example by taking a
-           picture of the last screen and error messages.
-
-      If the Boot Loader is *SYSLINUX*:
-
-        1. Press
-           <span class="keycap">Tab</span>. A command line with a list
-           of boot options appears at the bottom of the screen.
-
-           [[!img doc/advanced_topics/boot_options/syslinux-with-options.png link="no" alt="SYSLINUX with
-           a list of options starting with '/live/vmlinuz' at the bottom"]]
-
-        1. Press the <span class="keycap">Backspace</span> key several times to
-           remove the <span class="code">quiet</span> option from the command line.
-
-        1. Type <span class="code">debug nosplash</span> to add these options to the command line.
-
-        1. If Tails previously failed to start and displayed the
-           following error:
-
-           <p class="pre">Probing EDD (edd=off to disable)...</span>
-
-           Then type <span class="code">edd=off</span> to add this option to the command line.
-
-        1. Press <span class="keycap">Enter</span> to start Tails.
-
-        1. Hopefully, new error messages now appear when starting Tails. You can
-           [[send them to our help desk by email|support/talk]], for example by taking a
-           picture of the last screen and error messages.
-
-   """]]
 
    [[!img doc/first_steps/welcome_screen/welcome-screen.png link="no" alt="Welcome to Tails!"]]
 
