@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+set -u
+set -x
+
+rm -f config/gitlab-triage/policies/stalled.yml
+./config/gitlab-triage/bin/generate-stalled-policy \
+    > config/gitlab-triage/policies/stalled.yml
+
+sudo "$(dirname "$0")"/../config/gitlab-triage/bin/gitlab-triage \
+    --source-id tails --source groups \
+    --policies-file /etc/gitlab-triage-policies/stalled.yml \
+    "${@}"

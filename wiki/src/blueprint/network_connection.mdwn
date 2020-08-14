@@ -58,7 +58,8 @@ Current issues in Tails
   their mistake before connecting to a network (which might be automatic).
 
 * Q. Hard to connect using PTs when the computer's hardware clock is
-  not set to the current, correct UTC time
+  not set to the current, correct UTC time ([[!tails_ticket 15548]],
+  [upstream issue](https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/obfs4/-/issues/32439))
 
   This is one of the top
   complaints we get from censored users. tor's improvements wrt.
@@ -67,7 +68,6 @@ Current issues in Tails
   stem from the fact Tails can't easily tell whether the hardware
   clock is in UTC or local time, combined with the fact Tails can't
   tell what the local timezone is.
-
 
 Open questions
 ==============
@@ -179,8 +179,10 @@ First batch
 
    ⇒ No, we won't do per-network persistent Tor settings, but global ones.
 
-   In any case, the user needs to be allowed to revisit their choices
-   that were persisted. How?
+   With respect to allowing the user to revisit their choices that were
+   persisted: we'll always persist the last choice. We will not give the user
+   the option of using different settings today without modifying
+   persistent ones.
 
 3. Automatic bridges/PTs retrieval (Moat) — [[!tails_ticket 15331]]
 
@@ -188,6 +190,7 @@ First batch
    - Bonus points: UX closer to Tor Browser's
    - Benefit seems marginally higher than persistent Tor settings for our personas.
    - Cost: at first sight, vastly higher than persistent Tor settings
+   - Blocked by Meek (to be verified)
 
    While designing/implementing solutions, keep Snowflake in mind ([[!tails_ticket 5494]]):
    it might require similar kludges to Moat, so better use kludges that will work for both.
