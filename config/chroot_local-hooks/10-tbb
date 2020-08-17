@@ -336,6 +336,8 @@ create_default_profile() {
 TBB_TIMESTAMP="$(date --date='2000-01-01 00:00:00' +%s)"
 
 TBB_SHA256SUMS_FILE=/usr/share/tails/tbb-sha256sums.txt
+TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
+TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
 TBB_TARBALLS="$(grep "\<tor-browser-linux64-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
 
 # We'll use the en-US bundle as our basis
@@ -344,8 +346,6 @@ NIGHTLY_BUILD=
 if echo "${TBB_TARBALLS}" | grep --quiet 'tor-browser-linux64-tbb-nightly'; then
     NIGHTLY_BUILD=yes
 fi
-TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
-TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
 
 # The Firefox extensions we want to install from Debian and make
 # available in the Tor Browser.
