@@ -251,6 +251,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   end
   if @veracrypt_needs_keyfile
     # not accessible and unreachable with the keyboard (#15952)
+    @screen.wait('GnomeDisksUnlockDialogKeyfileComboBox.png', 5)
     @screen.click('GnomeDisksUnlockDialogKeyfileComboBox.png')
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     $vm.file_overwrite('/tmp/keyfile', 'asdf')
