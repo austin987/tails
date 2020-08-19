@@ -24,8 +24,12 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
 end
 
 Then /^the Git repository "([\S]+)" has been cloned successfully$/ do |repo|
-  assert($vm.directory_exist?("/home/#{LIVE_USER}/#{repo}/.git"))
-  assert($vm.file_exist?("/home/#{LIVE_USER}/#{repo}/.git/config"))
-  $vm.execute_successfully("cd '/home/#{LIVE_USER}/#{repo}/' && git status",
-                           user: LIVE_USER)
+  # Git needs a strictly positive time, after seeing "Unpacking objects: 100%",
+  # before the conditions we check below are verified
+  try_for(10, msg: 'the Git repository has not been cloned') do
+    $vm.directory_exist?("/home/#{LIVE_USER}/#{repo}/.git")
+    $vm.file_exist?("/home/#{LIVE_USER}/#{repo}/.git/config")
+    $vm.execute("cd '/home/#{LIVE_USER}/#{repo}/' && git status",
+                user: LIVE_USER).success?
+  end
 end

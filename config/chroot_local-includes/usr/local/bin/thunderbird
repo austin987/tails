@@ -10,10 +10,6 @@ set -x
 THUNDERBIRD_CONFIG_DIR="${HOME}/.thunderbird"
 PROFILE="${THUNDERBIRD_CONFIG_DIR}/profile.default"
 
-thunderbird_config_is_persistent() {
-    [ "$(findmnt --noheadings --output SOURCE --target "${THUNDERBIRD_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/thunderbird]" ]
-}
-
 configure_locale() {
     # Thunderbird will set the locale based on the environment when
     # this pref is empty, but will then save the result to this pref
@@ -33,25 +29,10 @@ disable_autocrypt() {
                      user_pref
 }
 
-configure_default_incoming_protocol() {
-    # For extensions.torbirdy.defaultprotocol, POP = 0, IMAP = 1
-    local default_protocol
-    if thunderbird_config_is_persistent; then
-        default_protocol=0
-    else
-        default_protocol=1
-    fi
-    set_mozilla_pref "${PROFILE}/prefs.js"                 \
-                     "extensions.torbirdy.defaultprotocol" \
-                     "${default_protocol}"                 \
-                     user_pref
-}
-
 reconfigure_profile() {
     mkdir -p "${PROFILE}"
     configure_locale
     disable_autocrypt
-    configure_default_incoming_protocol
 
     # Suppress Enigmail's configuration wizard by pretending that the current
     # version was already configured. Only do this on first run though:
