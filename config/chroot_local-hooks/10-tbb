@@ -158,11 +158,12 @@ apply_extension_code_signing_hacks () {
     (
         cd "${tmp}"
         7z x -tzip "${tbb_install}/omni.ja"
+        # Any $ in the below in-line patch must be escaped!
         patch -p1 <<EOF
-diff -Naur a/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js b/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js
---- a/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2019-09-02 15:24:00.000000000 +0200
-+++ b/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2019-09-08 20:42:24.198382292 +0200
-@@ -195,6 +195,10 @@
+diff -Naur omni.orig/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js omni/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js
+--- omni.orig/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2000-01-01 00:00:00.000000000 +0000
++++ omni/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2020-08-19 12:53:26.852000000 +0000
+@@ -223,6 +223,10 @@
    if (addon.id == "https-everywhere-eff@eff.org") {
      return true;
    }
@@ -173,10 +174,10 @@ diff -Naur a/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js b/ch
    return addon.isCorrectlySigned !== false;
  }
  
-diff -Naur a/modules/addons/XPIDatabase.jsm b/modules/addons/XPIDatabase.jsm
---- a/modules/addons/XPIDatabase.jsm	2019-09-02 15:24:00.000000000 +0200
-+++ b/modules/addons/XPIDatabase.jsm	2019-09-08 20:40:29.469007744 +0200
-@@ -2126,6 +2126,11 @@
+diff -Naur omni.orig/modules/addons/XPIDatabase.jsm omni/modules/addons/XPIDatabase.jsm
+--- omni.orig/modules/addons/XPIDatabase.jsm	2000-01-01 00:00:00.000000000 +0000
++++ omni/modules/addons/XPIDatabase.jsm	2020-08-19 12:44:24.880000000 +0000
+@@ -2212,6 +2212,11 @@
        return true;
      }
  
@@ -185,10 +186,10 @@ diff -Naur a/modules/addons/XPIDatabase.jsm b/modules/addons/XPIDatabase.jsm
 +      return true;
 +    }
 +
-     // Ensure that Tor Launcher is never enabled as an add-on. It will be
-     // removed inside getInstallState() soon.
-     if (aAddon.id == "tor-launcher@torproject.org")
-@@ -2729,7 +2734,8 @@
+     if (this.mustSign(aAddon.type) && !aAddon.isCorrectlySigned) {
+       logger.warn(`Add-on \${aAddon.id} is not correctly signed.`);
+       if (Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
+@@ -2819,7 +2824,8 @@
        }
  
        unsigned =
@@ -196,12 +197,12 @@ diff -Naur a/modules/addons/XPIDatabase.jsm b/modules/addons/XPIDatabase.jsm
 +        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned
 +        && aNewAddon.id !== "uBlock0@raymondhill.net";
        if (unsigned) {
-         throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
+         throw Error(`Extension \${aNewAddon.id} is not correctly signed`);
        }
-diff -Naur a/modules/addons/XPIInstall.jsm b/modules/addons/XPIInstall.jsm
---- a/modules/addons/XPIInstall.jsm	2019-09-02 15:24:00.000000000 +0200
-+++ b/modules/addons/XPIInstall.jsm	2019-09-08 20:41:07.345467589 +0200
-@@ -3826,6 +3826,7 @@
+diff -Naur omni.orig/modules/addons/XPIInstall.jsm omni/modules/addons/XPIInstall.jsm
+--- omni.orig/modules/addons/XPIInstall.jsm	2000-01-01 00:00:00.000000000 +0000
++++ omni/modules/addons/XPIInstall.jsm	2020-08-19 12:40:30.960000000 +0000
+@@ -3835,6 +3835,7 @@
      if (
        XPIDatabase.mustSign(addon.type) &&
        addon.id !== "https-everywhere-eff@eff.org" &&
@@ -222,11 +223,12 @@ EOF
     (
         cd "${tmp}"
         7z x -tzip "${tbb_install}/browser/omni.ja"
+        # Any $ in the below in-line patch must be escaped!
         patch -p1 <<EOF
-diff -Naur a/modules/BrowserGlue.jsm b/modules/BrowserGlue.jsm
---- a/modules/BrowserGlue.jsm	2019-09-02 15:24:00.000000000 +0200
-+++ b/modules/BrowserGlue.jsm	2019-09-08 20:45:59.323681266 +0200
-@@ -1926,7 +1926,8 @@
+diff -Naur browser-omni.orig/modules/BrowserGlue.jsm browser-omni/modules/BrowserGlue.jsm
+--- browser-omni.orig/modules/BrowserGlue.jsm	2000-01-01 00:00:00.000000000 +0000
++++ browser-omni/modules/BrowserGlue.jsm	2020-08-19 12:49:21.224000000 +0000
+@@ -2201,7 +2201,8 @@
            // disabled. Even if they lack Mozilla's blessing they are enabled
            // nevertheless.
            if ((addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) &&
