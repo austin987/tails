@@ -21,3 +21,6 @@ user_pref("extensions.getAddons.showPane", false);
 
 // Disable Pocket service integration
 user_pref("extensions.pocket.enabled", false);
+
+// Enable userChrome.css
+user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
