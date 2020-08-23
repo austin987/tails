@@ -52,10 +52,9 @@ To install the dependencies on our test suite:
                 | sudo tee /etc/apt/sources.list.d/buster.list
         fi
         if [ "${dist}" = buster ]; then
-            # For our qemu 4.2 buster-backport
-            echo 'deb http://deb.tails.boum.org/ isotester-buster main' \
-                | sudo tee /etc/apt/sources.list.d/isotester-buster.list
-            echo -e "Package: src:qemu\nPin: origin deb.tails.boum.org\nPin-Priority: 990" \
+            echo 'deb http://ftp.us.debian.org/ buster-backports main' \
+                | sudo tee /etc/apt/sources.list.d/buster-backports.list
+            echo -e "Package: qemu*\nPin: release n=buster-backports, o=Debian Backports\nPin-Priority: 990" \
                 | sudo tee /etc/apt/preferences.d/qemu
         fi
         sudo apt update && \
