@@ -6,12 +6,14 @@ tails ({{version}}) unstable; urgency=medium
   {% set mr_desc = mr.title + " (" + mr.ref + ")" %}
   * {{ mr_desc|wordwrap(wrapstring="\n    ")}}
     {% if mr.closes_issues %}
+
     Closes issues:
       {% for issue in mr.closes_issues %}
 	{% set issue_desc = issue.title + " (" + issue.ref + ")" %}
       - {{ issue_desc|wordwrap(wrapstring="\n        ") }}
       {% endfor %}
     {% endif %}
+
     Commits:
       {% for commit_message in mr.commit_messages %}
       - {{ commit_message|wordwrap(wrapstring="\n        ") }}
