@@ -85,7 +85,11 @@ class ChangelogGenerator(object):
                     }
                     for issue in mr.closes_issues()
                 ],
-                "commit_messages": [commit.title for commit in mr.commits()],
+                "commit_messages": [
+                    commit.title for commit in mr.commits()
+                    # Ignore merge commits
+                    if len(project.commits.get(commit.id).parent_ids) == 1
+                ],
             })
             # yapf: enable
 
