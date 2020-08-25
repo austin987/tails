@@ -250,7 +250,8 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     pim_field.typeText($veracrypt_pim)
   end
   if @veracrypt_needs_keyfile
-    # not accessible and unreachable with the keyboard (#15952)
+    # XXX:Bullseye: port to Dogtail, as #15952 was fixed in GNOME Disks 3.35.2
+    @screen.wait('GnomeDisksUnlockDialogKeyfileComboBox.png', 5)
     @screen.click('GnomeDisksUnlockDialogKeyfileComboBox.png')
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     $vm.file_overwrite('/tmp/keyfile', 'asdf')

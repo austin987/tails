@@ -1,3 +1,62 @@
+tails (4.10) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 9.5.4-build1 (Closes: #17885).
+    - Upgrade Linux kernel to 5.7.0-2 at 5.7.10-1 (Closes: #17841,
+      #17834).
+
+  * Bugfixes
+    - Make iPhone Tethering work by adding udev rule to disable MAC
+      spoofing for it (Closes: #17820).
+    - Remove broken Thunderbird protocol selection. This code has been
+      a no-op in practice since at least Tails 4.0.  We've decided to
+      reject #17276 and investigate what the biggest problems are for
+      email in Tails with slow/shitty Internet connections:
+      default'ing to IMAP may, or may not, be part of these
+      problems (Closes #17276).
+
+  * Minor improvements and updates
+    - Upgrade to Tor 0.4.3.6 (Closes: #17835).
+    - Upgrade to Electrum 4.0.2 (Closes: #17828).
+    - Hide Thunderbird welcome message: it is not relevant in the
+      context of Tails.  For example, it feels weird that we would
+      encourage users to donate to Thunderbird about as loudly as we
+      encourage them to donate to Tails.  Besides, the default message
+      is retrieved from the web when Thunderbird starts.  We don't
+      need this extra network activity.
+    - import-translations: use *_release branches instead of
+      *_completed branches. The new *_release branches contain exactly
+      what we want, i.e. all reviewed translations from
+      Transifex. While the *_completed branches only contain PO files
+      for languages that are fully translated (Closes: #16774).
+
+  * Build system
+    - Upgrade snapshot of the Debian archive to 2020081601, including
+      the 10.5 point release of Debian Buster (Closes: #17790).
+    - On Bullseye and newer: use custom, fake, unversioned python
+      packages. The unversioned python packages are not shipped in
+      Bullseye/sid anymore, and even old versions are not installable
+      anymore (Closes: #17858).
+    - Import vagrant-libvirt's create_box.sh script. It's not included
+      in vagrant-libvirt 0.1.2-1 anymore (Closes: #17872).
+
+  * Test suite
+    - Improve robustness for scenario "The Additional Software dpkg
+      hook notices when persistence is locked down while installing a
+      package".
+    - Improve robustness for scenario "Use GNOME Disks to unlock a USB
+      drive that has a basic VeraCrypt volume with a keyfile".
+    - Improve robustness of cloning a Git repository.
+    - Don't hammer resources of the system under test while
+      installing/removing packages. I see every such dpkg|grep call
+      takes about 0.3 seconds on lizard, i.e. 30% of the 1 second
+      default delay between checks, which I suspect is enough to slow
+      down the package installation/removal we're exercising.
+    - Update expected title of the GitLab page we use
+    - Rubocop: target Ruby 2.5 (Buster).
+
+ -- Tails developers <tails@boum.org>  Mon, 24 Aug 2020 13:28:43 +0200
+
 tails (4.9) unstable; urgency=medium
 
   * Security fixes

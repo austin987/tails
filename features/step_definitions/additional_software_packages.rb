@@ -148,7 +148,7 @@ end
 Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and notices the persistence is locked$/ do |package|
   asp_logs = "#{ASP_STATE_DIR}/log"
   assert(!$vm.file_empty?(asp_logs))
-  try_for(120) do
+  try_for(180, delay: 2) do
     $vm.execute(
       "grep -E '^.*New\spackages\smanually\sinstalled:\s.*#{package}.*$' " \
       "#{asp_logs}"

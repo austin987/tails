@@ -56,7 +56,7 @@ When /^I update APT using apt$/ do
 end
 
 def wait_for_package_installation(package)
-  try_for(2 * 60) do
+  try_for(2 * 60, delay: 3) do
     $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null " \
                              "| grep -qs '^Status:.*installed$'")
   end
@@ -81,7 +81,7 @@ Then /^I install "(.+)" using apt$/ do |package|
 end
 
 def wait_for_package_removal(package)
-  try_for(3 * 60) do
+  try_for(3 * 60, delay: 3) do
     # Once purged, a package is removed from the installed package status
     # database and "dpkg -s" returns a non-zero exit code
     !$vm.execute("dpkg -s #{package}").success?
