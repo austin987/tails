@@ -627,6 +627,7 @@ SquashFS file order
                | \A(?:lib/live/mount/overlay/rw/)?etc/(?:group|gshadow|passwd|shadow)-\s
                | \A(?:lib/live/mount/overlay/rw/)?etc/resolv-over-clearnet[.]conf\s
                | \A(?:lib/live/mount/overlay/rw/)?etc/skel/[.]config/autostart/end-profile[.]desktop\s
+               | \Alib/modules/.*/kernel/drivers/(?:cpufreq|net)/
                | \Arun/
                | \Avar/lib/AccountsService/users/Debian-gdm\s
                | \Avar/lib/gdm3/[#]\d+\s
@@ -950,7 +951,7 @@ before starting the wrapper from `puppet-tails`:
        PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails/tails(?:[.]git)?\z,:tails/puppet-tails,')
        cd "${WORK_DIR?:}"
        git clone "$PUPPET_TAILS_REMOTE"
-       sudo -l
+       sudo                                                                   \
        time                                                                   \
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
            --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
