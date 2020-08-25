@@ -951,7 +951,7 @@ before starting the wrapper from `puppet-tails`:
        PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails/tails(?:[.]git)?\z,:tails/puppet-tails,')
        cd "${WORK_DIR?:}"
        git clone "$PUPPET_TAILS_REMOTE"
-       sudo -l
+       sudo                                                                   \
        time                                                                   \
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
            --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
@@ -1127,7 +1127,7 @@ Prepare upgrade-description files
                         --next_version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}"
                 else
                     echo \
-                        --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,') \
+                        --next_version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
                         --next_version "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}"
                 fi
             ) \
