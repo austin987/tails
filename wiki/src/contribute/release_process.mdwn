@@ -17,7 +17,7 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent transmission-cli`
+* `docker.io gitlab-cli jq tidy mktorrent python3-jinja2 transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
@@ -951,7 +951,7 @@ before starting the wrapper from `puppet-tails`:
        PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails/tails(?:[.]git)?\z,:tails/puppet-tails,')
        cd "${WORK_DIR?:}"
        git clone "$PUPPET_TAILS_REMOTE"
-       sudo -l
+       sudo                                                                   \
        time                                                                   \
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
            --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
@@ -1127,7 +1127,7 @@ Prepare upgrade-description files
                         --next_version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}"
                 else
                     echo \
-                        --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,') \
+                        --next_version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
                         --next_version "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}"
                 fi
             ) \
@@ -1471,28 +1471,38 @@ Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
 announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 
-Write an announcement listing the security bugs affecting the previous
-version in
-`wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
-(XXX: when preparing a final *major* release, point at the
-previous *bugfix* release rather than at the release candidate)
-in order to let the users of the old versions
-know that they have to upgrade. Date it a few days before the
-images to be released were *built*. Including:
+Write an announcement listing the security bugs affecting the previous version
+in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`, in
+order to let the users of the old versions know that they have to upgrade:
 
-- if we are not shipping Linux from Debian stable, the list of
-  CVE fixed in Linux since the one shipped in the previous release of
-  Tails; you can find them in the relevant changelog e.g.:
-  * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/unstable_changelog>
-  * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/testing_changelog>
-  * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/stretch-backports_changelog>
-- the list of DSA fixed in packages we ship since those that were in
-  the previous release of Tails: <https://www.debian.org/security/#DSAS>
-- the list of BSA fixed in packages we ship since those that were in
-  the previous release of Tails:
-  <https://lists.debian.org/debian-backports-announce/>
-- the list of MFSA fixed by the Tor Browser update:
-  <https://www.mozilla.org/security/announce/>
+1. Generate the boilerplate contents from the template:
+
+        ./bin/generate-security-advisory \
+           --previous-version "${PREVIOUS_VERSION:?}" \
+           --version "${VERSION:?}" \
+           --tag "${TAG:?}" \
+        > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn"
+
+   Note: when preparing a final *major* release, in this example command line,
+   replace occurrences of `${PREVIOUS_VERSION:?}` with the version number of the
+   previous *bugfix* release, rather than the release candidate.
+
+2. Manually add to
+   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`:
+
+   - if we are not shipping Linux from Debian stable, the list of
+     CVE fixed in Linux since the one shipped in the previous release of
+     Tails; you can find them in the relevant changelog e.g.:
+     * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/unstable_changelog>
+     * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/testing_changelog>
+     * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/stretch-backports_changelog>
+   - the list of DSA fixed in packages we ship since those that were in
+     the previous release of Tails: <https://www.debian.org/security/#DSAS>
+   - the list of BSA fixed in packages we ship since those that were in
+     the previous release of Tails:
+     <https://lists.debian.org/debian-backports-announce/>
+   - the list of MFSA fixed by the Tor Browser update:
+     <https://www.mozilla.org/security/announce/>
 
 Remove obsolete bits from `wiki/src/home/testing.html`. For example,
 remove any text that's specific to a release candidate we may have
@@ -1723,25 +1733,30 @@ Skip this part if preparing a release candidate.
       desc="*Hole in the Roof* milestone"]] to a date between the next
       2 releases
 
-### Tickets linked from the website
+### Issues linked from the website
 
-Go through the issues linked from the documentation and support sections of the
-website and point our lead technical writer (sajolida) to those that might
-be resolved in this release.
+1. Go through the issues linked from the documentation and support sections of the
+   website to identify the issues that might
+   be resolved in this release.
 
-    cd "${MASTER_CHECKOUT:?}" && \
-    find wiki/src/{doc,support} ! -path wiki/src/support/known_issues/graphics.mdwn -name "*.mdwn" -o -name "*.html" | xargs cat | \
-        ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
-        while read ticket; do
-            ticket_status="$(python-gitlab --gitlab TailsRM -o json --fields state project-issue get --project-id 2 --iid "$ticket" | jq --raw-output .state)"
-            if [ -z "${ticket_status:-}" ]; then
-                echo "Failed to find the status of #${ticket:?}" >&2
-                continue
-            fi
-            if [ "${ticket_status:?}" = "closed" ]; then
-                echo "It seems issue #${ticket:?} has been fixed. Please find all instances on the website and adjust them as needed. Ticket URL: https://gitlab.tails.boum.org/tails/tails/-/issues/${ticket:?}"
-            fi
-        done
+       cd "${MASTER_CHECKOUT:?}" && \
+       find wiki/src/{doc,support} ! -path wiki/src/support/known_issues/graphics.mdwn -name "*.mdwn" -o -name "*.html" | xargs cat | \
+           ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
+           while read ticket; do
+               ticket_status="$(python-gitlab --gitlab TailsRM -o json --fields state project-issue get --project-id 2 --iid "$ticket" | jq --raw-output .state)"
+               if [ -z "${ticket_status:-}" ]; then
+                   echo "Failed to find the status of #${ticket:?}" >&2
+                   continue
+               fi
+               if [ "${ticket_status:?}" = "closed" ]; then
+                   echo "It seems issue #${ticket:?} has been fixed. Please find all instances on the website and adjust them as needed. Ticket URL: https://gitlab.tails.boum.org/tails/tails/-/issues/${ticket:?}"
+               fi
+           done
+
+2. Create a GitLab issue to list them.
+
+   Title: *“Issues linked from the website” for Tails $VERSION*
+   Labels: *Core Work:Technical writing* and *To Do*
 
 Twitter
 -------
