@@ -1,5 +1,6 @@
 import logging
 import gi
+import glob
 import os
 import sh
 import threading
@@ -116,11 +117,8 @@ class PersistentStorage(object):
         self.box_storage_unlocked.set_visible(True)
         self.button_start.set_sensitive(True)
 
-        # Cherry-pick the settings we want to load from the persistent settings
-        # (currently only the Unsafe Browser setting)
-        sh.cp("-a",
-              os.path.join(persistent_settings_dir, unsafe_browser_setting_filename),
-              settings_dir)
+        for setting in glob.glob(os.path.join(persistent_settings_dir, 'tails.*')):
+            sh.cp("-a", setting, settings_dir)
 
         if not os.listdir(settings_dir):
             self.apply_settings_cb()
