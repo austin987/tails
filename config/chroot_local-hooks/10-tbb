@@ -88,12 +88,6 @@ install_tor_browser() {
     # Otherwise the "General" section in the preferences is not displayed.
     install -d -m 0755 "${prep}"/TorBrowser/UpdateInfo
 
-    # XXX: so far no sane way to disable the update check has been
-    # found, so let's apply an insane solution: overwrite the
-    # hardcoded url in the binary with something harmless.
-    sed -i 's@https://aus1\.torproject\.org/@https://127.0.0.1/xxxxxxxxx/@' \
-        "${prep}"/firefox.real
-
     mv "${prep}" "${destination}"
     rm -r "${tmp}"
 }
