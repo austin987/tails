@@ -67,7 +67,11 @@ def main():
     info = []
     for _type, _args in config:
         if _type == 'command':
-            info.append(debug_command(_args['args'][0], *_args['args'][1:]))
+            if 'shell' in _args:
+                shell = _args['shell']
+            else:
+                shell = False
+            info.append(debug_command(args=_args['args'], shell=shell))
         elif _type == 'directory':
             info.append(debug_directory(_args['user'], _args['path']))
         else:
@@ -76,15 +80,18 @@ def main():
     print(json.dumps(info, indent=4))
 
 
-def debug_command(command, *args):
+def debug_command(args: list, shell=False):
     """Return the command and it's standard output as dict.
 
-    >>> debug_command('echo', 'foo')
+    >>> debug_command(['echo', 'foo'])
     {...'key': 'echo foo'...}
     """
-    command_output = subprocess.check_output([command, *args])
+    if shell:
+        command_output = subprocess.check_output(' '.join(args), shell=True)
+    else:
+        command_output = subprocess.check_output(args)
     command_output = command_output.decode('UTF-8').strip().split('\n')
-    return {'key': '{}'.format(' '.join((command,) + args)), 'content': command_output}
+    return {'key': '{}'.format(' '.join(args)), 'content': command_output}
 
 
 def debug_file(user, filename):
