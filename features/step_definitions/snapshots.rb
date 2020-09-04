@@ -15,6 +15,7 @@ CHECKPOINTS =
       parent_checkpoint: 'tails-greeter',
       steps:             [
         'I log in to a new session',
+        'all notifications have disappeared',
       ],
     },
 
@@ -47,6 +48,7 @@ CHECKPOINTS =
       steps:             [
         'I set an administration password',
         'I log in to a new session',
+        'all notifications have disappeared',
       ],
     },
 
@@ -69,6 +71,7 @@ CHECKPOINTS =
       steps:             [
         'I allow the Unsafe Browser to be started',
         'I log in to a new session',
+        'all notifications have disappeared',
       ],
     },
 
@@ -105,6 +108,7 @@ CHECKPOINTS =
       parent_checkpoint: 'usb-install-tails-greeter',
       steps:             [
         'I log in to a new session',
+        'all notifications have disappeared',
       ],
     },
 
@@ -133,6 +137,7 @@ CHECKPOINTS =
         'all persistent filesystems have safe access rights',
         'all persistence configuration files have safe access rights',
         'all persistent directories have safe access rights',
+        'all notifications have disappeared',
       ],
     },
 
