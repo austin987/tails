@@ -118,8 +118,8 @@ CHECKPOINTS =
       steps:             [
         'I create a persistent partition',
         'a Tails persistence partition exists on USB drive "__internal"',
-        'I shutdown Tails and wait for the computer to power off',
-        'I start Tails from USB drive "__internal" with network unplugged',
+        'I cold reboot the computer',
+        'the computer reboots Tails',
         'the boot device has safe access rights',
         'Tails is running from USB drive "__internal"',
         'process "udev-watchdog" is running',
