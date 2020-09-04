@@ -69,6 +69,12 @@ class Keymaps
     'shift' => [0x2a], 'right_shift' => [0x36],
   }.freeze
 
+  DE_KEYMAP = COMMON_KEYMAP.merge(
+    {
+      '!' => [0x2a, 0x02],
+    }
+  )
+
   US_KEYMAP = COMMON_KEYMAP.merge(
     {
       '-' => [0x0c], '=' => [0x0d], ';' => [0x27], "'" => [0x28],
@@ -84,6 +90,7 @@ class Keymaps
     }
   )
 
+  public_constant :DE_KEYMAP
   public_constant :US_KEYMAP
   public_constant :COMMON_KEYMAP
 end
@@ -213,7 +220,14 @@ class Screen
     debug_log("Keyboard: pressing: #{sequence.join('+')}") if opts[:log]
     codes = []
     sequence.each do |key|
-      keymap = $language.empty? ? Keymaps::US_KEYMAP : Keymaps::COMMON_KEYMAP
+      case $language
+      when ''
+        keymap = Keymaps::US_KEYMAP
+      when 'German'
+        keymap = Keymaps::DE_KEYMAP
+      else
+        keymap = Keymaps::COMMON_KEYMAP
+      end
       # We use lower-case to make it easier to get the keycodes right.
       code = keymap[('A'..'Z').include?(key) ? key : key.downcase]
       if code.nil?
