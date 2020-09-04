@@ -126,6 +126,7 @@ When /^I start the computer$/ do
   assert(!$vm.running?,
          'Trying to start a VM that is already running')
   $vm.start
+  $language = ''
 end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and genuine APT sources)?( and I login)?$/ do |dvd_boot, network_unplugged, keep_apt_sources, do_login|
