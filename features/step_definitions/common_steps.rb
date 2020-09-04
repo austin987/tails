@@ -335,7 +335,7 @@ Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_a
   step 'I configure APT to use non-onion sources' unless keep_apt_sources
 end
 
-Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
+Given /^I set the language to (|German)$/ do |lang|
   case lang
   when 'German'
     $language = 'German'
@@ -344,12 +344,16 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
     @screen.type($language)
     sleep(2) # Gtk needs some time to filter the results
     @screen.press('Return')
-    @screen.wait("TailsGreeterLoginButton#{$language}.png", 10).click
   when ''
-    @screen.wait('TailsGreeterLoginButton.png', 10).click
+    next
   else
     raise "Unsupported language: #{lang}"
   end
+end
+
+Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
+  step "I set the language to #{lang}"
+  @screen.wait("TailsGreeterLoginButton#{$language}.png", 10).click
   step 'the Tails desktop is ready'
 end
 
