@@ -444,7 +444,7 @@ method run () {
                     name        => $upgrade_description->product_name,
                     version     => $upgrade_path->{version},
                     size        => format_bytes($upgrade_path->{'total-size'},
-                                                mode => "iec"),
+                                                mode => "iec", precision => 0),
                 }),
             title        => $self->encoding->decode(gettext(q{Upgrade available})),
             ok_label     => $self->encoding->decode(gettext(q{Upgrade now})),
