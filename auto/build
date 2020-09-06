@@ -59,6 +59,12 @@ echo "POTFILES_DOT_IN='$(
        | sed -e 's,^config/chroot_local-includes,,' | tr "\n" ' '
    )'" \
    >> config/chroot_local-includes/usr/share/tails/build/variables
+echo "SOF_VERSION='$(
+         git -C submodules/sof branch --all --contains HEAD \
+             --format '%(refname:short)' 'origin/stable-v*' \
+       | cut -d"-" -f 2
+   )'" \
+   >> config/chroot_local-includes/usr/share/tails/build/variables
 
 # fix permissions on some source files that will be copied as is to the chroot.
 # they may be wrong, e.g. if the Git repository was cloned with a strict umask.
@@ -146,11 +152,11 @@ BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
    cat config/chroot_sources/*.chroot
 ) > "$BUILD_APT_SOURCES"
 
-# make workarounds available in the chroot:
-WORKAROUNDS_SRC="submodules/tails-workarounds"
-WORKAROUNDS_DST="config/chroot_local-includes/tmp/"
-mkdir -p "$WORKAROUNDS_DST"
-cp -a "$WORKAROUNDS_SRC" "$WORKAROUNDS_DST"
+# make submodules available in the chroot:
+SUBMODULES_SRC="submodules/sof submodules/tails-workarounds"
+SUBMODULES_DST="config/chroot_local-includes/tmp/submodules"
+mkdir -p "$SUBMODULES_DST"
+cp -a $SUBMODULES_SRC "$SUBMODULES_DST"/
 
 echo "I: Building ISO image ${BUILD_ISO_FILENAME}..."
 time lb build noauto "${@}"
