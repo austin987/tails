@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if (!frequency) {
         e.preventDefault();
-        console.log(document.getElementById("donate-paypal-button").classList.remove("active"));
+        document.getElementById("donate-paypal-button").classList.remove("active");
         document.getElementById("frequency-buttons").classList.add("shake");
       }
     }
