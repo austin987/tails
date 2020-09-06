@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
   show(document.getElementById('paypal-with-js'));
   hide(document.getElementById('paypal-without-js'));
 
-  // default donation is in $
+  // Default donation is in $
   toggle(document.getElementsByClassName('donate-dollars'), "show");
   toggle(document.getElementsByClassName('donate-euros'), "hide");
 
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('t3').value = 'Y';
   }
 
-  // toggle button groups
+  // Toggle button groups
   var element = document.getElementsByClassName('btn');
   for (let i = 0; i < element.length; i++) {
     element[i].addEventListener('click', function() {
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // change donation values on change and on click
+  // Change donation values on change and on click
   var defaultvalue = 5;
   var belement = document.getElementsByClassName('btn-amount');
   for (let i = 0; i < belement.length; i++) {
