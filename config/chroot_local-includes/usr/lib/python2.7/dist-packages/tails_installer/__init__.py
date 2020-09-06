@@ -32,7 +32,7 @@ if os.path.exists('/usr/sbin') or os.path.exists('/usr/local/sbin'):
 def utf8_gettext(*args, **kwargs):
     " Translate string, converting it to a UTF-8 encoded bytestring "
     return gettext.translation(
-               'tails-installer', '/usr/share/locale', fallback=True
+               'tails', '/usr/share/locale', fallback=True
            ).gettext(*args, **kwargs)
 
 _ = utf8_gettext
