@@ -28,6 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function getCustom() {
+    return JSON.parse(document.getElementById("custom").value);
+  }
+
+  function setCustom(custom) {
+    document.getElementById("custom").value = JSON.stringify(custom);
+  }
+  setCustom({});
+
   // Show version with JavaScript
   show(document.getElementById('paypal-with-js'));
   hide(document.getElementById('paypal-without-js'));
@@ -148,6 +157,23 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("frequency-buttons").classList.add("shake");
       }
     }
+  }
+
+  // Newsletter subscription
+  function newsletterSubscription() {
+    var custom = getCustom();
+    if (document.getElementById("opt-in").checked) {
+      custom.newsletter = true;
+      show(document.getElementById("email"));
+    } else {
+      custom.newsletter = false;
+      hide(document.getElementById("email"));
+    }
+    setCustom(custom);
+  }
+  newsletterSubscription();
+  document.getElementById("opt-in").onclick = function(e) {
+    newsletterSubscription();
   }
 
 });
