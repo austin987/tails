@@ -134,7 +134,7 @@ end
 
 When /^I start Tails Installer$/ do
   @installer_log_path = '/tmp/tails-installer.log'
-  command = "/usr/bin/tails-installer --verbose > #{@installer_log_path} 2>&1"
+  command = "/usr/local/bin/tails-installer --verbose > #{@installer_log_path} 2>&1"
   step "I run \"#{command}\" in GNOME Terminal"
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
