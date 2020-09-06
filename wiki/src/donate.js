@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // A/B testing
   let variant;
-  if (Math.round(Date.now() / 1000 / 60 / 60 / 5) % 2 == 0) { // divide time since epoch by slots of 5 hours
+  if (false) { // Math.round(Date.now() / 1000 / 60 / 60 / 5) % 2 == 0) { // divide time since epoch by slots of 5 hours
     variant = "default";
     document.getElementById("variant-forced").remove();
   } else {
