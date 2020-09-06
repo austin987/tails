@@ -118,8 +118,6 @@ def _get_datadir():
     if not script_path.startswith('/usr/'):
         if os.path.exists('data/tails-installer.ui'):
             return('data')
-    elif script_path.startswith('/usr/local/'):
-        return('/usr/local/share/tails-installer')
     else:
         return('/usr/share/tails-installer')
 
