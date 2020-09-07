@@ -55,6 +55,17 @@ example:
 Ensure you include the "-buildN" part.
 </div>
 
+Set `TBB_TAILS_TICKET` to the number of the ticket about updating Tor
+Browser, and `TBB_IMPORT_BRANCH` to the branch we'll work on, which
+must include the `+force-all-tests` suffix:
+
+    TBB_TAILS_TICKET=123456
+    TBB_IMPORT_BRANCH=feature/${TBB_TAILS_TICKET}-tor-browser-${TBB_VERSION%%-*}+force-all-tests
+
+Check out the new branch:
+
+    git checkout -b ${TBB_IMPORT_BRANCH} origin/stable
+
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
 
@@ -164,11 +175,6 @@ Set up environment variables
    copy of our Tor Browser archive, for example:
 
         TBB_ARCHIVE="$HOME/tails/torbrowser-archive"
-
-4. Make `TBB_IMPORT_BRANCH` point to the branch where you want to
-   import the new Tor Browser's metadata, for example:
-
-        TBB_IMPORT_BRANCH=feature/123456-torbrowser-42.3.4+force-all-tests
 
 Import a new set of Tor Browser tarballs
 ----------------------------------------
