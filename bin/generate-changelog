@@ -63,9 +63,10 @@ class ChangelogGenerator(object):
         mrs = []
 
         gl_mrs = [
-            mr for mr in milestone.merge_requests(all=True, state='merged')
-            if self.gl.project_path_with_namespace(mr.target_project_id) in
-            PROJECTS
+            mr for mr in milestone.merge_requests(all=True)
+            if mr.state == 'merged' \
+            and self.gl.project_path_with_namespace(
+                mr.target_project_id) in PROJECTS
         ]
 
         for mr in gl_mrs:
