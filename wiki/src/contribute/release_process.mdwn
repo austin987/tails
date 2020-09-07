@@ -137,6 +137,7 @@ Also export the following environment variables:
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 * `export IUKS_DIR="${ISOS:?}/iuks/v2"`
 * `export IUKS_HASHES="${IUKS_DIR:?}/to_${VERSION}.sha256sum"`
+* `export MILESTONE=$(echo "${VERSION:?}" | sed -e 's,~.*,,')`
 
 Pre-freeze
 ==========
@@ -373,7 +374,7 @@ Changelog
 Update the Changelog entry for the release you're preparing:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
-	./bin/update-changelog --version "${VERSION:?}"
+	./bin/update-changelog --version "${MILESTONE:?}"
 
 Then, gather other useful information from:
 
