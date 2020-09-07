@@ -69,7 +69,7 @@ method _build__presets () {
             id          => 'GreeterSettings',
             name        => $self->encoding->decode(gettext(q{Welcome Screen})),
             description => $self->encoding->decode(gettext(
-                q{Beta: only the additional setting to enable the Unsafe Browser is made persistent}
+                q{Language, administration password, and additional settings}
             )),
             icon_name   => 'preferences-system',
             enabled     => 0,
