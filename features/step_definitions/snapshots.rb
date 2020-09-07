@@ -15,6 +15,8 @@ CHECKPOINTS =
       parent_checkpoint: 'tails-greeter',
       steps:             [
         'I log in to a new session',
+        'all Greeter options are set to default values',
+        'all notifications have disappeared',
       ],
     },
 
@@ -36,6 +38,7 @@ CHECKPOINTS =
       steps:             [
         'I enable the specific Tor configuration option',
         'I log in to a new session',
+        'all Greeter options are set to default values',
         'all notifications have disappeared',
       ],
     },
@@ -47,6 +50,8 @@ CHECKPOINTS =
       steps:             [
         'I set an administration password',
         'I log in to a new session',
+        'all Greeter options are set to default values',
+        'all notifications have disappeared',
       ],
     },
 
@@ -69,6 +74,8 @@ CHECKPOINTS =
       steps:             [
         'I allow the Unsafe Browser to be started',
         'I log in to a new session',
+        'all Greeter options are set to default values',
+        'all notifications have disappeared',
       ],
     },
 
@@ -105,6 +112,8 @@ CHECKPOINTS =
       parent_checkpoint: 'usb-install-tails-greeter',
       steps:             [
         'I log in to a new session',
+        'all Greeter options are set to default values',
+        'all notifications have disappeared',
       ],
     },
 
@@ -114,8 +123,8 @@ CHECKPOINTS =
       steps:             [
         'I create a persistent partition',
         'a Tails persistence partition exists on USB drive "__internal"',
-        'I shutdown Tails and wait for the computer to power off',
-        'I start Tails from USB drive "__internal" with network unplugged',
+        'I cold reboot the computer',
+        'the computer reboots Tails',
         'the boot device has safe access rights',
         'Tails is running from USB drive "__internal"',
         'process "udev-watchdog" is running',
@@ -129,10 +138,12 @@ CHECKPOINTS =
       steps:             [
         'I enable persistence',
         'I log in to a new session',
+        'all Greeter options are set to default values',
         'all persistence presets are enabled',
         'all persistent filesystems have safe access rights',
         'all persistence configuration files have safe access rights',
         'all persistent directories have safe access rights',
+        'all notifications have disappeared',
       ],
     },
 
