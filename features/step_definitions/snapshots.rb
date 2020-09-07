@@ -15,7 +15,6 @@ CHECKPOINTS =
       parent_checkpoint: 'tails-greeter',
       steps:             [
         'I log in to a new session',
-        'all Greeter options are set to default values',
         'all notifications have disappeared',
       ],
     },
@@ -38,7 +37,6 @@ CHECKPOINTS =
       steps:             [
         'I enable the specific Tor configuration option',
         'I log in to a new session',
-        'all Greeter options are set to default values',
         'all notifications have disappeared',
       ],
     },
@@ -50,7 +48,6 @@ CHECKPOINTS =
       steps:             [
         'I set an administration password',
         'I log in to a new session',
-        'all Greeter options are set to default values',
         'all notifications have disappeared',
       ],
     },
@@ -74,7 +71,6 @@ CHECKPOINTS =
       steps:             [
         'I allow the Unsafe Browser to be started',
         'I log in to a new session',
-        'all Greeter options are set to default values',
         'all notifications have disappeared',
       ],
     },
@@ -112,7 +108,6 @@ CHECKPOINTS =
       parent_checkpoint: 'usb-install-tails-greeter',
       steps:             [
         'I log in to a new session',
-        'all Greeter options are set to default values',
         'all notifications have disappeared',
       ],
     },
@@ -138,7 +133,6 @@ CHECKPOINTS =
       steps:             [
         'I enable persistence',
         'I log in to a new session',
-        'all Greeter options are set to default values',
         'all persistence presets are enabled',
         'all persistent filesystems have safe access rights',
         'all persistence configuration files have safe access rights',
