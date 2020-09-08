@@ -20,4 +20,7 @@ user_pref("print.postscript.cups.enabled", false);
 user_pref("extensions.getAddons.showPane", false);
 
 // Disable Pocket service integration
-pref("extensions.pocket.enabled", false);
+user_pref("extensions.pocket.enabled", false);
+
+// Enable userChrome.css
+user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);

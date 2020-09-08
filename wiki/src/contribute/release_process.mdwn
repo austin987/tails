@@ -17,7 +17,7 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-jinja2 transmission-cli`
+* `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
@@ -43,8 +43,19 @@ To release Tails you need:
         per_page = 100
         private_token = XXX
 
-   Set the value of the `private_token` option to the `role-release-automation`
-   GitLab user's API token, which you'll find in `rm.git`'s keyringer.
+        [Tails]
+        url = https://gitlab.tails.boum.org
+        per_page = 100
+        private_token = XXX
+
+   Then:
+
+   - In the `TailsRM` section, set the value of the `private_token` option to
+     the `role-release-automation` GitLab user's API token, which you'll find in
+     `rm.git`'s keyringer.
+
+   - In the `Tails` section, set the value of the `private_token` option to a
+     GitLab API token for your own user.
 
 Environment
 ===========
@@ -126,6 +137,7 @@ Also export the following environment variables:
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 * `export IUKS_DIR="${ISOS:?}/iuks/v2"`
 * `export IUKS_HASHES="${IUKS_DIR:?}/to_${VERSION}.sha256sum"`
+* `export MILESTONE=$(echo "${VERSION:?}" | sed -e 's,~.*,,')`
 
 Pre-freeze
 ==========
@@ -358,40 +370,13 @@ Update more included files
 Changelog
 ---------
 
-Make sure to switch back to the release branch, spawn an editor to
-remove the placeholder entry for the next release in `debian/changelog`,
-and gather data from the Git repository:
+Update the Changelog entry for the release you're preparing:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
-	dch -e && \
-	DEBEMAIL='tails@boum.org' DEBFULLNAME='Tails developers' \
-	./release ${VERSION:?} ${PREVIOUS_TAG:?}
-
-This populates the Changelog with the Git log entries.
-
-Then, launch an editor for the needed cleanup of the result:
-
-	dch -e
-
-Changelog entries can be dispatched into those usual sections:
-
-<pre>
-  * Major changes
-
-  * Security fixes
-
-  * Bugfixes
-
-  * Minor improvements and updates
-
-  * Build system
-
-  * Test suite
-</pre>
+	./bin/update-changelog --version "${MILESTONE:?}"
 
 Then, gather other useful information from:
 
-* every custom bundled package's own Changelog (Tails Installer, etc.)
 * the diff between the previous version's `.packages` file and the one
   from the to-be-released images; look for:
   - security fixes
@@ -1492,9 +1477,9 @@ order to let the users of the old versions know that they have to upgrade:
    - if we are not shipping Linux from Debian stable, the list of
      CVE fixed in Linux since the one shipped in the previous release of
      Tails; you can find them in the relevant changelog e.g.:
-     * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/unstable_changelog>
-     * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/testing_changelog>
-     * <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/stretch-backports_changelog>
+     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/unstable_changelog>
+     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/testing_changelog>
+     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/buster-backports_changelog>
    - the list of DSA fixed in packages we ship since those that were in
      the previous release of Tails: <https://www.debian.org/security/#DSAS>
    - the list of BSA fixed in packages we ship since those that were in

@@ -1,5 +1,6 @@
 import logging
 import gi
+import glob
 import os
 import sh
 import threading
@@ -116,11 +117,51 @@ class PersistentStorage(object):
         self.box_storage_unlocked.set_visible(True)
         self.button_start.set_sensitive(True)
 
-        # Cherry-pick the settings we want to load from the persistent settings
-        # (currently only the Unsafe Browser setting)
-        sh.cp("-a",
-              os.path.join(persistent_settings_dir, unsafe_browser_setting_filename),
-              settings_dir)
+        # Copy all settings from the "persistent settings directory". This is
+        # a workaround for an issue that caused the "Settings were loaded"-
+        # notification to be displayed even if no settings were actually
+        # loaded, including on the first boot after activating persistence (
+        # which is confusing for users). FTR, the explanation for this is:
+        #
+        # When persistence is activated, live-persist copies the mount
+        # destination directory (/var/lib/gdm3/settings) to the source
+        # directory (/live/persistence/TailsData_unlocked/greeter-settings),
+        # if the source directory doesn't exist yet.
+        # In addition with the fact that we immediately store the settings
+        # on the file system as soon as the user changes them, that means
+        # that when we look at the destination directory after activating
+        # persistence, and see that there are settings stored there, it's
+        # unclear whether those were loaded from the persistence or simply
+        # set by the user in the same Welcome Screen session before unlocking
+        # persistence.
+        # One workaround we tried was to check if the values of any of the
+        # settings on the filesystem are actually different than the values
+        # in memory, but that doesn't work well for the admin password, which
+        # is stored hashed on the filesystem, but in cleartext in memory.
+        #
+        # So the current workaround is to have this separate "persistent
+        # settings directory" instead of simply persisting the "normal"
+        # settings directory, copying all settings from the former
+        # to the latter after persistence was activated, and copying all
+        # settings back to persistent directory when the Welcome Screen
+        # is left. That means that even if the user already set settings
+        # in the Welcome Screen before unlocking persistence, those will
+        # be stored in the "normal" settings directory, so the "persistent"
+        # settings directory will always be empty if no settings were
+        # persisted yet.
+        #
+        # This workaround will no longer be necessary once #11529 is done,
+        # because with #11529, the source directory
+        # (/live/persistence/TailsData_unlocked/greeter-settings), will
+        # be created immediately, so live-persist will never copy the
+        # destination directory to the source directory.
+        #
+        # Both the commit which introduced the persistent settings directory
+        # (e5653981228b375c28bf4d1ace9be3367e080900) and the commit which
+        # extended its usage and introduced this lengthy comment, can be
+        # reverted once #11529 is done.
+        for setting in glob.glob(os.path.join(persistent_settings_dir, 'tails.*')):
+            sh.cp("-a", setting, settings_dir)
 
         if not os.listdir(settings_dir):
             self.apply_settings_cb()
