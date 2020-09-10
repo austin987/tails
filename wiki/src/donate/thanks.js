@@ -1,30 +1,13 @@
-$(document).ready(function(){
+// The customization of /donate/thanks can be tested using using /donate/thanks/test.
 
-  var list = document.getElementById("tweets");
+// Store the GET parameters returned by PayPal even before the page finished to launch
+params = new URLSearchParams(document.location.search.substring(1));
 
-  function shuffle(items) {
-    var cached = items.slice(0), temp, i = cached.length, rand;
-    while(--i)
-    {
-      rand = Math.floor(i * Math.random());
-      temp = cached[rand];
-      cached[rand] = cached[i];
-      cached[i] = temp;
-    }
-    return cached;
+// Hide the GET parameters returned by PayPal
+window.history.replaceState(null, "donate", window.location.href.split('?')[0]);
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (params.has("first_name")) {
+    document.getElementById("name").innerHTML = params.get("first_name");
   }
-
-  function shuffleNodes() {
-    var nodes = list.children, i = 0;
-    nodes = Array.prototype.slice.call(nodes);
-    nodes = shuffle(nodes);
-    while(i < nodes.length)
-    {
-      list.appendChild(nodes[i]);
-      ++i;
-    }
-  }
-
-  shuffleNodes();
-
 });
