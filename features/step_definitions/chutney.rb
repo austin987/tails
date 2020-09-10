@@ -12,6 +12,8 @@ def chutney_status_log(cmd)
              'configuring'
            when 'wait_for_bootstrap'
              'waiting for bootstrap (might take a few minutes)'
+           when 'done'
+             'started!'
            else
              return
            end
@@ -109,6 +111,7 @@ def ensure_chutney_is_running
   )
 
   $chutney_initialized = true
+  chutney_status_log('done')
 end
 # rubocop:enable Metrics/AbcSize
 # rubocop:enable Metrics/MethodLength
