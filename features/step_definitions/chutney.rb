@@ -8,6 +8,8 @@ def chutney_status_log(cmd)
              'starting'
            when 'stop'
              'stopping'
+           when 'stop_old'
+             'cleaning up old instance'
            when 'configure'
              'configuring'
            when 'wait_for_bootstrap'
@@ -52,6 +54,7 @@ def ensure_chutney_is_running
 
   chutney_cmd = proc do |cmd|
     chutney_status_log(cmd)
+    cmd = 'stop' if cmd == 'stop_old'
     Dir.chdir(chutney_src_dir) do
       cmd_helper([chutney_script, cmd, network_definition], env)
     end
@@ -85,7 +88,7 @@ def ensure_chutney_is_running
       end
     end
   else
-    chutney_cmd.call('stop')
+    chutney_cmd.call('stop_old')
     chutney_data_dir_cleanup.call
     chutney_cmd.call('configure')
     chutney_cmd.call('start')
