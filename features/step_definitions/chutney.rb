@@ -2,6 +2,22 @@ def chutney_src_dir
   "#{GIT_DIR}/submodules/chutney"
 end
 
+def chutney_status_log(cmd)
+  action = case cmd
+           when 'start'
+             'starting'
+           when 'stop'
+             'stopping'
+           when 'configure'
+             'configuring'
+           when 'wait_for_bootstrap'
+             'waiting for bootstrap (might take a few minutes)'
+           else
+             return
+           end
+  puts("Chutney Tor network simulation: #{action} ...")
+end
+
 # XXX: giving up on a few worst offenders for now
 # rubocop:disable Metrics/AbcSize
 # rubocop:disable Metrics/MethodLength
@@ -33,7 +49,7 @@ def ensure_chutney_is_running
   end
 
   chutney_cmd = proc do |cmd|
-    debug_log("chutney: #{cmd}")
+    chutney_status_log(cmd)
     Dir.chdir(chutney_src_dir) do
       cmd_helper([chutney_script, cmd, network_definition], env)
     end
