@@ -17,7 +17,7 @@ There are many ways [you can contribute to Tails](https://tails.boum.org/contrib
 
 Find out how you can make a difference in Tails: https://tails.boum.org/contribute/.
 
-### How to get started with Gitlab
+### How to get started with GitLab
 
 https://tails.boum.org/contribute/working_together/GitLab/
 
