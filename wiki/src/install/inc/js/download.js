@@ -123,6 +123,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function showAnotherMirror() {
+    hide(document.getElementById("bittorrent"));
     show(document.getElementById("try-another-mirror"));
   }
 
@@ -191,6 +192,12 @@ document.addEventListener("DOMContentLoaded", function() {
       // in a NetworkError depending on the timing and browser.
       window.open(elm.getAttribute("href"), "_blank");
     }
+  }
+
+  // Display BitTorrent verification tip when BitTorrent download is clicked
+  document.getElementById("bittorrent-download").onclick = function(e) {
+    hide(document.getElementById("javascript-verification-tip"));
+    show(document.getElementById("bittorrent-verification-tip"));
   }
 
   // Reset verification when downloading again after failure
