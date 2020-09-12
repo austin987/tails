@@ -125,18 +125,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  function toggleContinueLink(method, state) {
-    if (method == "direct") {
-      hide(document.getElementById("skip-download-direct"));
-      hide(document.getElementById("skip-verification-direct"));
-      hide(document.getElementById("next-direct"));
-      show(document.getElementById(state));
-    }
-    if(method == "bittorrent") {
-      hide(document.getElementById("skip-download-bittorrent"));
-      hide(document.getElementById("next-bittorrent"));
-      show(document.getElementById(state));
-    }
+  function toggleContinueLink(state) {
+    hide(document.getElementById("skip-download"));
+    hide(document.getElementById("skip-verification"));
+    hide(document.getElementById("next"));
+    show(document.getElementById(state));
   }
 
   function hitCounter(status) {
@@ -161,12 +154,17 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function resetVerificationResult(result) {
+    transparent(document.getElementById("step-verify"));
+    transparent(document.getElementById("step-continue"));
+    transparent(document.getElementById("continue-link"));
+    opaque(document.getElementById("step-verify"));
+    opaque(document.getElementById("continue-link"));
     hide(document.getElementById("verifying-download"));
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
     hide(document.getElementById("verification-failed-again"));
     show(document.getElementById("verification"));
-    toggleContinueLink("direct", "skip-verification-direct");
+    toggleContinueLink("skip-verification");
   }
 
   function showVerifyingDownload(filename) {
@@ -184,15 +182,14 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function showVerificationResult(result) {
-    toggleDirectBitTorrent("direct");
     show(document.getElementById("verification"));
     hide(document.getElementById("verify-download-wrapper"));
     resetVerificationResult();
     hitCounter(result);
     if (result === "successful") {
       show(document.getElementById("verification-successful"));
-      opaque(document.getElementById("step-continue-direct"));
-      toggleContinueLink("direct", "next-direct");
+      opaque(document.getElementById("step-continue"));
+      toggleContinueLink("next");
     }
     else if (result === "failed") {
       show(document.getElementById("verification-failed"));
@@ -206,36 +203,16 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  function toggleDirectBitTorrent(method) {
-    transparent(document.getElementById("step-verify-direct"));
-    transparent(document.getElementById("step-continue-direct"));
-    transparent(document.getElementById("continue-link-direct"));
-    transparent(document.getElementById("step-verify-bittorrent"));
-    transparent(document.getElementById("step-continue-bittorrent"));
-    transparent(document.getElementById("continue-link-bittorrent"));
-    if (method == "direct") {
-      opaque(document.getElementById("step-verify-direct"));
-      opaque(document.getElementById("continue-link-direct"));
-      show(document.getElementById("verify-download-wrapper"));
-    }
-    if (method == "bittorrent") {
-      opaque(document.getElementById("step-verify-bittorrent"));
-      opaque(document.getElementById("step-continue-bittorrent"));
-      opaque(document.getElementById("continue-link-bittorrent"));
-      toggleContinueLink("bittorrent", "next-bittorrent");
-    }
-  }
-
   // Reset the page to its initial state:
   // - Detect the browser version and display the relevant variant
   detectBrowser();
-  // - Show the download steps of both direct and BitTorrent downloads
-  toggleDirectBitTorrent("none");
+  // - Show the download steps
+  transparent(document.getElementById("step-verify"));
+  transparent(document.getElementById("step-continue"));
+  transparent(document.getElementById("continue-link"));
   // - Display 'Skip download' as continue link
-  toggleContinueLink("direct", "skip-download-direct");
-  toggleContinueLink("bittorrent", "skip-download-bittorrent");
-  opaque(document.getElementById("continue-link-direct"));
-  opaque(document.getElementById("continue-link-bittorrent"));
+  toggleContinueLink("skip-download");
+  opaque(document.getElementById("continue-link"));
 
   // Display "Verify with your browser" when image is clicked
   document.getElementById("download-img").onclick = function(e) { displayVerification(e, this); }
@@ -245,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       e.preventDefault();
       hitCounter("download-image");
-      toggleDirectBitTorrent("direct");
+      show(document.getElementById("verify-download-wrapper"));
       showAnotherMirror();
       resetVerificationResult();
     } finally {
@@ -258,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // Display "Verify with your browser" when "I already" is clicked
   document.getElementById("already-downloaded").onclick = function() {
     hitCounter("already-downloaded");
-    toggleDirectBitTorrent("direct");
+    show(document.getElementById("verify-download-wrapper"));
     resetVerificationResult();
   }
 
@@ -270,26 +247,12 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       e.preventDefault();
       hitCounter("download-image-again");
-      toggleDirectBitTorrent("direct");
+      show(document.getElementById("verify-download-wrapper"));
       resetVerificationResult();
     } finally {
       // Setting window.location.href will abort AJAX requests resulting
       // in a NetworkError depending on the timing and browser.
       window.open(elm.getAttribute("href"), "_blank");
-    }
-  }
-
-  // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-img-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
-  document.getElementById("download-iso-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
-
-  function displayBitTorrentVerification(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-torrent");
-      toggleDirectBitTorrent("bittorrent");
-    } finally {
-      window.location = elm.getAttribute("href");
     }
   }
 
