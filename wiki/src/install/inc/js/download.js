@@ -123,7 +123,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function showAnotherMirror() {
-    hide(document.getElementById("already-downloaded"));
     show(document.getElementById("try-another-mirror"));
   }
 
@@ -192,12 +191,6 @@ document.addEventListener("DOMContentLoaded", function() {
       // in a NetworkError depending on the timing and browser.
       window.open(elm.getAttribute("href"), "_blank");
     }
-  }
-
-  // Display "Verify with your browser" when "I already" is clicked
-  document.getElementById("already-downloaded").onclick = function() {
-    hitCounter("already-downloaded");
-    resetVerificationResult();
   }
 
   // Reset verification when downloading again after failure
