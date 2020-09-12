@@ -10,32 +10,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   showFloatingToggleableLinks();
 
-  function opaque(elm) {
-    elm.classList.remove('transparent');
-    var siblings = elm.querySelectorAll("a");
-    for (let i = 0; i < siblings.length; i++) {
-      siblings[i].style.pointerEvents = "auto";
-    }
-  }
-
-  function transparent(elm) {
-    elm.classList.add('transparent');
-    var siblings = elm.querySelectorAll("a");
-    for (let i = 0; i < siblings.length; i++) {
-      siblings[i].style.pointerEvents = "none";
-    }
-  }
-
-  function toggleOpacity(elm, mode) {
-    for (let i = 0; i < elm.length; i++) {
-      if (mode == "opaque") {
-        opaque(elm[i]);
-      } else {
-        transparent(elm[i]);
-      }
-    }
-  }
-
   function hide(elm) {
     elm.style.display = "none";
   }
@@ -154,11 +128,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function resetVerificationResult(result) {
-    transparent(document.getElementById("step-verify"));
-    transparent(document.getElementById("step-continue"));
-    transparent(document.getElementById("continue-link"));
-    opaque(document.getElementById("step-verify"));
-    opaque(document.getElementById("continue-link"));
     hide(document.getElementById("verifying-download"));
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
@@ -182,13 +151,11 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function showVerificationResult(result) {
-    show(document.getElementById("verification"));
     hide(document.getElementById("verify-download-wrapper"));
     resetVerificationResult();
     hitCounter(result);
     if (result === "successful") {
       show(document.getElementById("verification-successful"));
-      opaque(document.getElementById("step-continue"));
       toggleContinueLink("next");
     }
     else if (result === "failed") {
@@ -207,22 +174,17 @@ document.addEventListener("DOMContentLoaded", function() {
   // - Detect the browser version and display the relevant variant
   detectBrowser();
   // - Show the download steps
-  transparent(document.getElementById("step-verify"));
-  transparent(document.getElementById("step-continue"));
-  transparent(document.getElementById("continue-link"));
   // - Display 'Skip download' as continue link
   toggleContinueLink("skip-download");
-  opaque(document.getElementById("continue-link"));
 
   // Display "Verify with your browser" when image is clicked
-  document.getElementById("download-img").onclick = function(e) { displayVerification(e, this); }
-  document.getElementById("download-iso").onclick = function(e) { displayVerification(e, this); }
+  document.getElementById("download-img").onclick = function(e) { download(e, this); }
+  document.getElementById("download-iso").onclick = function(e) { download(e, this); }
 
-  function displayVerification(e, elm) {
+  function download(e, elm) {
     try {
       e.preventDefault();
       hitCounter("download-image");
-      show(document.getElementById("verify-download-wrapper"));
       showAnotherMirror();
       resetVerificationResult();
     } finally {
@@ -235,19 +197,17 @@ document.addEventListener("DOMContentLoaded", function() {
   // Display "Verify with your browser" when "I already" is clicked
   document.getElementById("already-downloaded").onclick = function() {
     hitCounter("already-downloaded");
-    show(document.getElementById("verify-download-wrapper"));
     resetVerificationResult();
   }
 
   // Reset verification when downloading again after failure
-  document.getElementById("download-img-again").onclick = function(e) { resetVerification(e, this); }
-  document.getElementById("download-iso-again").onclick = function(e) { resetVerification(e, this); }
+  document.getElementById("download-img-again").onclick = function(e) { downloadAgain(e, this); }
+  document.getElementById("download-iso-again").onclick = function(e) { downloadAgain(e, this); }
 
-  function resetVerification(e, elm) {
+  function downloadAgain(e, elm) {
     try {
       e.preventDefault();
       hitCounter("download-image-again");
-      show(document.getElementById("verify-download-wrapper"));
       resetVerificationResult();
     } finally {
       // Setting window.location.href will abort AJAX requests resulting
