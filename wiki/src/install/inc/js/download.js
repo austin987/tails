@@ -1,36 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-  window.addEventListener("message", receiveMessage);
-
-  function receiveMessage(event) {
-    if (event.source !== window || event.origin !== "https://tails.boum.org" || !event.data) {
-      return;
-    }
-    if (event.data.action === "verifying") {
-      showVerifyingDownload(event.data.fileName);
-    }
-    else if (event.data.action === "verification-failed") {
-      showVerificationResult("failed");
-    }
-    else if (event.data.action === "verification-failed-again") {
-      showVerificationResult("failed-again");
-    }
-    else if (event.data.action === "verification-success") {
-      showVerificationResult("successful");
-    }
-    else if (event.data.action === "progress") {
-      showVerificationProgress(event.data.percentage);
-    }
-    else if (event.data.action === "extension-installed") {
-      if (document.documentElement.dataset.extension === "up-to-date") {
-        showVerifyDownload();
-      }
-      else if (document.documentElement.dataset.extension === "outdated") {
-        showUpdateExtension();
-      }
-    }
-  }
-
   // Display floating-toggleable-links to prevent people without JS to
   // either always see the toggles or have broken toggle links.
   function showFloatingToggleableLinks() {
@@ -196,19 +165,8 @@ document.addEventListener("DOMContentLoaded", function() {
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
     hide(document.getElementById("verification-failed-again"));
-    toggleContinueLink("direct", "skip-verification-direct");
-  }
-
-  function showUpdateExtension() {
-    hide(document.getElementById("verification"));
-    hide(document.getElementById("install-extension"));
-    show(document.getElementById("update-extension"));
-  }
-
-  function showVerifyDownload() {
-    hide(document.getElementById("install-extension"));
-    hide(document.getElementById("update-extension"));
     show(document.getElementById("verification"));
+    toggleContinueLink("direct", "skip-verification-direct");
   }
 
   function showVerifyingDownload(filename) {
@@ -227,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function showVerificationResult(result) {
     toggleDirectBitTorrent("direct");
-    showVerifyDownload();
+    show(document.getElementById("verification"));
     hide(document.getElementById("verify-download-wrapper"));
     resetVerificationResult();
     hitCounter(result);
@@ -280,10 +238,10 @@ document.addEventListener("DOMContentLoaded", function() {
   opaque(document.getElementById("continue-link-bittorrent"));
 
   // Display "Verify with your browser" when image is clicked
-  document.getElementById("download-img").onclick = function(e) { displayVerificationExtension(e, this); }
-  document.getElementById("download-iso").onclick = function(e) { displayVerificationExtension(e, this); }
+  document.getElementById("download-img").onclick = function(e) { displayVerification(e, this); }
+  document.getElementById("download-iso").onclick = function(e) { displayVerification(e, this); }
 
-  function displayVerificationExtension(e, elm) {
+  function displayVerification(e, elm) {
     try {
       e.preventDefault();
       hitCounter("download-image");
@@ -335,10 +293,17 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Right-after installing on Chrome, display the "Verify Tails..."
-  if (window.location.hash === "#chrome-installation") {
-    toggleDirectBitTorrent("direct");
-    showVerifyDownload();
+  // Trigger verification when file is chosen
+  document.getElementById("verify-download").onchange = function(e) { verifyFile(e, this); }
+
+  function verifyFile(e, elm) {
+    file = elm.files[0]
+    // XXX: Cannot open file
+    showVerifyingDownload(file.name);
+    showVerificationProgress(50);
+    setTimeout(function(){ showVerificationResult("failed"); }, 2500);
+    setTimeout(function(){ showVerificationResult("failed-again"); }, 5000);
+    setTimeout(function(){ showVerificationResult("successful"); }, 7500);
   }
 
   // To debug the display of the different states:
