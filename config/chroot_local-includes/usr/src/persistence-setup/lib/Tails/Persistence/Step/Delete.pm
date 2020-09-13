@@ -13,10 +13,7 @@ use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use Number::Format qw(:subs);
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+use Locale::TextDomain 'tails';
 
 use Moo;
 use MooX::late;
@@ -49,21 +46,21 @@ has 'warning_icon' => (
 =cut
 
 method BUILD (@args) {
-    $self->title->set_text($self->encoding->decode(gettext(
+    $self->title->set_text($self->encoding->decode(__(
         q{Persistence wizard - Persistent volume deletion}
     )));
-    $self->subtitle->set_text($self->encoding->decode(gettext(
+    $self->subtitle->set_text($self->encoding->decode(__(
         q{Your persistent data will be deleted.}
     )));
     # TRANSLATORS: partition, size, device vendor, device model
-    $self->description->set_markup($self->encoding->decode(sprintf(
-        gettext(q{The persistent volume %s (%s), on the <b>%s %s</b> device, will be deleted.}),
-        $self->persistence_partition_device_file,
-        format_bytes($self->persistence_partition_size, mode => "iec"),
-        $self->drive_vendor,
-        $self->drive_model
+    $self->description->set_markup($self->encoding->decode(__x(
+        q{The persistent volume {partition} ({size}), on the <b>{vendor} {model}</b> device, will be deleted.},
+        partition => $self->persistence_partition_device_file,
+        size      => format_bytes($self->persistence_partition_size, mode => "iec"),
+        vendor    => $self->drive_vendor,
+        model     => $self->drive_model,
     )));
-    $self->go_button->set_label($self->encoding->decode(gettext(q{Delete})));
+    $self->go_button->set_label($self->encoding->decode(__(q{Delete})));
     $self->go_button->set_sensitive(TRUE);
 }
 
@@ -100,7 +97,7 @@ method operation_finished ($reply) {
     if ($error) {
         $self->working(0);
         say STDERR "$error";
-        $self->subtitle->set_text($self->encoding->decode(gettext(q{Failed})));
+        $self->subtitle->set_text($self->encoding->decode(__(q{Failed})));
         $self->description->set_text($error);
     }
     else {
@@ -114,10 +111,10 @@ method operation_finished ($reply) {
 method go_button_pressed () {
     $self->working(1);
     $self->subtitle->set_text(
-        $self->encoding->decode(gettext(q{Deleting...})),
+        $self->encoding->decode(__(q{Deleting...})),
     );
     $self->description->set_text(
-        $self->encoding->decode(gettext(q{Deleting the persistent volume...})),
+        $self->encoding->decode(__(q{Deleting the persistent volume...})),
     );
 
     $self->go_callback->(

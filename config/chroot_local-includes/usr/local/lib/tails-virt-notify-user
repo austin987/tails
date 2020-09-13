@@ -25,13 +25,12 @@ See https://tails.boum.org/.
 use Desktop::Notify;
 use English '-no_match_vars';
 use IPC::System::Simple qw{capturex $EXITVAL};
-use Locale::gettext;
+use Locale::TextDomain 'tails';
 use Net::DBus::Reactor;
-use POSIX;
 
 ### initialization
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+
+POSIX::setlocale(&POSIX::LC_MESSAGES, '');
 
 ### callbacks
 
@@ -68,17 +67,17 @@ my ($body, $summary);
 
 chomp($vm_name);
 if (grep {$_ eq $vm_name} @whitelist) {
-    $summary = gettext("Warning: virtual machine detected!");
+    $summary = __("Warning: virtual machine detected!");
 }
 else {
-    $summary = gettext("Warning: non-free virtual machine detected!");
+    $summary = __("Warning: non-free virtual machine detected!");
 }
 
-$body = gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
+$body = __("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
 
 $notify->create(summary => $summary,
                 body    => $body,
-                actions => { "moreinfo_$PID" => gettext('Learn more'), },
+                actions => { "moreinfo_$PID" => __('Learn more'), },
                 hints   => { 'transient' => 1, },
                 timeout => 0)->show();
 

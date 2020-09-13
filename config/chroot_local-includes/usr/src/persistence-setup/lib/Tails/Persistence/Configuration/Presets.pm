@@ -20,10 +20,7 @@ use List::MoreUtils qw{all};
 use Tails::Persistence::Configuration::Atom;
 use Types::Standard qw(ArrayRef Str);
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+use Locale::TextDomain 'tails';
 
 use namespace::clean;
 
@@ -52,8 +49,8 @@ method _build__presets () {
     my @presets = (
         {
             id          => 'PersonalData',
-            name        => $self->encoding->decode(gettext(q{Personal Data})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Personal Data})),
+            description => $self->encoding->decode(__(
                 q{Keep files stored in the `Persistent' directory}
             )),
             icon_name   => 'stock_folder',
@@ -67,8 +64,8 @@ method _build__presets () {
         },
         {
             id          => 'GreeterSettings',
-            name        => $self->encoding->decode(gettext(q{Welcome Screen})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Welcome Screen})),
+            description => $self->encoding->decode(__(
                 q{Language, administration password, and additional settings}
             )),
             icon_name   => 'preferences-system',
@@ -82,8 +79,8 @@ method _build__presets () {
         },
         {
             id          => 'BrowserBookmarks',
-            name        => $self->encoding->decode(gettext(q{Browser Bookmarks})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Browser Bookmarks})),
+            description => $self->encoding->decode(__(
                 q{Bookmarks saved in the Tor Browser}
             )),
             icon_name   => 'user-bookmarks',
@@ -97,8 +94,8 @@ method _build__presets () {
         },
         {
             id          => 'NetworkConnections',
-            name        => $self->encoding->decode(gettext(q{Network Connections})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Network Connections})),
+            description => $self->encoding->decode(__(
                 q{Configuration of network devices and connections}
             )),
             icon_name   => 'network-wired',
@@ -112,8 +109,8 @@ method _build__presets () {
         },
         {
             id                  => 'AdditionalSoftware',
-            name                => $self->encoding->decode(gettext(q{Additional Software})),
-            description         => $self->encoding->decode(gettext(
+            name                => $self->encoding->decode(__(q{Additional Software})),
+            description         => $self->encoding->decode(__(
                 q{Software installed when starting Tails}
             )),
             icon_name           => 'package-x-generic',
@@ -132,8 +129,8 @@ method _build__presets () {
         },
         {
             id          => 'Printers',
-            name        => $self->encoding->decode(gettext(q{Printers})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Printers})),
+            description => $self->encoding->decode(__(
                 q{Printers configuration}
             )),
             icon_name   => 'printer',
@@ -147,8 +144,8 @@ method _build__presets () {
         },
         {
             id          => 'Thunderbird',
-            name        => $self->encoding->decode(gettext(q{Thunderbird})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Thunderbird})),
+            description => $self->encoding->decode(__(
                 q{Thunderbird emails, feeds, and settings}
             )),
             icon_name   => 'thunderbird',
@@ -162,8 +159,8 @@ method _build__presets () {
         },
         {
             id          => 'GnuPG',
-            name        => $self->encoding->decode(gettext(q{GnuPG})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{GnuPG})),
+            description => $self->encoding->decode(__(
                 q{GnuPG keyrings and configuration}
             )),
             icon_name   => 'seahorse-key',
@@ -177,8 +174,8 @@ method _build__presets () {
         },
         {
             id          => 'BitcoinClient',
-            name        => $self->encoding->decode(gettext(q{Bitcoin Client})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Bitcoin Client})),
+            description => $self->encoding->decode(__(
                 q{Electrum's bitcoin wallet and configuration}
             )),
             icon_name   => 'electrum',
@@ -192,8 +189,8 @@ method _build__presets () {
         },
         {
             id          => 'Pidgin',
-            name        => $self->encoding->decode(gettext(q{Pidgin})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Pidgin})),
+            description => $self->encoding->decode(__(
                 q{Pidgin profiles and OTR keyring}
             )),
             icon_name   => 'pidgin',
@@ -207,8 +204,8 @@ method _build__presets () {
         },
         {
             id          => 'SSHClient',
-            name        => $self->encoding->decode(gettext(q{SSH Client})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{SSH Client})),
+            description => $self->encoding->decode(__(
                 q{SSH keys, configuration and known hosts}
             )),
             icon_name   => 'seahorse-key-ssh',
@@ -222,8 +219,8 @@ method _build__presets () {
         },
         {
             id          => 'Dotfiles',
-            name        => $self->encoding->decode(gettext(q{Dotfiles})),
-            description => $self->encoding->decode(gettext(
+            name        => $self->encoding->decode(__(q{Dotfiles})),
+            description => $self->encoding->decode(__(
                 q{Symlink into $HOME every file or directory found in the `dotfiles' directory}
             )),
             icon_name   => 'preferences-desktop',

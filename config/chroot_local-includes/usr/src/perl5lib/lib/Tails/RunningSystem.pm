@@ -11,6 +11,7 @@ use strictures 2;
 use autodie qw(:all);
 
 use Carp;
+use Carp::Assert;
 use Carp::Assert::More;
 use Function::Parameters;
 use Path::Tiny;
@@ -21,10 +22,7 @@ use Try::Tiny;
 use Types::Path::Tiny qw{AbsDir AbsFile AbsPath};
 use Types::Standard qw(Str);
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+use Locale::TextDomain 'tails';
 
 no Moo::sification;
 use Moo;
@@ -220,8 +218,8 @@ method _build_boot_block_device () {
     } catch {
         $self->display_error(
             $self->main_window,
-            $self->encoding->decode(gettext(q{Error})),
-            $self->encoding->decode(gettext(
+            $self->encoding->decode(__(q{Error})),
+            $self->encoding->decode(__(
                 q{The device Tails is running from cannot be found. Maybe you used the 'toram' option?},
             )),
         );
@@ -249,7 +247,7 @@ method _build_boot_drive () {
     } catch {
         $self->display_error(
             $self->main_window,
-            $self->encoding->decode(gettext(
+            $self->encoding->decode(__(
                 q{The drive Tails is running from cannot be found. Maybe you used the 'toram' option?},
             )),
             '',

@@ -22,10 +22,7 @@ use Tails::Persistence::Configuration::Presets;
 use Types::Path::Tiny qw{AbsPath};
 
 use List::MoreUtils qw{none};
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+use Locale::TextDomain 'tails';
 
 use namespace::clean;
 

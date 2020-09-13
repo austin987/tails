@@ -33,11 +33,6 @@ use Tails::Persistence::Step::Configure;
 use Tails::Persistence::Step::Delete;
 use Tails::Persistence::Utils qw{align_up_at_2MiB align_down_at_2MiB step_name_to_class_name get_variable_from_file check_config_file_permissions};
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
-
 no Moo::sification;
 use Moo;
 use MooX::late;
@@ -49,8 +44,24 @@ with 'Tails::Role::HasEncoding';
 
 use namespace::clean;
 
+# Must be after namespace::clean, so that we can use "around" for the "__"
+# function.
+use Locale::TextDomain 'tails';
+POSIX::setlocale(&POSIX::LC_MESSAGES, '');
+
 use MooX::Options;
 
+# Workaround the fact MooX::Options is incompatible with Locale::TextDomain
+# (it needs a __ method, which it injects via MooX::Locale::Passthrough,
+# but that does not go well when Locale::TextDomain is loaded).
+around __ => sub {
+    my $orig = shift;
+    # if called as a class or object method,
+    # let's ignore the second argument ($self)
+    shift if ref $_[0] or $_[0] eq __PACKAGE__;
+    my $msgid = shift;
+    Locale::TextDomain::__($msgid);
+};
 
 =head1 ATTRIBUTES
 
@@ -262,7 +273,7 @@ method _build_steps () {
 
 method _build_main_window () {
     my $win = Gtk3::Window->new('toplevel');
-    $win->set_title($self->encoding->decode(gettext('Setup Tails persistent volume')));
+    $win->set_title($self->encoding->decode(__('Setup Tails persistent volume')));
 
     $win->set_border_width(10);
 
@@ -340,8 +351,8 @@ method _build_configuration () {
         catch {
             $self->display_error(
                 $self->main_window,
-                $self->encoding->decode(gettext('Error')),
-                $self->encoding->decode(gettext(
+                $self->encoding->decode(__('Error')),
+                $self->encoding->decode(__(
                     $_,
                 )));
             exit 4;
@@ -368,58 +379,52 @@ method check_sanity (Str $step_name) {
         'bootstrap' => [
             {
                 method  => 'device_has_persistent_volume',
-                message => $self->encoding->decode(gettext(
-                    "Device %s already has a persistent volume.")),
+                message => __"Device already has a persistent volume.",
                 must_be_false    => 1,
                 can_be_forced    => 1,
                 needs_device_arg => 1,
             },
             {
                 method  => 'device_has_enough_free_space',
-                message => $self->encoding->decode(gettext(
-                    "Device %s has not enough unallocated space.")),
+                message => __"Device has not enough unallocated space.",
             },
         ],
         'delete' => [
             {
                 method  => 'device_has_persistent_volume',
-                message => $self->encoding->decode(gettext(
-                    "Device %s has no persistent volume.")),
+                message => __"Device has no persistent volume.",
                 needs_device_arg => 1,
             },
             {
                 method  => 'persistence_is_enabled',
-                message => $self->encoding->decode(gettext(
-                    "Cannot delete the persistent volume on %s while in use. You should restart Tails without persistence.")),
+                message =>
+                    __"Cannot delete the persistent volume while in use. You should restart Tails without persistence.",
                 must_be_false => 1,
             },
         ],
         'configure' => [
             {
                 method  => 'device_has_persistent_volume',
-                message => $self->encoding->decode(gettext(
-                    "Device %s has no persistent volume.")),
+                message => __"Device has no persistent volume.",
                 needs_device_arg => 1,
             },
             {
                 method  => 'persistence_partition_is_unlocked',
-                message => $self->encoding->decode(gettext(
-                    "Persistence volume on %s is not unlocked.")),
+                message => __"Persistence volume is not unlocked.",
             },
             {
                 method  => 'persistence_filesystem_is_mounted',
-                message => $self->encoding->decode(gettext(
-                    "Persistence volume on %s is not mounted.")),
+                message => __"Persistence volume is not mounted.",
             },
             {
                 method  => 'persistence_filesystem_is_readable',
-                message => $self->encoding->decode(gettext(
-                    "Persistence volume on %s is not readable. Permissions or ownership problems?")),
+                message =>
+                    __"Persistence volume is not readable. Permissions or ownership problems?",
             },
             {
                 method  => 'persistence_filesystem_is_writable',
-                message => $self->encoding->decode(gettext(
-                    "Persistence volume on %s is not writable.")),
+                message =>
+                    __"Persistence volume is not writable.",
             },
         ],
     );
@@ -427,21 +432,20 @@ method check_sanity (Str $step_name) {
     my @checks = (
         {
             method  => 'drive_is_connected_via_a_supported_interface',
-            message => $self->encoding->decode(gettext(
-                "Tails is running from non-USB / non-SDIO device %s.")),
+            message =>
+                __"Tails is running from non-USB / non-SDIO device.",
             needs_drive_arg => 1,
         },
         {
             method  => 'drive_is_optical',
-            message => $self->encoding->decode(gettext(
-                "Device %s is optical.")),
+            message => __"Device is optical.",
             must_be_false    => 1,
             needs_drive_arg => 1,
         },
         {
             method  => 'started_from_device_installed_with_tails_installer',
-            message => $self->encoding->decode(gettext(
-                "Device %s was not created using a USB image or Tails Installer.")),
+            message =>
+                __"Device was not created using a USB image or Tails Installer.",
             must_be_false => 0,
         },
     );
@@ -468,9 +472,7 @@ method check_sanity (Str $step_name) {
             $res = ! $res;
         }
         if (! $res) {
-            my $message = $self->encoding->decode(sprintf(
-                gettext($check->{message}),
-                $self->boot_device_file));
+            my $message = $self->encoding->decode($check->{message});
             if ($self->force && exists($check->{can_be_forced}) && $check->{can_be_forced}) {
                 say STDERR "$message",
                      "... but --force is enabled, ignoring results of this sanity check.";
@@ -478,7 +480,7 @@ method check_sanity (Str $step_name) {
             else {
                 $self->display_error(
                     $self->main_window,
-                    $self->encoding->decode(gettext('Error')),
+                    $self->encoding->decode(__('Error')),
                     $message
                 );
                 return;
@@ -684,10 +686,10 @@ method goto_next_step () {
                 return;
             }
         }
-        $self->current_step->title->set_text($self->encoding->decode(gettext(
+        $self->current_step->title->set_text($self->encoding->decode(__(
             q{Persistence wizard - Finished}
         )));
-        $self->current_step->subtitle->set_text($self->encoding->decode(gettext(
+        $self->current_step->subtitle->set_text($self->encoding->decode(__(
             q{Any changes you have made will only take effect after restarting Tails.
 
 You may now close this application.}

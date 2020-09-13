@@ -22,10 +22,7 @@ Glib::Object::Introspection->setup(
     package  => 'Gio'
 );
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+use Locale::TextDomain 'tails';
 
 use Moo;
 use MooX::late;
@@ -110,7 +107,7 @@ has 'configuration_app_desktop_id' => (
 =cut
 
 method _build_name () {
-    $self->encoding->decode(gettext('Custom'));
+    $self->encoding->decode(__('Custom'));
 }
 
 method _build_id () {
