@@ -151,7 +151,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function showVerificationProgress(percentage) {
-    showVerifyingDownload();
     document.getElementById("progress-bar").style.width = percentage + "%";
     document.getElementById("progress-bar").setAttribute("aria-valuenow", percentage.toString());
   }
@@ -242,10 +241,11 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // To debug the display of the different states:
+  // showVerifyingDownload('test.img');
+  // showVerificationProgress('50');
   // showVerificationResult("successful");
   // showVerificationResult("failed");
   // showVerificationResult("failed-again");
-  // showVerificationProgress('50');
   // showVerificationResult("error");
 
 });
