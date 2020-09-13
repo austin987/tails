@@ -187,7 +187,8 @@ document.addEventListener("DOMContentLoaded", function() {
   // Reset the page to its initial state:
   // - Detect the browser version and display the relevant variant
   detectBrowser();
-  // - Show the download steps
+  // - Show "Verify" button
+  showVerifyButton();
   // - Display 'Skip download' as continue link
   toggleContinueLink("skip-download");
 
