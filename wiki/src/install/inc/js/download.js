@@ -232,6 +232,21 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
+  // Display "Verify with BitTorrent" when Torrent file is clicked
+  document.getElementById("download-img-torrent").onclick = function(e) { downloadTorrent(e, this); }
+  document.getElementById("download-iso-torrent").onclick = function(e) { downloadTorrent(e, this); }
+
+  function downloadTorrent(e, elm) {
+    try {
+      e.preventDefault();
+      hitCounter("download-torrent");
+    } finally {
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(elm.getAttribute("href"), "_blank");
+    }
+  }
+
   // Trigger verification when file is chosen
   document.getElementById("verify-file").onchange = function(e) { verifyFile(e, this); }
 
