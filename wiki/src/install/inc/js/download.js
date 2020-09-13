@@ -109,6 +109,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
   /* Display logic functions */
 
+  function toggleJavaScriptBitTorrent(method) {
+    if (method === "javascript") {
+      hide(document.getElementById("bittorrent-verification-tip"));
+      show(document.getElementById("javascript-verification-tip"));
+    }
+    else if (method === "bittorrent") {
+      hide(document.getElementById("javascript-verification-tip"));
+      show(document.getElementById("bittorrent-verification-tip"));
+    }
+  }
+
   function showAnotherMirror() {
     hide(document.getElementById("bittorrent"));
     show(document.getElementById("try-another-mirror"));
@@ -188,6 +199,7 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       e.preventDefault();
       hitCounter("download-image");
+      toggleJavaScriptBitTorrent("javascript");
       resetVerificationResult();
       showAnotherMirror();
     } finally {
@@ -205,8 +217,7 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       e.preventDefault();
       hitCounter("download-torrent");
-      hide(document.getElementById("javascript-verification-tip"));
-      show(document.getElementById("bittorrent-verification-tip"));
+      toggleJavaScriptBitTorrent("bittorrent");
       toggleContinueLink("next");
     } finally {
       // Setting window.location.href will abort AJAX requests resulting
@@ -223,6 +234,7 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       e.preventDefault();
       hitCounter("download-image-again");
+      toggleJavaScriptBitTorrent("javascript");
       resetVerificationResult();
       showVerifyButton();
     } finally {
