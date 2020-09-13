@@ -1,14 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-  // Display floating-toggleable-links to prevent people without JS to
-  // either always see the toggles or have broken toggle links.
-  function showFloatingToggleableLinks() {
-    var links = document.getElementsByClassName("floating-toggleable-link");
-    for (let i = 0; i < links.length; i++) {
-      show(links[i]);
-    }
-  }
-  showFloatingToggleableLinks();
+  /* Generic functions */
 
   function hide(elm) {
     elm.style.display = "none";
@@ -99,13 +91,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  function toggleContinueLink(state) {
-    hide(document.getElementById("skip-download"));
-    hide(document.getElementById("skip-verification"));
-    hide(document.getElementById("next"));
-    show(document.getElementById(state));
-  }
-
   function hitCounter(status) {
     try {
       var counter_url, url, scenario, version, cachebust;
@@ -122,19 +107,11 @@ document.addEventListener("DOMContentLoaded", function() {
     } catch (e) { } // Ignore if we fail to hit the download counter
   }
 
+  /* Display logic functions */
+
   function showAnotherMirror() {
     hide(document.getElementById("bittorrent"));
     show(document.getElementById("try-another-mirror"));
-  }
-
-  function resetVerificationResult(result) {
-    hide(document.getElementById("verifying-download"));
-    hide(document.getElementById("verification-successful"));
-    hide(document.getElementById("verification-failed"));
-    hide(document.getElementById("verification-failed-again"));
-    hide(document.getElementById("verification-error"));
-    show(document.getElementById("verification"));
-    toggleContinueLink("skip-verification");
   }
 
   function showVerifyButton() {
@@ -184,15 +161,26 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Reset the page to its initial state:
-  // - Detect the browser version and display the relevant variant
-  detectBrowser();
-  // - Show "Verify" button
-  showVerifyButton();
-  // - Display 'Skip download' as continue link
-  toggleContinueLink("skip-download");
+  function resetVerificationResult(result) {
+    hide(document.getElementById("verifying-download"));
+    hide(document.getElementById("verification-successful"));
+    hide(document.getElementById("verification-failed"));
+    hide(document.getElementById("verification-failed-again"));
+    hide(document.getElementById("verification-error"));
+    show(document.getElementById("verification"));
+    toggleContinueLink("skip-verification");
+  }
 
-  // Display "Verify with your browser" when image is clicked
+  function toggleContinueLink(state) {
+    hide(document.getElementById("skip-download"));
+    hide(document.getElementById("skip-verification"));
+    hide(document.getElementById("next"));
+    show(document.getElementById(state));
+  }
+
+  /* Initialize event handlers */
+
+  // Direct download
   document.getElementById("download-img").onclick = function(e) { download(e, this); }
   document.getElementById("download-iso").onclick = function(e) { download(e, this); }
 
@@ -209,14 +197,25 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Display BitTorrent verification tip when BitTorrent download is clicked
-  document.getElementById("bittorrent-download").onclick = function(e) {
-    hide(document.getElementById("javascript-verification-tip"));
-    show(document.getElementById("bittorrent-verification-tip"));
-    toggleContinueLink("next");
+  // BitTorrent download
+  document.getElementById("download-img-torrent").onclick = function(e) { downloadTorrent(e, this); }
+  document.getElementById("download-iso-torrent").onclick = function(e) { downloadTorrent(e, this); }
+
+  function downloadTorrent(e, elm) {
+    try {
+      e.preventDefault();
+      hitCounter("download-torrent");
+      hide(document.getElementById("javascript-verification-tip"));
+      show(document.getElementById("bittorrent-verification-tip"));
+      toggleContinueLink("next");
+    } finally {
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(elm.getAttribute("href"), "_blank");
+    }
   }
 
-  // Reset verification when downloading again after failure
+  // Download again after failure
   document.getElementById("download-img-again").onclick = function(e) { downloadAgain(e, this); }
   document.getElementById("download-iso-again").onclick = function(e) { downloadAgain(e, this); }
 
@@ -226,21 +225,6 @@ document.addEventListener("DOMContentLoaded", function() {
       hitCounter("download-image-again");
       resetVerificationResult();
       showVerifyButton();
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
-  }
-
-  // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-img-torrent").onclick = function(e) { downloadTorrent(e, this); }
-  document.getElementById("download-iso-torrent").onclick = function(e) { downloadTorrent(e, this); }
-
-  function downloadTorrent(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-torrent");
     } finally {
       // Setting window.location.href will abort AJAX requests resulting
       // in a NetworkError depending on the timing and browser.
@@ -260,6 +244,19 @@ document.addEventListener("DOMContentLoaded", function() {
     setTimeout(function(){ showVerificationResult("failed-again"); }, 7500);
     setTimeout(function(){ showVerificationResult("successful"); }, 10000);
   }
+
+  /* Final initialization */
+
+  // Display floating-toggleable-links to prevent people without JS to
+  // either always see the toggles or have broken toggle links.
+  var links = document.getElementsByClassName("floating-toggleable-link");
+  for (let i = 0; i < links.length; i++) {
+    show(links[i]);
+  }
+
+  detectBrowser();
+  showVerifyButton();
+  toggleContinueLink("skip-download");
 
   // To debug the display of the different states:
   // showVerifyingDownload('test.img');
