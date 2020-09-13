@@ -142,6 +142,7 @@ document.addEventListener("DOMContentLoaded", function() {
       document.getElementById("filename").textContent = filename;
     }
     show(document.getElementById("verifying-download"));
+    toggleContinueLink("skip-verification");
   }
 
   function showVerificationProgress(percentage) {
@@ -198,6 +199,7 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("bittorrent-download").onclick = function(e) {
     hide(document.getElementById("javascript-verification-tip"));
     show(document.getElementById("bittorrent-verification-tip"));
+    toggleContinueLink("next");
   }
 
   // Reset verification when downloading again after failure
