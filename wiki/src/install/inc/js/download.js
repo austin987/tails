@@ -137,6 +137,11 @@ document.addEventListener("DOMContentLoaded", function() {
     toggleContinueLink("skip-verification");
   }
 
+  function showVerifyButton() {
+    hide(document.getElementById("verifying-download"));
+    show(document.getElementById("verify-button"));
+  }
+
   function showVerifyingDownload(filename) {
     resetVerificationResult();
     hide(document.getElementById("verify-button"));
@@ -174,8 +179,7 @@ document.addEventListener("DOMContentLoaded", function() {
       show(document.getElementById("verification-failed-again"));
     }
     else if (result === "error") {
-      hide(document.getElementById("verifying-download"));
-      show(document.getElementById("verify-button"));
+      showVerifyButton();
       show(document.getElementById("verification-error"));
     }
   }
@@ -195,8 +199,8 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       e.preventDefault();
       hitCounter("download-image");
-      showAnotherMirror();
       resetVerificationResult();
+      showAnotherMirror();
     } finally {
       // Setting window.location.href will abort AJAX requests resulting
       // in a NetworkError depending on the timing and browser.
@@ -220,6 +224,7 @@ document.addEventListener("DOMContentLoaded", function() {
       e.preventDefault();
       hitCounter("download-image-again");
       resetVerificationResult();
+      showVerifyButton();
     } finally {
       // Setting window.location.href will abort AJAX requests resulting
       // in a NetworkError depending on the timing and browser.
