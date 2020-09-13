@@ -132,14 +132,19 @@ document.addEventListener("DOMContentLoaded", function() {
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
     hide(document.getElementById("verification-failed-again"));
+    hide(document.getElementById("verification-error"));
     show(document.getElementById("verification"));
     toggleContinueLink("skip-verification");
   }
 
   function showVerifyingDownload(filename) {
-    hide(document.getElementById("verify-download-wrapper"));
+    resetVerificationResult();
+    hide(document.getElementById("verify-button"));
     if (filename) {
-      document.getElementById("filename").textContent = filename;
+      var filenames = document.getElementsByClassName("verify-filename");
+      for (let i = 0; i < filenames.length; i++) {
+        filenames[i].textContent = filename;
+      }
     }
     show(document.getElementById("verifying-download"));
     toggleContinueLink("skip-verification");
@@ -152,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function showVerificationResult(result) {
-    hide(document.getElementById("verify-download-wrapper"));
+    hide(document.getElementById("verify-button"));
     resetVerificationResult();
     hitCounter(result);
     if (result === "successful") {
@@ -168,6 +173,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (result === "failed-again") {
       show(document.getElementById("verification-failed-again"));
+    }
+    else if (result === "error") {
+      hide(document.getElementById("verifying-download"));
+      show(document.getElementById("verify-button"));
+      show(document.getElementById("verification-error"));
     }
   }
 
@@ -219,16 +229,16 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // Trigger verification when file is chosen
-  document.getElementById("verify-download").onchange = function(e) { verifyFile(e, this); }
+  document.getElementById("verify-file").onchange = function(e) { verifyFile(e, this); }
 
   function verifyFile(e, elm) {
     file = elm.files[0]
-    // XXX: Cannot open file
     showVerifyingDownload(file.name);
     showVerificationProgress(50);
-    setTimeout(function(){ showVerificationResult("failed"); }, 2500);
-    setTimeout(function(){ showVerificationResult("failed-again"); }, 5000);
-    setTimeout(function(){ showVerificationResult("successful"); }, 7500);
+    setTimeout(function(){ showVerificationResult("error"); }, 2500);
+    setTimeout(function(){ showVerificationResult("failed"); }, 5000);
+    setTimeout(function(){ showVerificationResult("failed-again"); }, 7500);
+    setTimeout(function(){ showVerificationResult("successful"); }, 10000);
   }
 
   // To debug the display of the different states:
@@ -236,5 +246,6 @@ document.addEventListener("DOMContentLoaded", function() {
   // showVerificationResult("failed");
   // showVerificationResult("failed-again");
   // showVerificationProgress('50');
+  // showVerificationResult("error");
 
 });
