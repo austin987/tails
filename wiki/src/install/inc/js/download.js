@@ -249,6 +249,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function verifyFile(e, elm) {
     file = elm.files[0]
+    /* Dummy code that simulates the various states of a verification
+       This is where the verification logic should go. */
     showVerifyingDownload(file.name);
     showVerificationProgress(50);
     setTimeout(function(){ showVerificationResult("error"); }, 2500);
