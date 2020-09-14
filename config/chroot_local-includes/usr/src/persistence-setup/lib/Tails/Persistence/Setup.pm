@@ -15,6 +15,9 @@ use English qw{-no_match_vars};
 use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use Gtk3 qw{-init};
+use Locale::Messages qw{bind_textdomain_codeset
+                        bind_textdomain_filter
+                        turn_utf_8_on};
 use Net::DBus qw(:typing);
 use Net::DBus::Annotation qw(:call);
 use List::Util qw{first min max};
@@ -33,6 +36,11 @@ use Tails::Persistence::Step::Bootstrap;
 use Tails::Persistence::Step::Configure;
 use Tails::Persistence::Step::Delete;
 use Tails::Persistence::Utils qw{align_up_at_2MiB align_down_at_2MiB step_name_to_class_name get_variable_from_file check_config_file_permissions};
+
+BEGIN {
+    bind_textdomain_filter 'tails', \&turn_utf_8_on;
+    bind_textdomain_codeset 'tails', 'utf-8';
+}
 
 no Moo::sification;
 use Moo;
@@ -273,7 +281,7 @@ method _build_steps () {
 
 method _build_main_window () {
     my $win = Gtk3::Window->new('toplevel');
-    $win->set_title($self->encoding->decode(__('Setup Tails persistent volume')));
+    $win->set_title(__('Setup Tails persistent volume'));
 
     $win->set_border_width(10);
 
@@ -351,8 +359,8 @@ method _build_configuration () {
         catch {
             $self->display_error(
                 $self->main_window,
-                $self->encoding->decode(__('Error')),
-                $self->encoding->decode($_));
+                __('Error'),
+                $_);
             exit 4;
         };
     }
@@ -470,7 +478,7 @@ method check_sanity (Str $step_name) {
             $res = ! $res;
         }
         if (! $res) {
-            my $message = $self->encoding->decode($check->{message});
+            my $message = $check->{message};
             if ($self->force && exists($check->{can_be_forced}) && $check->{can_be_forced}) {
                 say STDERR "$message",
                      "... but --force is enabled, ignoring results of this sanity check.";
@@ -478,7 +486,7 @@ method check_sanity (Str $step_name) {
             else {
                 $self->display_error(
                     $self->main_window,
-                    $self->encoding->decode(__('Error')),
+                    __('Error'),
                     $message
                 );
                 return;
@@ -684,14 +692,14 @@ method goto_next_step () {
                 return;
             }
         }
-        $self->current_step->title->set_text($self->encoding->decode(__(
+        $self->current_step->title->set_text(__(
             q{Persistence wizard - Finished}
-        )));
-        $self->current_step->subtitle->set_text($self->encoding->decode(__(
+        ));
+        $self->current_step->subtitle->set_text(__(
             q{Any changes you have made will only take effect after restarting Tails.
 
 You may now close this application.}
-        )));
+        ));
         $self->current_step->description->set_text(' ');
         $self->current_step->go_button->hide;
         $self->current_step->status_area->hide;

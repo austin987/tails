@@ -82,20 +82,20 @@ method BUILD (@args) {
     assert_defined($self->list_box);
     assert_defined($self->settings_container);
 
-    $self->title->set_text($self->encoding->decode(__(
+    $self->title->set_text(__(
         q{Persistence wizard - Persistent volume configuration}
-    )));
-    $self->subtitle->set_text($self->encoding->decode(__(
+    ));
+    $self->subtitle->set_text(__(
         q{Specify the files that will be saved in the persistent volume}
-    )));
-    $self->description->set_markup($self->encoding->decode(__x(
+    ));
+    $self->description->set_markup(__x(
         q{The selected files will be stored in the encrypted partition {partition} ({size}), on the <b>{vendor} {model}</b> device.},
         partition => $self->persistence_partition_device_file,
         size      => format_bytes($self->persistence_partition_size, mode => "iec"),
         vendor    => $self->drive_vendor,
         model     => $self->drive_model,
-    )));
-    $self->go_button->set_label($self->encoding->decode(__(q{Save})));
+    ));
+    $self->go_button->set_label(__(q{Save}));
     $self->go_button->set_sensitive(TRUE);
 }
 
@@ -175,7 +175,7 @@ method operation_finished ($error = undef) {
     if ($error) {
         $self->working(0);
         say STDERR "$error";
-        $self->subtitle->set_text($self->encoding->decode(__(q{Failed})));
+        $self->subtitle->set_text(__(q{Failed}));
         $self->description->set_text($error);
     }
     else {
@@ -188,11 +188,9 @@ method operation_finished ($error = undef) {
 method go_button_pressed () {
     $self->settings_container->hide;
     $self->working(1);
-    $self->subtitle->set_text(
-        $self->encoding->decode(__(q{Saving...})),
-    );
+    $self->subtitle->set_text(__(q{Saving...}));
     $self->description->set_text(
-        $self->encoding->decode(__(q{Saving persistence configuration...})),
+        __(q{Saving persistence configuration...}),
     );
 
     my $error;

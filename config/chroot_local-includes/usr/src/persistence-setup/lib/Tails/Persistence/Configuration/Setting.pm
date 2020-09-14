@@ -108,7 +108,7 @@ has 'configuration_app_desktop_id' => (
 =cut
 
 method _build_name () {
-    $self->encoding->decode(__('Custom'));
+    __('Custom');
 }
 
 method _build_id () {

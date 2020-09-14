@@ -50,10 +50,10 @@ method _build__presets () {
     my @presets = (
         {
             id          => 'PersonalData',
-            name        => $self->encoding->decode(__(q{Personal Data})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Personal Data}),
+            description => __(
                 q{Keep files stored in the `Persistent' directory}
-            )),
+            ),
             icon_name   => 'stock_folder',
             enabled     => 1,
             atoms_args  => [
@@ -65,10 +65,10 @@ method _build__presets () {
         },
         {
             id          => 'GreeterSettings',
-            name        => $self->encoding->decode(__(q{Welcome Screen})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Welcome Screen}),
+            description => __(
                 q{Language, administration password, and additional settings}
-            )),
+            ),
             icon_name   => 'preferences-system',
             enabled     => 0,
             atoms_args  => [
@@ -80,10 +80,10 @@ method _build__presets () {
         },
         {
             id          => 'BrowserBookmarks',
-            name        => $self->encoding->decode(__(q{Browser Bookmarks})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Browser Bookmarks}),
+            description => __(
                 q{Bookmarks saved in the Tor Browser}
-            )),
+            ),
             icon_name   => 'user-bookmarks',
             enabled     => 0,
             atoms_args  => [
@@ -95,10 +95,10 @@ method _build__presets () {
         },
         {
             id          => 'NetworkConnections',
-            name        => $self->encoding->decode(__(q{Network Connections})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Network Connections}),
+            description => __(
                 q{Configuration of network devices and connections}
-            )),
+            ),
             icon_name   => 'network-wired',
             enabled     => 0,
             atoms_args  => [
@@ -110,10 +110,10 @@ method _build__presets () {
         },
         {
             id                  => 'AdditionalSoftware',
-            name                => $self->encoding->decode(__(q{Additional Software})),
-            description         => $self->encoding->decode(__(
+            name                => __(q{Additional Software}),
+            description         => __(
                 q{Software installed when starting Tails}
-            )),
+            ),
             icon_name           => 'package-x-generic',
             enabled             => 0,
             configuration_app_desktop_id => 'org.boum.tails.additional-software-config.desktop',
@@ -130,10 +130,10 @@ method _build__presets () {
         },
         {
             id          => 'Printers',
-            name        => $self->encoding->decode(__(q{Printers})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Printers}),
+            description => __(
                 q{Printers configuration}
-            )),
+            ),
             icon_name   => 'printer',
             enabled     => 0,
             atoms_args  => [
@@ -145,10 +145,10 @@ method _build__presets () {
         },
         {
             id          => 'Thunderbird',
-            name        => $self->encoding->decode(__(q{Thunderbird})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Thunderbird}),
+            description => __(
                 q{Thunderbird emails, feeds, and settings}
-            )),
+            ),
             icon_name   => 'thunderbird',
             enabled     => 0,
             atoms_args  => [
@@ -160,10 +160,10 @@ method _build__presets () {
         },
         {
             id          => 'GnuPG',
-            name        => $self->encoding->decode(__(q{GnuPG})),
-            description => $self->encoding->decode(__(
+            name        => __(q{GnuPG}),
+            description => __(
                 q{GnuPG keyrings and configuration}
-            )),
+            ),
             icon_name   => 'seahorse-key',
             enabled     => 0,
             atoms_args  => [
@@ -175,10 +175,10 @@ method _build__presets () {
         },
         {
             id          => 'BitcoinClient',
-            name        => $self->encoding->decode(__(q{Bitcoin Client})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Bitcoin Client}),
+            description => __(
                 q{Electrum's bitcoin wallet and configuration}
-            )),
+            ),
             icon_name   => 'electrum',
             enabled     => 0,
             atoms_args  => [
@@ -190,10 +190,10 @@ method _build__presets () {
         },
         {
             id          => 'Pidgin',
-            name        => $self->encoding->decode(__(q{Pidgin})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Pidgin}),
+            description => __(
                 q{Pidgin profiles and OTR keyring}
-            )),
+            ),
             icon_name   => 'pidgin',
             enabled     => 0,
             atoms_args  => [
@@ -205,10 +205,10 @@ method _build__presets () {
         },
         {
             id          => 'SSHClient',
-            name        => $self->encoding->decode(__(q{SSH Client})),
-            description => $self->encoding->decode(__(
+            name        => __(q{SSH Client}),
+            description => __(
                 q{SSH keys, configuration and known hosts}
-            )),
+            ),
             icon_name   => 'seahorse-key-ssh',
             enabled     => 0,
             atoms_args  => [
@@ -220,10 +220,10 @@ method _build__presets () {
         },
         {
             id          => 'Dotfiles',
-            name        => $self->encoding->decode(__(q{Dotfiles})),
-            description => $self->encoding->decode(__(
+            name        => __(q{Dotfiles}),
+            description => __(
                 q{Symlink into $HOME every file or directory found in the `dotfiles' directory}
-            )),
+            ),
             icon_name   => 'preferences-desktop',
             enabled     => 0,
             atoms_args  => [

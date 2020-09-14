@@ -90,19 +90,19 @@ has 'passphrase_check_button' => (
 =cut
 
 method BUILD (@args) {
-    $self->title->set_text($self->encoding->decode(__(
+    $self->title->set_text(__(
         q{Persistence wizard - Persistent volume creation}
-    )));
-    $self->subtitle->set_text($self->encoding->decode(__(
+    ));
+    $self->subtitle->set_text(__(
         q{Choose a passphrase to protect the persistent volume}
-    )));
-    $self->description->set_markup($self->encoding->decode(__x(
+    ));
+    $self->description->set_markup(__x(
         q{A {size} persistent volume will be created on the <b>{vendor} {model}</b> device. Data on this volume will be stored in an encrypted form protected by a passphrase.},
         size   => format_bytes($self->size_of_free_space, mode => "iec"),
         vendor => $self->drive_vendor,
         model  => $self->drive_model,
-    )));
-    $self->go_button->set_label($self->encoding->decode(__(q{Create})));
+    ));
+    $self->go_button->set_label(__(q{Create}));
 }
 
 method _build_main_widget () {
@@ -144,9 +144,9 @@ method _build_intro () {
     $intro->set_line_wrap_mode('word');
     $intro->set_single_line_mode(FALSE);
     $intro->set_max_width_chars(72);
-    $intro->set_markup($self->encoding->decode(__(
+    $intro->set_markup(__(
         q{<b>Beware!</b> Using persistence has consequences that must be well understood. Tails can't help you if you use it wrong! See the <i>Encrypted persistence</i> page of the Tails documentation to learn more.}
-    )));
+    ));
 
     return $intro;
 }
@@ -172,17 +172,13 @@ method _build_warning_area () {
 }
 
 method _build_label () {
-    my $label = Gtk3::Label->new($self->encoding->decode(__(
-        q{Passphrase:}
-    )));
+    my $label = Gtk3::Label->new(__(q{Passphrase:}));
     $label->set_alignment(0.0, 0.5);
     return $label;
 }
 
 method _build_verify_label () {
-    my $label = Gtk3::Label->new($self->encoding->decode(__(
-        q{Verify Passphrase:}
-    )));
+    my $label = Gtk3::Label->new(__(q{Verify Passphrase:}));
     $label->set_alignment(0.0, 0.5);
     return $label;
 }
@@ -192,7 +188,7 @@ method _build_warning_label () {
     $label->set_padding(10, 0);
     $label->set_markup(
           "<i>"
-        . $self->encoding->decode(__(q{Passphrase can't be empty}))
+        . __(q{Passphrase can't be empty})
         . "</i>"
     );
     return $label;
@@ -227,7 +223,7 @@ method _build_table () {
 
 method _build_passphrase_check_button () {
     my $check_button = Gtk3::CheckButton->new_with_label(
-        $self->encoding->decode(__(q{Show Passphrase}))
+        __(q{Show Passphrase})
     );
     $check_button->set_active(FALSE);
     $check_button->signal_connect(
@@ -251,7 +247,7 @@ method update_passphrase_ui () {
     if ($passphrase ne $passphrase_verify) {
         $self->warning_label->set_markup(
               "<i>"
-            . $self->encoding->decode(__(q{Passphrases do not match}))
+            . __(q{Passphrases do not match})
             . "</i>"
         );
         $self->warning_image->show;
@@ -260,7 +256,7 @@ method update_passphrase_ui () {
     elsif (length($passphrase) == 0) {
         $self->warning_label->set_markup(
               "<i>"
-            . $self->encoding->decode(__(q{Passphrase can't be empty}))
+            . __(q{Passphrase can't be empty})
             . "</i>"
         );
         $self->warning_image->show;
@@ -306,42 +302,42 @@ method operation_finished (HashRef $replies) {
     if ($error) {
         $self->working(0);
         say STDERR "$error";
-        $self->subtitle->set_text($self->encoding->decode(__(q{Failed})));
+        $self->subtitle->set_text(__(q{Failed}));
         $self->description->set_text($error);
     }
     else {
         say STDERR "created ${created_device}.";
         $self->working(0);
 
-        $self->subtitle->set_text($self->encoding->decode(__(
+        $self->subtitle->set_text(__(
             q{Mounting Tails persistence partition.}
-        )));
-        $self->description->set_text($self->encoding->decode(__(
+        ));
+        $self->description->set_text(__(
             q{The Tails persistence partition will be mounted.}
-        )));
+        ));
         $self->working(1);
         systemx(qw{/sbin/udevadm settle});
         my $mountpoint = $self->mount_persistence_partition_cb->();
         $self->working(0);
         say STDERR "mounted persistence partition on $mountpoint";
 
-        $self->subtitle->set_text($self->encoding->decode(__(
+        $self->subtitle->set_text(__(
             q{Correcting permissions of the persistent volume.}
-        )));
-        $self->description->set_text($self->encoding->decode(__(
+        ));
+        $self->description->set_text(__(
             q{The permissions of the persistent volume will be corrected.}
-        )));
+        ));
         $self->working(1);
         systemx(qw{sudo -n /usr/local/bin/tails-fix-persistent-volume-permissions});
         $self->working(0);
         say STDERR "fixed permissions.";
 
-        $self->subtitle->set_text($self->encoding->decode(__(
+        $self->subtitle->set_text(__(
             q{Creating default persistence configuration.}
-        )));
-        $self->description->set_text($self->encoding->decode(__(
+        ));
+        $self->description->set_text(__(
             q{The default persistence configuration will be created.}
-        )));
+        ));
         $self->working(1);
         $self->create_configuration_cb->();
         $self->working(0);
@@ -354,11 +350,9 @@ method operation_finished (HashRef $replies) {
 method go_button_pressed () {
     $_->hide foreach ($self->intro, $self->warning_area, $self->table,$self->passphrase_check_button);
     $self->working(1);
-    $self->subtitle->set_text(
-        $self->encoding->decode(__(q{Creating...})),
-    );
+    $self->subtitle->set_text(__(q{Creating...}));
     $self->description->set_text(
-        $self->encoding->decode(__(q{Creating the persistent volume...})),
+        __(q{Creating the persistent volume...}),
     );
 
     $self->go_callback->(

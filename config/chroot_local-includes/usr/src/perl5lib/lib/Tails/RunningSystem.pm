@@ -218,10 +218,10 @@ method _build_boot_block_device () {
     } catch {
         $self->display_error(
             $self->main_window,
-            $self->encoding->decode(__(q{Error})),
-            $self->encoding->decode(__(
+            __(q{Error}),
+            __(
                 q{The device Tails is running from cannot be found. Maybe you used the 'toram' option?},
-            )),
+            ),
         );
     };
 
@@ -247,9 +247,9 @@ method _build_boot_drive () {
     } catch {
         $self->display_error(
             $self->main_window,
-            $self->encoding->decode(__(
+            __(
                 q{The drive Tails is running from cannot be found. Maybe you used the 'toram' option?},
-            )),
+            ),
             '',
         );
     };
