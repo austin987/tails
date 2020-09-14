@@ -1,27 +1,9 @@
-// This is the Debian specific preferences file for Mozilla Firefox
-// You can make any change in here, it is the purpose of this file.
-// You can, with this file and all files present in the
-// /etc/thunderbird/pref directory, override any preference that is
-// present in /usr/lib/thunderbird/defaults/pref directory.
-// While your changes will be kept on upgrade if you modify files in
-// /etc/thunderbird/pref, please note that they won't be kept if you
-// do them in /usr/lib/thunderbird/defaults/pref.
+// This is the Tails specific preferences file for Mozilla Thunderbird
+// This file is parsed after the file containing the Debian defaults
+// found in /etc/thunderbird/pref/thunderbird.js
 
+// Disable updates of extensions to have control over versions used
 pref("extensions.update.enabled", false);
-
-// Use LANG environment variable to choose locale from system
-// The old environment setting 'pref("intl.locale.matchOS", true);' is
-// currently not working anymore. The new introduced setting
-// 'intl.locale.requested' is now used for this. Setting an empty string is
-// pulling the system locale into Thunderbird.
-pref("intl.locale.requested", "");
-
-// Disable default mail checking (gnome).
-pref("mail.shell.checkDefaultMail", false);
-
-// if you are not using gnome
-pref("network.protocol-handler.app.http", "x-www-browser");
-pref("network.protocol-handler.app.https", "x-www-browser");
 
 // Disable mail indexing
 pref("mailnews.database.global.indexer.enabled", false);
@@ -346,9 +328,6 @@ pref("general.useragent.override", "");
 
 // Disable WebGL.
 pref("webgl.disabled", true);
-
-// Disable Telemetry completely.
-pref("toolkit.telemetry.enabled", false);
 
 // Disable Geolocation.
 pref("geo.enabled", false);
