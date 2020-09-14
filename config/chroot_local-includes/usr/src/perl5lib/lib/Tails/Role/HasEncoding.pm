@@ -27,8 +27,6 @@ no Moo::sification;
 use Moo::Role; # Moo::Role exports all methods declared after it's "use"'d
 use MooX::late;
 
-with 'Tails::Role::HasCodeset';
-
 use namespace::clean;
 
 has 'encoding' => (
@@ -38,7 +36,7 @@ has 'encoding' => (
 );
 
 method _build_encoding () {
-    find_encoding($self->codeset);
+    find_encoding('UTF-8');
 }
 
 no Moo::Role;
