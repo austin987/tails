@@ -11,11 +11,6 @@ Pre-requisites
 * a Debian Stretch (or newer) system
 * a user that has sudo credentials
 * [[Install perl5lib's dependencies|perl5lib#build-deps]]
-* Environment:
-  - Export location of a checkout of the `stable` branch of the main
-    Tails Git repository:
-
-        export TAILS_GIT_CHECKOUT="/path/to/your/tails/git/repo"
 
 <a id="build-deps"></a>
 
@@ -59,6 +54,7 @@ conditions closer to production):
     
 Run the upstream test suite:
 
+    TAILS_GIT_CHECKOUT="$(git rev-parse --show-toplevel)" \
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
     PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
