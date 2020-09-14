@@ -38,9 +38,9 @@ use Moo;
 use MooX::late;
 use MooX::HandlesVia;
 
+with 'Tails::Role::HasEncoding';
 with 'Tails::Role::DisplayError::Gtk3';
 with 'Tails::Role::HasDBus::System';
-with 'Tails::Role::HasEncoding';
 
 use namespace::clean;
 
