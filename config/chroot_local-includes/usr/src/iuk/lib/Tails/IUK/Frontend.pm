@@ -40,7 +40,6 @@ use namespace::clean;
 # Must be after namespace::clean, so that we can use "around" for the "__"
 # function.
 use Locale::TextDomain 'tails';
-POSIX::setlocale(&POSIX::LC_MESSAGES, '');
 
 use MooX::Options;
 
