@@ -13,6 +13,7 @@ use Carp::Assert::More;
 use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use Number::Format qw(:subs);
+use POSIX;
 use Tails::Persistence::Configuration;
 use Tails::Persistence::Configuration::Setting;
 use Try::Tiny;

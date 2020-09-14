@@ -13,6 +13,7 @@ use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use List::MoreUtils qw{all};
 use Pango;
+use POSIX;
 use UUID::Tiny ':std';
 
 use Glib::Object::Introspection;

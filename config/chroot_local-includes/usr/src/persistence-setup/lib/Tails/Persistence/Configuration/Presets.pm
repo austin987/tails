@@ -17,6 +17,7 @@ use autodie qw(:all);
 use Carp;
 use Function::Parameters;
 use List::MoreUtils qw{all};
+use POSIX;
 use Tails::Persistence::Configuration::Atom;
 use Types::Standard qw(ArrayRef Str);
 

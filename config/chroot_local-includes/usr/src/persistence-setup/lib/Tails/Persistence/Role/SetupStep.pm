@@ -15,6 +15,7 @@ use Glib qw{TRUE FALSE};
 use Gtk3 qw{-init};
 
 use Locale::TextDomain 'tails';
+use POSIX;
 
 use Moo::Role;
 use MooX::late;

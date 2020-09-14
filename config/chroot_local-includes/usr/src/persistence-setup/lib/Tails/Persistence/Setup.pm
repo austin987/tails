@@ -20,6 +20,7 @@ use Net::DBus::Annotation qw(:call);
 use List::Util qw{first min max};
 use Number::Format qw(:subs);
 use Path::Tiny;
+use POSIX;
 use Types::Standard qw(Str HashRef);
 use Try::Tiny;
 use Types::Path::Tiny qw{Dir};

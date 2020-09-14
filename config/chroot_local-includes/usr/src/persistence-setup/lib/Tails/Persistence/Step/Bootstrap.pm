@@ -14,6 +14,7 @@ use Glib qw{TRUE FALSE};
 
 use IPC::System::Simple qw{systemx};
 use Number::Format qw(:subs);
+use POSIX;
 use Types::Standard qw(HashRef);
 
 use Locale::TextDomain 'tails';

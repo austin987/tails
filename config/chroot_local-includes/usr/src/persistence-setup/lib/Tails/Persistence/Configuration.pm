@@ -16,6 +16,7 @@ use Carp;
 use Carp::Assert::More;
 
 use Function::Parameters;
+use POSIX;
 use Tails::Persistence::Configuration::Atom;
 use Tails::Persistence::Configuration::ConfigFile;
 use Tails::Persistence::Configuration::Presets;

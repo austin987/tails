@@ -14,6 +14,7 @@ use Glib qw{TRUE FALSE};
 use Number::Format qw(:subs);
 
 use Locale::TextDomain 'tails';
+use POSIX;
 
 use Moo;
 use MooX::late;

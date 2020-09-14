@@ -19,6 +19,7 @@ use Function::Parameters;
 use IPC::Run;
 use Number::Format qw(:subs);
 use Path::Tiny;
+use POSIX;
 use String::Errf qw{errf};
 use Tails::Download::HTTPS;
 use Tails::RunningSystem;
