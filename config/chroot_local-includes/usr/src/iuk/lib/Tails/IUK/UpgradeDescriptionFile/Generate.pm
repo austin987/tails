@@ -124,6 +124,7 @@ method run () {
             # The version regexp must be the same as in auto/config.
             next if $self->channel eq 'stable' && $channel eq 'alpha' &&
                 $previous_version !~ /~(?:alpha|beta|rc)[0-9]*$/;
+            next if $self->channel eq 'alpha' && $channel eq 'stable';
 
             say STDERR q{* Updating upgrade-description file for previous },
                 'release (', $previous_version, "), ", $channel, " channel: \n  ",
