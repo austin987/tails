@@ -352,9 +352,7 @@ method _build_configuration () {
             $self->display_error(
                 $self->main_window,
                 $self->encoding->decode(__('Error')),
-                $self->encoding->decode(__(
-                    $_,
-                )));
+                $self->encoding->decode($_));
             exit 4;
         };
     }
