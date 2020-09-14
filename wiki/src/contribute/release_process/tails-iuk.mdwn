@@ -62,3 +62,16 @@ Run the full test suite:
        RELEASE_TESTING=1 \
        LC_ALL=C \
        dzil test
+
+To run only BDD tests (ala Cucumber) defined under
+`config/chroot_local-includes/usr/src/iuk/features`, use `pherkin`.
+For example:
+
+    cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/iuk" && \
+    TAILS_GIT_CHECKOUT="$(git rev-parse --show-toplevel)" \
+    NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
+    PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
+    PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
+       RELEASE_TESTING=1 \
+       LC_ALL=C \
+       pherkin features/download_upgrade-description_file
