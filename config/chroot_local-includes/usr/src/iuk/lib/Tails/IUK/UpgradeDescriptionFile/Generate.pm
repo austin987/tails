@@ -115,11 +115,16 @@ method run () {
 
     for my $channel (qw{alpha stable}) {
         for my $previous_version (@{$self->previous_versions}) {
-            # Only generate an UDF on the alpha channel if the previous
-            # version actually uses that channel, i.e. it is not a final one.
+            # Only generate an UDF to a stable version on the alpha channel
+            # if the previous version actually uses that channel,
+            # i.e. it is not a final one. However, when releasing a non-final
+            # version, generate a UDF on the alpha channel for any previous
+            # version, so that users can follow the instructions in the call
+            # for testing to automatically upgrade to a RC.
             # The version regexp must be the same as in auto/config.
-            next if $channel eq 'alpha' &&
+            next if $self->channel eq 'stable' && $channel eq 'alpha' &&
                 $previous_version !~ /~(?:alpha|beta|rc)[0-9]*$/;
+            next if $self->channel eq 'alpha' && $channel eq 'stable';
 
             say STDERR q{* Updating upgrade-description file for previous },
                 'release (', $previous_version, "), ", $channel, " channel: \n  ",
