@@ -38,7 +38,28 @@ module RemoteShell
       socket.puts(JSON.dump([id] + args))
       socket.flush
       loop do
-        line = socket.readline("\n").chomp("\n")
+        # Calling socket.readline() and then just wait for the data to
+        # arrive is prone to stalling for some reason. A timed read()
+        # works much better.
+        #
+        # But timeouts introduce races: imagine if we time out after
+        # reading the data from the socket, but before returning and
+        # exiting the block; then the SocketReadTimeout is thrown and
+        # we lose that data! However, if we limit the timed read to
+        # only the first byte, which we always know what it's supposed
+        # to be, then we can easily detect and correct this race.
+        line_init = nil
+        begin
+          Object::Timeout.timeout(1, SocketReadTimeout) do
+            line_init = socket.read(1)
+          end
+        rescue SocketReadTimeout
+          next
+        end
+        if line_init != '['
+          line_init = '[' + line_init
+        end
+        line = line_init + socket.readline("\n").chomp("\n")
         response_id, status, *rest = JSON.load(line)
         if response_id == id
           if status != 'success'
