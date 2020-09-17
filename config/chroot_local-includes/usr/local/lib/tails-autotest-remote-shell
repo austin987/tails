@@ -1,8 +1,35 @@
 #!/usr/bin/python3
 
-# ATTENTION: Yes, this can be used as a backdoor, but only for an
-# adversary with access to you *physical* serial port, which means
-# that you are screwed any way.
+# ATTENTION: Yes, this is a backdoor! :) But it is of course not
+# enabled by default, and is only intended for automated testing
+# purposes, which you can read more about here:
+#
+#   https://tails.boum.org/contribute/release_process/test/automated_tests/
+#
+# In order for an adversary to make use of this backdoor these things
+# must be the true:
+#
+# 1. You must be running Tails in a virtual machine supporting virtio
+#    channels (e.g. qemu). In particular, this backdoor cannot work
+#    when Tails is running on real hardware. So from now on we'll
+#    assume Tails is running in a virtual machine.
+#
+# 2. The attacker must convince you to add the appropriate virtio
+#    channel to your virtual machine configuration (see
+#    REMOTE_SHELL_DEV below).
+#
+# 3. Since this script is not started automatically the adversary must
+#    somehow convince you to manually start it. For instance by adding
+#    "autotest_never_use_this_option" to the kernel commandline.
+#
+# 4. The attacker must also be able to write to the virtio channel on
+#    your host, which on a well-configured system (e.g. Debian)
+#    requires privileges that give full control of the virtual machine
+#    running Tails.
+#
+# In other words, this backdoor is completely irrelevant, since
+# requirement 4 alone gives them full control over the Tails system,
+# so no backdoor is needed.
 
 import base64
 import fcntl
