@@ -1,3 +1,5 @@
+/* In the end, I couldn't get PayPal to send variables in a GET command.
+
 // The customization of /donate/thanks can be tested using using /donate/thanks/test.
 
 // Store the GET parameters returned by PayPal even before the page finished to launch
@@ -11,3 +13,4 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("name").innerHTML = params.get("first_name");
   }
 });
+*/
