@@ -65,7 +65,7 @@ When /^I start Thunderbird$/ do
     'pref("mail.compose.attachment_reminder", false);',
   ]
   workaround_pref_lines.each do |line|
-    $vm.file_append('/etc/thunderbird/pref/thunderbird.js', line)
+    $vm.file_append('/etc/thunderbird/pref/thunderbird.js', line + "\n")
   end
   # On Jenkins each isotester runs its own email server, using their
   # respecitve snakeoil SSL cert, so we have to import it.
