@@ -22,6 +22,7 @@ def thunderbird_install_host_snakeoil_ssl_cert
   # Inspiration:
   # * https://wiki.mozilla.org/CA:AddRootToFirefox
   # * https://mike.kaply.com/2015/02/10/installing-certificates-into-firefox/
+  debug_log('Installing host snakeoil SSL certificate')
   $vm.file_overwrite(
     '/usr/share/thunderbird/defaults/pref/autoconfig.js',
     <<-EOF
