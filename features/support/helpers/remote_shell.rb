@@ -60,7 +60,7 @@ module RemoteShell
           line_init = '[' + line_init
         end
         line = line_init + socket.readline("\n").chomp("\n")
-        response_id, status, *rest = JSON.load(line)
+        response_id, status, *rest = JSON.parse(line)
         if response_id == id
           if status != 'success'
             # rubocop:disable Style/GuardClause
