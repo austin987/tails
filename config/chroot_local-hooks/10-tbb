@@ -151,63 +151,8 @@ apply_extension_code_signing_hacks () {
     (
         cd "${tmp}"
         7z x -tzip "${tbb_install}/omni.ja"
-        # Any $ in the below in-line patch must be escaped!
-        patch -p1 <<EOF
-diff -Naur omni.orig/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js omni/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js
---- omni.orig/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2000-01-01 00:00:00.000000000 +0000
-+++ omni/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2020-08-19 12:53:26.852000000 +0000
-@@ -223,6 +223,10 @@
-   if (addon.id == "https-everywhere-eff@eff.org") {
-     return true;
-   }
-+  // Allow uBlock installed from Debian (Tails#12571)
-+  if (addon.id == "uBlock0@raymondhill.net") {
-+    return true;
-+  }
-   return addon.isCorrectlySigned !== false;
- }
- 
-diff -Naur omni.orig/modules/addons/XPIDatabase.jsm omni/modules/addons/XPIDatabase.jsm
---- omni.orig/modules/addons/XPIDatabase.jsm	2000-01-01 00:00:00.000000000 +0000
-+++ omni/modules/addons/XPIDatabase.jsm	2020-08-19 12:44:24.880000000 +0000
-@@ -2212,6 +2212,11 @@
-       return true;
-     }
- 
-+    // Ensure that we allow uBlock installed from Debian (Tails#12571)
-+    if (aAddon.id == "uBlock0@raymondhill.net") {
-+      return true;
-+    }
-+
-     if (this.mustSign(aAddon.type) && !aAddon.isCorrectlySigned) {
-       logger.warn(`Add-on \${aAddon.id} is not correctly signed.`);
-       if (Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
-@@ -2819,7 +2824,8 @@
-       }
- 
-       unsigned =
--        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
-+        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned
-+        && aNewAddon.id !== "uBlock0@raymondhill.net";
-       if (unsigned) {
-         throw Error(`Extension \${aNewAddon.id} is not correctly signed`);
-       }
-diff -Naur omni.orig/modules/addons/XPIInstall.jsm omni/modules/addons/XPIInstall.jsm
---- omni.orig/modules/addons/XPIInstall.jsm	2000-01-01 00:00:00.000000000 +0000
-+++ omni/modules/addons/XPIInstall.jsm	2020-08-19 12:40:30.960000000 +0000
-@@ -3835,6 +3835,7 @@
-     if (
-       XPIDatabase.mustSign(addon.type) &&
-       addon.id !== "https-everywhere-eff@eff.org" &&
-+      addon.id !== "uBlock0@raymondhill.net" &&
-       addon.signedState <= AddonManager.SIGNEDSTATE_MISSING
-     ) {
-       throw new Error(
-EOF
-        touch --date="@${tbb_timestamp}" \
-              chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js \
-              modules/addons/XPIDatabase.jsm \
-              modules/addons/XPIInstall.jsm
+        cp -a '/usr/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net' chrome/torbutton/content/extensions/
+        find chrome/torbutton/content/extensions/ -exec touch --date="@${tbb_timestamp}" '{}' \;
         rm "${tbb_install}/omni.ja"
         7z a -mtc=off -tzip "${tbb_install}/omni.ja" *
     )
@@ -219,18 +164,38 @@ EOF
         # Any $ in the below in-line patch must be escaped!
         patch -p1 <<EOF
 diff -Naur browser-omni.orig/modules/BrowserGlue.jsm browser-omni/modules/BrowserGlue.jsm
---- browser-omni.orig/modules/BrowserGlue.jsm	2000-01-01 00:00:00.000000000 +0000
-+++ browser-omni/modules/BrowserGlue.jsm	2020-08-19 12:49:21.224000000 +0000
-@@ -2201,7 +2201,8 @@
-           // disabled. Even if they lack Mozilla's blessing they are enabled
-           // nevertheless.
-           if ((addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) &&
--              (addon.id !== "https-everywhere-eff@eff.org")) {
-+              (addon.id !== "https-everywhere-eff@eff.org") &&
-+              (addon.id !== "uBlock0@raymondhill.net")) {
-             this._notifyUnsignedAddonsDisabled();
-             break;
-           }
+--- browser-omni.orig/modules/BrowserGlue.jsm	2020-09-11 19:25:00.000000000 +0200
++++ browser-omni/modules/BrowserGlue.jsm	2020-09-19 11:44:17.439692582 +0200
+@@ -1367,6 +1367,29 @@
+       }
+     })();
+ 
++    (async () => {
++      const UBLOCK_ORIGIN_ID = "uBlock0@raymondhill.net";
++      const UBLOCK_ORIGIN_BUILTIN_URL =
++        "resource://torbutton/content/extensions/uBlock0@raymondhill.net/";
++      try {
++        const resolvedURI = Services.io.newURI(
++          resProto.resolveURI(Services.io.newURI(UBLOCK_ORIGIN_BUILTIN_URL))
++        );
++        const extensionData = new ExtensionData(resolvedURI);
++        const manifest = await extensionData.loadManifest();
++
++        await AddonManager.maybeInstallBuiltinAddon(
++          UBLOCK_ORIGIN_ID,
++          manifest.version,
++          UBLOCK_ORIGIN_BUILTIN_URL
++        );
++      } catch (e) {
++        const log = Log.repository.getLogger("uBlockOriginBuiltinLoader");
++        log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
++        log.error("Could not install uBlock Origin extension", e);
++      }
++    })();
++
+     if (AppConstants.MOZ_NORMANDY) {
+       Normandy.init();
+     }
 EOF
         touch --date="@${tbb_timestamp}" modules/BrowserGlue.jsm
         rm "${tbb_install}/browser/omni.ja"
@@ -363,7 +328,6 @@ TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
-apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 disable_update_checks "${TBB_INSTALL}"
 strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
@@ -388,6 +352,8 @@ FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/application.ini)
 FAKE_FIREFOX_VERSION=${FIREFOX_VERSION}+fake1
 install_fake_package firefox "${FAKE_FIREFOX_VERSION}" web
 install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
+apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+apt purge --yes firefox ${DEBIAN_EXT_PKGS}
 
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"
