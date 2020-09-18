@@ -450,6 +450,7 @@ class VM
     if running?
       raise 'The remote shell channel can only be added for inactive vms'
     end
+
     if @remote_shell_socket_path.nil?
       @remote_shell_socket_path =
         '/tmp/remote-shell_' + random_alnum_string(8) + '.socket'
