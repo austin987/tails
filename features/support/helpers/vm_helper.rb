@@ -455,16 +455,17 @@ class VM
       @remote_shell_socket_path =
         '/tmp/remote-shell_' + random_alnum_string(8) + '.socket'
     end
-    channel_xml = <<-XML
-    <channel type='unix'>
-      <source mode="bind" path='#{@remote_shell_socket_path}'/>
-      <target type='virtio' name='org.tails.remote_shell.0'/>
-    </channel>
-    XML
-    channel_rexml = REXML::Document.new(channel_xml)
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/devices'].add_element(channel_rexml)
-    update(xml: domain_xml.to_s)
+    update do |xml|
+      channel_xml = <<-XML
+        <channel type='unix'>
+          <source mode="bind" path='#{@remote_shell_socket_path}'/>
+          <target type='virtio' name='org.tails.remote_shell.0'/>
+        </channel>
+      XML
+      xml.elements['domain/devices'].add_element(
+        REXML::Document.new(channel_xml)
+      )
+    end
   end
 
   def remote_shell_is_up?
