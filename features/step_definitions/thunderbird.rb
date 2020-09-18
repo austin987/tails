@@ -70,9 +70,7 @@ When /^I start Thunderbird$/ do
   end
   # On Jenkins each isotester runs its own email server, using their
   # respecitve snakeoil SSL cert, so we have to import it.
-  if ENV['JENKINS_URL']
-    thunderbird_install_host_snakeoil_ssl_cert
-  end
+  thunderbird_install_host_snakeoil_ssl_cert unless ENV['JENKINS_URL'].nil?
   step 'I start "Thunderbird" via GNOME Activities Overview'
   try_for(60) { thunderbird_main }
 end
