@@ -758,6 +758,5 @@ class VM
 
     update { |xml| xml.elements['domain/vcpu'].text = nr_cpus }
   end
-
 end
 # rubocop:enable Metrics/ClassLength
