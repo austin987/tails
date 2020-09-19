@@ -103,10 +103,11 @@ fi
 # record what APT snapshots this build is going to use, so that one
 # can try to reproduce it more reliably
 JENKINS_ENV_PROPERTIES=tails-build-env.list
-echo "# This file is in Java property file format"   >> "$JENKINS_ENV_PROPERTIES"
-echo "# (https://en.wikipedia.org/wiki/.properties)" >> "$JENKINS_ENV_PROPERTIES"
-echo "APT_SNAPSHOTS_SERIALS = $(apt-snapshots-serials cat-json tmp/APT_snapshots.d)" \
-   >> "$JENKINS_ENV_PROPERTIES"
+{
+    echo "# This file is in Java property file format"
+    echo "# (https://en.wikipedia.org/wiki/.properties)"
+    echo "APT_SNAPSHOTS_SERIALS = $(apt-snapshots-serials cat-json tmp/APT_snapshots.d)"
+} >> "$JENKINS_ENV_PROPERTIES"
 
 DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
