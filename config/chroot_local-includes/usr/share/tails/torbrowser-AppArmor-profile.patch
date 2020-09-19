@@ -1,5 +1,5 @@
 diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index ece3159..c1ff8bf 100644
+index 57c0359..61aa937 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,11 +1,12 @@
@@ -33,7 +33,7 @@ index ece3159..c1ff8bf 100644
  
    /etc/machine-id r,
    /var/lib/dbus/machine-id r,
-@@ -44,38 +48,35 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -44,40 +48,35 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -66,6 +66,8 @@ index ece3159..c1ff8bf 100644
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/ r,
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so mr,
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so.* mr,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/libstdc++/*.so mr,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/libstdc++/*.so.* mr,
 +  @{torbrowser_home_dir}/ r,
 +  @{torbrowser_home_dir}/** mr,
 +
@@ -99,7 +101,7 @@ index ece3159..c1ff8bf 100644
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -99,12 +100,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -101,12 +100,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -112,7 +114,7 @@ index ece3159..c1ff8bf 100644
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
    owner /dev/shm/org.mozilla.ipc.[0-9]*.[0-9]* rw, # for Chromium IPC
-@@ -119,6 +114,25 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -121,6 +114,25 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
@@ -138,7 +140,7 @@ index ece3159..c1ff8bf 100644
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -145,5 +159,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -148,5 +160,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    # Yubikey NEO also needs this:
    /sys/devices/**/hidraw/hidraw*/uevent r,
  
