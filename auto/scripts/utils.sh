@@ -33,7 +33,7 @@ git_tag_from_commit() {
 
 # Returns "" if not on a tag
 git_current_tag() {
-	git_tag_from_commit $(git_current_commit)
+	git_tag_from_commit "$(git_current_commit)"
 }
 
 # Try to describe what currently is checked out. Returns "" if we are
@@ -54,9 +54,9 @@ git_on_a_tag() {
 
 git_only_doc_changes_since() {
 	local commit non_doc_diff
-	commit="$(git_commit_from_ref ${1})"
+	commit="$(git_commit_from_ref "${1}")"
 	non_doc_diff="$(git diff \
-		${commit}... \
+		"${commit}"... \
 		-- \
 		'*' \
 		':!/wiki' \

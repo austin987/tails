@@ -5,7 +5,7 @@ set -e
 set -u
 set -x
 
-. "$(dirname $0)/scripts/utils.sh"
+. "$(dirname "$0")/scripts/utils.sh"
 
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
@@ -78,7 +78,7 @@ if grep -qs -E '^Pin:\s+release\s+.*o=Debian Backports' \
     fatal "Found unsupported 'o=Debian Backports' syntax," \
           "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
 fi
-if [ $(dpkg --print-architecture) != amd64 ] ; then
+if [ "$(dpkg --print-architecture)" != amd64 ] ; then
     fatal "Only amd64 build systems are supported"
 fi
 
