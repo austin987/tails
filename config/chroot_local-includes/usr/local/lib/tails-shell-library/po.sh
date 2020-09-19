@@ -9,7 +9,7 @@ po_languages () {
 }
 
 count_msgids () {
-    cat | grep -E '^msgid\s+' | wc -l
+    cat | grep --count -E '^msgid\s+'
 }
 
 count_translated_strings () {
