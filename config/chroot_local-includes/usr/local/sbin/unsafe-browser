@@ -24,8 +24,9 @@ export TEXTDOMAIN
 . /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 error () {
-    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
-    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
+    local cli_text dialog_text
+    cli_text="${CMD}: `gettext \"error:\"` ${@}"
+    dialog_text="<b><big>`gettext \"Error\"`</big></b>
 
 ${@}"
     echo "${cli_text}" >&2
@@ -35,11 +36,12 @@ ${@}"
 
 verify_start () {
     # Make sure the user really wants to start the browser
-    local dialog_msg="<b><big>`gettext \"Launch the Unsafe Browser?\"`</big></b>
+    local dialog_msg launch exit
+    dialog_msg="<b><big>`gettext \"Launch the Unsafe Browser?\"`</big></b>
 
 `gettext \"The Unsafe Browser is not anonymous and the websites that you visit can see your real IP address.\\n\nOnly use the Unsafe Browser to log in to a captive portal or browse trusted web pages on the local network.\"`"
-    local launch="`gettext \"_Launch\"`"
-    local exit="`gettext \"_Exit\"`"
+    launch="`gettext \"_Launch\"`"
+    exit="`gettext \"_Exit\"`"
     if ! sudo -u "${SUDO_USER}" \
          zenity --question --ellipsize --title "" --text "${dialog_msg}" --default-cancel \
          --ok-label "${launch}"  --cancel-label "${exit}"; then
@@ -48,14 +50,16 @@ verify_start () {
 }
 
 show_start_notification () {
-    local title="`gettext \"Starting the Unsafe Browser...\"`"
-    local body="`gettext \"This may take a while, so please be patient.\"`"
+    local title body
+    title="`gettext \"Starting the Unsafe Browser...\"`"
+    body="`gettext \"This may take a while, so please be patient.\"`"
     tails-notify-user "${title}" "${body}" 10000
 }
 
 show_shutdown_notification () {
-    local title="`gettext \"Shutting down the Unsafe Browser...\"`"
-    local body="`gettext \"This may take a while, and you may not restart the Unsafe Browser until it is properly shut down.\"`"
+    local title body
+    title="`gettext \"Shutting down the Unsafe Browser...\"`"
+    body="`gettext \"This may take a while, and you may not restart the Unsafe Browser until it is properly shut down.\"`"
     tails-notify-user "${title}" "${body}" 10000
 }
 

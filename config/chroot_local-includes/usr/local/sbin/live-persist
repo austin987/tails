@@ -177,7 +177,8 @@ list_gpt_volumes ()
 		then
 			continue
 		fi
-		local result="$(probe_for_gpt_name "${labels}" ${dev})"
+		local result
+		result="$(probe_for_gpt_name "${labels}" ${dev})"
 		if [ -n "${result}" ]
 		then
 			echo ${result#*=}
@@ -482,7 +483,8 @@ activate_volumes ()
 close_volumes ()
 {
 	local volumes=${@}
-	local custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
+	local custom_mounts
+	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${volumes}
 	while read device source dest options # < ${custom_mounts}
 	do
@@ -494,7 +496,8 @@ close_volumes ()
 	rm -f ${custom_mounts} 2> /dev/null
 	for vol in ${volumes}
 	do
-		local backing=$(where_is_mounted ${vol})
+		local backing
+		backing=$(where_is_mounted ${vol})
 		umount ${backing}
 	done
 }

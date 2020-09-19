@@ -12,7 +12,8 @@ NEW_DB="${PERSISTENT_DATA_DIR}/keepassx.kdbx"
 
 prompt_for_database_renaming() {
     local filename="${1}"
-    local dialog_msg="`eval_gettext \"<b><big>Do you want to rename your <i>KeePassXC</i> database?</big></b>
+    local dialog_msg
+    dialog_msg="`eval_gettext \"<b><big>Do you want to rename your <i>KeePassXC</i> database?</big></b>
 
 You have a <i>KeePassXC</i> database in your <i>Persistent</i> folder:
 
@@ -20,8 +21,10 @@ You have a <i>KeePassXC</i> database in your <i>Persistent</i> folder:
 
 Renaming it to <i>keepassx.kdbx</i> would allow <i>KeePassXC</i> to open it automatically in the future.\"`
 "
-    local rename="`gettext \"Rename\"`"
-    local open="`gettext \"Keep current name\"`"
+    local rename
+    rename="`gettext \"Rename\"`"
+    local open
+    open="`gettext \"Keep current name\"`"
     zenity --question --ellipsize --title "" --text "${dialog_msg}" --default-cancel \
            --ok-label "${rename}" --cancel-label "${open}"
 }
