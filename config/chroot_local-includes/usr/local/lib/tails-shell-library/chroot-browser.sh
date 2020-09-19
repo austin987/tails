@@ -54,7 +54,7 @@ setup_chroot_for_browser () {
     # We have to pay attention to the order we stack the filesystems;
     # newest must be first, and remember that the .module file lists
     # oldest first, newest last.
-    while read rootfs_dir; do
+    while read -r rootfs_dir; do
         rootfs_dir="${rootfs_dirs_path}/${rootfs_dir}"
         mountpoint -q "${rootfs_dir}" && \
         lowerdirs="${rootfs_dir}:${lowerdirs}"

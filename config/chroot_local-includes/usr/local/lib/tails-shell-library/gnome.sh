@@ -19,6 +19,6 @@ export_gnome_env() {
     tr '\0' '\n' < "/proc/${gnome_shell_pid}/environ" | \
         grep -E "^${vars}=" > "${tmp_env_file}"
     # shellcheck disable=SC2163
-    while read line; do export "${line}"; done < "${tmp_env_file}"
+    while read -r line; do export "${line}"; done < "${tmp_env_file}"
     rm "${tmp_env_file}"
 }
