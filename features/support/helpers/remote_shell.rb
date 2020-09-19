@@ -10,7 +10,7 @@ module RemoteShell
   # This exception is *only* supposed to be use internally in
   # communicate() -- in particular it must not be raised by a
   # Timeout.timeout() wrapping around communicate() or any use of it.
-  class SocketReadTimeout < Exception
+  class SocketReadTimeout < RuntimeError
   end
 
   # Used to differentiate vs Timeout::Error, which is thrown by
