@@ -43,6 +43,7 @@ setup_chroot_for_browser () {
     # for creating isolated jails, the chroot can be used as its rootfs.
 
     local cleanup_cmd="try_cleanup_browser_chroot \"${chroot}\" \"${cow}\" \"${user}\""
+    # shellcheck disable=SC2064
     trap "${cleanup_cmd}" INT EXIT
 
     local rootfs_dir

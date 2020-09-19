@@ -2,7 +2,9 @@
 
 TOR_RC_DEFAULTS=/usr/share/tor/tor-service-defaults-torrc
 TOR_RC=/etc/tor/torrc
+# shellcheck disable=SC2034
 TOR_LOG=/var/log/tor/log
+# shellcheck disable=SC2034
 TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new

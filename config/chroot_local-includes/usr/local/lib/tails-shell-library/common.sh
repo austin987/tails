@@ -49,6 +49,7 @@ no_abort() {
         set_e_was_enabled=false
     fi
     "${@}"
+    # shellcheck disable=SC2034
     _NO_ABORT_RET=${?}
     if [ "${set_e_was_enabled}" = true ]; then
         set -e
@@ -59,6 +60,7 @@ no_abort() {
 is_package_installed() {
     local package_name package_status
     package_name="${1}"
+    # shellcheck disable=SC2016
     package_status="$(no_abort dpkg-query --show \
                       --showformat='${db:Status-Status}' "${package_name}" \
                       2>/dev/null)"

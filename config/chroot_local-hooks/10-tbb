@@ -352,6 +352,7 @@ DEBIAN_EXT_PKGS="webext-ublock-origin"
 TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
+# shellcheck disable=SC2153
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
@@ -378,6 +379,7 @@ FAKE_FIREFOX_VERSION=${FIREFOX_VERSION}+fake1
 install_fake_package firefox "${FAKE_FIREFOX_VERSION}" web
 install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
 
+# shellcheck disable=SC2153
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"
 

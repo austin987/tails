@@ -1,6 +1,7 @@
 #!/bin/sh
 
 TBB_INSTALL=/usr/local/lib/tor-browser
+# shellcheck disable=SC2034
 TBB_PROFILE=/etc/tor-browser/profile
 TBB_EXT=/usr/local/share/tor-browser-extensions
 TOR_LAUNCHER_INSTALL=/usr/local/lib/tor-launcher-standalone
