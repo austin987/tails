@@ -77,7 +77,7 @@ mac_spoof_panic() {
         log "Failed to down NIC ${nic} in panic mode."
     fi
     module=$(get_module_used_by_nic "${nic}")
-    nic_name="$(get_name_of_nic ${nic})"
+    nic_name="$(get_name_of_nic "${nic}")"
     echo "install ${module} /bin/true" >> \
          /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :

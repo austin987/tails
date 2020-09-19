@@ -257,7 +257,7 @@ run_browser_in_chroot () {
     local local_user="${4}"
     local wm_class="${5}"
     local profile
-    profile="$(browser_profile_dir ${browser_name} ${chroot_user})"
+    profile="$(browser_profile_dir "${browser_name}" "${chroot_user}")"
 
     sudo -u "${local_user}" xhost "+SI:localuser:${chroot_user}"
     chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \

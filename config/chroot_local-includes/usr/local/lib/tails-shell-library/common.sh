@@ -24,7 +24,7 @@ wait_until() {
         if [ "$(clock_gettime_monotonic)" -ge "${timeout_at}" ]; then
             return 1
         fi
-        sleep ${delay}
+        sleep "${delay}"
     done
     return 0
 }
