@@ -22,6 +22,7 @@ git_commit_from_ref() {
 	git rev-parse --verify "${@}" 2>/dev/null || :
 }
 
+# shellcheck disable=SC2120
 git_current_commit() {
 	git_commit_from_ref "${@}" HEAD
 }
@@ -73,6 +74,7 @@ base_branch() {
 }
 
 base_branches() {
+	# shellcheck disable=SC2086
 	echo ${BASE_BRANCHES}
 }
 

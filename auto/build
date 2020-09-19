@@ -15,8 +15,10 @@ umask 022
 
 BUILD_LOG="${BUILD_BASENAME}.buildlog"
 exec >  >(tee -a "$BUILD_LOG")
+# shellcheck disable=SC2064
 trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 exec 2> >(tee -a "$BUILD_LOG" >&2)
+# shellcheck disable=SC2064
 trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 
 ### functions
@@ -164,6 +166,7 @@ print_iso_size binary.iso
 echo "I: Hybriding it..."
 touch chroot/binary.iso
 mount --bind binary.iso chroot/binary.iso
+# shellcheck disable=SC2086
 chroot chroot isohybrid $AMNESIA_ISOHYBRID_OPTS binary.iso || fatal "isohybrid failed"
 umount chroot/binary.iso
 print_iso_size binary.iso
