@@ -70,7 +70,7 @@ git_only_doc_changes_since() {
 }
 
 base_branch() {
-	cat config/base_branch | head -n1
+	head -n1 config/base_branch
 }
 
 base_branches() {
