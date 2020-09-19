@@ -6,8 +6,6 @@ TOR_RC=/etc/tor/torrc
 TOR_LOG=/var/log/tor/log
 # shellcheck disable=SC2034
 TOR_DIR=/var/lib/tor
-TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
-NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
 tor_rc_lookup() {
 	grep --no-filename "^${1}\s" "${TOR_RC_DEFAULTS}" "${TOR_RC}" | \
