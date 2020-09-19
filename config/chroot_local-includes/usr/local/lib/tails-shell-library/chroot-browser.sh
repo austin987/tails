@@ -221,6 +221,19 @@ delete_chroot_browser_icons() {
     chmod a+r "${pack}"
 }
 
+delete_chroot_browser_embedded_extensions_in_omni_ja () {
+    local chroot="${1}" ; shift
+    # Now $@ is a list of extensions to delete.
+    local pack="${chroot}/${TBB_INSTALL}/omni.ja"
+
+    local extension
+    while [ -n "${*:-}" ]; do
+        extension="${1}" ; shift
+        7z d -tzip "${pack}" "chrome/torbutton/content/extensions/${extension}"
+    done
+    chmod a+r "${pack}"
+}
+
 configure_chroot_browser () {
     local chroot="${1}" ; shift
     local browser_user="${1}" ; shift
@@ -239,6 +252,9 @@ configure_chroot_browser () {
         "${browser_name}" "${browser_user}" "${best_locale}"
     delete_chroot_browser_searchplugins "${chroot}"
     delete_chroot_browser_icons "${chroot}"
+    delete_chroot_browser_embedded_extensions_in_omni_ja "${chroot}" \
+        'uBlock0@raymondhill.net' \
+        'https-everywhere'
     set_chroot_browser_permissions "${chroot}" "${browser_name}" \
         "${browser_user}"
 }
