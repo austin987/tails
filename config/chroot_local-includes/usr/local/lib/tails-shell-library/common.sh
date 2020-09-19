@@ -19,7 +19,7 @@ wait_until() {
     timeout="${1}"
     check_expr="${2}"
     delay="${3:-1}"
-    timeout_at=$(expr $(clock_gettime_monotonic) + ${timeout})
+    timeout_at=$(($(clock_gettime_monotonic) + timeout))
     until eval "${check_expr}"; do
         if [ "$(clock_gettime_monotonic)" -ge "${timeout_at}" ]; then
             return 1

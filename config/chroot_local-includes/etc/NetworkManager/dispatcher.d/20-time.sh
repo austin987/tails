@@ -70,7 +70,7 @@ wait_for_tor_consensus_helper() {
 	tries=0
 	while ! has_consensus && [ $tries -lt 10 ]; do
 		inotifywait -q -t 30 -e close_write -e moved_to ${TOR_DIR} || log "timeout"
-		tries=$(expr $tries + 1)
+		tries=$((tries + 1))
 	done
 
 	# return some kind of success measurement
