@@ -139,11 +139,8 @@ EOF
     rm -r "${tmp}"
 }
 
-# TBB works around the lack of code signing for its extensions by
-# hacking in exceptions. We do the same!
-# Improving this is tracked on #12571.
-apply_extension_code_signing_hacks () {
-    local tbb_install tbb_timestamp
+embed_extensions_in_omni_ja () {
+    local tbb_install tbb_timestamp tmp
     tbb_install="${1}"
     tbb_timestamp="${2}"
 
@@ -280,13 +277,27 @@ get_firefox_version() {
 }
 
 install_debian_extensions() {
-    local destination
+    local destination timestamp fake_firefox_version firefox_version
     destination="${1}"
-    shift
-    apt-get install --yes "${@}"
-    ln -s '/usr/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net' \
-          "${destination}"/'uBlock0@raymondhill.net'
+    timestamp="${2}"
+
+    # Install a fake firefox equivs package to satisfy the
+    # dependencies for the extensions we are about to install.
+    firefox_version=$(get_firefox_version "${destination}"/application.ini)
+    fake_firefox_version=${firefox_version}+fake1
+    install_fake_package firefox "${fake_firefox_version}" web
+
+    apt-get install --yes webext-ublock-origin
     patch -p1 < /usr/share/tails/uBlock-disable-autoUpdate.diff
+
+    # Apply the same hack for our extension as the Tor Browser does
+    # for HTTPS-Everywhere in order to bypass the mandatory extension
+    # signature check, which we lack since we install our extensions
+    # from Debian ...
+    embed_extensions_in_omni_ja "${destination}" "${timestamp}"
+    # ... and then remove the packages we just installed, since we
+    # don't need them outside of omni.ja.
+    apt purge --yes firefox webext-ublock-origin
 }
 
 create_default_profile() {
@@ -320,15 +331,12 @@ if echo "${TBB_TARBALLS}" | grep --quiet 'tor-browser-linux64-tbb-nightly'; then
     NIGHTLY_BUILD=yes
 fi
 
-# The Firefox extensions we want to install from Debian and make
-# available in the Tor Browser.
-DEBIAN_EXT_PKGS="webext-ublock-origin"
-
 TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+install_debian_extensions "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 disable_update_checks "${TBB_INSTALL}"
 strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 install_tor_launcher "${TBB_INSTALL}" "${TOR_LAUNCHER_INSTALL}"
@@ -345,15 +353,6 @@ rm -r "${TMP}"
 # directory...
 mv "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
 rmdir "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions
-
-# ... and then install a few Firefox extension by using a fake
-# firefox equivs package to satisfy the dependencies.
-FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/application.ini)
-FAKE_FIREFOX_VERSION=${FIREFOX_VERSION}+fake1
-install_fake_package firefox "${FAKE_FIREFOX_VERSION}" web
-install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
-apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
-apt purge --yes firefox ${DEBIAN_EXT_PKGS}
 
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"
