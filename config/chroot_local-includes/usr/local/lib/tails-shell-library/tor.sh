@@ -52,7 +52,7 @@ tor_bootstrap_progress() {
        local res
        res=$(tor_control_getinfo status/bootstrap-phase | \
                     sed --regexp-extended 's/^.* BOOTSTRAP PROGRESS=([[:digit:]]+) .*$/\1/')
-       echo ${res:-0}
+       echo "${res:-0}"
 }
 
 tor_is_working() {
