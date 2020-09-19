@@ -176,9 +176,6 @@ set_chroot_browser_name () {
     local browser_name="${3}"
     local browser_user="${4}"
     local locale="${5}"
-    local ext_dir="${chroot}/${TBB_EXT}"
-    local browser_profile_ext_dir
-    browser_profile_ext_dir="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")/extensions"
 
     # Torbutton is installed in the browser's omni.ja and it decides
     # the browser name.
@@ -201,7 +198,6 @@ set_chroot_browser_name () {
 
 delete_chroot_browser_searchplugins() {
     local chroot="${1}"
-    local ext_dir="${chroot}/${TBB_EXT}"
 
     pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
     local searchplugins_dir="chrome/browser/search-extensions"
@@ -224,7 +220,6 @@ delete_chroot_browser_searchplugins() {
 # shown in the tab of a "New Tab" page.
 delete_chroot_browser_icons() {
     local chroot="${1}"
-    local ext_dir="${chroot}/${TBB_EXT}"
 
     pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
     7z d -tzip "${pack}" "chrome/browser/content/branding/icon*.png"
