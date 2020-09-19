@@ -15,7 +15,7 @@ export_gnome_env() {
         return
     fi
     local tmp_env_file
-    tmp_env_file="$(tempfile)"
+    tmp_env_file="$(mktemp)"
     local vars
     # shellcheck disable=SC2086
     vars="($(echo ${GNOME_ENV_VARS} | tr ' ' '|'))"
