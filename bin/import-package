@@ -38,6 +38,7 @@ REMOTE_USER_AT_HOST='reprepro@incoming.deb.tails.boum.org'
 umask 0022
 WORKDIR=$(mktemp -d)
 
+# shellcheck disable=SC2064
 trap "rm -r '$WORKDIR'" EXIT HUP INT QUIT TERM
 
 (
@@ -72,11 +73,13 @@ apt-get download \
 chown "\$ORIG_OWNER" '$WORKDIR'
 EOF
    chmod 755 script
+   # shellcheck disable=SC2086
    sudo pbuilder execute --bindmounts "$WORKDIR" $PBUILDER_OPTIONS -- script
    rm script
 
    REMOTE_WORKDIR=$(ssh "$REMOTE_USER_AT_HOST" mktemp -d)
    scp ./* "$REMOTE_USER_AT_HOST":"$REMOTE_WORKDIR"/
+   # shellcheck disable=SC2029
    ssh "$REMOTE_USER_AT_HOST" \
        "reprepro includedsc '$TARGET_DIST' '$REMOTE_WORKDIR'/*.dsc && \
         reprepro includedeb '$TARGET_DIST' '$REMOTE_WORKDIR'/*.deb && \

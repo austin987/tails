@@ -70,6 +70,7 @@ guess_best_tor_browser_locale() {
     fi
     # If we use locale xx-YY and there is no langpack for xx-YY nor xx
     # there may be a similar locale xx-ZZ that we should use instead.
+    # shellcheck disable=SC2012
     similar_locale="$(ls -1 "${TBB_EXT}" | \
         sed -n "s,^langpack-\(${short_locale}-[A-Z]\+\)@firefox.mozilla.org.xpi$,\1,p" | \
         head -n 1)" || :
@@ -85,6 +86,7 @@ guess_best_tor_launcher_locale() {
     local long_locale short_locale
     long_locale="$(echo "${LANG}" | sed -e 's/\..*$//' -e 's/_/-/')"
     short_locale="$(echo "${long_locale}" | cut -d"-" -f1)"
+    # shellcheck disable=SC2010
     if [ -e "${TOR_LAUNCHER_LOCALES_DIR}/${long_locale}" ]; then
         echo "${long_locale}"
     elif ls -1 "${TOR_LAUNCHER_LOCALES_DIR}" | grep -q "^${short_locale}\(-[A-Z]\+\)\?$"; then

@@ -59,6 +59,7 @@ has_consensus() {
 	if [ $# -ge 1 ]; then
 		files="$@"
 	fi
+	# shellcheck disable=SC2086
 	grep -qs "^valid-until ${DATE_RE}"'$' ${files}
 }
 

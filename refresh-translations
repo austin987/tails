@@ -198,6 +198,7 @@ while [ -n "${1:-}" ]; do
 done
 
 # Schedule clean up
+# shellcheck disable=SC2064
 trap "rm -fr po/*.new po/*.orig ; [ '$KEEP_TMP_POT' = yes ] || rm -fr tmp/pot" EXIT
 
 # Update POT files
@@ -218,9 +219,11 @@ if ! no_left_out_files; then
 fi
 
 # Update PO files
+# shellcheck disable=SC2046
 intltool_update_po $(po_languages)
 
 # Update files that are actually used at runtime
+# shellcheck disable=SC2046
 refresh_mo $(po_languages)
 intltool_merge_desktop
 intltool_merge_xml
