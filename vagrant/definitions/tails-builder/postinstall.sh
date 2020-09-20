@@ -5,7 +5,7 @@ set -u
 # Based on ypcs' scripts found at:
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
 
-echo "$(date)" > /var/lib/vagrant_box_build_time
+date > /var/lib/vagrant_box_build_time
 
 export DEBIAN_FRONTEND="noninteractive"
 
@@ -42,8 +42,7 @@ apt-get -y install gnupg
 apt-key add /tmp/tails.binary.gpg
 
 echo "I: Adding standard APT suites..."
-cat "/etc/apt/sources.list" | \
-	sed -e 's/buster/buster-updates/' \
+sed -e 's/buster/buster-updates/' "/etc/apt/sources.list" \
 	> "/etc/apt/sources.list.d/buster-updates.list"
 
 echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ buster/updates main" \

@@ -5,7 +5,7 @@ set -u
 # Based on ypcs' scripts found at:
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
 
-CURDIR="$(realpath $(dirname $0))"
+CURDIR="$(realpath "$(dirname "$0")")"
 ROOT="$1"
 [ -z "${ROOT}" ] && echo "E: Missing argument!" && exit 1
 
