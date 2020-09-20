@@ -14,6 +14,7 @@ cp --dereference /etc/resolv.conf "${ROOT}/etc/resolv.conf"
 install --mode=0755 "${CURDIR}/postinstall.sh" "${ROOT}/postinstall.sh"
 cp "${CURDIR}/../../../config/chroot_sources/tails.binary.gpg" "${ROOT}/tmp/"
 
+# shellcheck disable=SC2064
 trap "umount ${ROOT}/proc" EXIT HUP INT QUIT TERM
 chroot "${ROOT}" mount -t proc proc /proc
 chroot "${ROOT}" "/postinstall.sh"

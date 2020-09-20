@@ -48,6 +48,7 @@ fi
 rm -f "${TARGET_NAME}".*
 
 # FIXME: vmdebootstrap is orphaned/deprecated (#15349).
+# shellcheck disable=SC2154
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
      LC_ALL=${LC_ALL} \
      ARCHITECTURE=${ARCHITECTURE} \
