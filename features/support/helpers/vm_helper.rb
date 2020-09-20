@@ -89,6 +89,7 @@ class VM
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot(TAILS_ISO)
     plug_network
+    add_remote_shell_channel
   rescue StandardError => e
     destroy_and_undefine
     raise e
@@ -434,12 +435,46 @@ class VM
     execute(cmd, **options)
   end
 
+  def remote_shell_socket_path
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    domain_rexml.elements.each('domain/devices/channel') do |e|
+      target = e.elements['target']
+      if target.attribute('name').to_s == 'org.tails.remote_shell.0'
+        return e.elements['source'].attribute('path').to_s
+      end
+    end
+    return nil
+  end
+
+  def add_remote_shell_channel
+    if running?
+      raise 'The remote shell channel can only be added for inactive vms'
+    end
+
+    if @remote_shell_socket_path.nil?
+      @remote_shell_socket_path =
+        '/tmp/remote-shell_' + random_alnum_string(8) + '.socket'
+    end
+    update do |xml|
+      channel_xml = <<-XML
+        <channel type='unix'>
+          <source mode="bind" path='#{@remote_shell_socket_path}'/>
+          <target type='virtio' name='org.tails.remote_shell.0'/>
+        </channel>
+      XML
+      xml.elements['domain/devices'].add_element(
+        REXML::Document.new(channel_xml)
+      )
+    end
+  end
+
   def remote_shell_is_up?
     msg = 'hello?'
     Timeout.timeout(3) do
       execute_successfully("echo '#{msg}'").stdout.chomp == msg
     end
   rescue StandardError
+    debug_log("The remote shell failed to respond within 3 seconds")
     false
   end
 
@@ -716,14 +751,6 @@ class VM
   def power_off
     @domain.destroy if running?
     @display.stop
-  end
-
-  def get_remote_shell_port
-    domain_xml.elements.each('domain/devices/serial') do |e|
-      if e.attribute('type').to_s == 'tcp'
-        return e.elements['source'].attribute('service').to_s.to_i
-      end
-    end
   end
 
   def set_vcpu(nr_cpus)
