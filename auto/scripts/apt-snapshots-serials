@@ -16,9 +16,13 @@ get_latest_serial() {
 		| awk -F': ' '/^Archive serial: / {print $2}'
 }
 
+list_origins () {
+	find "$CONFIG" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
+}
+
 if [ $# -eq 0 ]; then
 	action="cat"
-	ORIGINS="$(cd ${CONFIG}; ls -d *)"
+	ORIGINS="$(list_origins)"
 else
 	action="${1}"
 	shift
@@ -45,7 +49,7 @@ else
 		;;
 		cat|get-latest|freeze|thaw)
 			if [ $# -eq 0 ]; then
-				ORIGINS="$(cd "${CONFIG}"; ls -d *)"
+				ORIGINS="$(list_origins)"
 			else
 				ORIGINS="${@}"
 			fi

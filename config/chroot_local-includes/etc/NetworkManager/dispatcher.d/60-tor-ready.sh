@@ -39,5 +39,5 @@ if pgrep -f "${TOR_LAUNCHER_PROCESS_REGEX}"; then
 fi
 
 /usr/local/sbin/tails-notify-user \
-   "`gettext \"Tor is ready\"`" \
-   "`gettext \"You can now access the Internet.\"`"
+   "$(gettext "Tor is ready")" \
+   "$(gettext "You can now access the Internet.")"

@@ -63,13 +63,13 @@ has_consensus() {
 }
 
 has_only_unverified_consensus() {
-	[ ! -e ${TOR_CONSENSUS} ] && has_consensus ${TOR_UNVERIFIED_CONSENSUS}
+	[ ! -e "${TOR_CONSENSUS}" ] && has_consensus "${TOR_UNVERIFIED_CONSENSUS}"
 }
 
 wait_for_tor_consensus_helper() {
 	tries=0
 	while ! has_consensus && [ $tries -lt 10 ]; do
-		inotifywait -q -t 30 -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+		inotifywait -q -t 30 -e close_write -e moved_to "${TOR_DIR}" || log "timeout"
 		tries=$((tries + 1))
 	done
 
@@ -100,7 +100,7 @@ wait_for_working_tor() {
 	while ! tor_is_working; do
 		if [ "$waited" -lt ${INOTIFY_TIMEOUT} ]; then
 			sleep 2
-			waited=$(($waited + 2))
+			waited=$((waited + 2))
 		else
 			log "Timed out waiting for Tor to be working"
 			return 1
@@ -134,21 +134,21 @@ maybe_set_time_from_tor_consensus() {
 	local consensus=${TOR_CONSENSUS}
 
 	if has_only_unverified_consensus \
-	   && ln -f ${TOR_UNVERIFIED_CONSENSUS} ${TOR_UNVERIFIED_CONSENSUS_HARDLINK}; then
-		consensus=${TOR_UNVERIFIED_CONSENSUS_HARDLINK}
+	   && ln -f "${TOR_UNVERIFIED_CONSENSUS}" "${TOR_UNVERIFIED_CONSENSUS_HARDLINK}"; then
+		consensus="${TOR_UNVERIFIED_CONSENSUS_HARDLINK}"
 		log "We do not have a Tor verified consensus, let's use the unverified one."
 	fi
 
 	log "Waiting for the chosen Tor consensus file to contain a valid time interval..."
-	while ! has_consensus ${consensus}; do
-		inotifywait -q -t ${INOTIFY_TIMEOUT} -e close_write -e moved_to ${TOR_DIR} || log "timeout"
+	while ! has_consensus "${consensus}"; do
+		inotifywait -q -t "${INOTIFY_TIMEOUT}" -e close_write -e moved_to "${TOR_DIR}" || log "timeout"
 	done
 	log "The chosen Tor consensus now contains a valid time interval, let's use it."
 
 
 	# Get various date points in Tor's format, and do some sanity checks
-	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' ${consensus})
-	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' ${consensus})
+	vstart=$(sed -n "/^valid-after \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' "${consensus}")
+	vend=$(sed -n "/^valid-until \(${DATE_RE}\)"'$/s//\1/p; t q; b; :q q' "${consensus}")
 	vmid=$(date -ud "${vstart} -0130" +'%F %T')
 	log "Tor: valid-after=${vstart} | valid-until=${vend}"
 
@@ -175,7 +175,7 @@ maybe_set_time_from_tor_consensus() {
 tor_cert_valid_after() {
 	# Only print the last = freshest match
 	sed -n 's/^.*certificate lifetime runs from \(.*\) through.*$/\1/p' \
-	    ${TOR_LOG} | tail -n 1
+	    "${TOR_LOG}" | tail -n 1
 }
 
 tor_cert_lifetime_invalid() {
@@ -185,7 +185,7 @@ tor_cert_lifetime_invalid() {
 	# The log severity will be "warn" if bootstrapping with
 	# authorities and "info" with bridges.
 	grep -q "\[\(warn\|info\)\] Certificate \(not yet valid\|already expired\)\." \
-	    ${TOR_LOG}
+	    "${TOR_LOG}"
 }
 
 # This check is blocking until Tor reaches either of two states:
