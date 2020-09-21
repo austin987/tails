@@ -803,6 +803,8 @@ files metadata:
        cd - && \
        rm -rf "${tmp:?}"
     done
+    mv "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages} \
+       "${ISOS:?}/tails-amd64-${VERSION:?}"
 
 Due to various directory changes, one needs to manually go back to the
 desired directory, likely using:
@@ -817,42 +819,6 @@ Lastly, let's set some variables to be used later:
     IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.img"
     IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
-
-Push images to ISO history
-==========================
-
-Push the released ISO and USB images and their artifacts (`.buildlog`,
-`.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
-repo, so that:
-
- - The Jenkins `parallel_build_IUKs` job can fetch them.
- - Our isotesters can fetch them from there for their testing.
-
-How to do so is described in the `ISO_history.mdwn` document in the RM team's
-Git repo.
-
-If the release manager has `$ISOS` pointing to a checkout of the ISO
-history repository, the following commands might be useful. For the
-record, images and their signatures are already in that directory, and
-one just needs to ship some metadata along:
-
-    (cd ${ISOS?:}/tails-amd64-${VERSION?:} && \
-    cp "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}{.buildlog,.build-manifest,.packages} . && \
-    git annex sync && \
-    git annex add . && \
-    git commit -m "Add Tails ${VERSION?:} images and metadata." && \
-    git annex sync && \
-    git annex copy --to origin .)
-
-This transfer can take a while, and it's possible to proceed with the
-next section in the meanwhile, up to the following step (included):
-
- - Build the Incremental Upgrade Kits locally
-
-However, the following step will require those files being transferred
-and made available on the relevant web server:
-
- - Build the Incremental Upgrade Kits on Jenkins
 
 <a id="prepare-iuk"></a>
 
@@ -967,12 +933,34 @@ repo, so that:
  - The Jenkins `parallel_build_IUKs` job can fetch them.
  - Our isotesters can fetch them from there for their testing.
 
-XXX: Dear first-RM-who-reads-this, please replace the next step
-with new ones that are not affected by `git-annex` performance issues
-([[!tails_ticket 17686#note_154190]]).
+Make sure that Jenkins has finished building so you have set
+`MATCHING_JENKINS_IMAGES_BUILD_ID` (see above), then run:
 
-How to do so is described in the `ISO_history.mdwn` document in the RM team's
-Git repo.
+    ssh misc.lizard mkdir tails-amd64-${VERSION:?} && \
+    scp "${ISOS:?}"/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages,iso.sig,img.sig} \
+        misc.lizard:tails-amd64-${VERSION:?} && \
+    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
+       | ssh misc.lizard gpg --import && \
+    ssh misc.lizard << EOF && \
+       cd tails-amd64-${VERSION:?} && \
+       wget --quiet \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
+       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
+       gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
+    EOF
+    ssh misc.lizard << EOF
+       ( [ -d isos ] || git clone gitolite@puppet-git.lizard:isos.git ) && \
+       cd isos && \
+       git annex sync && \
+       git annex import ../tails-amd64-${VERSION:?} && \
+       rmdir ../tails-amd64-${VERSION:?} && \
+       git commit -m "Add Tails ${VERSION:?}" && \
+       git annex sync && \
+       git annex copy tails-amd64-${VERSION:?} --to origin && \
+       git annex drop tails-amd64-${VERSION:?} && \
+       git annex sync
+    EOF
 
 Then, wait (a few minutes, */15 crontab) until the images appear
 on <https://iso-history.tails.boum.org/>.
