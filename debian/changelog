@@ -1,21 +1,124 @@
-tails (4.11) UNRELEASED; urgency=medium
+tails (4.11.1) UNRELEASED; urgency=medium
 
   * Dummy entry for next release.
 
- -- intrigeri <intrigeri@debian.org>  Tue, 08 Sep 2020 07:46:26 +0000
+ -- anonym <anonym@riseup.net>  Tue, 22 Sep 2020 15:23:20 +0200
 
-tails (4.11~rc1) unstable; urgency=medium
+tails (4.11) unstable; urgency=medium
 
   * Security fixes
     - Upgrade Linux kernel to 5.7.0-3 at 5.7.17-1 (#17895).
+    - Upgrade Tor Browser to 10.0 (#17933).
     - Upgrade Thunderbird to 68.12.0-1~deb10u1.
     - Upgrade xorg-server to 1.20.4-1+deb10u1.
     - Upgrade openexr to 2.2.1-4.1+deb10u1.
     - Upgrade bind9 to 9.11.5.P4+dfsg-5.1+deb10u2.
     - Upgrade ghostscript to 9.27~dfsg-2+deb10u4.
+    - Upgrade libzmq5 to 4.3.1-4+deb10u2.
 
   * Minor improvements and updates
     - Upgrade Electrum to 4.0.2-2.
+
+  * Tor Browser 10.0 (tails/tails!189)
+
+    Commits:
+      - Tor Browser: patch in prefs changes introduced in 10.0-build3.
+      - Test suite: make scenario titles consistently not end with period
+      - Unsafe Browser: adjust disabling add-ons to Tor Browser 10
+      - Unsafe Browser: add missing escaping
+      - Upgrade Tor Browser to 10.0-build2 (refs: #17933).
+      - Rename, refactor, reorganize.
+      - Tor Browser: use new trick to avoid mandatory extension signing.
+      - Upgrade Tor Browser to 10.0a7.
+
+  * Test suite: use versioned python2 interpreter for otr-bot.py (tails/tails!186)
+
+    Commits:
+      - Test suite: use versioned python2 interpreter for otr-bot.py
+
+  * Test suite: switch to virtio transport for the remote shell (tails/tails!185)
+
+    Closes issues:
+      - Improve the remote shell's performance by switching to a virtio channel
+        (tails/tails#11888)
+
+    Commits:
+      - Test suite: make SocketReadTimeout inherit from RuntimeError
+      - Lint.
+      - Test suite: use factorized way to get and update the domain's XML definition
+      - Fix Layout/EmptyLineAfterGuardClause Rubocop regression
+      - Fix Style/StringLiterals Rubocop regression
+      - Fix Naming/HeredocDelimiterNaming Rubocop regression
+      - Rubocop: fix a Security/JSONLoad regression
+      - tails-autotest-remote-shell: lint
+      - tails-autotest-remote-shell: remove unused import
+      - Remote shell: improve warning.
+      - Test suite: log whenever remote_shell_is_up?() returns false.
+      - Remote shell: use timed read() for virtio channel.
+      - Remote shell: switch from serial to virtio transport (refs: #11888).
+
+  * Release process: generate UDFs to non-final releases from any supported
+    previous version (tails/tails!178)
+
+    Closes issues:
+      - UDF generation is broken for release candidates (tails/tails#17921)
+
+    Commits:
+      - Don't generate UDFs on the stable channel to point to a release candidate
+      - Release process: generate UDFs to non-final releases from any supported
+        previous version
+
+  * Don't override Debian's system-wide Thunderbird configuration (tails/tails!177)
+
+    Commits:
+      - Adding comment explaining extensions.update.enabled Thunderbird pref (Refs:
+        #16021)
+      - Removing network.protocol-handler.app.http[s] Thunderbird preferences (Refs:
+        #16021)
+      - Removing intl.locale.requested Thunderbird preference (Refs: #16021)
+      - Changing header in Thunderbird's prefs file indicating they are Tails' prefs
+        (Refs: #16021)
+      - aa_tails.js: Removing repeated thunderbird preferences
+      - Moving local included thunderbird config to not overwrite debian default (Will-
+        fix: #16021)
+
+  * Clarify phrasing of KeePassXC database renaming dialog (tails/tails!175)
+
+    Commits:
+      - Explicit (#17286)
+      - Explain that the change came from KeePassXC (#17286)
+
+  * Test Thunderbird with local email server on Jenkins (tails/tails!172)
+
+    Closes issues:
+      - Checking credentials in Thunderbird autoconfig wizard sometimes fails in the
+        test suite (tails/tails#11890)
+      - Run our own email (IMAP/POP3/SMTP) server for automated tests run on lizard
+        (tails/tails#12277)
+
+    Commits:
+      - Test suite: fix Rubocop offenses
+      - Lint.
+      - Test suite: add debug logging so we can tell whether we're installing the
+        hosts' email server's snakeoil certificate
+      - Test suite: add missing newline.
+      - Test suite: set promiscuous trust for the certificate we import.
+      - Test suite: import isotesters' snakoil SSL cert into Thunderbird.
+      - Test suite: complete the switch from Icedove to Thunderbird namespace in
+        configuration (refs: #12277)
+
+  * Chutney docs and logging (tails/tails!167)
+
+    Commits:
+      - Test suite: improve logging message for initial Chutney cleanup.
+      - Test suite: also log when Chutney is up and running.
+      - Test suite: make Chutney logging visible without debug formatter.
+      - Test suite: document our usage of Chutney (refs: #17801).
+
+  * Install python3-trezor from buster-backports (tails/tails!165)
+
+    Commits:
+      - Install trezor packages from buster-backports
 
   * Fix “return to Greeter when clicking the Start Tails button” on Intel+AMD dual-
     GPU systems (tails/tails!163)
@@ -36,6 +139,15 @@ tails (4.11~rc1) unstable; urgency=medium
       - Adjust end-user documentation for new default KeePassXC database filename
       - Open Passwords.kdbx by default (#17286)
       - Install KeePassXC 2.5.4 from buster-backports (#17286)
+
+  * Support audio on recent Intel platforms: Comet Lake, Whiskey Lake, etc.
+    (tails/tails!157)
+
+    Commits:
+      - auto/build: enable the pipefail option
+      - Add Intel SOF Firmware and Topology binaries as a submodule and install them
+      - build-tails: give our build scripts access to submodules' refs
+      - Make code fail hard if it becomes obsolete
 
   * "Synchronizing the system's clock" notification: hidden → onion services
     (tails/tails!156)
@@ -74,6 +186,14 @@ tails (4.11~rc1) unstable; urgency=medium
     Commits:
       - Include "initially installed Tails version" in WhisperBack reports
       - Reorder debugging info: keep persistence-related info together
+
+  * try_for() timeout is not honored (tails/tails!151)
+
+    Closes issues:
+      - Test suite: try_for timeout is not honored (tails/tails#17822)
+
+    Commits:
+      - Revert "Revert "Test suite: revert exception handling change in try_for""
 
   * Enable persistence for all Greeter settings (tails/tails!149)
 
@@ -152,7 +272,7 @@ tails (4.11~rc1) unstable; urgency=medium
         partition
       - tails-debugging-info: add support for commands that need to go through a shell
 
- -- Tails developers <tails@boum.org>  Mon, 07 Sep 2020 16:43:03 +0200
+ -- Tails developers <tails@boum.org>  Mon, 21 Sep 2020 12:03:51 +0200
 
 tails (4.10) unstable; urgency=medium
 
