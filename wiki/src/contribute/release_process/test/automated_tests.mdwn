@@ -13,6 +13,8 @@ The automated test suite is essentially a glue between:
   Tails in a virtual machine, and
 * [cucumber](http://cukes.info/), for defining features and scenarios
   testing them using the above two components.
+* [chutney](https://gitweb.torproject.org/chutney.git/tree/README),
+  for orchestrating a local Tor network.
 
 Its goal is to automate the development and release testing processes
 with a Continuous Integration server.
@@ -107,6 +109,23 @@ Scripts:
 
 * [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-autotest-remote-shell]]
 * [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-autotest-remote-shell.service]]
+
+## Chutney
+
+Chutney is an orchestration tool for quickly setting up a complete Tor
+network: directory authorities, entry/middle/exit nodes, bridges,
+etc. In Tails' test suite we use it to locally set up a Tor network
+that is under our control to be used by the system under testing,
+offering us greatly improved performance and robustness compared to if
+we used the real Tor network.
+
+This "simulated" Tor network is created when the automated test suite
+initializes, before any feature or scenario is started. It might take
+around a minute for it to be operational which stalls the testing
+process, so please be patient!
+
+[[!tails_gitweb_dir submodules/chutney/]]
+[[!tails_gitweb features/chutney/test-network]]
 
 # Expected, reference images
 
