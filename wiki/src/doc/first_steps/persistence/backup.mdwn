@@ -1,0 +1,122 @@
+[[!meta title="Making a backup of your Persistent Storage"]]
+
+<!-- XXX: These instructions should be kept in sync with doc/first_steps/persistence/rescue.mdwn -->
+
+These instructions explain how to back up your Persistent Storage to
+another Tails USB stick.
+
+<div class="tip">
+
+<p>If your Tails is broken and you are trying to rescue your Persistent Storage,
+see our [[instructions on rescuing your Persistent
+Storage from a broken Tails|doc/first_steps/persistence/rescue]].</p>
+
+</div>
+
+[[!toc]]
+
+Create a new Tails to store your backup
+=======================================
+
+In these instructions, we recommend you to create another Tails to store
+your backup. This way, if your Tails is lost or damaged, you will be
+able to replace it immediately with your backup Tails.
+
+1. Install Tails on a new USB stick on which you want to create your
+   backup Tails. For detailed instructions, see how to [[install Tails
+   from another Tails|install/clone#install-tails]].
+   Make sure that this new USB stick is at least as large as your
+   current Tails USB stick.
+
+1. We recommend making your backup Tails USB stick look different than your
+   current Tails USB stick to avoid using your backup Tails by mistake.
+
+1. Shutdown and unplug your current Tails USB stick.
+
+1. Restart on your backup Tails and create a Persistent Storage on it.
+   For detailed instructions, see how to [[create & configure the
+   Persistent Storage|doc/first_steps/persistence/configure]].
+
+   <div class="tip">
+   <p>We recommend using the same passphrase as your current Tails
+   so that the passphrase is easier to remember.</p>
+   </div>
+
+1. When the Persistent Storage settings shows the list of possible
+   features, click **Save** and
+   exit.
+
+   The backup process described below overrides the configuration of the
+   Persistent Storage. So, it does not matter which features you turn on
+   when creating the Persistent Storage.
+
+1. Shutdown and unplug your backup Tails USB stick.
+
+Create or update your backup
+============================
+
+1. Start on your current Tails, set up an [[administration
+   password|doc/first_steps/welcome_screen/administration_password]], and
+   unlock the Persistent Storage.
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">Files</span></span>
+   to open the <span class="application">Files</span> browser.
+
+1. Plug in your backup Tails USB stick.
+
+1. If your backup Tails is outdated, you can upgrade it by cloning your
+   current Tails using <span class="application">Tails Installer</span>.
+   For detailed instructions, see how to [[manually upgrade from another
+   Tails|upgrade/clone#upgrade]].
+
+1. A new encrypted volume appears in the sidebar of the
+   <span class="application">Files</span> browser. Click on it and enter
+   the passphrase of your backup Tails to unlock the volume.
+
+   Your backup shows up as
+   <span class="guilabel">TailsData</span>.
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">System Tools</span>&nbsp;▸
+     <span class="guimenuitem">Root Terminal</span>
+   </span>
+   to open a terminal with administration rights.
+
+1. Execute the following command to backup your Persistent Storage:
+
+<div class="caution">
+
+<p>Make sure to execute this command <strong>from the Tails that you
+want to back up</strong>: your current Tails. If you run this command from your
+backup Tails instead, you will delete the Persistent Storage on your
+current Tails.</p>
+
+</div>
+
+<!-- <li> are limited to 45em so I'm breaking the list here to prevent wrapping the long command line. -->
+
+<p class="pre command root">rsync -PaSHAXv --del /live/persistence/TailsData_unlocked/ /media/amnesia/TailsData</p>
+
+When the command finishes, it displays a summary of the data that was
+copied. For example:
+
+<pre>
+sent 32.32M bytes  received 1.69K bytes  21.55M bytes/sec
+total size is 32.30M  speedup is 1.00
+</pre>
+
+<div class="note">
+
+<p>Each time you update your backup, only the files that have changed
+are copied.</p>
+
+</div>
+
+You can now eject the <span class="guilabel">TailsData</span> volume in the
+<span class="application">Files</span> browser and unplug your backup Tails USB stick.

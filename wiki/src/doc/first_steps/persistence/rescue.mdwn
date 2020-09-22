@@ -1,0 +1,90 @@
+[[!meta title="Rescuing your Persistent Storage from a broken Tails"]]
+
+<!-- XXX: These instructions should be kept in sync with doc/first_steps/persistence/backup.mdwn -->
+
+If your Tails becomes broken, for example, it no longer starts, you can follow
+these instructions to try to rescue your Persistent Storage.
+
+<div class="tip">
+
+<p>It is advisable to keep a current backup of your Persistent Storage. To learn
+how to create a backup of your Persistent Storage, see our [[instructions on
+how to back up your Persistent Storage to another Tails USB
+stick|doc/first_steps/persistence/backup]].</p>
+
+</div>
+
+1. Install Tails on a new USB stick on which you want to rescue your Persistent
+   Storage. Make sure that this new USB stick is at least
+   as large as the USB stick that has your broken Tails on it.
+
+1. Start on your new Tails and create a Persistent Storage.
+   For detailed instructions, see how to
+   [[create and configure a Persistent Storage|doc/first_steps/persistence/configure]].
+
+   When the Persistent Storage settings shows the list of possible features,
+   click **Save** and exit.
+
+   The process described below overrides the configuration of the Persistent
+   Storage. So, it does not matter which features you turn on when creating
+   the Persistent Storage.
+
+1. Restart on your new Tails, set up an [[administration
+   password|doc/first_steps/welcome_screen/administration_password]], and
+   unlock the Persistent Storage.
+
+   <div class="caution">
+
+   Make sure that all applications are closed before continuing with these
+   instructions. Otherwise, the Persistent Storage might not be properly
+   rescued from your broken Tails.
+
+   </div>
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">Files</span></span>
+   to open the <span class="application">Files</span> browser.
+
+1. Plug in the USB stick that has your broken Tails on it.
+
+   A new encrypted volume appears in the sidebar of the
+   <span class="application">Files</span> browser. Click on it and enter the
+   passphrase of your broken Tails to unlock the volume.
+
+   The Persistent Storage of your broken Tails shows up as
+   <span class="guilabel">TailsData</span>.
+
+   <div class="bug">
+
+   <p>If an encrypted volume does not appear, then you might not be able to
+   rescue the Persistent Storage of your broken Tails.</p>
+
+   </div>
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">System Tools</span>&nbsp;▸
+     <span class="guimenuitem">Root Terminal</span>
+   </span>
+   to open a terminal with administration rights.
+
+1. Execute the following command to rescue the Persistent Storage of your
+   broken Tails to your new Tails:
+
+<!-- TODO: Test this command. -->
+<p class="pre command root">rsync -PaSHAXv --del /media/amnesia/TailsData/ /live/persistence/TailsData_unlocked</p>
+
+When the command finishes, it displays a summary of the data that was copied. For example:
+
+<pre>
+sent 32.32M bytes  received 1.69K bytes  21.55M bytes/sec
+total size is 32.30M  speedup is 1.00
+</pre>
+
+You can now eject the <span class="guilabel">TailsData</span> volume in the
+<span class="application">Files</span> browser and unplug the USB stick that
+has your broken Tails on it.
