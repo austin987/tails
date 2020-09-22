@@ -1,3 +1,273 @@
+tails (4.11) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Linux kernel to 5.7.0-3 at 5.7.17-1 (#17895).
+    - Upgrade Tor Browser to 10.0 (#17933).
+    - Upgrade Thunderbird to 68.12.0-1~deb10u1.
+    - Upgrade xorg-server to 1.20.4-1+deb10u1.
+    - Upgrade openexr to 2.2.1-4.1+deb10u1.
+    - Upgrade bind9 to 9.11.5.P4+dfsg-5.1+deb10u2.
+    - Upgrade ghostscript to 9.27~dfsg-2+deb10u4.
+    - Upgrade libzmq5 to 4.3.1-4+deb10u2.
+
+  * Minor improvements and updates
+    - Upgrade Electrum to 4.0.2-2.
+
+  * Tor Browser 10.0 (tails/tails!189)
+
+    Commits:
+      - Tor Browser: patch in prefs changes introduced in 10.0-build3.
+      - Test suite: make scenario titles consistently not end with period
+      - Unsafe Browser: adjust disabling add-ons to Tor Browser 10
+      - Unsafe Browser: add missing escaping
+      - Upgrade Tor Browser to 10.0-build2 (refs: #17933).
+      - Rename, refactor, reorganize.
+      - Tor Browser: use new trick to avoid mandatory extension signing.
+      - Upgrade Tor Browser to 10.0a7.
+
+  * Test suite: use versioned python2 interpreter for otr-bot.py (tails/tails!186)
+
+    Commits:
+      - Test suite: use versioned python2 interpreter for otr-bot.py
+
+  * Test suite: switch to virtio transport for the remote shell (tails/tails!185)
+
+    Closes issues:
+      - Improve the remote shell's performance by switching to a virtio channel
+        (tails/tails#11888)
+
+    Commits:
+      - Test suite: make SocketReadTimeout inherit from RuntimeError
+      - Lint.
+      - Test suite: use factorized way to get and update the domain's XML definition
+      - Fix Layout/EmptyLineAfterGuardClause Rubocop regression
+      - Fix Style/StringLiterals Rubocop regression
+      - Fix Naming/HeredocDelimiterNaming Rubocop regression
+      - Rubocop: fix a Security/JSONLoad regression
+      - tails-autotest-remote-shell: lint
+      - tails-autotest-remote-shell: remove unused import
+      - Remote shell: improve warning.
+      - Test suite: log whenever remote_shell_is_up?() returns false.
+      - Remote shell: use timed read() for virtio channel.
+      - Remote shell: switch from serial to virtio transport (refs: #11888).
+
+  * Release process: generate UDFs to non-final releases from any supported
+    previous version (tails/tails!178)
+
+    Closes issues:
+      - UDF generation is broken for release candidates (tails/tails#17921)
+
+    Commits:
+      - Don't generate UDFs on the stable channel to point to a release candidate
+      - Release process: generate UDFs to non-final releases from any supported
+        previous version
+
+  * Don't override Debian's system-wide Thunderbird configuration (tails/tails!177)
+
+    Commits:
+      - Adding comment explaining extensions.update.enabled Thunderbird pref (Refs:
+        #16021)
+      - Removing network.protocol-handler.app.http[s] Thunderbird preferences (Refs:
+        #16021)
+      - Removing intl.locale.requested Thunderbird preference (Refs: #16021)
+      - Changing header in Thunderbird's prefs file indicating they are Tails' prefs
+        (Refs: #16021)
+      - aa_tails.js: Removing repeated thunderbird preferences
+      - Moving local included thunderbird config to not overwrite debian default (Will-
+        fix: #16021)
+
+  * Clarify phrasing of KeePassXC database renaming dialog (tails/tails!175)
+
+    Commits:
+      - Explicit (#17286)
+      - Explain that the change came from KeePassXC (#17286)
+
+  * Test Thunderbird with local email server on Jenkins (tails/tails!172)
+
+    Closes issues:
+      - Checking credentials in Thunderbird autoconfig wizard sometimes fails in the
+        test suite (tails/tails#11890)
+      - Run our own email (IMAP/POP3/SMTP) server for automated tests run on lizard
+        (tails/tails#12277)
+
+    Commits:
+      - Test suite: fix Rubocop offenses
+      - Lint.
+      - Test suite: add debug logging so we can tell whether we're installing the
+        hosts' email server's snakeoil certificate
+      - Test suite: add missing newline.
+      - Test suite: set promiscuous trust for the certificate we import.
+      - Test suite: import isotesters' snakoil SSL cert into Thunderbird.
+      - Test suite: complete the switch from Icedove to Thunderbird namespace in
+        configuration (refs: #12277)
+
+  * Chutney docs and logging (tails/tails!167)
+
+    Commits:
+      - Test suite: improve logging message for initial Chutney cleanup.
+      - Test suite: also log when Chutney is up and running.
+      - Test suite: make Chutney logging visible without debug formatter.
+      - Test suite: document our usage of Chutney (refs: #17801).
+
+  * Install python3-trezor from buster-backports (tails/tails!165)
+
+    Commits:
+      - Install trezor packages from buster-backports
+
+  * Fix “return to Greeter when clicking the Start Tails button” on Intel+AMD dual-
+    GPU systems (tails/tails!163)
+
+    Commits:
+      - tails-unblock-network: skip most graphics-related devices when triggering udev
+
+  * Round the download size in "Upgrade available" dialog (tails/tails!162)
+
+    Commits:
+      - Rounds the size of numbers displayed in stderr if is not possible to do an
+        incremental upgrade because there is no free memory or disk space available
+      - Round the download size in Upgrade available IUK dialog
+
+  * Save KeePassXC database in persistent directory (tails/tails!161)
+
+    Commits:
+      - Adjust end-user documentation for new default KeePassXC database filename
+      - Open Passwords.kdbx by default (#17286)
+      - Install KeePassXC 2.5.4 from buster-backports (#17286)
+
+  * Support audio on recent Intel platforms: Comet Lake, Whiskey Lake, etc.
+    (tails/tails!157)
+
+    Commits:
+      - auto/build: enable the pipefail option
+      - Add Intel SOF Firmware and Topology binaries as a submodule and install them
+      - build-tails: give our build scripts access to submodules' refs
+      - Make code fail hard if it becomes obsolete
+
+  * "Synchronizing the system's clock" notification: hidden → onion services
+    (tails/tails!156)
+
+    Commits:
+      - update hidden to onion services
+        (https://gitlab.tails.boum.org/tails/tails/-/issues/15354)
+
+  * Drop obsolete workaround for python3-qdarkstyle, fixing devel FTBFS
+    (tails/tails!154)
+
+    Commits:
+      - Drop now unneeded APT pinning on helpdev and python3-qdarkstyle
+      - Revert "Avoid installing python3-qdarkstyle by default"
+
+  * Build the changelog from GitLab MRs rather than from Git commits
+    (tails/tails!153)
+
+    Commits:
+      - generate-changelog: only list merged MRs
+      - Changelog generation: support preparing a non-final (alpha, beta, RC) release
+      - Update comment
+      - Release process: update obsolete reference to Stretch
+      - Release process: use HTTPS URIs
+      - Remove obsolete "release" script
+      - RM doc: drop obsolete process hack around painful changelog generation
+      - Release process and release notes checklist: switch to automated changelog
+        generation
+      - changelog.jinja2: add newlines for nicer formatting if rendered as Markdown
+      - generate-changelog: skip merge commits
+      - Add PoC script that generates a changelog from GitLab MRs
+
+  * Include "initially installed Tails version" info in WhisperBack reports
+    (tails/tails!152)
+
+    Commits:
+      - Include "initially installed Tails version" in WhisperBack reports
+      - Reorder debugging info: keep persistence-related info together
+
+  * try_for() timeout is not honored (tails/tails!151)
+
+    Closes issues:
+      - Test suite: try_for timeout is not honored (tails/tails#17822)
+
+    Commits:
+      - Revert "Revert "Test suite: revert exception handling change in try_for""
+
+  * Enable persistence for all Greeter settings (tails/tails!149)
+
+    Commits:
+      - Test suite: make sure Greeter settings are default when they should.
+      - Test suite: add scenario testing persistent Greeter options (refs: #17136).
+      - Test suite: support entering sudo/persistent password in German.
+      - Test suite: simplify.
+      - Test suite: refactor.
+      - Test suite: restore $language after reboot during the same scenario.
+      - Test suite: consistently wait for notifications after logging in.
+      - Greeter: Explain in a comment why we need this ugly workaround
+      - Greeter: expand persistence support to all settings.
+
+  * Tor browser 10.0.x based on ESR78 (tails/tails!148)
+
+    Commits:
+      - Automate Tor Browser import branch name generation.
+      - Tor Browser: disable update checks via Enterprise Policy mechanism.
+      - Revert "Tor Browser: disable the update check with a hack."
+      - Upgrade Tor Browser to 10.0a6.
+      - Tor Browser: disable the update check with a hack.
+      - Test Suite: bump image.
+      - Test Suite: bump UnsafeBrowserStartPage.fa.png.
+      - Unsafe Browser: enable userChrome.css.
+      - Unsafe Browser: Fix pref → user_pref error.
+      - Tor Browser: drop userChrome.css.
+      - Unsafe Browsesr: make DNS resolution work.
+      - Revert "Tor Browser: remove leftover .orig."
+      - Revert "Tor Browser: delete all Namecoin stuff."
+      - Revert "Tor Browser: temporarily disable all non-en_US locales."
+      - Tor Browser: refresh extension hacks patches.
+      - Upgrade Tor Browser to 10.0a5-build2.
+      - Move variables.
+      - Don't ignore grep failure.
+      - Tor Browser: delete all Namecoin stuff.
+      - Tor Browser: use the bundled libstdc++.so.6.
+      - Tor Browser: remove leftover .orig.
+      - Tor Browser: temporarily disable all non-en_US locales.
+      - Upgrade Tor Browser to 10.x nightly build as of 2020-08-13.
+      - Tor Browser: naming scheme for nightly builds has changed.
+
+  * Hide broken "Turn on Wi-Fi Hotspot" feature in GNOME Wi-Fi settings
+    (tails/tails!147)
+
+    Commits:
+      - Hide broken "Turn on Wi-Fi Hotspot" feature in GNOME Wi-Fi settings (#17887)
+
+  * Upgrade Linux to 5.7.17-1, adjust for updated Electrum dependencies, support
+    older TREZOR firmware (tails/tails!142)
+
+    Commits:
+      - Avoid installing python3-qdarkstyle by default
+      - Install python3-hid, to support the HID version of TREZOR
+      - Install python3-qdarkstyle from Bullseye: Electrum now depends on it (#17904)
+      - Upgrade Linux to 5.7.0-3, currently at version 5.7.17-1 (#17895)
+      - Revert "Install python3-cryptography, otherwise Electrum 4.0.2-0.1 won't start"
+      - Install python3-construct from buster-backports: python3-trezor needs it
+        (#17904)
+
+  * Fix sorting Intel GPUs last in the "Error starting GDM" message
+    (tails/tails!141)
+
+    Closes issues:
+      - Multiple GPUs are not sorted in the intended order in the "Error starting GDM"
+        message (tails/tails#17903)
+
+    Commits:
+      - Fix sorting Intel GPUs last in the "Error starting GDM" message (#17903)
+
+  * Include information about the contents of the system partition in WhisperBack
+    reports (tails/tails!140)
+
+    Commits:
+      - tails-debugging-info: include information about the contents of the system
+        partition
+      - tails-debugging-info: add support for commands that need to go through a shell
+
+ -- Tails developers <tails@boum.org>  Mon, 21 Sep 2020 12:03:51 +0200
+
 tails (4.10) unstable; urgency=medium
 
   * Security fixes

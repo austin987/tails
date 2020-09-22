@@ -10,12 +10,6 @@ pref("network.security.ports.banned", "631,6136,4444,4445,6668,7656,7657,7658,76
 // boot, which is bad (nagging) UX, we disable it.
 pref("extensions.torbutton.show_slider_notification", false);
 
-// Disable the Tor Browser's automatic update checking
-pref("app.update.auto", false);
-pref("app.update.disabledForTesting", true);
-pref("app.update.doorhanger", false);
-pref("app.update.url", "https://127.0.0.1/dev/null");
-
 // Suppress prompt and always spoof useragent as English
 pref("privacy.spoof_english", 2);
 
