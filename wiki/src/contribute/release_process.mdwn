@@ -92,6 +92,9 @@ Export the following environment variables:
   [[contribute/release_schedule#versioning]])
 * `PREVIOUS_VERSION`: the last released version (which could be a release
   candidate, in case you're preparing a major release)
+* `PREVIOUS_STABLE_VERSION`: the current stable release of Tails. This
+  will be the same as `PREVIOUS_VERSION` except when preparing a major
+  release.
 * tags:
 
         export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
@@ -1446,23 +1449,19 @@ Ensure our [[contribute/working_together/roles/technical_writer]] has
 announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 
 Write an announcement listing the security bugs affecting the previous version
-in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`, in
+in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
 order to let the users of the old versions know that they have to upgrade:
 
 1. Generate the boilerplate contents from the template:
 
         ./bin/generate-security-advisory \
-           --previous-version "${PREVIOUS_VERSION:?}" \
+           --previous-version "${PREVIOUS_STABLE_VERSION:?}" \
            --version "${VERSION:?}" \
            --tag "${TAG:?}" \
-        > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn"
-
-   Note: when preparing a final *major* release, in this example command line,
-   replace occurrences of `${PREVIOUS_VERSION:?}` with the version number of the
-   previous *bugfix* release, rather than the release candidate.
+        > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn"
 
 2. Manually add to
-   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`:
+   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`:
 
    - if we are not shipping Linux from Debian stable, the list of
      CVE fixed in Linux since the one shipped in the previous release of
@@ -1631,7 +1630,7 @@ Sanity checks
       }
 
 * Add the relevant MFSA to
-  `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
+  `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`
   and commit.
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
@@ -1770,10 +1769,7 @@ If you just released a final release
 1. If you just released a new stable release, remove the previous
    stable release from:
    - our rsync server:
-     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
-     (XXX: for final *major* releases, adjust `PREVIOUS_VERSION` to
-     point at the previous *bugfix* release, instead of the release
-     candidate).
+     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_STABLE_VERSION:?}/`
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
      (ISO and USB image, use comma-separated values)
      with `ssh bittorrent.lizard transmission-remote --list` and then
