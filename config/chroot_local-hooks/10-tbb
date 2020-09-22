@@ -74,9 +74,7 @@ install_tor_browser() {
     # instead of the system one, whenever ours is too old.
     # For details see projects/firefox/abicheck.cc in
     # https://git.torproject.org/builders/tor-browser-build.git
-    # Tor Browser 9.0a7 requires GLIBCXX_3.4.25, which Buster has,
-    # so disable this for now.
-    # cp "${prep}"/TorBrowser/Tor/libstdc++/libstdc++.so.6 "${prep}"
+    cp "${prep}"/TorBrowser/Tor/libstdc++/libstdc++.so.6 "${prep}"
 
     # We don't need the Tor binary, the shared libraries Tor needs
     # (but Firefox doesn't) and documentation shipped in the TBB.
@@ -90,6 +88,44 @@ install_tor_browser() {
     # Otherwise the "General" section in the preferences is not displayed.
     install -d -m 0755 "${prep}"/TorBrowser/UpdateInfo
 
+    # Apply 10.0-build2 → 10.0-build3 changes:
+    (
+        local tmp
+        tmp="$(mktemp -d)"
+        cd "${tmp}"
+        7z x -tzip "${prep}/browser/omni.ja"
+        # Any $ in the below in-line patch must be escaped!
+        patch -p1 <<EOF
+commit fb9428098b5b85eed400daa6e0010ac63faf8848 (tag: tor-browser-78.3.0esr-10.0-2-build2, origin/tor-browser-78.3.0esr-10.0-2)
+Author: Matthew Finkel <sysrqb@torproject.org>
+Date:   Sat Sep 19 17:03:53 2020 +0000
+
+    Revert "fixup! TB4: Tor Browser's Firefox preference overrides."
+    
+    This reverts commit c386fb3312237fd6c0d123ba9aaad662f8740e56.
+    
+    We continue using the old webextensions storage backend due to #40137.
+
+diff --git a/browser/app/profile/000-tor-browser.js b/browser/app/profile/000-tor-browser.js
+index bac98ce06540..7e29c788b720 100644
+--- a/defaults/preferences/000-tor-browser.js
++++ b/defaults/preferences/000-tor-browser.js
+@@ -286,6 +286,8 @@ pref("extensions.htmlaboutaddons.recommendations.enabled", false);
+ pref("extensions.legacy.exceptions", "{972ce4c6-7e08-4474-a285-3208198ce6fd},torbutton@torproject.org");
+ // Bug 26114: Allow NoScript to access addons.mozilla.org etc.
+ pref("extensions.webextensions.restrictedDomains", "");
++// Bug 31396: Disable indexedDB WebExtension storage backend.
++pref("extensions.webextensions.ExtensionStorageIDB.enabled", false);
+ // Bug 28896: Make sure our bundled WebExtensions are running in Private Browsing Mode
+ pref("extensions.allowPrivateBrowsingByDefault", true);
+ 
+EOF
+        touch --date="@${TBB_TIMESTAMP:?}" defaults/preferences/000-tor-browser.js
+        rm "${prep}/browser/omni.ja"
+        7z a -mtc=off -tzip "${prep}/browser/omni.ja" *
+        rm -r "${tmp}"
+    )
+    
     mv "${prep}" "${destination}"
     rm -r "${tmp}"
 }
@@ -141,11 +177,8 @@ EOF
     rm -r "${tmp}"
 }
 
-# TBB works around the lack of code signing for its extensions by
-# hacking in exceptions. We do the same!
-# Improving this is tracked on #12571.
-apply_extension_code_signing_hacks () {
-    local tbb_install tbb_timestamp
+embed_extensions_in_omni_ja () {
+    local tbb_install tbb_timestamp tmp
     tbb_install="${1}"
     tbb_timestamp="${2}"
 
@@ -153,62 +186,8 @@ apply_extension_code_signing_hacks () {
     (
         cd "${tmp}"
         7z x -tzip "${tbb_install}/omni.ja"
-        patch -p1 <<EOF
-diff -Naur a/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js b/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js
---- a/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2019-09-02 15:24:00.000000000 +0200
-+++ b/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2019-09-08 20:42:24.198382292 +0200
-@@ -195,6 +195,10 @@
-   if (addon.id == "https-everywhere-eff@eff.org") {
-     return true;
-   }
-+  // Allow uBlock installed from Debian (Tails#12571)
-+  if (addon.id == "uBlock0@raymondhill.net") {
-+    return true;
-+  }
-   return addon.isCorrectlySigned !== false;
- }
- 
-diff -Naur a/modules/addons/XPIDatabase.jsm b/modules/addons/XPIDatabase.jsm
---- a/modules/addons/XPIDatabase.jsm	2019-09-02 15:24:00.000000000 +0200
-+++ b/modules/addons/XPIDatabase.jsm	2019-09-08 20:40:29.469007744 +0200
-@@ -2126,6 +2126,11 @@
-       return true;
-     }
- 
-+    // Ensure that we allow uBlock installed from Debian (Tails#12571)
-+    if (aAddon.id == "uBlock0@raymondhill.net") {
-+      return true;
-+    }
-+
-     // Ensure that Tor Launcher is never enabled as an add-on. It will be
-     // removed inside getInstallState() soon.
-     if (aAddon.id == "tor-launcher@torproject.org")
-@@ -2729,7 +2734,8 @@
-       }
- 
-       unsigned =
--        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
-+        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned
-+        && aNewAddon.id !== "uBlock0@raymondhill.net";
-       if (unsigned) {
-         throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
-       }
-diff -Naur a/modules/addons/XPIInstall.jsm b/modules/addons/XPIInstall.jsm
---- a/modules/addons/XPIInstall.jsm	2019-09-02 15:24:00.000000000 +0200
-+++ b/modules/addons/XPIInstall.jsm	2019-09-08 20:41:07.345467589 +0200
-@@ -3826,6 +3826,7 @@
-     if (
-       XPIDatabase.mustSign(addon.type) &&
-       addon.id !== "https-everywhere-eff@eff.org" &&
-+      addon.id !== "uBlock0@raymondhill.net" &&
-       addon.signedState <= AddonManager.SIGNEDSTATE_MISSING
-     ) {
-       throw new Error(
-EOF
-        touch --date="@${tbb_timestamp}" \
-              chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js \
-              modules/addons/XPIDatabase.jsm \
-              modules/addons/XPIInstall.jsm
+        cp -a '/usr/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net' chrome/torbutton/content/extensions/
+        find chrome/torbutton/content/extensions/ -exec touch --date="@${tbb_timestamp}" '{}' \;
         rm "${tbb_install}/omni.ja"
         7z a -mtc=off -tzip "${tbb_install}/omni.ja" *
     )
@@ -217,20 +196,41 @@ EOF
     (
         cd "${tmp}"
         7z x -tzip "${tbb_install}/browser/omni.ja"
+        # Any $ in the below in-line patch must be escaped!
         patch -p1 <<EOF
-diff -Naur a/modules/BrowserGlue.jsm b/modules/BrowserGlue.jsm
---- a/modules/BrowserGlue.jsm	2019-09-02 15:24:00.000000000 +0200
-+++ b/modules/BrowserGlue.jsm	2019-09-08 20:45:59.323681266 +0200
-@@ -1926,7 +1926,8 @@
-           // disabled. Even if they lack Mozilla's blessing they are enabled
-           // nevertheless.
-           if ((addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) &&
--              (addon.id !== "https-everywhere-eff@eff.org")) {
-+              (addon.id !== "https-everywhere-eff@eff.org") &&
-+              (addon.id !== "uBlock0@raymondhill.net")) {
-             this._notifyUnsignedAddonsDisabled();
-             break;
-           }
+diff -Naur browser-omni.orig/modules/BrowserGlue.jsm browser-omni/modules/BrowserGlue.jsm
+--- browser-omni.orig/modules/BrowserGlue.jsm	2020-09-11 19:25:00.000000000 +0200
++++ browser-omni/modules/BrowserGlue.jsm	2020-09-19 11:44:17.439692582 +0200
+@@ -1367,6 +1367,29 @@
+       }
+     })();
+ 
++    (async () => {
++      const UBLOCK_ORIGIN_ID = "uBlock0@raymondhill.net";
++      const UBLOCK_ORIGIN_BUILTIN_URL =
++        "resource://torbutton/content/extensions/uBlock0@raymondhill.net/";
++      try {
++        const resolvedURI = Services.io.newURI(
++          resProto.resolveURI(Services.io.newURI(UBLOCK_ORIGIN_BUILTIN_URL))
++        );
++        const extensionData = new ExtensionData(resolvedURI);
++        const manifest = await extensionData.loadManifest();
++
++        await AddonManager.maybeInstallBuiltinAddon(
++          UBLOCK_ORIGIN_ID,
++          manifest.version,
++          UBLOCK_ORIGIN_BUILTIN_URL
++        );
++      } catch (e) {
++        const log = Log.repository.getLogger("uBlockOriginBuiltinLoader");
++        log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
++        log.error("Could not install uBlock Origin extension", e);
++      }
++    })();
++
+     if (AppConstants.MOZ_NORMANDY) {
+       Normandy.init();
+     }
 EOF
         touch --date="@${tbb_timestamp}" modules/BrowserGlue.jsm
         rm "${tbb_install}/browser/omni.ja"
@@ -264,6 +264,19 @@ apply_prefs_hacks() {
             7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
     )
     rm -r "${tmp}"
+}
+
+disable_update_checks() {
+    local tbb_install
+    tbb_install="${1}"
+    mkdir -p "${tbb_install}/distribution"
+    cat > "${tbb_install}/distribution/policies.json" <<EOF
+{
+  "policies": {
+    "DisableAppUpdate": true
+  }
+}
+EOF
 }
 
 strip_nondeterminism () {
@@ -302,13 +315,27 @@ get_firefox_version() {
 }
 
 install_debian_extensions() {
-    local destination
+    local destination timestamp fake_firefox_version firefox_version
     destination="${1}"
-    shift
-    apt-get install --yes "${@}"
-    ln -s '/usr/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net' \
-          "${destination}"/'uBlock0@raymondhill.net'
+    timestamp="${2}"
+
+    # Install a fake firefox equivs package to satisfy the
+    # dependencies for the extensions we are about to install.
+    firefox_version=$(get_firefox_version "${destination}"/application.ini)
+    fake_firefox_version=${firefox_version}+fake1
+    install_fake_package firefox "${fake_firefox_version}" web
+
+    apt-get install --yes webext-ublock-origin
     patch -p1 < /usr/share/tails/uBlock-disable-autoUpdate.diff
+
+    # Apply the same hack for our extension as the Tor Browser does
+    # for HTTPS-Everywhere in order to bypass the mandatory extension
+    # signature check, which we lack since we install our extensions
+    # from Debian ...
+    embed_extensions_in_omni_ja "${destination}" "${timestamp}"
+    # ... and then remove the packages we just installed, since we
+    # don't need them outside of omni.ja.
+    apt purge --yes firefox webext-ublock-origin
 }
 
 create_default_profile() {
@@ -331,30 +358,24 @@ create_default_profile() {
 TBB_TIMESTAMP="$(date --date='2000-01-01 00:00:00' +%s)"
 
 TBB_SHA256SUMS_FILE=/usr/share/tails/tbb-sha256sums.txt
+TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
+TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
 TBB_TARBALLS="$(grep "\<tor-browser-linux64-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
 
 # We'll use the en-US bundle as our basis
-MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux64-.*_en-US\.tar\.xz" || :)"
+MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux64-.*_en-US\.tar\.xz")"
 NIGHTLY_BUILD=
-if [ -z "${MAIN_TARBALL}" ] && [ "$(echo $TBB_TARBALLS | awk '{ print $2 }')" = 'tor-browser-linux64-tbb-nightly_ALL.tar.xz' ]; then
-    # Except for TBB nightly builds; then there is only one bundle
-    # containing all langpacks
-    MAIN_TARBALL='tor-browser-linux64-tbb-nightly_ALL.tar.xz'
+if echo "${TBB_TARBALLS}" | grep --quiet 'tor-browser-linux64-tbb-nightly'; then
     NIGHTLY_BUILD=yes
 fi
-TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
-TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
-
-# The Firefox extensions we want to install from Debian and make
-# available in the Tor Browser.
-DEBIAN_EXT_PKGS="webext-ublock-origin"
 
 TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
-apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+install_debian_extensions "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+disable_update_checks "${TBB_INSTALL}"
 strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 install_tor_launcher "${TBB_INSTALL}" "${TOR_LAUNCHER_INSTALL}"
 
@@ -370,13 +391,6 @@ rm -r "${TMP}"
 # directory...
 mv "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
 rmdir "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions
-
-# ... and then install a few Firefox extension by using a fake
-# firefox equivs package to satisfy the dependencies.
-FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/application.ini)
-FAKE_FIREFOX_VERSION=${FIREFOX_VERSION}+fake1
-install_fake_package firefox "${FAKE_FIREFOX_VERSION}" web
-install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
 
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"

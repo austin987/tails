@@ -88,14 +88,14 @@ def sort_gpus(gpus: list) -> list:
     Sort GPUs putting the most probable at top.
     Specifically, this means putting Intel last.
 
-    >>> gpus = [{"Vendor": "Intel Corporation [8086]"}, {"Vendor": "Anyone"}]
-    >>> sort_gpus(gpus)[0]["Vendor"]
-    'Anyone'
+    >>> gpus = [{"Vendor-code": "8086"}, {"Vendor-code": "1234"}]
+    >>> sort_gpus(gpus)[0]["Vendor-code"]
+    '1234'
     >>> gpus.reverse()
-    >>> sort_gpus(gpus)[0]["Vendor"]
-    'Anyone'
+    >>> sort_gpus(gpus)[0]["Vendor-code"]
+    '1234'
     """
-    return sorted(gpus, key=lambda g: g["Vendor"].endswith("[8086]"))
+    return sorted(gpus, key=lambda g: g["Vendor-code"] == "8086")
 
 
 def format_gpus(gpus: list) -> str:

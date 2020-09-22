@@ -3,6 +3,7 @@
 set -e
 set -u
 set -x
+set -o pipefail
 
 . "$(dirname $0)/scripts/utils.sh"
 
@@ -57,6 +58,12 @@ echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/sh
 echo "POTFILES_DOT_IN='$(
          /bin/grep -E --no-filename '[^ #]*\.in$' po/POTFILES.in \
        | sed -e 's,^config/chroot_local-includes,,' | tr "\n" ' '
+   )'" \
+   >> config/chroot_local-includes/usr/share/tails/build/variables
+echo "SOF_VERSION='$(
+         git -C submodules/sof branch --all --contains HEAD \
+             --format '%(refname:short)' 'origin/stable-v*' \
+       | cut -d"-" -f 2
    )'" \
    >> config/chroot_local-includes/usr/share/tails/build/variables
 
@@ -146,13 +153,11 @@ BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
    cat config/chroot_sources/*.chroot
 ) > "$BUILD_APT_SOURCES"
 
-# make workarounds available in the chroot, if any:
-WORKAROUNDS_SRC="submodules/tails-workarounds"
-WORKAROUNDS_DST="config/chroot_local-includes/tmp/"
-if [ -d "$WORKAROUNDS_SRC" ]; then
-  mkdir -p "$WORKAROUNDS_DST"
-  cp -a "$WORKAROUNDS_SRC" "$WORKAROUNDS_DST"
-fi
+# make submodules available in the chroot:
+SUBMODULES_SRC="submodules/sof submodules/tails-workarounds"
+SUBMODULES_DST="config/chroot_local-includes/tmp/submodules"
+mkdir -p "$SUBMODULES_DST"
+cp -a $SUBMODULES_SRC "$SUBMODULES_DST"/
 
 echo "I: Building ISO image ${BUILD_ISO_FILENAME}..."
 time lb build noauto "${@}"

@@ -7,6 +7,12 @@ module RemoteShell
   class ServerFailure < StandardError
   end
 
+  # This exception is *only* supposed to be use internally in
+  # communicate() -- in particular it must not be raised by a
+  # Timeout.timeout() wrapping around communicate() or any use of it.
+  class SocketReadTimeout < RuntimeError
+  end
+
   # Used to differentiate vs Timeout::Error, which is thrown by
   # try_for() (by default) and often wraps around remote shell usage
   # -- in that case we don't want to catch that "outer" exception in
@@ -22,7 +28,7 @@ module RemoteShell
 
   def communicate(vm, *args, **opts)
     opts[:timeout] ||= DEFAULT_TIMEOUT
-    socket = TCPSocket.new('127.0.0.1', vm.get_remote_shell_port)
+    socket = UNIXSocket.new(vm.remote_shell_socket_path)
     id = (@@request_id += 1)
     # Since we already have defined our own Timeout in the current
     # scope, we have to be more careful when referring to the Timeout
@@ -32,7 +38,28 @@ module RemoteShell
       socket.puts(JSON.dump([id] + args))
       socket.flush
       loop do
-        line = socket.readline("\n").chomp("\n")
+        # Calling socket.readline() and then just wait for the data to
+        # arrive is prone to stalling for some reason. A timed read()
+        # works much better.
+        #
+        # But timeouts introduce races: imagine if we time out after
+        # reading the data from the socket, but before returning and
+        # exiting the block; then the SocketReadTimeout is thrown and
+        # we lose that data! However, if we limit the timed read to
+        # only the first byte, which we always know what it's supposed
+        # to be, then we can easily detect and correct this race.
+        line_init = nil
+        begin
+          Object::Timeout.timeout(1, SocketReadTimeout) do
+            line_init = socket.read(1)
+          end
+        rescue SocketReadTimeout
+          next
+        end
+        if line_init != '['
+          line_init = '[' + line_init
+        end
+        line = line_init + socket.readline("\n").chomp("\n")
         response_id, status, *rest = JSON.parse(line)
         if response_id == id
           if status != 'success'

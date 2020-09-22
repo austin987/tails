@@ -45,9 +45,17 @@ echo "systemd-udevd has reloaded its databases." >&2
 # Now we'll load any present network device previously blocked by
 # the blacklist. In particular, the MAC spoofing udev rule should trigger
 # for each network device added.
-echo "Restarting systemd-udev-trigger.service..." >&2
-systemctl restart systemd-udev-trigger.service
-echo "systemd-udev-trigger.service restarted." >&2
+echo "Replaying udev events..." >&2
+udevadm trigger --type=subsystems --action=add \
+        --subsystem-nomatch=backlight \
+        --subsystem-nomatch='drm*' \
+        --subsystem-nomatch=graphics
+udevadm trigger --type=devices --action=add \
+        --attr-nomatch=class=0x030000 \
+        --subsystem-nomatch=backlight \
+        --subsystem-nomatch='drm*' \
+        --subsystem-nomatch=graphics
+echo "replayed udev events." >&2
 
 # Block until all triggers have been run. NetworkManager is started immediately
 # after, and without the blocking behaviour there's a race between NM
