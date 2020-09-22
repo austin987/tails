@@ -1406,23 +1406,17 @@ If preparing a final release
 
 Skip this part if preparing a RC.
 
-XXX: If preparing a final *major* release, beware! The `git rm` steps
-will get confused because we should be removing files from the
-previous *bugfix* release (and `PREVIOUS_VERSION` points to the
-release candidate instead, for which we don't ship all files). Maybe
-start by removing all files (regardless of the version), before copying
-the new files? To be attempted/confirmed when releasing 4.11.
-
 Rename, copy, garbage collect and update various files.
 
+	git rm \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-"*.{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
+	mkdir -p "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files" && \
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
-	git rm \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
 	LC_NUMERIC=C ls -l -h -L ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
