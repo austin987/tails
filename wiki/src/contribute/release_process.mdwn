@@ -244,47 +244,6 @@ Upgrade Tor Browser AppArmor profile
 
 See the dedicated page: [[tor-browser_AppArmor_patch]]
 
-Upgrade bundled binary Debian packages
---------------------------------------
-
-Skip this section if you are preparing a bugfix release.
-
-The goal here is to make sure the bundled binary Debian packages contain
-up-to-date localization files, so:
-
- - If you are preparing a release candidate, build at least the packages
-   that change user-visible strings, so that translators can use the RC
-   to check the status of their work and identify what's left to do.
- - If you are preparing a final major release, build at least the packages
-   that got translation updates since the RC: we've sent a call for
-   translation while releasing the RC so the least we can do is to
-   incorporate the work that ensued into our final release :)
-
-For each bundled Debian package, `cd` into the package's root
-directory,
-import translations from Transifex and sanity-check them:
-
-	cd PACKAGE && \
-	git checkout master && \
-	git pull && \
-	"${RELEASE_CHECKOUT:?}"/import-translations && \
-	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/lint_po
-
-Then, for every PO file that has issues:
-
-1. Rollback changes to that file: `git checkout po/LL.po`
-2. Run `lint_po` again. It should pass this time.
-
-And finally, commit:
-
-    git add po && git commit \
-	    -m "Update POT and PO files, pull updated translations from Transifex."
-
-Then see the relevant release processes, and upload the packages to
-the release branch's custom APT suite:
-
-* [[tails-installer]]
-
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
 
