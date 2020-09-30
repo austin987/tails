@@ -10,12 +10,14 @@ use Moo::Role;
 use MooX::late;
 use namespace::clean;
 
+requires 'encoding';
+
 method display_error (
     (InstanceOf['Gtk3::Window']) $main_window,
     Str $title,
     Str $mesg
 ) {
-    say STDERR "$title: $mesg";
+    say STDERR $self->encoding->encode("$title: $mesg");
 
     my $dialog = Gtk3::MessageDialog->new(
         $main_window, 'destroy-with-parent', 'error', 'ok',

@@ -100,7 +100,33 @@ create_pot () {
     if [ -e "${progpath}" ]; then
         pot="$(prog_potfile "${prog}")"
         mkdir -p "$(dirname ${pot})"
+        case "$proglang" in
+            Perl)
+                # XXX: once we can assume libintl-perl 1.28+,
+                # generate this list of options with:
+                # perl -MLocale::TextDomain -E 'print Locale::TextDomain->options'
+                xgettext_args='--keyword'
+                xgettext_args="$xgettext_args --keyword=__"
+                xgettext_args="$xgettext_args --keyword='\$__'"
+                xgettext_args="$xgettext_args --keyword=__x"
+                xgettext_args="$xgettext_args --keyword=__n:1,2"
+                xgettext_args="$xgettext_args --keyword=__nx:1,2"
+                xgettext_args="$xgettext_args --keyword=__xn:1,2"
+                xgettext_args="$xgettext_args --keyword=__p:1c,2"
+                xgettext_args="$xgettext_args --keyword=__np:1c,2,3"
+                xgettext_args="$xgettext_args --keyword=__npx:1c,2,3"
+                xgettext_args="$xgettext_args --keyword=N__"
+                xgettext_args="$xgettext_args --keyword=N__n:1,2"
+                xgettext_args="$xgettext_args --keyword=N__p:1c,2"
+                xgettext_args="$xgettext_args --keyword=N__np:1c,2,3"
+                xgettext_args="$xgettext_args --keyword=%__'"
+                ;;
+            *)
+                xgettext_args=
+                        ;;
+        esac
         xgettext --language="${proglang}" --from-code=UTF-8 \
+                 $xgettext_args \
                  --add-comments="Translators:" -o "${pot}" "${progpath}"
         if [ -f "${pot}" ]; then
             normalize_pot "${pot}"
@@ -129,7 +155,7 @@ refresh_mo () {
         po=$(po_file $locale)
         mo=$(mo_file $locale)
         mkdir -p $(dirname "$mo")
-        msgfmt -o "${mo}" "${po}"
+        msgfmt --check -o "${mo}" "${po}"
     done
 }
 

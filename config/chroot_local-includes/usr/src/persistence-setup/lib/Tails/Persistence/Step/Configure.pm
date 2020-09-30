@@ -13,14 +13,12 @@ use Carp::Assert::More;
 use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use Number::Format qw(:subs);
+use POSIX;
 use Tails::Persistence::Configuration;
 use Tails::Persistence::Configuration::Setting;
 use Try::Tiny;
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+use Locale::TextDomain 'tails';
 
 use Moo;
 use MooX::late;
@@ -84,21 +82,20 @@ method BUILD (@args) {
     assert_defined($self->list_box);
     assert_defined($self->settings_container);
 
-    $self->title->set_text($self->encoding->decode(gettext(
+    $self->title->set_text(__(
         q{Persistence wizard - Persistent volume configuration}
-    )));
-    $self->subtitle->set_text($self->encoding->decode(gettext(
+    ));
+    $self->subtitle->set_text(__(
         q{Specify the files that will be saved in the persistent volume}
-    )));
-    $self->description->set_markup($self->encoding->decode(sprintf(
-        # TRANSLATORS: partition, size, device vendor, device model
-        gettext(q{The selected files will be stored in the encrypted partition %s (%s), on the <b>%s %s</b> device.}),
-        $self->persistence_partition_device_file,
-        format_bytes($self->persistence_partition_size, mode => "iec"),
-        $self->drive_vendor,
-        $self->drive_model
-    )));
-    $self->go_button->set_label($self->encoding->decode(gettext(q{Save})));
+    ));
+    $self->description->set_markup(__x(
+        q{The selected files will be stored in the encrypted partition {partition} ({size}), on the <b>{vendor} {model}</b> device.},
+        partition => $self->persistence_partition_device_file,
+        size      => format_bytes($self->persistence_partition_size, mode => "iec"),
+        vendor    => $self->drive_vendor,
+        model     => $self->drive_model,
+    ));
+    $self->go_button->set_label(__(q{Save}));
     $self->go_button->set_sensitive(TRUE);
 }
 
@@ -178,7 +175,7 @@ method operation_finished ($error = undef) {
     if ($error) {
         $self->working(0);
         say STDERR "$error";
-        $self->subtitle->set_text($self->encoding->decode(gettext(q{Failed})));
+        $self->subtitle->set_text(__(q{Failed}));
         $self->description->set_text($error);
     }
     else {
@@ -191,11 +188,9 @@ method operation_finished ($error = undef) {
 method go_button_pressed () {
     $self->settings_container->hide;
     $self->working(1);
-    $self->subtitle->set_text(
-        $self->encoding->decode(gettext(q{Saving...})),
-    );
+    $self->subtitle->set_text(__(q{Saving...}));
     $self->description->set_text(
-        $self->encoding->decode(gettext(q{Saving persistence configuration...})),
+        __(q{Saving persistence configuration...}),
     );
 
     my $error;
