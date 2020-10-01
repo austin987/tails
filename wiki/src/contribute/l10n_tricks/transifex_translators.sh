@@ -3,7 +3,7 @@
 set -e
 set -u
 
-PROJECTS="tails-misc whisperback"
+PROJECTS="tails-misc"
 GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 TOR_TRANSLATION_DIR="$GIT_TOPLEVEL_DIR/tmp/tor-translation"
 
