@@ -109,6 +109,14 @@ git clone --shared --local /amnesia.git/.git "${TAILS_GIT_DIR}"
 		rm -rf "${submodule}"
 		git clone --shared \
 		    "/amnesia.git/.git/modules/submodules/${submodule}"
+                cd "${submodule}"
+                # Mirror the branches this submodule tracks on its
+                # "origin" remote as if they were on our own "origin" remote,
+                # so our build scripts have access to refs. See more detailed
+                # explanation below, where we do the same thing
+                # in $TAILS_GIT_DIR.
+                git config remote.origin.fetch \
+                    +refs/remotes/origin/*:refs/remotes/origin/*
 	done
 )
 

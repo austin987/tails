@@ -21,19 +21,14 @@ complex system|contribute/APT_repository]].
 
 ## The Debian side of things
 
-We generally ship the latest Linux kernel from Debian _unstable_ or
-_stable backports_. There's a delay for new Linux uploads to migrate
-from Debian _unstable_ to _testing_ and then to be uploaded and
-accepted into _stable backports_. So in practice we tend to ship the
-Linux kernel from Debian _unstable_: it happens regularly that the
-version we want to ship is in _unstable_ but not in _stable
-backports_ yet.
+We generally ship the latest Linux kernel from Debian _stable backports_, and
+occasionally from _unstable_ when a critical security fix is not available in
+_stable backports_ yet.
 
 The Linux kernel binary packages include an ABI version number, e.g.
 for `linux-image-4.18.0-2-amd64` the ABI is version 2.
 
-Tracking the kernel from Debian _unstable_ has one significant
-drawback: sometimes the only way to include security fixes is to
+Sometimes, the only way to include security fixes is to
 upgrade Linux to a major new version. For example, say the current
 Tails release includes Linux 5.18.8, an important security issue was
 fixed in 5.18.9 and in 5.19.6. If 5.19.6 was uploaded to _unstable_
@@ -43,8 +38,9 @@ fix is to upgrade to 5.19.6.
 ## _We_ need to decide
 
 Which exact Linux kernel version we ship in a given Tails release is
-a trade-off between packages availability, security fixes, stability,
-and hardware support. The Foundations Team has to make this decision
+a trade-off between packages availability, security fixes, limiting
+the risks of hardware support regressions, and adding support for new
+hardware. The Foundations Team has to make this decision
 during every Tails release cycle. Due to the way we manage our APT
 repositories and to the fact we don't publish release candidates for
 Tails bugfix releases, how this decision is made and implemented
@@ -95,15 +91,16 @@ To learn how the new kernel works for us:
 
 Look for:
 
- - Security issues fixed in _unstable_ since the version we currently ship
+ - Security issues fixed since the version we currently ship
 
    To do so, look for "CVE" in the
    [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
    entries newer than the kernel we currently ship.
 
- - Major security fixes still not fixed in _unstable_ (in which case,
-   depending on when we are in our own release process, it may be worth
-   delaying the analysis a bit)
+ - Major security fixes still not fixed in the version we're considering
+   (in which case, depending on when we are in our own release process,
+   it may be worth delaying the analysis a bit, or exceptionally installing
+   the kernel from _unstable_)
 
    To do so, use the Debian [security tracker for
    Linux](https://security-tracker.debian.org/tracker/source-package/linux).
@@ -121,6 +118,12 @@ Look for:
       what kernel version is affected, but once you open the bug's page,
       you'll see that info; for example, [[!debbug 960871]] is marked
       as affecting linux/5.6.7-1)
+
+   If there are important hardware support regressions, ask someone who has an
+   archive of WhisperBack reports (for example intrigeri) to check the
+   popularity _in Tails_ of the affected hardware: while assessing the impact of
+   regressions, we need to take into account that some devices are much more
+   popular among Tails users than among the general Debian users population.
 
  - Relevant hardware support improvements
 
@@ -222,6 +225,12 @@ have prepared the very topic branch we need to do that, so:
 1. Follow our usual process to get it reviewed and merged.
 2. Follow the instructions to [[enable new security
    features|Linux_kernel#new-security-features]].
+
+### In any case
+
+- Update Intel SOF Firmware and Topology binaries: make `submodules/sof` point
+  to the latest upstream stable branch from
+  <https://github.com/thesofproject/sof-bin>
 
 <a id="new-security-features"></a>
 

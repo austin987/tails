@@ -28,6 +28,10 @@ PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
     /usr/local/lib/seahorse-tool-wrapper \
     /usr/local/sbin/tails-additional-software \
+    /usr/lib/python2.7/dist-packages/tails_installer/creator.py \
+    /usr/lib/python2.7/dist-packages/tails_installer/gui.py \
+    /usr/lib/python2.7/dist-packages/tails_installer/source.py \
+    /usr/lib/python2.7/dist-packages/tails_installer/utils.py \
     /usr/lib/python3/dist-packages/tailsgreeter/settings/persistence.py \
     /usr/lib/python3/dist-packages/tailsgreeter/ui/add_settings_dialog.py \
     /usr/lib/python3/dist-packages/tailsgreeter/ui/additional_settings.py \
@@ -36,6 +40,9 @@ PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/lib/python3/dist-packages/unlock_veracrypt_volumes/volume.py \
     /usr/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_list.py \
     /usr/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_manager.py \
+    /usr/lib/python3/dist-packages/whisperBack/exceptions.py \
+    /usr/lib/python3/dist-packages/whisperBack/gui.py \
+    /usr/lib/python3/dist-packages/whisperBack/whisperback.py \
     /usr/local/lib/tails-additional-software-notify \
     /usr/local/sbin/tails-additional-software"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
@@ -83,6 +90,12 @@ prog_potfile () {
         /usr/lib/python3/dist-packages/tailsgreeter/*)
             domain="greeter-$(basename "$prog")"
             ;;
+        /usr/lib/python*/dist-packages/tails_installer/*)
+            domain="installer-$(basename "$prog")"
+            ;;
+        /usr/lib/python3/dist-packages/whisperBack/*)
+            domain="whisperBack-$(basename "$prog")"
+            ;;
         /usr/src/persistence-setup/lib/*)
             domain="persistence-setup-$(basename "$prog")"
             ;;
@@ -100,7 +113,33 @@ create_pot () {
     if [ -e "${progpath}" ]; then
         pot="$(prog_potfile "${prog}")"
         mkdir -p "$(dirname "${pot}")"
+        case "$proglang" in
+            Perl)
+                # XXX: once we can assume libintl-perl 1.28+,
+                # generate this list of options with:
+                # perl -MLocale::TextDomain -E 'print Locale::TextDomain->options'
+                xgettext_args='--keyword'
+                xgettext_args="$xgettext_args --keyword=__"
+                xgettext_args="$xgettext_args --keyword='\$__'"
+                xgettext_args="$xgettext_args --keyword=__x"
+                xgettext_args="$xgettext_args --keyword=__n:1,2"
+                xgettext_args="$xgettext_args --keyword=__nx:1,2"
+                xgettext_args="$xgettext_args --keyword=__xn:1,2"
+                xgettext_args="$xgettext_args --keyword=__p:1c,2"
+                xgettext_args="$xgettext_args --keyword=__np:1c,2,3"
+                xgettext_args="$xgettext_args --keyword=__npx:1c,2,3"
+                xgettext_args="$xgettext_args --keyword=N__"
+                xgettext_args="$xgettext_args --keyword=N__n:1,2"
+                xgettext_args="$xgettext_args --keyword=N__p:1c,2"
+                xgettext_args="$xgettext_args --keyword=N__np:1c,2,3"
+                xgettext_args="$xgettext_args --keyword=%__'"
+                ;;
+            *)
+                xgettext_args=
+                        ;;
+        esac
         xgettext --language="${proglang}" --from-code=UTF-8 \
+                 $xgettext_args \
                  --add-comments="Translators:" -o "${pot}" "${progpath}"
         if [ -f "${pot}" ]; then
             normalize_pot "${pot}"
@@ -129,7 +168,7 @@ refresh_mo () {
         po=$(po_file $locale)
         mo=$(mo_file $locale)
         mkdir -p "$(dirname "$mo")"
-        msgfmt -o "${mo}" "${po}"
+        msgfmt --check -o "${mo}" "${po}"
     done
 }
 

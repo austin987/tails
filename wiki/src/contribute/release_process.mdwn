@@ -88,11 +88,16 @@ Note:
 
 Export the following environment variables:
 
-* version numbers (see [[contribute/release_schedule#versioning]]):
+* `VERSION`: the version you're preparing (see
+  [[contribute/release_schedule#versioning]])
+* `PREVIOUS_VERSION`: the last released version (which could be a release
+  candidate, in case you're preparing a major release)
+* `PREVIOUS_STABLE_VERSION`: the current stable release of Tails. This
+  will be the same as `PREVIOUS_VERSION` except when preparing a major
+  release.
+* tags:
 
-        export VERSION=$(dpkg-parsechangelog -SVersion)
         export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
-        export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
         export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
 
 * `NEXT_PLANNED_MAJOR_VERSION`: set to the version number of the next
@@ -238,51 +243,6 @@ Upgrade Tor Browser AppArmor profile
 ------------------------------------
 
 See the dedicated page: [[tor-browser_AppArmor_patch]]
-
-Upgrade bundled binary Debian packages
---------------------------------------
-
-Skip this section if you are preparing a bugfix release.
-
-The goal here is to make sure the bundled binary Debian packages contain
-up-to-date localization files, so:
-
- - If you are preparing a release candidate, build at least the packages
-   that change user-visible strings, so that translators can use the RC
-   to check the status of their work and identify what's left to do.
- - If you are preparing a final major release, build at least the packages
-   that got translation updates since the RC: we've sent a call for
-   translation while releasing the RC so the least we can do is to
-   incorporate the work that ensued into our final release :)
-
-For each bundled Debian package, `cd` into the package's root
-directory (e.g. a checkout of the `whisperback` repository),
-import translations from Transifex and sanity-check them:
-
-	cd whisperback && \
-	git checkout master && \
-	git pull && \
-	"${RELEASE_CHECKOUT:?}"/import-translations && \
-	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/lint_po
-
-Then, for every PO file that has issues:
-
-1. Rollback changes to that file: `git checkout po/LL.po`
-2. Run `lint_po` again. It should pass this time.
-
-And finally, commit:
-
-    git add po && git commit \
-	    -m "Update POT and PO files, pull updated translations from Transifex."
-
-Then see the relevant release processes, and upload the packages to
-the release branch's custom APT suite:
-
-* [[tails-installer]]
-* whisperback:
-  * follow [upstream release process](https://gitlab.tails.boum.org/tails/whisperback/-/blob/master/HACKING.md#release)
-  * build a Debian package in an amd64 chroot of the Debian release
-    the Tails version you're preparing is based on
 
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
@@ -621,6 +581,7 @@ SquashFS file order
 
 1. Remove the bits about `kill-boot-profile` at the end: they're
    only useful when profiling the boot.
+   XXX: automate during next release process ([[!tails_ticket 16467]])
 1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
@@ -803,6 +764,8 @@ files metadata:
        cd - && \
        rm -rf "${tmp:?}"
     done
+    mv "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages} \
+       "${ISOS:?}/tails-amd64-${VERSION:?}"
 
 Due to various directory changes, one needs to manually go back to the
 desired directory, likely using:
@@ -817,42 +780,6 @@ Lastly, let's set some variables to be used later:
     IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.img"
     IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
-
-Push images to ISO history
-==========================
-
-Push the released ISO and USB images and their artifacts (`.buildlog`,
-`.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
-repo, so that:
-
- - The Jenkins `parallel_build_IUKs` job can fetch them.
- - Our isotesters can fetch them from there for their testing.
-
-How to do so is described in the `ISO_history.mdwn` document in the RM team's
-Git repo.
-
-If the release manager has `$ISOS` pointing to a checkout of the ISO
-history repository, the following commands might be useful. For the
-record, images and their signatures are already in that directory, and
-one just needs to ship some metadata along:
-
-    (cd ${ISOS?:}/tails-amd64-${VERSION?:} && \
-    cp "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}{.buildlog,.build-manifest,.packages} . && \
-    git annex sync && \
-    git annex add . && \
-    git commit -m "Add Tails ${VERSION?:} images and metadata." && \
-    git annex sync && \
-    git annex copy --to origin .)
-
-This transfer can take a while, and it's possible to proceed with the
-next section in the meanwhile, up to the following step (included):
-
- - Build the Incremental Upgrade Kits locally
-
-However, the following step will require those files being transferred
-and made available on the relevant web server:
-
- - Build the Incremental Upgrade Kits on Jenkins
 
 <a id="prepare-iuk"></a>
 
@@ -967,14 +894,37 @@ repo, so that:
  - The Jenkins `parallel_build_IUKs` job can fetch them.
  - Our isotesters can fetch them from there for their testing.
 
-XXX: Dear first-RM-who-reads-this, please replace the next step
-with new ones that are not affected by `git-annex` performance issues
-([[!tails_ticket 17686#note_154190]]).
+Make sure that Jenkins has finished building so you have set
+`MATCHING_JENKINS_IMAGES_BUILD_ID` (see above), then run:
 
-How to do so is described in the `ISO_history.mdwn` document in the RM team's
-Git repo.
+    ssh misc.lizard mkdir tails-amd64-${VERSION:?} && \
+    scp "${ISOS:?}"/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages,iso.sig,img.sig} \
+        misc.lizard:tails-amd64-${VERSION:?} && \
+    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
+       | ssh misc.lizard gpg --import && \
+    ssh misc.lizard << EOF && \
+       cd tails-amd64-${VERSION:?} && \
+       wget --quiet \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
+       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
+       gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
+    EOF
+    ssh misc.lizard << EOF
+       ( [ -d isos ] || git clone gitolite@puppet-git.lizard:isos.git ) && \
+       cd isos && \
+       git annex init && \
+       git annex sync && \
+       git annex import ../tails-amd64-${VERSION:?} && \
+       rmdir ../tails-amd64-${VERSION:?} && \
+       git commit -m "Add Tails ${VERSION:?}" && \
+       git annex sync && \
+       git annex copy tails-amd64-${VERSION:?} --to origin && \
+       git annex drop tails-amd64-${VERSION:?} && \
+       git annex sync
+    EOF
 
-Then, wait (a few minutes, */15 crontab) until the images appear
+Then, wait (a few minutes, `*/15` crontab) until the images appear
 on <https://iso-history.tails.boum.org/>.
 
 <a id="build-iuks-on-jenkins"></a>
@@ -1159,24 +1109,22 @@ Prepare upgrade-description files
         git commit -m "Update upgrade-description files." && \
         git push origin ${WEBSITE_RELEASE_BRANCH:?}
 
-1. Copy the generated UDFs for the previous releases to the *test*
+1. Copy the generated UDF for the previous stable release to the *test*
    channel in `$MASTER_CHECKOUT`, modify their content accordingly,
    sign them, commit and push:
 
         cd ${MASTER_CHECKOUT:?} && \
         git fetch && \
         git merge origin/master && \
-        for old_version in $(echo ${IUK_SOURCE_VERSIONS:?} ${VERSION:?}); do
-          release_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
-          test_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
-          mkdir -p "$(dirname "$test_udf")" && \
-          git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
-            | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
-          echo "Signing ${test_udf:?}" && \
-          gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
-          mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
-          git add ${test_udf:?}* ; \
-        done && \
+        release_udf="wiki/src/upgrade/v2/Tails/${PREVIOUS_STABLE_VERSION:?}/amd64/${DIST:?}/upgrades.yml" && \
+        test_udf="wiki/src/upgrade/v2/Tails/${PREVIOUS_STABLE_VERSION:?}/amd64/test/upgrades.yml" && \
+        mkdir -p "$(dirname "$test_udf")" && \
+        git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
+          | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
+        echo "Signing ${test_udf:?}" && \
+        gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+        mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+        git add ${test_udf:?}* && \
         git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
         git push origin master:master
 
@@ -1417,23 +1365,17 @@ If preparing a final release
 
 Skip this part if preparing a RC.
 
-XXX: If preparing a final *major* release, beware! The `git rm` steps
-will get confused because we should be removing files from the
-previous *bugfix* release (and `PREVIOUS_VERSION` points to the
-release candidate instead, for which we don't ship all files). Maybe
-start by removing all files (regardless of the version), before copying
-the new files? To be attempted/confirmed when releasing 4.11.
-
 Rename, copy, garbage collect and update various files.
 
+	git rm \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-"*.{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
+	mkdir -p "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files" && \
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
+	   "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.build-manifest" \
+	   "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
-	git rm \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
 	LC_NUMERIC=C ls -l -h -L ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
@@ -1461,23 +1403,19 @@ Ensure our [[contribute/working_together/roles/technical_writer]] has
 announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 
 Write an announcement listing the security bugs affecting the previous version
-in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`, in
+in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
 order to let the users of the old versions know that they have to upgrade:
 
 1. Generate the boilerplate contents from the template:
 
         ./bin/generate-security-advisory \
-           --previous-version "${PREVIOUS_VERSION:?}" \
+           --previous-version "${PREVIOUS_STABLE_VERSION:?}" \
            --version "${VERSION:?}" \
            --tag "${TAG:?}" \
-        > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn"
-
-   Note: when preparing a final *major* release, in this example command line,
-   replace occurrences of `${PREVIOUS_VERSION:?}` with the version number of the
-   previous *bugfix* release, rather than the release candidate.
+        > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn"
 
 2. Manually add to
-   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`:
+   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`:
 
    - if we are not shipping Linux from Debian stable, the list of
      CVE fixed in Linux since the one shipped in the previous release of
@@ -1646,7 +1584,7 @@ Sanity checks
       }
 
 * Add the relevant MFSA to
-  `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
+  `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`
   and commit.
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
@@ -1785,10 +1723,7 @@ If you just released a final release
 1. If you just released a new stable release, remove the previous
    stable release from:
    - our rsync server:
-     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
-     (XXX: for final *major* releases, adjust `PREVIOUS_VERSION` to
-     point at the previous *bugfix* release, instead of the release
-     candidate).
+     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_STABLE_VERSION:?}/`
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
      (ISO and USB image, use comma-separated values)
      with `ssh bittorrent.lizard transmission-remote --list` and then

@@ -1,16 +1,41 @@
 #!/usr/bin/python3
 
-# ATTENTION: Yes, this can be used as a backdoor, but only for an
-# adversary with access to you *physical* serial port, which means
-# that you are screwed any way.
+# ATTENTION: Yes, this is a backdoor! :) But it is of course not
+# enabled by default, and is only intended for automated testing
+# purposes, which you can read more about here:
+#
+#   https://tails.boum.org/contribute/release_process/test/automated_tests/
+#
+# In order for an adversary to make use of this backdoor these things
+# must be the true:
+#
+# 1. You must be running Tails in a virtual machine supporting virtio
+#    channels (e.g. qemu). In particular, this backdoor cannot work
+#    when Tails is running on real hardware. So from now on we'll
+#    assume Tails is running in a virtual machine.
+#
+# 2. The attacker must convince you to add the appropriate virtio
+#    channel to your virtual machine configuration (see
+#    REMOTE_SHELL_DEV below).
+#
+# 3. Since this script is not started automatically the adversary must
+#    somehow convince you to manually start it. For instance by adding
+#    "autotest_never_use_this_option" to the kernel commandline.
+#
+# 4. The attacker must also be able to write to the virtio channel on
+#    your host, which on a well-configured system (e.g. Debian)
+#    requires privileges that give full control of the virtual machine
+#    running Tails.
+#
+# In other words, this backdoor is completely irrelevant, since
+# requirement 4 alone gives them full control over the Tails system,
+# so no backdoor is needed.
 
 import base64
 import fcntl
-import io
 import json
 import os
 import pwd
-import serial
 import signal
 import subprocess
 import sys
@@ -18,15 +43,17 @@ import systemd.daemon
 import textwrap
 import traceback
 
-REMOTE_SHELL_DEV = '/dev/ttyS0'
+REMOTE_SHELL_DEV = '/dev/virtio-ports/org.tails.remote_shell.0'
 
 
 def mk_switch_user_fn(user):
     pwd_user = pwd.getpwnam(user)
+
     def switch_user():
         os.initgroups(user, pwd_user.pw_gid)
         os.setgid(pwd_user.pw_gid)
         os.setuid(pwd_user.pw_uid)
+
     return switch_user
 
 
@@ -40,7 +67,9 @@ def get_user_env(user):
               'export_gnome_env ; ' + \
               'env'
     wrapped_env_cmd = "su -c '{}' {}".format(env_cmd, user)
-    pipe = subprocess.Popen(wrapped_env_cmd, stdout=subprocess.PIPE, shell=True)
+    pipe = subprocess.Popen(wrapped_env_cmd,
+                            stdout=subprocess.PIPE,
+                            shell=True)
     env_data = pipe.communicate()[0].decode('utf-8')
     return dict((line.split('=', 1) for line in env_data.splitlines()))
 
@@ -49,29 +78,28 @@ def get_user_env(user):
 # other users' applications, so let's wrap around an interactive
 # Python shell started as a subprocess.
 class PythonSession:
-    def __init__(self, user = None):
+    def __init__(self, user=None):
         interactive_shell_code = '; '.join([
             "import sys",
             "import code",
             "sys.ps1 = ''",
             "sys.ps2 = ''",
             "code.interact(banner='')",
-            ])
+        ])
         if not user:
             user = pwd.getpwuid(os.getuid()).pw_name
         env = get_user_env(user)
         cwd = env.get('HOME', '/')
         self.process = subprocess.Popen(
             ["python3", "-u", "-c", interactive_shell_code],
-            bufsize = 0,
+            bufsize=0,
             shell=False,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=env,
             cwd=cwd,
-            preexec_fn=mk_switch_user_fn(user)
-        )
+            preexec_fn=mk_switch_user_fn(user))
         init_code = """
             import io
             import json
@@ -105,7 +133,7 @@ class PythonSession:
             fake_stderr.close()
             print(json.dumps([exc, out_data, err_data]))
             """.replace('            ', '').lstrip()
-        indented_code = textwrap.indent(code, prefix=' '*4)
+        indented_code = textwrap.indent(code, prefix=' ' * 4)
         wrapped_code = wrapper.format(code=indented_code)
         self.process.stdin.write(wrapped_code.encode())
         self.process.stdin.flush()
@@ -116,22 +144,54 @@ def run_cmd_as_user(cmd, user):
     switch_user_fn = mk_switch_user_fn(user)
     env = get_user_env(user)
     cwd = env.get('HOME', '/')
-    return subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        shell=True, env=env, cwd=cwd, preexec_fn=switch_user_fn
-    )
+    return subprocess.Popen(cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            shell=True,
+                            env=env,
+                            cwd=cwd,
+                            preexec_fn=switch_user_fn)
 
 
 def main():
-    port = serial.Serial(port = REMOTE_SHELL_DEV, baudrate = 4000000)
     python_sessions = dict()
+    fd = os.open(REMOTE_SHELL_DEV, os.O_RDWR)
+    port = open(fd, 'wb+', buffering=0)
+    # In order to avoid busy-waiting when polling the above character
+    # device for new data sent from clients, we borrow the approach used
+    # by python-negotiator (https://github.com/xolox/python-negotiator):
+    # We add O_ASYNC so a SIGIO signal is sent to us whenever data is
+    # ready to be read from the device.
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_ASYNC)
+    fcntl.fcntl(fd, fcntl.F_SETOWN, os.getpid())
+    # By default receiving a SIGIO terminates the process so we override
+    # it to do nothing instead.
+    signal.signal(signal.SIGIO, lambda *args: None)
 
     # Notify systemd that we're ready
     systemd.daemon.notify('READY=1')
     systemd.daemon.notify('STATUS=Processing requests...\n')
 
     while True:
+        # We can avoid an unnecessary delay of up to one second during the
+        # first iteration of this loop; if a client sends a request
+        # before we run SETOWN above, the expected signal never
+        # reaches us, and we enter the loop and pass through the
+        # conditional doomed to a full second of mournful waiting
+        # for this lost signal. :_( By trying to read before we do a
+        # timed wait for the signal, this delay is avoided.
         line = port.readline().decode('utf-8')
+        if line == "":
+            # In case the SIGIO gets lost for whatever reason
+            # (e.g. the one mentioned above), let's always poll at
+            # least once every second.
+            try:
+                signal.sigtimedwait([signal.SIGIO], 1)
+            except InterruptedError:
+                # Thrown if any other signal is received.
+                pass
+            continue
         try:
             id, cmd_type, *rest = json.loads(line)
             ret = ""
@@ -159,10 +219,10 @@ def main():
                 open_mode = cmd_type[5] + 'b'
                 with open(path, open_mode) as f:
                     if cmd_type == 'file_read':
-                        assert(rest == [])
+                        assert (rest == [])
                         ret = str(base64.b64encode(f.read()), 'utf-8')
                     elif cmd_type in ['file_write', 'file_append']:
-                        assert(len(rest) == 1)
+                        assert (len(rest) == 1)
                         data = base64.b64decode(rest[0])
                         ret = f.write(data)
                         if ret != len(data):
@@ -172,7 +232,13 @@ def main():
             else:
                 raise ValueError("unknown command type")
             response = (ret + "\n").encode('utf-8')
-            port.write(response)
+            # We can only write 2**15 bytes at a time to the virtio channel
+            # (seems to only affect the guest -> host direction).
+            chunk_size = 2**15
+            chunks = (response[0 + i:chunk_size + i]
+                      for i in range(0, len(response), chunk_size))
+            for chunk in chunks:
+                port.write(chunk)
             port.flush()
         except Exception as e:
             print("Error caught while processing line:", file=sys.stderr)
@@ -182,9 +248,11 @@ def main():
             print("-----", file=sys.stderr)
             sys.stderr.flush()
             exc_str = '{}: {}'.format(type(e).__name__, str(e))
-            port.write(json.dumps([id, 'error', exc_str]).encode('utf-8') + b"\n")
+            port.write(
+                json.dumps([id, 'error', exc_str]).encode('utf-8') + b"\n")
             port.flush()
             continue
+
 
 if __name__ == "__main__":
     main()

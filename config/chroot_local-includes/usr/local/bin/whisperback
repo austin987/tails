@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+########################################################################
+# WhisperBack - Send a feedback in an encrypted mail
+# Copyright (C) 2009-2018 Tails developers <tails@boum.org>
+#
+# This program is  free software; you can redistribute  it and/or modify
+# it under the  terms of the GNU General Public  License as published by
+# the Free Software Foundation; either  version 3 of the License, or (at
+# your option) any later version.
+#
+# This program  is distributed in the  hope that it will  be useful, but
+# WITHOUT   ANY  WARRANTY;   without  even   the  implied   warranty  of
+# MERCHANTABILITY  or FITNESS  FOR A  PARTICULAR PURPOSE.   See  the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+########################################################################
+
+"""WhisperBack launcher script
+
+"""
+
+import gettext
+import logging
+import logging.config
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+
+logging.config.fileConfig('/usr/share/whisperback/logging.conf')
+# Set loglevel if debug is found in kernel command line
+with open('/proc/cmdline') as cmdline_fd:
+    CMDLINE = cmdline_fd.read()
+if "debug" in CMDLINE.split():
+    logging.getLogger().setLevel(logging.DEBUG)
+
+import whisperBack
+
+ui = whisperBack.WhisperBackUI()
+Gtk.main()
