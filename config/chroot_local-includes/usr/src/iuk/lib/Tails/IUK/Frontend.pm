@@ -17,8 +17,12 @@ use English qw{-no_match_vars};
 use Env;
 use Function::Parameters;
 use IPC::Run;
+use Locale::Messages qw{bind_textdomain_codeset
+                        bind_textdomain_filter
+                        turn_utf_8_on};
 use Number::Format qw(:subs);
 use Path::Tiny;
+use POSIX;
 use String::Errf qw{errf};
 use Tails::Download::HTTPS;
 use Tails::RunningSystem;
@@ -29,10 +33,10 @@ use Try::Tiny;
 use Types::Path::Tiny qw{AbsDir AbsFile};
 use Types::Standard qw(ArrayRef Bool CodeRef Defined HashRef InstanceOf Int Maybe Str);
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+BEGIN {
+    bind_textdomain_filter 'tails', \&turn_utf_8_on;
+    bind_textdomain_codeset 'tails', 'utf-8';
+}
 
 no Moo::sification;
 use Moo;
@@ -42,8 +46,23 @@ with 'Tails::Role::HasEncoding';
 
 use namespace::clean;
 
+# Must be after namespace::clean, so that we can use "around" for the "__"
+# function.
+use Locale::TextDomain 'tails';
+
 use MooX::Options;
 
+# Workaround the fact MooX::Options is incompatible with Locale::TextDomain
+# (it needs a __ method, which it injects via MooX::Locale::Passthrough,
+# but that does not go well when Locale::TextDomain is loaded).
+around __ => sub {
+    my $orig = shift;
+    # if called as a class or object method,
+    # let's ignore the second argument ($self)
+    shift if ref $_[0] or $_[0] eq __PACKAGE__;
+    my $msgid = shift;
+    Locale::TextDomain::__($msgid);
+};
 
 =head1 ATTRIBUTES
 
@@ -173,10 +192,10 @@ method fatal_run_cmd (Str :$error_msg, ArrayRef :$cmd, Maybe[Str] :$as = undef, 
     $success or $self->fatal(
         errf("<b>%{error_msg}s</b>\n\n%{details}s",
              {
-                 error_msg => $error_msg, # was already decoded
-                 details   => $self->encoding->decode(gettext(
+                 error_msg => $error_msg,
+                 details   => __(
                      q{For debugging information, execute the following command: sudo tails-debugging-info}
-                 )),
+                 ),
              },
          ),
         title          => $error_title,
@@ -184,7 +203,7 @@ method fatal_run_cmd (Str :$error_msg, ArrayRef :$cmd, Maybe[Str] :$as = undef, 
             "exit code: %{exit_code}i\n\n".
             "stdout:\n%{stdout}s\n\n".
             "stderr:\n%{stderr}s",
-            { exit_code => $exit_code, stdout => $stdout, stderr => $stderr }
+            { exit_code => $exit_code, stdout => $stdout, stderr => $stderr },
         )),
     );
 
@@ -240,15 +259,13 @@ method refresh_signing_key () {
           or $success = 0;
     $exit_code = $?;
     $success or $self->fatal(
-        $self->encoding->decode(gettext(
+        __(
             q{<b>An error occured while updating the signing key.</b>\n\n}.
             q{<b>This prevents determining whether an upgrade is available from our website.</b>\n\n}.
             q{Check your network connection, and restart Tails to try upgrading again.\n\n}.
             q{If the problem persists, go to file:///usr/share/doc/tails/website/doc/upgrade/error/check.en.html},
-        )),
-        title => $self->encoding->decode(gettext(
-            q{Error while updating the signing key}
-        )),
+        ),
+        title => __(q{Error while updating the signing key}),
         debugging_info => $self->encoding->decode(errf(
             "exit code: %{exit_code}i\n\n".
             "stdout:\n%{stdout}s\n\n".
@@ -275,14 +292,12 @@ method get_upgrade_description () {
     }
     my ($stdout, $stderr, $success, $exit_code) = $self->fatal_run_cmd(
         cmd         => [ 'tails-iuk-get-upgrade-description-file', @args ],
-        error_title => $self->encoding->decode(gettext(
-            q{Error while checking for upgrades}
-        )),
-        error_msg   => $self->encoding->decode(gettext(
+        error_title => __(q{Error while checking for upgrades}),
+        error_msg   => __(
             "<b>Could not determine whether an upgrade is available from our website.</b>\n\n".
             "Check your network connection, and restart Tails to try upgrading again.\n\n".
             "If the problem persists, go to file:///usr/share/doc/tails/website/doc/upgrade/error/check.en.html",
-    )));
+    ));
 
     return ($stdout, $stderr, $success, $exit_code);
 }
@@ -293,37 +308,35 @@ method no_incremental_explanation (Str $no_incremental_reason) {
     my $explanation;
 
     if ($no_incremental_reason eq 'no-incremental-upgrade-path') {
-        $explanation = gettext(
+        $explanation = __(
             q{no automatic upgrade is available from our website }.
             q{for this version}
         );
     }
     elsif ($no_incremental_reason eq 'not-installed-with-tails-installer') {
-        $explanation = gettext(
+        $explanation = __(
             q{your device was not created using a USB image or Tails Installer}
         );
     }
     elsif ($no_incremental_reason eq 'non-writable-device') {
-        $explanation = gettext(
+        $explanation = __(
             q{Tails was started from a DVD or a read-only device}
         );
     }
     elsif ($no_incremental_reason eq 'not-enough-free-space') {
-        $explanation = gettext(
+        $explanation = __(
             q{there is not enough free space on the Tails system partition}
         );
     }
     elsif ($no_incremental_reason eq 'not-enough-free-memory') {
-        $explanation = gettext(
+        $explanation = __(
             q{not enough memory is available on this system}
         );
     }
     else {
-        $self->debug(errf(
-            $self->encoding->decode(gettext(
-                q{No explanation available for reason '%{reason}s'.}
-            )),
-            { reason => $no_incremental_reason }
+        $self->debug(__x(
+                q{No explanation available for reason '{reason}'.},
+                reason => $no_incremental_reason,
         ));
         $explanation = $no_incremental_reason;
     }
@@ -343,13 +356,13 @@ method run () {
     $self->checked_upgrades_file->touch;
 
     unless ($upgrade_description->contains_upgrade_path) {
-        $self->info($self->encoding->decode(gettext("The system is up-to-date")));
+        $self->info(__("The system is up-to-date"));
         exit(0);
     }
 
-    $self->info($self->encoding->decode(gettext(
+    $self->info(__(
         'This version of Tails is outdated, and may have security issues.'
-    )));
+    ));
     my ($upgrade_path, $upgrade_type, $no_incremental_reason);
 
     if ($self->running_system->started_from_writable_device) {
@@ -378,32 +391,24 @@ method run () {
             }
             else {
                 $no_incremental_reason = 'not-enough-free-space';
-                $self->info(errf(
-                    $self->encoding->decode(gettext(
-                        "The available incremental upgrade requires ".
-                        "%{space_needed}s ".
-                        "of free space on Tails system partition, ".
-                        " but only %{free_space}s is available."
-                    )),
-                    {
-                        space_needed => format_bytes($space_needed, mode => "iec", precision => 0),
-                        free_space   => format_bytes($free_space,   mode => "iec", precision => 0),
-                    }
+                $self->info(__x(
+                    "The available incremental upgrade requires ".
+                    "{space_needed} ".
+                    "of free space on Tails system partition, ".
+                    " but only {free_space} is available.",
+                    space_needed => format_bytes($space_needed, mode => "iec", precision => 0),
+                    free_space   => format_bytes($free_space,   mode => "iec", precision => 0),
                 ));
             }
         }
         else {
             $no_incremental_reason = 'not-enough-free-memory';
-            $self->info(errf(
-                $self->encoding->decode(gettext(
-                    "The available incremental upgrade requires ".
-                    "%{memory_needed}s of free memory, but only ".
-                    "%{free_memory}s is available."
-                    )),
-                {
-                    memory_needed => format_bytes($memory_needed, mode => "iec", precision => 0),
-                    free_memory   => format_bytes($free_memory,   mode => "iec", precision => 0),
-                }
+            $self->info(__x(
+                "The available incremental upgrade requires ".
+                "{memory_needed} of free memory, but only ".
+                "{free_memory} is available.",
+                memory_needed => format_bytes($memory_needed, mode => "iec", precision => 0),
+                free_memory   => format_bytes($free_memory,   mode => "iec", precision => 0),
             ));
         }
     }
@@ -417,62 +422,53 @@ method run () {
         }
         else {
             $self->fatal(
-                $self->encoding->decode(gettext(
+                __(
                     "An incremental upgrade is available, but no full upgrade is.\n".
                     "This should not happen. Please report a bug."
-                )),
-                title => $self->encoding->decode(gettext(
+                ),
+                title => __(
                     q{Error while detecting available upgrades}
-                )),
+                ),
             );
         }
     }
 
     if ($upgrade_type eq 'incremental') {
         exit(0) unless($self->dialog(
-            errf(
-                $self->encoding->decode(gettext(
-                    "<b>You should upgrade to %{name}s %{version}s.</b>\n\n".
-                    "For more information about this new version, go to %{details_url}s\n\n".
-                    "We recommend you close all other applications during the upgrade.\n".
-                    "Downloading the upgrade might take a long time, from several minutes to a few hours.\n\n".
-                    "Download size: %{size}s\n\n".
-                    "Do you want to upgrade now?"
-                )),
-                {
-                    details_url => $upgrade_path->{'details-url'},
-                    name        => $upgrade_description->product_name,
-                    version     => $upgrade_path->{version},
-                    size        => format_bytes($upgrade_path->{'total-size'},
-                                                mode => "iec", precision => 0),
-                }),
-            title        => $self->encoding->decode(gettext(q{Upgrade available})),
-            ok_label     => $self->encoding->decode(gettext(q{Upgrade now})),
-            cancel_label => $self->encoding->decode(gettext(q{Upgrade later})),
+            __x(
+                "<b>You should upgrade to {name} {version}.</b>\n\n".
+                "For more information about this new version, go to {details_url}\n\n".
+                "We recommend you close all other applications during the upgrade.\n".
+                "Downloading the upgrade might take a long time, from several minutes to a few hours.\n\n".
+                 "Download size: {size}\n\n".
+                 "Do you want to upgrade now?",
+                details_url => $upgrade_path->{'details-url'},
+                name        => $upgrade_description->product_name,
+                version     => $upgrade_path->{version},
+                size        => format_bytes($upgrade_path->{'total-size'},
+                                            mode => "iec", precision => 0),
+                ),
+            title        => __(q{Upgrade available}),
+            ok_label     => __(q{Upgrade now}),
+            cancel_label => __(q{Upgrade later}),
             ));
         $self->do_incremental_upgrade($upgrade_path);
     }
     else {
         exit(0) unless($self->dialog(
-            errf(
-                $self->encoding->decode(gettext(
-                    "<b>You should do a manual upgrade to %{name}s %{version}s.</b>\n\n".
-                    "For more information about this new version, go to %{details_url}s\n\n".
-                     "It is not possible to automatically upgrade ".
-                     "your device to this new version: %{explanation}s.\n\n".
-                     "To learn how to do a manual upgrade, go to ".
-                     "https://tails.boum.org/doc/upgrade/#manual",
-                )),
-                {
-                    details_url => $upgrade_path->{'details-url'},
-                    name        => $upgrade_description->product_name,
-                    version     => $upgrade_path->{version},
-                    explanation => $self->encoding->decode(
-                        $self->no_incremental_explanation($no_incremental_reason)
-                    ),
-                }
+            __x(
+                "<b>You should do a manual upgrade to {name} {version}.</b>\n\n".
+                "For more information about this new version, go to {details_url}\n\n".
+                "It is not possible to automatically upgrade ".
+                "your device to this new version: {explanation}.\n\n".
+                "To learn how to do a manual upgrade, go to ".
+                "https://tails.boum.org/doc/upgrade/#manual",
+                details_url => $upgrade_path->{'details-url'},
+                name        => $upgrade_description->product_name,
+                version     => $upgrade_path->{version},
+                explanation => $self->no_incremental_explanation($no_incremental_reason),
             ),
-            title => $self->encoding->decode(gettext(q{New version available})),
+            title => __(q{New version available}),
             type  => 'info',
         ));
         $self->do_full_upgrade($upgrade_path);
@@ -553,16 +549,12 @@ fun space_needed (HashRef $upgrade_path) {
 }
 
 method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $destdir) {
-    my $title = $self->encoding->decode(gettext("Downloading upgrade"));
-    my $info = $self->encoding->decode(errf(
-        gettext(
-            "Downloading the upgrade to %{name}s %{version}s..."
-        ),
-        {
-            name    => $self->product_name,
-            version => $upgrade_path->{version},
-        }
-    ));
+    my $title = __("Downloading upgrade");
+    my $info = __x(
+        "Downloading the upgrade to {name} {version}...",
+        name    => $self->product_name,
+        version => $upgrade_path->{version},
+    );
     $self->info($info);
 
     foreach my $target_file (target_files($upgrade_path, $destdir)) {
@@ -595,26 +587,19 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
         $success or $self->fatal(
             errf("<b>%{error_msg}s</b>\n\n%{details}s",
                  {
-                     error_msg      => $self->encoding->decode(errf(
-                         gettext(
-                             q{<b>The upgrade could not be downloaded.</b>\n\n}.
-                             q{Check your network connection, and restart }.
-                             q{Tails to try upgrading again.\n\n}.
-                             q{If the problem persists, go to }.
-                             q{file:///usr/share/doc/tails/website/doc/upgrade/error/download.en.html}
-                         ),
-                         {
-                             target_url => $target_file->{url},
-                         }
-                     )),
-                     details => $self->encoding->decode(gettext(
+                     error_msg => __(
+                         q{<b>The upgrade could not be downloaded.</b>\n\n}.
+                         q{Check your network connection, and restart }.
+                         q{Tails to try upgrading again.\n\n}.
+                         q{If the problem persists, go to }.
+                         q{file:///usr/share/doc/tails/website/doc/upgrade/error/download.en.html}
+                     ),
+                     details   => __(
                          q{For debugging information, execute the following command: sudo tails-debugging-info}
-                     )),
+                     ),
                  }
             ),
-            title => $self->encoding->decode(gettext(
-                q{Error while downloading the upgrade}
-            )),
+            title => __(q{Error while downloading the upgrade}),
             debugging_info => $self->encoding->decode(errf(
                 "exit code: %{exit_code}i\n\n".
                 "stderr:\n%{stderr}s",
@@ -623,17 +608,13 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
         );
 
         -e $target_file->{output_file} or $self->fatal(
-            $self->encoding->decode(errf(
-                gettext(
-                    q{Output file '%{output_file}s' does not exist, but }.
-                    q{tails-iuk-get-target-file did not complain. }.
-                    q{Please report a bug.}
-                ),
-                { output_file => $target_file->{output_file} }
-            )),
-            title => $self->encoding->decode(gettext(
-                q{Error while downloading the upgrade}
-            )),
+            __x(
+                q{Output file '{output_file}' does not exist, but }.
+                q{tails-iuk-get-target-file did not complain. }.
+                q{Please report a bug.},
+                output_file => $target_file->{output_file},
+            ),
+            title => __(q{Error while downloading the upgrade}),
         );
     }
 }
@@ -643,12 +624,12 @@ method do_incremental_upgrade (HashRef $upgrade_path) {
 
     my ($target_files_tempdir) = $self->fatal_run_cmd(
         cmd       => ['tails-iuk-mktemp-get-target-file'],
-        error_title => $self->encoding->decode(gettext(
+        error_title => __(
             q{Error while creating temporary downloading directory}
-        )),
-        error_msg => $self->encoding->decode(gettext(
+        ),
+        error_msg => __(
             "Failed to create temporary download directory"
-        )),
+        ),
         as        => 'tails-iuk-get-target-file',
     );
     chomp $target_files_tempdir;
@@ -670,13 +651,11 @@ method do_incremental_upgrade (HashRef $upgrade_path) {
             )->transformURL($url);
         } catch {
             $self->fatal(
-                $self->encoding->decode(gettext(
+                __(
                     "<b>Could not choose a download server.</b>\n\n".
                     "This should not happen. Please report a bug.",
-                )),
-                title => $self->encoding->decode(gettext(
-                    q{Error while choosing a download server}
-                )),
+                ),
+                title => __(q{Error while choosing a download server}),
                 debugging_info => $self->encoding->decode($_),
             );
         };
@@ -689,30 +668,28 @@ method do_incremental_upgrade (HashRef $upgrade_path) {
     );
 
     $self->dialog(
-        $self->encoding->decode(gettext(
+        __(
             "The upgrade was successfully downloaded.\n\n".
             "The network connection will now be disabled.\n\n".
             "Please save your work and close all other applications."
-        )),
+        ),
         type     => 'info',
-        title    => $self->encoding->decode(gettext(
-            q{Upgrade successfully downloaded}
-        )),
-        ok_label => $self->encoding->decode(gettext(q{Apply upgrade})),
+        title    => __(q{Upgrade successfully downloaded}),
+        ok_label => __(q{Apply upgrade}),
     );
 
     $self->install_iuk($upgrade_path, path($target_files_tempdir));
 
     $self->dialog(
-        $self->encoding->decode(gettext(
+        __(
             "<b>Your Tails device was successfully upgraded.</b>\n\n".
             "Some security features were temporarily disabled.\n".
             "You should restart Tails on the new version as soon as possible.\n\n".
             "Do you want to restart now?"
-        )),
-        title        => $self->encoding->decode(gettext(q{Restart Tails})),
-        ok_label     => $self->encoding->decode(gettext(q{Restart now})),
-        cancel_label => $self->encoding->decode(gettext(q{Restart later})),
+        ),
+        title        => __(q{Restart Tails}),
+        ok_label     => __(q{Restart now}),
+        cancel_label => __(q{Restart later}),
     ) && $self->restart_system;
 
     exit(0);
@@ -722,12 +699,8 @@ method restart_system () {
     $self->info("Restarting the system");
     $self->fatal_run_cmd(
         cmd       => ['/sbin/reboot'],
-        error_title => $self->encoding->decode(gettext(
-            q{Error while restarting the system}
-        )),
-        error_msg => $self->encoding->decode(gettext(
-            q{Failed to restart the system}
-        )),
+        error_title => __(q{Error while restarting the system}),
+        error_msg => __(q{Failed to restart the system}),
         as        => 'root',
     ) unless $ENV{HARNESS_ACTIVE};
 }
@@ -740,22 +713,18 @@ method shutdown_network () {
     $self->info("Shutting down network connection");
     $self->fatal_run_cmd(
         cmd       => ['tails-shutdown-network'],
-        error_title => $self->encoding->decode(gettext(
-            q{Error while shutting down the network}
-        )),
-        error_msg => $self->encoding->decode(gettext(
-            q{Failed to shutdown network}
-        )),
+        error_title => __(q{Error while shutting down the network}),
+        error_msg => __(q{Failed to shutdown network}),
         as        => 'root',
     ) unless $ENV{HARNESS_ACTIVE};
 }
 
 method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
-    my $title = $self->encoding->decode(gettext("Upgrading the system"));
-    my $info = $self->encoding->decode(gettext(
+    my $title = __("Upgrading the system");
+    my $info = __(
         "<b>Your Tails device is being upgraded...</b>\n\n".
         "For security reasons, the networking is now disabled."
-    ));
+    );
     $self->info($info);
 
     $self->shutdown_network;
@@ -783,21 +752,20 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
     $zenity_h->kill_kill unless $self->batch;
 
     $success or $self->fatal(
-        errf("<b>%{error_msg}s</b>\n\n%{details}s",
+        $self->encoding->decode(errf("<b>%{error_msg}s</b>\n\n%{details}s",
              {
-                 error_msg => $self->encoding->decode(gettext(
+                 error_msg => __(
                      q{<b>An error occured while installing the upgrade.</b>\n\n}.
                      q{Your Tails device needs to be repaired and might be unable to restart.\n\n}.
                      q{Please follow the instructions at }.
-                     q{file:///usr/share/doc/tails/website/doc/upgrade/error/install.en.html})),
-                 details   => $self->encoding->decode(gettext(
+                     q{file:///usr/share/doc/tails/website/doc/upgrade/error/install.en.html}
+                 ),
+                 details   => __(
                      q{For debugging information, execute the following command: sudo tails-debugging-info}
-                 )),
+                 ),
              },
-         ),
-        title => $self->encoding->decode(gettext(
-            q{Error while installing the upgrade}
         )),
+        title => __(q{Error while installing the upgrade}),
         debugging_info => $self->encoding->decode(errf(
             "exit code: %{exit_code}i\n\n".
             "stdout:\n%{stdout}s\n\n".
