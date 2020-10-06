@@ -911,8 +911,8 @@ class LinuxTailsInstallerCreator(TailsInstallerCreator):
             append = 'p1'
         if not append:
             self.log.warning(
-                _("Unsupported device '%(device)s', please report a bug." %
-                  {'device': full_drive_name})
+                _("Unsupported device '%(device)s', please report a bug.") %
+                {'device': full_drive_name}
             )
             self.log.info(_('Trying to continue anyway.'))
             append = '1'
@@ -929,8 +929,8 @@ class LinuxTailsInstallerCreator(TailsInstallerCreator):
                 raise TailsInstallerError(_("Unknown filesystem.  Your device "
                                             "may need to be reformatted."))
             else:
-                raise TailsInstallerError(_("Unsupported filesystem: %s" %
-                                            self.fstype))
+                raise TailsInstallerError(_("Unsupported filesystem: %s") %
+                                          self.fstype)
         if self.drive['label'] != self.label:
             self.log.info("Setting %(device)s label to %(label)s" %
                           {'device': self.drive['device'],
@@ -948,7 +948,7 @@ class LinuxTailsInstallerCreator(TailsInstallerCreator):
                                                         self.label))
             except TailsInstallerError, e:
                 self.log.error(_("Unable to change volume label: %(message)s") %
-                                 {'message': str(e)})
+                               {'message': str(e)})
 
     def install_bootloader(self):
         """ Run syslinux to install the bootloader on our devices """
@@ -1148,8 +1148,8 @@ class LinuxTailsInstallerCreator(TailsInstallerCreator):
         with open(mbr_path, 'rb') as mbr_fd:
             self.extracted_mbr_content = mbr_fd.read()
         if not len(self.extracted_mbr_content):
-            raise TailsInstallerError(_("Could not read the extracted MBR from %(path)s"
-                                 % {path: mbr_path}))
+            raise TailsInstallerError(_("Could not read the extracted MBR from %(path)s")
+                                      % {'path': mbr_path})
 
     def reset_mbr(self):
         parent = parent = self.drive.get('parent', self._drive)

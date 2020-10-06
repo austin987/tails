@@ -52,7 +52,7 @@ def extract_file_content_from_iso(iso_path, path):
     err = unicode_to_utf8(err)
     if proc.returncode:
         raise Exception(_("There was a problem executing `%s`."
-                          "%s\n%s" % (cmd, out, err)))
+                          "%s\n%s") % (cmd, out, err))
     return out
 
 def iso_is_live_system(iso_path):
