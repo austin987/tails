@@ -1447,21 +1447,42 @@ Copy the signatures and the Torrents into the website repository:
 	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
-Write the announcement for the release in
-`${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
+Write the announcement for the release:
 
-- Update the `meta title` directive.
-- Update the `meta date` directive.
-- Document important config changes that users of the Persistent Storage have to do
-  themselves (e.g. the Pidgin proxy settings change in
-  [[!tails_gitweb_commit 9925321]] breaks all existing persistent
-  profiles).
-- Document known issues.
-- This snippet can help to convert the copied changelog's issue
-  references to links:
+1. Set these environment variables, in the format `YYYY-MM-DD`:
 
-      sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
-          wiki/src/news/test_${TAG:?}.mdwn
+   - `RELEASE_DATE`: the date when you plan to publish this non-final release
+   - `FINAL_RELEASE_DATE`: the date when we plan to publish the final release
+     you're preparing a RC for
+
+2. Generate the boilerplate contents from the template:
+
+        ./bin/generate-call-for-testing \
+           --version "${VERSION:?}" \
+           --tag "${TAG:?}" \
+           --date "${RELEASE_DATE:?}" \
+           --final-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+           --final-date "${FINAL_RELEASE_DATE:?}" \
+        > ${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn
+
+3. Edit `${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`:
+
+   - Mention major user-visible improvements.
+
+     This snippet can help to convert the copied changelog's issue
+     references to links:
+
+         sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
+             wiki/src/news/test_${TAG:?}.mdwn
+
+   - Document important config changes that users of the Persistent Storage have to do
+     themselves (e.g. the Pidgin proxy settings change in
+     [[!tails_gitweb_commit 9925321]] breaks all existing persistent
+     profiles).
+
+   - Document known issues.
+
+   - Look for _FIXME_.
 
 In `wiki/src/home/testing.html`, add a bullet point with a pointer to
 the call for testing for this release candidate

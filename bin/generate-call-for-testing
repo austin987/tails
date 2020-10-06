@@ -1,0 +1,32 @@
+#! /usr/bin/python3
+
+import email.utils
+import subprocess
+
+from datetime import datetime
+import jinja2
+
+
+def call_for_testing_contents(args) -> str:
+    jinja2_env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader('config/release_management/templates'))
+
+    return (jinja2_env.get_template('call_for_testing.mdwn').render(
+        date=email.utils.format_datetime(datetime.fromisoformat(args.date)),
+        version=args.version,
+        tag=args.tag,
+        final_date=datetime.fromisoformat(args.final_date).strftime("%B %d"),
+        final_version=args.final_version))
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version', required=True)
+    parser.add_argument('--tag', required=True)
+    parser.add_argument('--date', required=True)
+    parser.add_argument('--final-version', required=True)
+    parser.add_argument('--final-date', required=True)
+    args = parser.parse_args()
+
+    print(call_for_testing_contents(args))
