@@ -290,9 +290,11 @@ class TailsInstallerCreator(object):
         if self.totalsize > freebytes:
             raise TailsInstallerError(_(
                 "Not enough free space on device." +
-                "\n%dMB ISO + %dMB overlay > %dMB free space") %
-                (self.source.size/1024**2, self.overlay,
-                 freebytes/1024**2))
+                "\n%(iso_size)dMB ISO + %(overlay_size)dMB overlay " +
+                "> %(free_space)dMB free space") %
+                {'iso_size': self.source.size/1024**2,
+                 'overlay_size': self.overlay,
+                 'free_space': freebytes/1024**2})
 
     def create_persistent_overlay(self):
         if self.overlay:

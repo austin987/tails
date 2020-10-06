@@ -45,8 +45,12 @@ class LocalIsoSource(Source):
         out = out.decode('utf-8')
         err = err.decode('utf-8')
         if proc.returncode:
-            raise SourceError(_("There was a problem executing `%s`.\n"
-                                "%s\n%s") % (cmd_decoded, out, err))
+            raise SourceError(_("There was a problem executing `%(cmd)s`.\n"
+                                "%(out)s\n%(err)s") % {
+                                    'cmd': cmd_decoded,
+                                    'out': out,
+                                    'err': err
+                                })
         _set_liberal_perms_recursive(destination)
 
 
