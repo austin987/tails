@@ -1177,6 +1177,42 @@ Sanity check
 Verify once more that the Tor Browser we ship is still the most recent (see
 above).
 
+Delete obsolete IUKs
+--------------------
+
+Skip this section if you're preparing a non-final release (beta, RC).
+
+Delete the IUKs that upgrade to any beta or RC corresponding to the version you
+are preparing:
+
+ - first check that it's not going to remove anything we want to keep:
+
+        ssh rsync.lizard /bin/sh -c \
+            \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
+                   /srv/rsync/tails/tails/stable/iuk/v2 \
+                   -type f \
+                   -name "*_to_${VERSION:?}~*.iuk" \
+                   -not -name '*~test_*~test.iuk' \
+                   -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                   -ls \
+            \"
+
+ - then actually delete the files:
+
+        ssh rsync.lizard /bin/sh -c \
+            \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
+                   /srv/rsync/tails/tails/stable/iuk/v2 \
+                   -type f \
+                   -name "*_to_${VERSION:?}~*.iuk" \
+                   -not -name '*~test_*~test.iuk' \
+                   -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                   -print -delete \
+            \"
+
+Rationale: avoid the need for mirrors to store 3 concurrent sets of IUKs
+([[!tails_ticket 17944]]). It's OK to delete them now, because we're past the
+deadline we've announced in the call for testing.
+
 <a id="publish-iuk"></a>
 
 Publish the ISO, IMG, and IUKs over HTTP
