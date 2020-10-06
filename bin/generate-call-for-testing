@@ -3,8 +3,12 @@
 import email.utils
 import subprocess
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import jinja2
+
+
+def feedback_deadline(final_date: datetime) -> datetime:
+    return final_date - timedelta(days=2)
 
 
 def call_for_testing_contents(args) -> str:
@@ -16,7 +20,9 @@ def call_for_testing_contents(args) -> str:
         version=args.version,
         tag=args.tag,
         final_date=datetime.fromisoformat(args.final_date).strftime("%B %d"),
-        final_version=args.final_version))
+        final_version=args.final_version,
+        deadline=feedback_deadline(datetime.fromisoformat(
+            args.final_date)).strftime("%B %d")))
 
 
 if __name__ == '__main__':
