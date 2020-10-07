@@ -56,7 +56,8 @@ pref("mail.server.default.enableAutocrypt", false);
 pref("mailnews.p7m_subparts_external", true);
 
 // Sanitize mime headers
-pref("mail.mime.avoid_fingerprinting", true);
+pref("mail.suppress_content_language", true);
+pref("mail.sanitize_date_header", true);
 
 // Make all system-wide dictionaries available
 pref("spellchecker.dictionary_path", "/usr/share/hunspell");
