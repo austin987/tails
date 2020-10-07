@@ -14,14 +14,14 @@ goodcrypto.com converted from bash to python and added basic tests.
 <BLANKLINE>
 """
 
+import gettext
 import os
 import sys
 import subprocess
-from gettext import gettext
-
 import sh
 
-os.environ['TEXTDOMAIN'] = 'tails'
+translation = gettext.translation("tails", '/usr/share/locale', fallback=True)
+_ = translation.gettext
 
 HOME_DIR = os.environ['HOME']
 CONF_DIR = os.path.join(HOME_DIR, '.electrum')
@@ -59,14 +59,14 @@ def verify_start():
     True
     """
 
-    disabled_text = gettext('Persistence is disabled for Electrum')
-    warning_text = gettext(
+    disabled_text = _('Persistence is disabled for Electrum')
+    warning_text = _(
         "When you reboot Tails, all of Electrum's data will be lost, including your Bitcoin wallet.\nIt is strongly recommended to only run Electrum when its persistence feature is activated.")
-    question_text = gettext('Do you want to start Electrum anyway?')
+    question_text = _('Do you want to start Electrum anyway?')
     dialog_msg = ('<b><big>{}</big></b>\n\n{}\n\n{}\n'.
                   format(disabled_text, warning_text, question_text))
-    launch_text = gettext('_Launch')
-    exit_text = gettext('_Exit')
+    launch_text = _('_Launch')
+    exit_text = _('_Exit')
 
     # results 0 == True; 1 == False; 5 == Timeout
     results = sh.zenity('--question', '--title', '', '--default-cancel',
