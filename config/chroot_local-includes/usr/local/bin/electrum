@@ -35,7 +35,9 @@ def main(*args):
     # Disable update checking for all users (even those who made their config
     # persistent before we changed this value in the default config), because
     # users can't easily update to a new version anyway if it's not in Debian.
-    subprocess.run(['/usr/bin/electrum', '--offline', 'setconfig', 'check_updates', 'false'], check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(['/usr/bin/electrum', '--offline',
+                    'setconfig', 'check_updates', 'false'],
+                   check=True, stdout=subprocess.DEVNULL)
     os.execv('/usr/bin/electrum', ['/usr/bin/electrum'] + list(args))
 
 
@@ -74,7 +76,7 @@ def verify_start():
                         '--ok-label', launch_text,
                         '--cancel-label', exit_text,
                         '--text', dialog_msg,
-                        _ok_code=[0,1,5])
+                        _ok_code=[0, 1, 5])
     start = results.exit_code == 0
 
     return start
