@@ -577,9 +577,15 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             $exit_code = $?;
         }
         else {
-            my ($download_h,$zenity_h,$download_out);
-            $download_h =  IPC::Run::start \@cmd,\undef,\$download_out, '2>',\$stderr; 
-            $zenity_h = IPC::Run::start [qw{zenity --progress --percentage=0 --auto-close}, '--title', $title, '--text', $info],\$download_out;
+            my ($download_h, $zenity_h, $download_out);
+            $download_h =  IPC::Run::start \@cmd,
+                \undef, \$download_out, '2>', \$stderr;
+            $zenity_h = IPC::Run::start
+                [
+                    qw{zenity --progress --percentage=0 --auto-close},
+                    '--title', $title, '--text', $info
+                ],
+                \$download_out;
             try {
                 while ($zenity_h->pumpable && $download_h->pumpable ) {
                     $download_h->pump_nb;
@@ -738,17 +744,18 @@ method shutdown_network () {
 
 method cancel_download () {
     $self->info("Cancelling the upgrade download");
+    return unless $ENV{HARNESS_ACTIVE};
+
     $self->fatal_run_cmd(
-        cmd       => ['tails-iuk-cancel-download'],
+        cmd         => ['tails-iuk-cancel-download'],
         error_title => $self->encoding->decode(gettext(
             q{Error while cancelling the upgrade download}
         )),
-        error_msg => $self->encoding->decode(gettext(
+        error_msg   => $self->encoding->decode(gettext(
             q{Failed to cancel the upgrade download}
         )),
-        as        => 'root',
-    ) unless $ENV{HARNESS_ACTIVE};
-    
+        as          => 'root',
+    );
 }
 
 method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
