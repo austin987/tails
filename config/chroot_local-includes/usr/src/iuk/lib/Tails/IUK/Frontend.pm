@@ -748,12 +748,8 @@ method cancel_download () {
 
     $self->fatal_run_cmd(
         cmd         => ['tails-iuk-cancel-download'],
-        error_title => $self->encoding->decode(gettext(
-            q{Error while cancelling the upgrade download}
-        )),
-        error_msg   => $self->encoding->decode(gettext(
-            q{Failed to cancel the upgrade download}
-        )),
+        error_title => __(q{Error while cancelling the upgrade download}),
+        error_msg   => __(q{Failed to cancel the upgrade download}),
         as          => 'root',
     );
 }
