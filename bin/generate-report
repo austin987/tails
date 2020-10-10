@@ -17,7 +17,7 @@ PYTHON_GITLAB_NAME = os.getenv('GITLAB_NAME', default='Tails')
 
 GROUP_NAME = 'tails'
 
-# Only changes in these projects are considered
+# By default, only changes in these projects are considered
 PROJECTS = [
     GROUP_NAME + '/' + project for project in [
         'chutney',
@@ -49,9 +49,11 @@ class GitLabWrapper(gitlab.Gitlab):
 
 
 class ReportGenerator(object):
-    def __init__(self, gl, group, label: str, year: int, month: int):
+    def __init__(self, gl, group, projects: list, label: str, year: int,
+                 month: int):
         self.gl = gl
         self.group = group
+        self.projects = projects
         self.label = label
         self.after = end_of_previous_month(year, month)
         self.before = beginning_of_next_month(year, month)
@@ -73,7 +75,7 @@ class ReportGenerator(object):
         for issue in gl_closed_issues:
             project = self.gl.project(issue["project_id"])
             issue = project.issues.get(issue["iid"])
-            if self.label not in issue.labels:
+            if self.label is not None and self.label not in issue.labels:
                 continue
             closed_issues.append({
                 "title": issue.title,
@@ -84,7 +86,7 @@ class ReportGenerator(object):
 
     def closed_issues(self) -> list:
         closed_issues = []
-        for project in PROJECTS:
+        for project in self.projects:
             closed_issues = closed_issues + self.closed_issues_in_project(
                 project)
         return closed_issues
@@ -103,7 +105,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--year', type=int, required=True)
     parser.add_argument('--month', type=int, required=True)
-    parser.add_argument('--label', required=True)
+    parser.add_argument('--label', default=None)
+    parser.add_argument('--project')
     parser.add_argument("--debug", action="store_true", help="debug output")
     args = parser.parse_args()
 
@@ -119,8 +122,13 @@ if __name__ == '__main__':
     group = gl.groups.list(search=GROUP_NAME)[0]
     assert isinstance(group, gitlab.v4.objects.Group)
 
-    report_generator = ReportGenerator(gl, group, args.label, args.year,
-                                       args.month)
+    if args.project:
+        projects = [args.project]
+    else:
+        projects = PROJECTS
+
+    report_generator = ReportGenerator(gl, group, projects, args.label,
+                                       args.year, args.month)
 
     print("Closed issues")
     print("=============")
