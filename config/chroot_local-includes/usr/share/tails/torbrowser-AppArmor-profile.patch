@@ -1,5 +1,5 @@
 diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index 57c0359..61aa937 100644
+index 57c0359..e89da56 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,11 +1,12 @@
@@ -101,7 +101,7 @@ index 57c0359..61aa937 100644
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -101,12 +100,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -101,22 +100,20 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -114,12 +114,26 @@ index 57c0359..61aa937 100644
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
    owner /dev/shm/org.mozilla.ipc.[0-9]*.[0-9]* rw, # for Chromium IPC
-@@ -121,6 +114,25 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+ 
+   # Deny access to DRM nodes, that's granted by the X abstraction, which is
+   # sourced by the gnome abstraction, that we include.
+-  deny /dev/dri/** rwklx,
++  # Makes Tor Browser take ages to start
++  # (https://gitlab.tails.boum.org/tails/tails/-/issues/17896)
++  # deny /dev/dri/** rwklx,
+ 
+   # Silence denial logs about permissions we don't need
+-  deny /dev/dri/   rwklx,
++  # Makes Tor Browser take ages to start
++  # (https://gitlab.tails.boum.org/tails/tails/-/issues/17896)
++  # deny /dev/dri/   rwklx,
+   deny @{HOME}/.cache/fontconfig/ rw,
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
-   deny @{HOME}/.config/gtk-2.0/** rw,
-+  deny /usr/local/lib/tor-browser/update.test/ rw,
-+
+@@ -128,6 +125,24 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+   deny /usr/bin/lsb_release x,
+   deny capability sys_admin,
+ 
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
 +  # https://labs.riseup.net/code/issues/9261)
@@ -135,12 +149,13 @@ index 57c0359..61aa937 100644
 +  # access to it that's granted by the freedesktop.org abstraction.
 +  deny @{HOME}/.local/share/recently-used.xbel* rw,
 +
-+  # Silence denial logs about permissions we don't need
-+  deny /dev/dri/   rwklx,
-   deny @{PROC}/@{pid}/net/route r,
-   deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
-   deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -148,5 +160,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
++  # Silence denial logs about permissions we don't need (Tails-specific)
++  deny /usr/local/lib/tor-browser/update.test/ rw,
++
+   # Silence denial logs about PulseAudio
+   deny /etc/pulse/client.conf r,
+   deny /usr/bin/pulseaudio x,
+@@ -148,5 +163,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    # Yubikey NEO also needs this:
    /sys/devices/**/hidraw/hidraw*/uevent r,
  
