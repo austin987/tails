@@ -31,30 +31,143 @@ Configure an email account
 
 [[!inline pages="doc/anonymous_internet/thunderbird/account_creation.inline" raw="yes" sort="age"]]
 
-OpenPGP encryption with Enigmail
-================================
+<a id="openpgp"></a>
 
-<span class="application">Thunderbird</span> in Tails includes the
-<span class="application">[Enigmail](https://www.enigmail.net/)</span>
-extension to encrypt and authenticate emails using OpenPGP.
+OpenPGP encryption
+==================
 
-To configure <span class="application">Enigmail</span> for your email account, you can start the
-<span class="application">Enigmail Setup Wizard</span> by choosing
+<div class="note">
+
+<p>
+Since Tails 4.12 we install <span class="application">Thunderbird
+78</span> which introduces built-in support for OpenPGP encryption,
+making <span class="application">Enigmail</span> obsolete. If you
+currently use <span class="application">Enigmail</span> in Tails,
+consider following our [[migration instructions|openpgp_migration]].
+</p>
+
+</div>
+
+<span class="application">Thunderbird's</span> [official HOWTO and
+FAQ](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq)
+contains a lot of useful information, so consider having a look there
+as well!
+
+Recommendation: set up a Master Password
+----------------------------------------
+
+Before you configure OpenPGP we recommend that you [[set up a Master
+Password|openpgp_migration#master_password]] in order to protect your
+private keys better.
+
+Generate a new OpenPGP key
+--------------------------
+
+<div class="note">
+
+<p>
+In case you are a <span class="application">GnuPG</span> user, note
+that <span class="application">Thunderbird</span> and <span
+class="application">GnuPG</span> uses separate keyrings. Any public
+key you want to use in <span class="application">Thunderbird</span>
+must be present in its keyring, so if you only have them in <span
+class="application">GnuPG</span>, you must [[export it from <span
+class="application">GnuPG</span> and import it in <span
+class="application">Thunderbird</span>|openpgp_migration#migrate_public_keys]].
+</p>
+
+</div>
+
+1. Enter
+   <span class="menuchoice">
+     <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
+     <span class="guimenuitem">Account Settings</span></span>.
+
+1. Under the account you wish to generate a key for, select <span
+   class="guilabel">End-To-End Encryption</span> to open the account's
+   OpenPGP settings.
+
+1. Click <span class="button">Add Key…</span>, select <span
+   class="guilabel">Create a new OpenPGP Key</span>, click <span
+   class="button">Continue</span> and follow the on-screen
+   instructions. This should result in a functioning OpenPGP
+   configuration for your account!
+
+1. While you are still at the <span class="guilabel">End-To-End
+   Encryption</span> settings you may want look a bit down to
+   configure the <span class="guilabel">Default settings for sending
+   messages</span> so it suites your preferences, and helps [[avoid
+   mistakes|thunderbird#plaintext_mistake]].
+
+Encrypting and signing email
+----------------------------
+
+When composing email you can encrypt email by selecting
 <span class="menuchoice">
-  <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
-  <span class="guisubmenu">Enigmail</span>&nbsp;▸
-  <span class="guimenuitem">Setup Wizard</span></span>.
+  <span class="guimenu">Options</span>&nbsp;▸
+  <span class="guimenuitem">Require Encryption</span></span>.
+and sign email by selecting
+<span class="menuchoice">
+  <span class="guimenu">Options</span>&nbsp;▸
+  <span class="guimenuitem">Digitally Sign This Message</span></span>.
 
-You can also create an OpenPGP key associated with your email address as
-part of the <span class="application">Enigmail Setup Wizard</span>.
+When sending encrypting email to a recipient whose public key is not
+in <span class="application">Thunderbird's</span> keyring, you will be
+given the option to download it from a keyserver. In this case you
+will see a window called "OpenPGP Message Security", which will list
+each recipient and their key status. For keys with "no key available",
+select it and click <span class="button">Manage keys for selected
+recipient…</span> which will open a new window. By clicking <span
+class="button">Discover new or updated key</span> it will be
+downloaded from a keyserver (if present).
 
-If you are new to OpenPGP, you can read the following guides on getting
-started with encrypting emails using
-<span class="application">Thunderbird</span> and
-<span class="application">Enigmail</span>:
+Just having the key in the keyring is not enough. Keys must also be
+marked as
+[accepted](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq#w_what-does-key-acceptance-mean),
+otherwise <span class="application">Thunderbird</span> refuses to
+encrypt using that key. To accept the key you just fetched, click
+<span class="button">Open details and edit acceptance…</span> and
+follow the on-screen instructions. In order to "accept" the key, one
+of the "Yes" options must be selected.
 
-  - [Security-in-a-Box: Thunderbird & OpenPGP - secure email](https://securityinabox.org/en/guide/thunderbird/linux/)
-  - [Enigmail: Enigmail Quick Start Guide](https://www.enigmail.net/index.php/en/user-manual/quick-start)
+<a id="plaintext_mistake"></a>
+
+### Avoid sending unencrypted emails by mistake
+
+By default,
+<span class="menuchoice">
+  <span class="guimenu">Options</span>&nbsp;▸
+  <span class="guimenuitem">Require Encryption</span></span>.
+is not checked, so it is dangerously easy to forget it and then end up
+unintentionalluy sending unencrypted email. You can change this
+default in the <span class="guilabel">End-To-End Encryption</span>
+settings under the <span class="guilabel">Default settings for sending
+messages</span> section.
+
+OpenPGP Key Manager
+-------------------
+
+In the <span class="guilabel">End-To-End Encryption</span> settings
+for your account, there is a <span class="button">OpenPGP Key
+Manager</span> button which will open the built-in key manager. Here
+you can do basic key management, such as:
+
+* Setting the
+  [acceptance](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq#w_what-does-key-acceptance-mean)
+  of public keys by right-clicking on them and selecting <span
+  class="guimenuitem">Key Properties</span> and following the
+  on-screen instructions under <span class="guimenuitem">Your
+  Acceptance</span>.
+
+* Import keys from files through the <span class="guimenu">File</span>
+  menu. These could for instance be [[public keys exported from <span
+  class="application">GnuPG's</span>
+  keyring|openpgp_migration#export_public_key]].
+
+* Import keys from the keyserver through
+  <span class="menuchoice">
+    <span class="guimenu">Keyserver</span>&nbsp;▸
+    <span class="guimenuitem">Discover Keys Inline</span></span>.
 
 <div class="caution">
 

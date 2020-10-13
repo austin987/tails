@@ -1,0 +1,161 @@
+[[!meta title="Migrating OpenPGP configuration from Enigmail in Thunderbird 78"]]
+
+[[!toc levels=1]]
+
+Enigmail migration instructions
+===============================
+
+First of all you may want to look at [the official HOWTO and
+FAQ](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq)
+to get a general understanding of what has changed. Please note that
+Tails does not include any version of <span
+class="application">Enigmail</span> so its migration mechanism is not
+available to Tails users.
+
+Instead we provide these step-by-step instructions of how to migrate
+your <span class="application">Enigmail</span> configuration from
+Tails 4.11 (or earlier) to <span class="application">Thunderbird's</span>
+built-in OpenPGP implementation.
+
+1. [[Export your private key|openpgp_migration#export_private_key]] to
+   somewhere in your Home directory.
+
+1. Start <span class="application">Thunderbird</span> if it is not
+   already started.
+
+1. We recommend that your [[set up a Master
+   Password|openpgp_migration#master_password]] in order to protect
+   your private keys better.
+
+1. Enter
+   <span class="menuchoice">
+     <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
+     <span class="guimenuitem">Account Settings</span></span>.
+
+1. Under the account you wish to migrate, select <span
+   class="guilabel">End-To-End Encryption</span> to open the account's
+   OpenPGP settings.
+
+1. Click <span class="button">Add Key…</span>, select <span
+   class="guilabel">Import an existing OpenPGP Key</span> and click
+   <span class="button">Continue</span>.
+
+1. Click <span class="button">Select File to Import…</span> and open
+   the key file you exported in the first step.
+
+1. Make sure your key is listed and that the <span
+   class="guilabel">Treat this key as a Personal Key</span> checkbox
+   is checked, and follow the on-screen instructions until you are
+   back at the <span class="guilabel">End-To-End Encryption</span>
+   settings.
+
+1. It should display "OpenPGP Keys imported successfully", and below
+   you should see your key listed. By default "None" is selected,
+   which means OpenPGP is disabled, but if you click your key to
+   select it, your account is ready for OpenPGP!
+
+1. While you are still at the <span class="guilabel">End-To-End
+   Encryption</span> settings you may want look a bit down to
+   configure the <span class="guilabel">Default settings for sending
+   messages</span> so it suites your preferences, and helps [[avoid
+   mistakes|thunderbird#plaintext_mistake]].
+
+<a id="migrate_public_keys"></a>
+
+Once you are done with importing your own private key you may want to
+import any public keys you expect to send encrypted email to (or
+verify signature from).
+
+1. [[Export all relevant public
+   keys|openpgp_migration#export_public_key]] to somewhere in your
+   Home directory.
+
+1. Back in <span class="application">Thunderbird</span>, in the <span
+   class="guilabel">End-To-End Encryption</span> settings for your
+   account, click <span class="button">OpenPGP Key Manager</span>.
+
+1. Click
+   <span class="menuchoice">
+     <span class="guimenu">File</span>&nbsp;▸
+     <span class="guimenuitem">Import Public Key(s) From
+     File</span></span>.
+
+1. Select the file containing the public key and follow the on-screen
+   instructions. The key is now imported!
+
+1. However, by default imported keys are not
+   [accepted](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq#w_what-does-key-acceptance-mean),
+   which means that you cannot encrypt email to them. To "accept" a
+   key, right-click it in the <span class="application">OpenPGP Key
+   Manager</span> and select <span class="guimenuitem">Key
+   Properties</span>.
+
+1. Read the instructions under <span class="guimenuitem">Your
+   Acceptance</span>. In order to "accept" the key, one of the "Yes"
+   options must be selected.
+
+Now you are done! To familiarize yourself with this new way of doing
+OpenPGP, you may want to read [[our updated OpenPGP instructions for
+Thunderbird|thunderbird#openpgp]].
+
+<a id="master_password"></a>
+
+Set up a Master Password
+========================
+
+1. Enter the preferences through
+   <span class="menuchoice">
+     <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
+     <span class="guimenuitem">Preferences</span></span>.
+
+1. Select <span class="guilabel">Privacy & Security</span> and scroll
+   to the <span class="guilabel">Passwords</span> section.
+
+1. Check the <span class="guilabel">Use a master password</span>
+   checkbox and follow the on-screen instructions.
+
+<a id="export_public_key"></a>
+
+Export public key from GnuPG
+============================
+
+1. Start
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Utilities</span>&nbsp;▸
+     <span class="guimenuitem">Passwords and Keys</span></span>.
+
+1. In the list to the left, click <span class="guilabel">GnuPG keys</span>.
+
+1. Click the key you wish to export and then click
+   <span class="menuchoice">
+     <span class="guimenu">File</span>&nbsp;▸
+     <span class="guimenuitem">Export…</span></span>.
+
+1. Select a convenient place somewhere in your Home directory to
+   export the key to.
+
+To export multiple public keys, just repeat the last two steps.
+
+<a id="export_private_key"></a>
+
+Export your private key from GnuPG
+==================================
+
+1. Start
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Utilities</span>&nbsp;▸
+     <span class="guimenuitem">Passwords and Keys</span></span>.
+
+1. In the list to the left, click <span class="guilabel">GnuPG keys</span>.
+
+1. Right-click the key you wish to use and select <span
+   class="guimenuitem">Properties</span>.
+
+1. In the properties window, click the <span
+   class="guilabel">Details</span> tab and click <span
+   class="button">Export</span>.
+
+1. Select a convenient place somewhere in your Home directory to
+   export the key to.
