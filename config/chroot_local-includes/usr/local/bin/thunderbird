@@ -26,10 +26,41 @@ reconfigure_profile() {
     configure_locale
 }
 
+native_openpgp_configured() {
+    grep -q '^user_pref("mail.identity.id[0-9]\+.openpgp_key_id"' \
+         "${PROFILE}/prefs.js"
+}
+
+enigmail_configured() {
+    grep -q '^user_pref("mail.identity.id[0-9]\+.enablePgp", true);' \
+         "${PROFILE}/prefs.js"
+}
+
+notify_enigmail_migration() {
+    local dialog_msg="<b><big>`gettext \"Your OpenPGP configuration needs to be migrated\"`</big></b>
+
+`gettext \"Thunderbird now supports OpenPGP by itself, and Enigmail is obsolete. In order to use your old OpenPGP configuration it must be migrated, which we provide step-by-step instructions for.\"`
+"
+    local open_docs="`gettext \"_Open instructions\"`"
+    local ignore="`gettext \"_Ignore\"`"
+    zenity --question --width 480 --title "" --text "${dialog_msg}" \
+           --ok-label "${open_docs}" --cancel-label "${ignore}"
+}
+
+enigmail_migration() {
+    if native_openpgp_configured || ! enigmail_configured; then
+        return
+    fi
+    if notify_enigmail_migration; then
+        tails-documentation doc/anonymous_internet/thunderbird/openpgp_migration &
+    fi
+}
+
 start_thunderbird() {
     export GNOME_ACCESSIBILITY=1
     unset SESSION_MANAGER
     reconfigure_profile
+    enigmail_migration
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
 
