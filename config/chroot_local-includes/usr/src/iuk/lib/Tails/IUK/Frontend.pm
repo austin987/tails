@@ -744,14 +744,13 @@ method shutdown_network () {
 
 method cancel_download () {
     $self->info("Cancelling the upgrade download");
-    return unless $ENV{HARNESS_ACTIVE};
 
     $self->fatal_run_cmd(
         cmd         => ['tails-iuk-cancel-download'],
         error_title => __(q{Error while cancelling the upgrade download}),
         error_msg   => __(q{Failed to cancel the upgrade download}),
         as          => 'root',
-    );
+    ) unless $ENV{HARNESS_ACTIVE};
 }
 
 method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
