@@ -386,8 +386,8 @@ method run () {
                         " but only %{free_space}s is available."
                     )),
                     {
-                        space_needed => format_bytes($space_needed, mode => "iec"),
-                        free_space   => format_bytes($free_space,   mode => "iec"),
+                        space_needed => format_bytes($space_needed, mode => "iec", precision => 0),
+                        free_space   => format_bytes($free_space,   mode => "iec", precision => 0),
                     }
                 ));
             }
@@ -401,8 +401,8 @@ method run () {
                     "%{free_memory}s is available."
                     )),
                 {
-                    memory_needed => format_bytes($memory_needed, mode => "iec"),
-                    free_memory   => format_bytes($free_memory,   mode => "iec"),
+                    memory_needed => format_bytes($memory_needed, mode => "iec", precision => 0),
+                    free_memory   => format_bytes($free_memory,   mode => "iec", precision => 0),
                 }
             ));
         }
@@ -444,7 +444,7 @@ method run () {
                     name        => $upgrade_description->product_name,
                     version     => $upgrade_path->{version},
                     size        => format_bytes($upgrade_path->{'total-size'},
-                                                mode => "iec"),
+                                                mode => "iec", precision => 0),
                 }),
             title        => $self->encoding->decode(gettext(q{Upgrade available})),
             ok_label     => $self->encoding->decode(gettext(q{Upgrade now})),

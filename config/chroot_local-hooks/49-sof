@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Adding Intel SOF firmware and topology binaries (#17898)"
+
+# Get $SOF_VERSION
+. /usr/share/tails/build/variables
+
+SRC_DIR='/tmp/submodules/sof/lib/firmware/intel'
+INTEL_FIRMWARE_DIR='/lib/firmware/intel'
+SOF_DEST_DIR="${INTEL_FIRMWARE_DIR}/sof"
+SOF_TPLG_DEST_DIR="${INTEL_FIRMWARE_DIR}/sof-tplg"
+
+# Sanity check
+for dir in "$SOF_DEST_DIR" "$SOF_TPLG_DEST_DIR"; do
+    if [ -e "$dir" ]; then
+        echo "E: $dir already exists, maybe this hook could be dropped"
+        exit 1
+    fi
+done
+
+# Install topology
+cp -r "$SRC_DIR/sof-tplg-${SOF_VERSION}" "$SOF_TPLG_DEST_DIR"
+
+# Install firmware
+mkdir "$SOF_DEST_DIR"
+cd "$SOF_DEST_DIR"
+for versioned_firmware in "${SRC_DIR}/sof/${SOF_VERSION}"/*.ri \
+                          "${SRC_DIR}/sof/${SOF_VERSION}"/intel-signed/*.ri ; do
+    cp "$versioned_firmware" ./
+    unversioned_firmware=$(python3 -c "print('$(basename "$versioned_firmware")'.replace('-${SOF_VERSION}', ''))")
+    ln -s "$(basename "$versioned_firmware")" "$unversioned_firmware"
+done
+ln -s sof-apl-"${SOF_VERSION}".ri sof-glk.ri
+ln -s sof-cnl-"${SOF_VERSION}".ri sof-cfl.ri
+ln -s sof-cnl-"${SOF_VERSION}".ri sof-cml.ri
