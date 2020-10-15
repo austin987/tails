@@ -31,8 +31,7 @@ class LocalIsoSource(Source):
         try:
             self.dev = underlying_physical_device(self.path)
         except Exception, e:
-            print >> sys.stderr, _("Could not guess underlying block device: %s"
-                                   % e.args[0])
+            print >> sys.stderr, _("Could not guess underlying block device: %s") % e.args[0]
             pass
 
     def clone(self, destination):
@@ -46,8 +45,12 @@ class LocalIsoSource(Source):
         out = out.decode('utf-8')
         err = err.decode('utf-8')
         if proc.returncode:
-            raise SourceError(_("There was a problem executing `%s`.\n"
-                                "%s\n%s" % (cmd_decoded, out, err)))
+            raise SourceError(_("There was a problem executing `%(cmd)s`.\n"
+                                "%(out)s\n%(err)s") % {
+                                    'cmd': cmd_decoded,
+                                    'out': out,
+                                    'err': err
+                                })
         _set_liberal_perms_recursive(destination)
 
 
@@ -66,9 +69,9 @@ class RunningLiveSystemSource(Source):
             dst = os.path.join(destination, f)
             if os.path.isfile(src):
                 if src.lower().endswith('.iso'):
-                    print >> sys.stderr, _("Skipping '%(filename)s'" % {
+                    print >> sys.stderr, _("Skipping '%(filename)s'") % {
                         'filename': src
-                    })
+                    }
                 else:
                     shutil.copy(src, dst)
             elif os.path.islink(src):
