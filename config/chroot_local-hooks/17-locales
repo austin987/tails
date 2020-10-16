@@ -1,0 +1,22 @@
+#! /bin/sh
+
+set -e
+set -u
+
+echo "Generate supported locales"
+
+LANGUAGES_FILE="/usr/share/tails/greeter/supported_languages"
+LANG_REGEXP=$(sed --regexp-extended 's, ,|,g' "$LANGUAGES_FILE" \
+                  | sed --regexp-extended 's,\|$,,')
+
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+# Install locales, which ships /etc/locale.gen and locale-gen
+ensure_hook_dependency_is_installed locales
+
+# Uncomment supported locales
+perl -pi -E "s{^#\s+((?:${LANG_REGEXP})_.*\sUTF-8)$}{\$1}" /etc/locale.gen
+
+# Compile locales
+locale-gen
