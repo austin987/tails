@@ -15,6 +15,7 @@ use English qw{-no_match_vars};
 use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use Gtk3 qw{-init};
+use IPC::System::Simple qw{systemx};
 use Locale::Messages qw{bind_textdomain_codeset
                         bind_textdomain_filter
                         turn_utf_8_on};
@@ -284,6 +285,7 @@ method _build_main_window () {
     $win->set_title(__('Setup Tails persistent volume'));
 
     $win->set_border_width(10);
+    $win->set_deletable(FALSE);
 
     $win->add($self->current_step->main_widget) if $self->has_current_step;
     $win->signal_connect('destroy' => sub { Gtk3->main_quit; });
@@ -701,8 +703,15 @@ method goto_next_step () {
 You may now close this application.}
         ));
         $self->current_step->description->set_text(' ');
-        $self->current_step->go_button->hide;
         $self->current_step->status_area->hide;
+        my ($width, $height) = $self->main_window->get_size();
+        $self->main_window->resize($width, 280);
+        $self->current_step->go_button->signal_connect(
+            'clicked',
+            sub { systemx(qw{sudo -n /sbin/reboot }); }
+        );
+        $self->current_step->go_button->set_label(__(q{Restart Now}));
+        $self->current_step->go_button->set_sensitive(TRUE);
     }
 }
 
