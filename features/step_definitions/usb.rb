@@ -534,7 +534,7 @@ Then /^all persistent filesystems have safe access rights$/ do
     fs_perms = $vm.execute("stat -c %a #{mountpoint}").stdout.chomp
     assert_equal('root', fs_owner)
     assert_equal('root', fs_group)
-    assert_equal('775', fs_perms)
+    assert_equal('770', fs_perms)
   end
 end
 
