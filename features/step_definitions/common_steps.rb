@@ -335,25 +335,23 @@ Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_a
   step 'I configure APT to use non-onion sources' unless keep_apt_sources
 end
 
-Given /^I set the language to (|German)$/ do |lang|
-  case lang
-  when 'German'
-    $language = 'German'
-    @screen.wait('TailsGreeterLanguage.png', 10).click
-    @screen.wait('TailsGreeterLanguagePopover.png', 10)
-    @screen.type($language)
-    sleep(2) # Gtk needs some time to filter the results
-    @screen.press('Return')
-  when ''
-    next
-  else
-    raise "Unsupported language: #{lang}"
-  end
+Given /^I set the language to (.*)$/ do |lang|
+  $language = lang
+  @screen.wait('TailsGreeterLanguage.png', 10).click
+  @screen.wait('TailsGreeterLanguagePopover.png', 10)
+  @screen.type($language)
+  sleep(2) # Gtk needs some time to filter the results
+  @screen.press('Return')
 end
 
-Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
-  step "I set the language to #{lang}"
-  @screen.wait("TailsGreeterLoginButton#{$language}.png", 10).click
+Given /^I log in to a new session(?: in (.*) with accelerator "([^"]+)")?$/ do |lang, start_accel|
+  start_accel ||= 's'
+  step "I set the language to #{lang}" if lang && lang != 'English'
+  # After selecting options (language, administration password, etc.),
+  # the Greeter needs some time to focus the main window back, so that
+  # typing the accelerator for the "Start Tails" button is honored.
+  sleep(1)
+  @screen.press('alt', start_accel)
   step 'the Tails desktop is ready'
 end
 
@@ -1223,4 +1221,22 @@ end
 
 def git_current_tag
   `git describe --tags --exact-match HEAD`.chomp
+end
+
+Then /^the keyboard layout is set to "([^"]+)"$/ do |keyboard_layout|
+  input_sources = $vm.execute_successfully(
+    'gsettings get org.gnome.desktop.input-sources sources',
+    user: LIVE_USER
+  ).stdout
+  input_countrycode = input_sources.scan(/\('([^']*)', '([^']*)'\)/).first.last
+  assert_equal(keyboard_layout, input_countrycode)
+
+  mru_sources = $vm.execute_successfully(
+    'gsettings get org.gnome.desktop.input-sources mru-sources',
+    user: LIVE_USER
+  ).stdout.chomp
+  if mru_sources != '@a(ss) []'
+    mru_countrycode = mru_sources.scan(/\('([^']*)', '([^']*)'\)/).first.last
+    assert_equal(keyboard_layout, mru_countrycode)
+  end
 end
