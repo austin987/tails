@@ -461,7 +461,7 @@ Given /^available upgrades have been checked$/ do
 end
 
 When /^I start the Tor Browser( in offline mode)?$/ do |offline|
-  step 'I start "Tor Browser" via GNOME Activities Overview'
+  step 'I start "TorBrowserOverviewIcon.png" via GNOME Activities Overview'
   if offline
     start_button = Dogtail::Application
                    .new('zenity')
@@ -773,18 +773,27 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
     # keyword only found in the former's .desktop file.
     app_name = 'commandline'
   end
-  @screen.wait('GnomeApplicationsMenu.png', 10)
+  @screen.wait("GnomeApplicationsMenu#{$language}.png", 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
-  @screen.wait('GnomeActivitiesOverview.png', 10)
-  # Trigger startup of search providers
-  @screen.type(app_name[0])
-  # Give search providers some time to start (#13469#note-5) otherwise
-  # our search sometimes returns no results at all.
-  sleep 2
-  # Type the rest of the search query
-  @screen.type(app_name[1..-1])
-  sleep 2
-  @screen.press('ctrl', 'Return')
+  # Only use this way of passing the app_name argument where it's
+  # really needed, e.g. to avoid having to encode lots of keymaps
+  # to be able to type the name correctly:
+  if app_name.match(/[.]png$/)
+    # This should be ctrl + click, to ensure we open a new window.
+    # Let's implement this once once of the callers needs this.
+    @screen.wait(app_name, 10).click
+  else
+    @screen.wait('GnomeActivitiesOverview.png', 10)
+    # Trigger startup of search providers
+    @screen.type(app_name[0])
+    # Give search providers some time to start (#13469#note-5) otherwise
+    # our search sometimes returns no results at all.
+    sleep 2
+    # Type the rest of the search query
+    @screen.type(app_name[1..-1])
+    sleep 2
+    @screen.press('ctrl', 'Return')
+  end
 end
 
 When /^I type "([^"]+)"$/ do |string|

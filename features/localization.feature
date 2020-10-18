@@ -20,6 +20,9 @@ Feature: Localization
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     When I log in to a new session in <language> with accelerator "<start_accel>"
     Then the keyboard layout is set to "<layout>"
+    When the network is plugged
+    And Tor is ready
+    Then DuckDuckGo is the default search engine
 
     # This list has to be kept in sync' with our list of tier-1 languages:
     # https://tails.boum.org/contribute/how/translate/#tier-1-languages

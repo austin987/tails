@@ -17,6 +17,14 @@ When /^I close the (?:Tor|Unsafe) Browser$/ do
   @screen.press('ctrl', 'q')
 end
 
+When(/^I kill the ((?:Tor|Unsafe) Browser)$/) do |browser|
+  info = xul_application_info(browser)
+  $vm.execute_successfully("pkill --full --exact '#{info[:cmd_regex]}'")
+  try_for(10) do
+    $vm.execute("pgrep --full --exact '#{info[:cmd_regex]}'").failure?
+  end
+end
+
 def tor_browser_application_info(defaults)
   user = LIVE_USER
   binary = $vm.execute_successfully(
@@ -85,7 +93,7 @@ end
 
 def xul_application_info(application)
   defaults = {
-    address_bar_image: 'BrowserAddressBar.png',
+    address_bar_image: "BrowserAddressBar#{$language}.png",
     unused_tbb_libs:   ['libnssdbm3.so', 'libmozavcodec.so', 'libmozavutil.so'],
   }
   case application
@@ -303,4 +311,23 @@ Then /^I can watch a WebM video in Tor Browser$/ do
   retry_tor(recovery_on_failure) do
     @screen.wait('TorBrowserSampleRemoteWebMVideoFrame.png', 30)
   end
+end
+
+Then /^DuckDuckGo is the default search engine$/ do
+  step 'I start the Tor Browser'
+  step 'I open a new tab in the Tor Browser'
+  # Typing would require maintaining keymaps for every language in
+  # which we run this step ⇒ instead, paste the search string.
+  $vm.set_clipboard('a random search string')
+  @screen.press('ctrl', 'v')
+  @screen.wait_any(
+    [
+      'DuckDuckGoSearchPrompt.png',
+      'DuckDuckGoSearchPromptHindi.png',
+      'DuckDuckGoSearchPromptChinese.png',
+      'DuckDuckGoSearchPromptPersian.png',
+    ],
+    20
+  )
+  step 'I kill the Tor Browser'
 end
