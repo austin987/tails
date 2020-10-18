@@ -25,9 +25,13 @@ Feature: Localization
     Then DuckDuckGo is the default search engine
 
     # This list has to be kept in sync' with our list of tier-1 languages:
-    # https://tails.boum.org/contribute/how/translate/#tier-1-languages
+    #   https://tails.boum.org/contribute/how/translate/#tier-1-languages
+
+    # Known issues, that this step effectively verifies are still present:
+    #  - Arabic's layout should be "ara": #12638
     Examples:
       | language   | start_accel | layout |
+      | Arabic     | s           | us     |
       | Chinese    | s           | cn     |
       | English    | s           | us     |
       | French     | d           | fr     |
@@ -39,5 +43,4 @@ Feature: Localization
       | Portuguese | s           | pt     |
       | Russian    | s           | ru     |
       # | Turkish  | XXX: #17974 | tr                  |
-      # | Arabic   | s             | ara (XXX: #12638) |
       # | Spanish  | XXX: #17974 | es                  |
