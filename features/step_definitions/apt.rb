@@ -25,6 +25,24 @@ Then /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
   assert_no_match(/sdscoq7snqtznauu[.]onion.*experimental/, apt_sources)
 end
 
+Then /^if releasing, the tagged Tails APT source is enabled$/ do
+  unless git_on_a_tag
+    puts 'Not on a tag ⇒ skipping this step'
+    next
+  end
+  assert_match(/umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion\/?\s+#{Regexp.quote(git_current_tag)}\s/,
+               apt_sources)
+end
+
+Then /^if releasing, no unversioned Tails APT source is enabled$/ do
+  unless git_on_a_tag
+    puts 'Not on a tag ⇒ skipping this step'
+    next
+  end
+  assert_no_match(/umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion\/?\s+(stable|testing|devel)\s/,
+                  apt_sources)
+end
+
 When /^I configure APT to use non-onion sources$/ do
   script = <<-SCRIPT
   use strict;

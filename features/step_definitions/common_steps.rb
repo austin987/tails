@@ -1216,3 +1216,11 @@ Given /^I magically allow the Unsafe Browser to be started$/ do
   $vm.file_overwrite('/var/lib/live/config/tails.unsafe-browser',
                      'TAILS_UNSAFE_BROWSER_ENABLED=true')
 end
+
+def git_on_a_tag
+  system('git describe --tags --exact-match HEAD >/dev/null 2>&1')
+end
+
+def git_current_tag
+  `git describe --tags --exact-match HEAD`.chomp
+end
