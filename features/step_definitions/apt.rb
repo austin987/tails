@@ -6,7 +6,7 @@ def apt_sources
   ).stdout
 end
 
-Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
+Then /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
   apt_sources.chomp.each_line do |line|
     next unless line.start_with? 'deb'
@@ -16,11 +16,11 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   end
 end
 
-Given /^no proposed-updates APT suite is enabled$/ do
+Then /^no proposed-updates APT suite is enabled$/ do
   assert_no_match(/\s\S+-proposed-updates\s/, apt_sources)
 end
 
-Given /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
+Then /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
   # sdscoq7snqtznauu.onion == deb.torproject.org
   assert_no_match(/sdscoq7snqtznauu[.]onion.*experimental/, apt_sources)
 end
