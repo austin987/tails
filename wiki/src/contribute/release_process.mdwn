@@ -24,6 +24,7 @@ To release Tails you'll need some packages installed:
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
 * `po4a` 0.55: different versions extract Markdown headings
    in a different way, which makes tons of strings fuzzy.
+* `i18nspector` 0.26 or newer
 * packages to [[build a local version of the website|contribute/build/website/]]
 
 Configuration files
@@ -879,6 +880,9 @@ before starting the wrapper from `puppet-tails`:
        sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
     )
 
+Take note of the `time` output above and add it to the table in
+[[!tails_ticket 17750]].
+
 This command takes a long time. In parallel, while it is running,
 you can follow the next step:
 
@@ -927,6 +931,9 @@ Make sure that Jenkins has finished building so you have set
 Then, wait (a few minutes, `*/15` crontab) until the images appear
 on <https://iso-history.tails.boum.org/>.
 
+XXX: report back on [[!tails_gitlab tails/sysadmin/-/issues/17417#note_157498]]
+how painful it is to wait here.
+
 <a id="build-iuks-on-jenkins"></a>
 
 Build the Incremental Upgrade Kits on Jenkins
@@ -963,6 +970,9 @@ Build the Incremental Upgrade Kits on Jenkins
 5. Wait until both `parallel_build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
    It should take about 10-15 minutes for each member of
    the `$IUK_SOURCE_VERSIONS` list, distributed across `isobuilderN` workers.
+
+6. Add the time it took for `parallel_build_IUKs` and
+   `parallel_collect_IUKs` to the table of [[!tails_ticket 17750]].
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
