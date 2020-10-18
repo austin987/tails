@@ -71,7 +71,7 @@ When /^I start Thunderbird$/ do
   # On Jenkins each isotester runs its own email server, using their
   # respecitve snakeoil SSL cert, so we have to import it.
   thunderbird_install_host_snakeoil_ssl_cert unless ENV['JENKINS_URL'].nil?
-  step 'I start "Thunderbird" via GNOME Activities Overview'
+  step 'I start "ThunderbirdOverviewIcon.png" via GNOME Activities Overview'
   try_for(60) { thunderbird_main }
 end
 
@@ -279,4 +279,20 @@ Then /^my Thunderbird inbox is non-empty$/ do
   visible_messages = message_list.children(recursive: false,
                                            roleName:  'table row')
   assert(!visible_messages.empty?)
+end
+
+Then(/^the screen keyboard works in Thunderbird$/) do
+  step 'I start Thunderbird'
+  @screen.wait('ScreenKeyboard.png', 10)
+  @screen.wait_any(
+    ['ScreenKeyboardKeyX.png', 'ScreenKeyboardKeyPersian.png'], 10
+  )[1].click
+  @screen.wait_any(
+    [
+      'ThunderbirdX.png',
+      'ThunderbirdXChinese.png',
+      'ThunderbirdXPersian.png',
+      'ThunderbirdXRTL.png',
+    ], 20
+  )
 end

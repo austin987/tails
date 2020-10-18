@@ -331,3 +331,22 @@ Then /^DuckDuckGo is the default search engine$/ do
   )
   step 'I kill the Tor Browser'
 end
+
+Then(/^the screen keyboard works in Tor Browser$/) do
+  step 'I start the Tor Browser'
+  step 'I open a new tab in the Tor Browser'
+  @screen.wait('ScreenKeyboard.png', 10)
+  @screen.wait_any(
+    ['ScreenKeyboardKeyX.png', 'ScreenKeyboardKeyPersian.png'], 10
+  )[1].click
+  @screen.wait_any(
+    [
+      'BrowserAddressBarX.png',
+      'BrowserAddressBarXChinese.png',
+      'BrowserAddressBarXHindi.png',
+      'BrowserAddressBarXPersian.png',
+      'BrowserAddressBarXRTL.png',
+    ], 20
+  )
+  step 'I kill the Tor Browser'
+end

@@ -1249,3 +1249,15 @@ Then /^the keyboard layout is set to "([^"]+)"$/ do |keyboard_layout|
     assert_equal(keyboard_layout, mru_countrycode)
   end
 end
+
+When /^I enable the screen keyboard$/ do
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.a11y.applications ' \
+    'screen-keyboard-enabled true',
+    user: LIVE_USER
+  )
+end
+
+Then(/^the layout of the screen keyboard is set to "([^"]+)"$/) do |layout|
+  @screen.find("ScreenKeyboardLayout#{layout.upcase}.png")
+end

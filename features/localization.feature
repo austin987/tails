@@ -23,24 +23,29 @@ Feature: Localization
     When the network is plugged
     And Tor is ready
     Then DuckDuckGo is the default search engine
+    When I enable the screen keyboard
+    Then the screen keyboard works in Tor Browser
+    And the screen keyboard works in Thunderbird
+    And the layout of the screen keyboard is set to "<osk_layout>"
 
     # This list has to be kept in sync' with our list of tier-1 languages:
     #   https://tails.boum.org/contribute/how/translate/#tier-1-languages
 
     # Known issues, that this step effectively verifies are still present:
+    #  - Not all localized layouts exist in the GNOME screen keyboard: #8444
     #  - Arabic's layout should be "ara": #12638
     Examples:
-      | language   | start_accel | layout |
-      | Arabic     | s           | us     |
-      | Chinese    | s           | cn     |
-      | English    | s           | us     |
-      | French     | d           | fr     |
-      | German     | s           | de     |
-      | Hindi      | s           | in     |
-      | Indonesian | s           | id     |
-      | Italian    | s           | it     |
-      | Persian    | s           | ir     |
-      | Portuguese | s           | pt     |
-      | Russian    | s           | ru     |
+      | language   | start_accel | layout | osk_layout |
+      | Arabic     | s           | us     | us         |
+      | Chinese    | s           | cn     | us         |
+      | English    | s           | us     | us         |
+      | French     | d           | fr     | fr         |
+      | German     | s           | de     | de         |
+      | Hindi      | s           | in     | us         |
+      | Indonesian | s           | id     | us         |
+      | Italian    | s           | it     | us         |
+      | Persian    | s           | ir     | ir         |
+      | Portuguese | s           | pt     | us         |
+      | Russian    | s           | ru     | ru         |
       # | Turkish  | XXX: #17974 | tr                  |
       # | Spanish  | XXX: #17974 | es                  |
