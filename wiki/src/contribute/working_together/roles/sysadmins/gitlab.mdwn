@@ -1,0 +1,77 @@
+[[!meta title="GitLab for Tails sysadmins"]]
+
+[[!toc levels=2]]
+
+# Important information about the Tails GitLab instance
+
+The following are important things a Tails sysadmin needs to know about the
+[[Tails GitLab|https://gitlab.tails.boum.org]] instance:
+
+  - The service is provided by Immerda. We usually contact them through e-mail
+    or their Jabber channel (see their [[contact
+info|https://www.immerda.ch/contact.html]]).
+
+  - Tails sysadmins don't have shell access to the VM hosting the service so,
+    among many other things, using [[Server
+    Hooks|https://docs.gitlab.com/ce/administration/server_hooks.html]] is not easy
+    and would depend on coordination with our service provider.
+
+  - We manage the configuration of our GitLab using
+    [[Gitlabracadabra|https://gitlab.com/gitlabracadabra/gitlabracadabra]], and
+    the configuration is stored in the
+    [[gitlab-config|https://gitlab.tails.boum.org/tails/gitlab-config]] repository.
+
+  - GitLab's `root` user is an owner of all projects because that makes sense
+    for the way Tails currently manages user permissions for the different
+    groups and projects. Notifications are turned off for that user and it
+    shouldn't be used for communicating with other users.
+
+  - Tails previously used Redmine, and the migration was coordinated using
+    [[Salsa|https://salsa.debian.org/tails-team/gitlab-migration]]. Here's some
+    [[documentation related to Tails
+    infrastructure|https://salsa.debian.org/tails-team/gitlab-migration/-/wikis/sysadmin/gitlab-integration]]
+    that was used to create this page.
+
+  - The user documentation for Tails GitLab instance is kept [[in a separate
+    page|contribute/working_together/GitLab]].
+
+# Interactions of GitLab with the rest of Tails infrastructure
+
+The following pieces of the Tails infrastructure interact with GitLab either
+directly or indirectly:
+
+  - The [[Ticket Gardener|contribute/working_together/roles/ticket_gardener]]
+    queries GitLab for information about the state of issues and merge
+    requests.
+
+  - The [[Translation
+    Platform|contribute/working_together/roles/translation_platform]]
+    constantly merges modifications made through
+    [[Weblate|https://translate.tails.boum.org]] and pushes them back to the Tails
+    main repository (see [[the
+    script|https://gitlab.tails.boum.org/tails/puppet-tails/-/blob/master/files/weblate/scripts/cron.sh]]
+    for that). We use a local "gatekeeper" repository with a
+    [[hook|https://gitlab.tails.boum.org/tails/puppet-tails/-/blob/master/files/gitolite/hooks/tails-weblate-update.hook]]
+    to prevent the Translation Platform from messing with more things than it
+    should.
+
+  - Ikiwiki is notified whenever there's a change in the `master` branch of the
+    [[main Tails repository|https://gitlab.tails.boum.org/tails/tails]] and
+    creates/updates `.po` files when new content was added to the Tails website.
+    For this, GitLab was manually configured to mirror the main Tails repository to
+    a local repository in the Tails infrastructure, and the local mirror
+    [[pings|https://gitlab.tails.boum.org/tails/puppet-tails/-/blob/master/files/gitolite/hooks/www_website_ping-post-update.hook]]
+    Ikiwiki when its master branch was modified. Some other [["underlay"
+    repositories|https://gitlab.tails.boum.org/tails/puppet-tails/tree/master/manifests/website.pp#n19]]
+    are also configured to [[cause Ikiwiki to
+    refresh|https://gitlab.tails.boum.org/tails/puppet-tails/tree/master/files/gitolite/hooks/www_website_underlays-post-update.hook]]
+    the main website.
+
+  - Our [[Jenkins|contribute/working_together/roles/sysadmins/Jenkins]] master
+    [[is also
+    notified|https://gitlab.tails.boum.org/tails/puppet-tails/-/blob/master/templates/gitolite/hooks/tails-post-receive.erb]]
+    when there are relevant changes to the main Tails repository, and its Jenkins
+    slaves query GitLab to determine [[whether to conduct reproducibility
+    tests|https://gitlab.tails.boum.org/tails/puppet-tails/-/blob/master/files/jenkins/slaves/isobuilders/decide_if_reproduce]]
+    and [[whether to send notifications through
+    e-mail|https://gitlab.tails.boum.org/tails/puppet-tails/-/blob/master/files/jenkins/slaves/isobuilders/output_ISO_builds_and_tests_notifications]].
