@@ -606,11 +606,22 @@ SquashFS file order
    killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Backup the old sort file: `cp config/binary_rootfs/squashfs.sort{,.old}`
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
-1. Remove runtime-generated files that don't exist in the rootfs,
-   in order to avoid confusing noise in the build output:
+1. To remove:
 
-           perl -ni -E 'chomp; say unless m{(?:
+   - runtime-generated files that don't exist in the rootfs,
+     in order to avoid confusing noise in the build output
+   - the bits about `kill-boot-profile` at the end: they're
+     only useful when profiling the boot
+   - some hardware-dependent files
+
+   Run this command:
+
+           perl -ni -E 'chomp;
+              last if m{\Ausr/local/lib/kill-boot-profile\s}xms;
+              say unless m{(?:
                   [.]pyc\s+\d+\z
+               | \Aboot-profile[.]pid\s
+               | \Alib/firmware/
                | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
                | \Alib/live/mount/overlay/rw/etc/fstab\s
                | \Alib/live/mount/overlay/rw/etc/console-setup/cached_\S+[.](?:gz|sh)\s
@@ -628,9 +639,6 @@ SquashFS file order
                | \Avar/log/live/config[.]pipe\s
            )}xms' config/binary_rootfs/squashfs.sort
 
-1. Remove the bits about `kill-boot-profile` at the end: they're
-   only useful when profiling the boot.
-   XXX: automate during next release process ([[!tails_ticket 16467]])
 1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
