@@ -877,6 +877,15 @@ that is not present locally yet):
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
 
+Verify there's enough free disk space in `$IUKS_DIR`:
+
+    MIN_DISK_SPACE=15000
+    FREE_DISK_SPACE=$(/bin/df --block-size=M --output=avail "${IUKS_DIR:?}" \
+       | tail -n1 | sed --regexp-extended 's,M$,,')
+    if [ "$FREE_DISK_SPACE" -lt "$MIN_DISK_SPACE" ]; then
+       echo "ERROR! Not enough free space in ${IUKS_DIR:?}"
+    fi
+
 Start building the IUKs locally:
 
     (
