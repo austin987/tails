@@ -1361,10 +1361,13 @@ Testing
    choose a fast mirror that already has the
    tentative ISO and USB images. E.g. <https://mirrors.edge.kernel.org/tails/> or
    <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
-   of bandwidth.
+   of bandwidth:
 
         ./check-mirrors.rb --allow-multiple --fast --channel ${DIST:?} \
-            --ip $(dig +short mirrors.edge.kernel.org | tail -n1) \
+            --url-prefix https://mirrors.wikimedia.org/tails/ \
+            tails-amd64-${VERSION:?} \
+        || ./check-mirrors.rb --allow-multiple --fast --channel ${DIST:?} \
+            --url-prefix https://mirrors.edge.kernel.org/tails/ \
             tails-amd64-${VERSION:?}
 
 1. Email <tails-testers@boum.org> to ask them to test the tentative
