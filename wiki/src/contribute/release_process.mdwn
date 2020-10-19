@@ -877,20 +877,7 @@ that is not present locally yet):
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
 
-You're encouraged to enable parallelism to avoid waiting for a very
-long, serial build (which is still the default at the moment). As
-discussed in [[!tails_ticket 17657]], it seems running as many jobs as
-there are physical cores is a nice rule of thumb.
-
-For example, set:
-
-    JOBS="--jobs 4"
-
-or, attempt to automatically set it to the number of physical cores:
-
-    JOBS="--jobs $(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
-
-before starting the wrapper from `puppet-tails`:
+Start building the IUKs locally:
 
     (
        set -eu
@@ -910,7 +897,8 @@ before starting the wrapper from `puppet-tails`:
            --output-dir "${IUKS_DIR?:}"                                       \
            --source-versions "${IUK_SOURCE_VERSIONS?:}"                       \
            --new-version "${VERSION?:}"                                       \
-           --verbose ${JOBS:-}
+           --verbose                                                          \
+           --jobs "$(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
        cd "${IUKS_DIR?:}"
        sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
     )
