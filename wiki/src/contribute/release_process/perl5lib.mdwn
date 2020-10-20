@@ -2,9 +2,6 @@
 
 [[!toc levels=1]]
 
-Everything on this page happens in the
-`config/chroot_local-includes/usr/src/perl5lib` directory.
-
 <a id="build-deps"></a>
 
 Install build and test dependencies
@@ -17,9 +14,11 @@ Install build and test dependencies
        libdist-zilla-plugin-test-notabs-perl \
        libdist-zilla-plugin-test-perl-critic-perl \
        libdist-zilla-app-command-authordebs-perl && \
+    cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/perl5lib" && \
     dzil authordebs --install
 
 Run the test suite
 ==================
 
+    cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/perl5lib" && \
     RELEASE_TESTING=1 dzil test

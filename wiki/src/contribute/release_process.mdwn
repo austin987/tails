@@ -20,8 +20,8 @@ To release Tails you'll need some packages installed:
 * `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
-* `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
+* `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
 * `po4a` 0.55: different versions extract Markdown headings
    in a different way, which makes tons of strings fuzzy.
 * `i18nspector` 0.26 or newer
@@ -244,51 +244,6 @@ Upgrade Tor Browser AppArmor profile
 ------------------------------------
 
 See the dedicated page: [[tor-browser_AppArmor_patch]]
-
-Upgrade bundled binary Debian packages
---------------------------------------
-
-Skip this section if you are preparing a bugfix release.
-
-The goal here is to make sure the bundled binary Debian packages contain
-up-to-date localization files, so:
-
- - If you are preparing a release candidate, build at least the packages
-   that change user-visible strings, so that translators can use the RC
-   to check the status of their work and identify what's left to do.
- - If you are preparing a final major release, build at least the packages
-   that got translation updates since the RC: we've sent a call for
-   translation while releasing the RC so the least we can do is to
-   incorporate the work that ensued into our final release :)
-
-For each bundled Debian package, `cd` into the package's root
-directory (e.g. a checkout of the `whisperback` repository),
-import translations from Transifex and sanity-check them:
-
-	cd whisperback && \
-	git checkout master && \
-	git pull && \
-	"${RELEASE_CHECKOUT:?}"/import-translations && \
-	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/lint_po
-
-Then, for every PO file that has issues:
-
-1. Rollback changes to that file: `git checkout po/LL.po`
-2. Run `lint_po` again. It should pass this time.
-
-And finally, commit:
-
-    git add po && git commit \
-	    -m "Update POT and PO files, pull updated translations from Transifex."
-
-Then see the relevant release processes, and upload the packages to
-the release branch's custom APT suite:
-
-* [[tails-installer]]
-* whisperback:
-  * follow [upstream release process](https://gitlab.tails.boum.org/tails/whisperback/-/blob/master/HACKING.md#release)
-  * build a Debian package in an amd64 chroot of the Debian release
-    the Tails version you're preparing is based on
 
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
@@ -521,9 +476,8 @@ Build the almost-final images
    - Set `defaultcomp`, so we can more accurately optimize our
      SquashFS file ordering.
    - Do _not_ set `keeprunning` nor `rescue`.
-2. Carefully read the build logs to make sure nothing bad happened.
-3. Keep the resulting build artifacts until the end of this release process.
-4. Record where the manifest of needed packages is stored:
+2. Keep the resulting build artifacts until the end of this release process.
+3. Record where the manifest of needed packages is stored:
 
         export BUILD_MANIFEST=XXX ; \
         [ -f "${BUILD_MANIFEST:?}" ] || echo "ERROR: BUILD_MANIFEST is incorrect"
@@ -558,7 +512,9 @@ Prepare the versioned APT suites
 
   Note:
 
-  - This command can take a while (about a dozen minutes).
+  - This command takes a while (about a dozen minutes).
+    While it's running, if you don't feel the need to take a break,
+    you can proceed with the "SquashFS file order" section below.
   - It's expected that the packages that were pulled from our
     [[custom APT repository|APT_repository/custom]] are
     listed under "some packages were not found anywhere" (because we
@@ -592,22 +548,35 @@ SquashFS file order
 1. Install the almost-final USB image to a USB stick.
 1. Boot this USB stick a first time to trigger re-partitioning.
 1. Shut down this Tails.
-1. Set up a wired connection to avoid having to deal with wireless settings.
+1. If possible, set up a wired connection to avoid having to deal
+   with wireless settings.
 1. Boot this USB stick **on bare metal** again.
 1. Add `profile` to the kernel command-line.
 1. Login with the default settings in the Welcome Screen (e.g. do not configure
    an _Administration Password_).
+1. Unless you've set up a wired connection, connect to Wi-Fi.
 1. Wait for the "Tor is ready" notification.
 1. Start *Tor Browser*.
 1. A few minutes later, once the `boot-profile` process has been
    killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Backup the old sort file: `cp config/binary_rootfs/squashfs.sort{,.old}`
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
-1. Remove runtime-generated files that don't exist in the rootfs,
-   in order to avoid confusing noise in the build output:
+1. To remove:
 
-           perl -ni -E 'chomp; say unless m{(?:
+   - runtime-generated files that don't exist in the rootfs,
+     in order to avoid confusing noise in the build output
+   - the bits about `kill-boot-profile` at the end: they're
+     only useful when profiling the boot
+   - some hardware-dependent files
+
+   Run this command:
+
+           perl -ni -E 'chomp;
+              last if m{\Ausr/local/lib/kill-boot-profile\s}xms;
+              say unless m{(?:
                   [.]pyc\s+\d+\z
+               | \Aboot-profile[.]pid\s
+               | \Alib/firmware/
                | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
                | \Alib/live/mount/overlay/rw/etc/fstab\s
                | \Alib/live/mount/overlay/rw/etc/console-setup/cached_\S+[.](?:gz|sh)\s
@@ -625,9 +594,6 @@ SquashFS file order
                | \Avar/log/live/config[.]pipe\s
            )}xms' config/binary_rootfs/squashfs.sort
 
-1. Remove the bits about `kill-boot-profile` at the end: they're
-   only useful when profiling the boot.
-   XXX: automate during next release process ([[!tails_ticket 16467]])
 1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
@@ -671,9 +637,7 @@ suite should be ready, so it is time to:
    Our build system will apply the correct compression settings automatically
    so don't bother setting it yourself.
 
-1. Make sure the Jenkins build starts. Until the hook is back in place
-   ([[!tails_ticket 17745]]), starting it manually may avoid up to 15
-   minutes of waiting.
+1. Make sure the Jenkins build starts.
 
 1. Compare the new build manifest with the one from the previous,
    almost-final build:
@@ -693,15 +657,16 @@ suite should be ready, so it is time to:
 Verify that Jenkins reproduced your images
 ------------------------------------------
 
-to verify that Jenkins reproduced your images:
+To verify that Jenkins reproduced your images:
 
 1. Visit the URL printed by this command:
 
        echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
 
-2. Find the job (probably the last one)
-   and make sure the ISO and USB images built by Jenkins
-   have the same hash (in the `.shasum` file) as the images you built.
+2. Find the relevant build (probably the last one)
+   and compare the SHA512 hashes of the ISO and USB images built by Jenkins
+   (in the `tails-build-artifacts.shasum` build artifact) with the ones
+   of the images you built.
 
 3. Then:
 
@@ -811,12 +776,8 @@ files metadata:
        rm -rf "${tmp:?}"
     done
     mv "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages} \
-       "${ISOS:?}/tails-amd64-${VERSION:?}"
-
-Due to various directory changes, one needs to manually go back to the
-desired directory, likely using:
-
-    cd ${RELEASE_CHECKOUT?:}
+       "${ISOS:?}/tails-amd64-${VERSION:?}" && \
+    cd "${RELEASE_CHECKOUT?:}"
 
 Lastly, let's set some variables to be used later:
 
@@ -835,24 +796,8 @@ Prepare incremental upgrades
 Since Tails 4.2, we use a new upgrade scheme, which fundamentally
 changes what the source version number of an upgrade means: it's now
 the version that was *initially installed* and *not* the currently
-running version. If this is news to you, see:
-
-* the document that explains the benefits for our users:
-  [[blueprint/Endless_upgrades]];
-
-* the corresponding
-  [[design documentation|contribute/design/incremental_upgrades]].
-
-The main practical implications at release time are:
-
-* The Release Manager has to publish more IUKs than they used to.
-  But they can now publish IUKs (reproducibly) built on Jenkins,
-  instead of having to upload those they've built locally.
-
-* The Release Manager has to sign more UDFs than they used to.
-
-* Computing `$IUK_SOURCE_VERSIONS` is now straightforward enough
-  that it was automated :)
+running version. For details, see the corresponding
+[[design documentation|contribute/design/incremental_upgrades]].
 
 Prepare the environment
 -----------------------
@@ -887,20 +832,16 @@ that is not present locally yet):
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
 
-You're encouraged to enable parallelism to avoid waiting for a very
-long, serial build (which is still the default at the moment). As
-discussed in [[!tails_ticket 17657]], it seems running as many jobs as
-there are physical cores is a nice rule of thumb.
+Verify there's enough free disk space in `$IUKS_DIR`:
 
-For example, set:
+    MIN_DISK_SPACE=15000
+    FREE_DISK_SPACE=$(/bin/df --block-size=M --output=avail "${IUKS_DIR:?}" \
+       | tail -n1 | sed --regexp-extended 's,M$,,')
+    if [ "$FREE_DISK_SPACE" -lt "$MIN_DISK_SPACE" ]; then
+       echo "ERROR! Not enough free space in ${IUKS_DIR:?}"
+    fi
 
-    JOBS="--jobs 4"
-
-or, attempt to automatically set it to the number of physical cores:
-
-    JOBS="--jobs $(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
-
-before starting the wrapper from `puppet-tails`:
+Start building the IUKs locally:
 
     (
        set -eu
@@ -909,8 +850,8 @@ before starting the wrapper from `puppet-tails`:
        PUPPET_TAILS_REMOTE=$(echo -n "${TAILS_REMOTE?:}" | perl -p -E 's,:tails/tails(?:[.]git)?\z,:tails/puppet-tails,')
        cd "${WORK_DIR?:}"
        git clone "$PUPPET_TAILS_REMOTE"
-       sudo                                                                   \
        time                                                                   \
+       sudo                                                                   \
        ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
            --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
            --tails-git-commit "${TAG?:}"                                      \
@@ -920,7 +861,8 @@ before starting the wrapper from `puppet-tails`:
            --output-dir "${IUKS_DIR?:}"                                       \
            --source-versions "${IUK_SOURCE_VERSIONS?:}"                       \
            --new-version "${VERSION?:}"                                       \
-           --verbose ${JOBS:-}
+           --verbose                                                          \
+           --jobs "$(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
        cd "${IUKS_DIR?:}"
        sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
     )
@@ -929,8 +871,9 @@ Take note of the `time` output above and add it to the table in
 [[!tails_ticket 17750]].
 
 This command takes a long time. In parallel, while it is running,
-you can follow the next step:
+you can follow the next steps:
 
+ - ISO history
  - Build the Incremental Upgrade Kits on Jenkins
 
 ISO history
@@ -946,38 +889,19 @@ repo, so that:
 Make sure that Jenkins has finished building so you have set
 `MATCHING_JENKINS_IMAGES_BUILD_ID` (see above), then run:
 
-    ssh misc.lizard mkdir tails-amd64-${VERSION:?} && \
-    scp "${ISOS:?}"/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages,iso.sig,img.sig} \
-        misc.lizard:tails-amd64-${VERSION:?} && \
-    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
-       | ssh misc.lizard gpg --import && \
-    ssh misc.lizard << EOF && \
-       cd tails-amd64-${VERSION:?} && \
-       wget --quiet \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
-       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
-       gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
-    EOF
-    ssh misc.lizard << EOF
-       ( [ -d isos ] || git clone gitolite@puppet-git.lizard:isos.git ) && \
-       cd isos && \
-       git annex init && \
-       git annex sync && \
-       git annex import ../tails-amd64-${VERSION:?} && \
-       rmdir ../tails-amd64-${VERSION:?} && \
-       git commit -m "Add Tails ${VERSION:?}" && \
-       git annex sync && \
-       git annex copy tails-amd64-${VERSION:?} --to origin && \
-       git annex drop tails-amd64-${VERSION:?} && \
-       git annex sync
-    EOF
+    cd "${RELEASE_CHECKOUT:?}" && \
+    ./bin/add-release-to-iso-history \
+        --version "${VERSION:?}" \
+        --isos "${ISOS:?}" \
+        --release-branch "${RELEASE_BRANCH:?}" \
+        --matching-jenkins-images-build-id "${MATCHING_JENKINS_IMAGES_BUILD_ID:?}"
 
 Then, wait (a few minutes, `*/15` crontab) until the images appear
-on <https://iso-history.tails.boum.org/>.
+on <https://iso-history.tails.boum.org/?C=M&O=D>.
 
-XXX: report back on [[!tails_gitlab tails/sysadmin/-/issues/17417#note_157498]]
-how painful it is to wait here.
+While waiting, you can prepare the `parallel_build_IUKs` job and build in the
+next section. But do **not** click _Build_ until the images have appeared in the
+ISO history.
 
 <a id="build-iuks-on-jenkins"></a>
 
@@ -1006,11 +930,11 @@ Build the Incremental Upgrade Kits on Jenkins
 3. After a few seconds, a new build appears on top of the _Build
    History_ sidebar. Click on the progress bar of this new build.
 
-3. **Verify:** A downstream `parallel_collect_IUKs` job should appear,
-   to be triggered once the `parallel_build_IUKs` has completed successfully.
+3. Once this build is completed, Jenkins will trigger a build of the downstream
+   `parallel_collect_IUKs` job.
 
-4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable
-   to the ID of that downstream job (an integer).
+4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable to the ID of
+   that `parallel_collect_IUKs` build (an integer).
 
 5. Wait until both `parallel_build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
    It should take about 10-15 minutes for each member of
@@ -1050,14 +974,9 @@ Else, if this verification fails, then:
 
    Else, if the parameters where correct, then follow the next steps.
 
-2. As detailed in [[!tails_ticket 17658]], the `parallel_*_IUKs` jobs
-   are maintained manually instead of through `jenkins-job-builder`; it
-   might be that changes to the serial version (`build_IUKs`) weren't
-   reflected into the parallel version (`parallel_build_IUKs`). You
-   might want to try a build with the serial version before filing a
-   ticket (maybe for a single source version for a quick temperature
-   check, then for all of them if the first one matches your local
-   version).
+3. Leave the IUKs built by Jenkins in `rsync.lizard:/srv/tmp`: at least in some
+   cases, this will speed up uploading your own IUKs later by a 500+ factor,
+   thanks to `rsync --partial --inplace`.
 
 3. File an issue about this problem.
 
@@ -1232,6 +1151,42 @@ Sanity check
 Verify once more that the Tor Browser we ship is still the most recent (see
 above).
 
+Delete obsolete IUKs
+--------------------
+
+Skip this section if you're preparing a non-final release (beta, RC).
+
+Delete the IUKs that upgrade to any beta or RC corresponding to the version you
+are preparing:
+
+ - first check that it's not going to remove anything we want to keep:
+
+        ssh rsync.lizard /bin/sh -c \
+            \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
+                   /srv/rsync/tails/tails/stable/iuk/v2 \
+                   -type f \
+                   -name "*_to_${VERSION:?}~*.iuk" \
+                   -not -name '*~test_*~test.iuk' \
+                   -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                   -ls \
+            \"
+
+ - then actually delete the files:
+
+        ssh rsync.lizard /bin/sh -c \
+            \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
+                   /srv/rsync/tails/tails/stable/iuk/v2 \
+                   -type f \
+                   -name "*_to_${VERSION:?}~*.iuk" \
+                   -not -name '*~test_*~test.iuk' \
+                   -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                   -print -delete \
+            \"
+
+Rationale: avoid the need for mirrors to store 3 concurrent sets of IUKs
+([[!tails_ticket 17944]]). It's OK to delete them now, because we're past the
+deadline we've announced in the call for testing.
+
 <a id="publish-iuk"></a>
 
 Publish the ISO, IMG, and IUKs over HTTP
@@ -1254,28 +1209,17 @@ Upload the ISO and USB image signatures to our rsync server:
     scp "${ISO_PATH:?}.sig" "${IMG_PATH:?}.sig" rsync.lizard:
 
 Copy the ISO and USB images to our rsync server, verify their signature,
-move them in place with proper ownership and permissions
-and update the time in `project/trace` file on our rsync server
+move them in place with proper ownership and permissions:
+
+    cd "${RELEASE_CHECKOUT:?}" && \
+    ./bin/copy-images-to-rsync-server-and-verify \
+        --version "${VERSION:?}" \
+        --dist "${DIST:?}" \
+        --release-branch "${RELEASE_BRANCH:?}" \
+        --matching-jenkins-images-build-id "${MATCHING_JENKINS_IMAGES_BUILD_ID:?}"
+
+Update the time in `project/trace` file on our rsync server
 and on the live website (even for a release candidate):
-
-    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
-       | ssh rsync.lizard gpg --import
-    ssh rsync.lizard << EOF
-       wget --quiet \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
-       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
-       gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
-    EOF
-
-    ssh rsync.lizard << EOF
-      sudo install -o root -g rsync_tails -m 0755 -d \
-         /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
-      sudo chown root:rsync_tails tails-amd64-${VERSION:?}.{iso,img}* && \
-      sudo chmod u=rwX,go=rX tails-amd64-${VERSION:?}.{iso,img}* && \
-      sudo mv tails-amd64-${VERSION:?}.{iso,img}* \
-              /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?}
-    EOF
 
 	TRACE_TIME=$(date +%s) &&
 	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
@@ -1289,9 +1233,9 @@ and on the live website (even for a release candidate):
 	)
 
 At this stage, either IUKs were reproduced by Jenkins and left on the
-rsync server in a temporary location, or one should wait until the
-synchronization of local files (started in the first part of this
-section) to the same temporary location has completed.
+rsync server in a temporary location, or you must wait until the
+upload of the locally built IUKs (started in the first part of this
+section) is completed.
 
 Move the IUKs in place with proper
 ownership and permissions and update the time in `project/trace` file
@@ -1316,9 +1260,9 @@ candidate):
 	   git push origin master
 	)
 
-The IUK hashes files can be removed:
+Finally, delete the hashes file:
 
-    ssh rsync.lizard rm -f /srv/tmp/to_${VERSION?:}.sha256sum'*'
+    ssh rsync.lizard rm -f "/srv/tmp/to_${VERSION?:}.sha256sum"
 
 ## Announce, seed and test the Torrents
 
@@ -1369,24 +1313,35 @@ Now you can announce and seed the Torrents for the release you're preparing:
     done
 
 Test that you can start downloading the ISO and USB images with a BitTorrent client.
+It can take a few dozen minutes before this works.
 
 Testing
 =======
 
-1. Using `check-mirrors`, choose a fast mirror that already has the
-   tentative ISO and USB images. E.g. <https://mirrors.kernel.org/tails/> or
+1. Using [[!tails_gitlab desc="`check-mirrors`" tails/check-mirrors]],
+   choose a fast mirror that already has the
+   tentative ISO and USB images. E.g. <https://mirrors.edge.kernel.org/tails/> or
    <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
-   of bandwidth.
+   of bandwidth:
 
         ./check-mirrors.rb --allow-multiple --fast --channel ${DIST:?} \
-            --ip $(dig +short mirrors.kernel.org | tail -n1) \
+            --url-prefix https://mirrors.wikimedia.org/tails/ \
+            tails-amd64-${VERSION:?} \
+        || ./check-mirrors.rb --allow-multiple --fast --channel ${DIST:?} \
+            --url-prefix https://mirrors.edge.kernel.org/tails/ \
             tails-amd64-${VERSION:?}
+
+   If there's none, you may point <tails-manual-testers@boum.org>
+   to the images that Jenkins has built:
+
+        echo "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/"
 
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
    This is a public list, don't point to the pad.
 1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
    may start:
+   - use the template email from `rm.git:manual_testers.mdwn`
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
@@ -1475,6 +1430,7 @@ order to let the users of the old versions know that they have to upgrade:
    - if we are not shipping Linux from Debian stable, the list of
      CVE fixed in Linux since the one shipped in the previous release of
      Tails; you can find them in the relevant changelog e.g.:
+     * the GitLab issue that lead to the kernel upgrade
      * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/unstable_changelog>
      * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/testing_changelog>
      * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/buster-backports_changelog>
@@ -1502,21 +1458,42 @@ Copy the signatures and the Torrents into the website repository:
 	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
-Write the announcement for the release in
-`${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
+Write the announcement for the release:
 
-- Update the `meta title` directive.
-- Update the `meta date` directive.
-- Document important config changes that users of the Persistent Storage have to do
-  themselves (e.g. the Pidgin proxy settings change in
-  [[!tails_gitweb_commit 9925321]] breaks all existing persistent
-  profiles).
-- Document known issues.
-- This snippet can help to convert the copied changelog's issue
-  references to links:
+1. Set these environment variables, in the format `YYYY-MM-DD`:
 
-      sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
-          wiki/src/news/test_${TAG:?}.mdwn
+   - `RELEASE_DATE`: the date when you plan to publish this non-final release
+   - `FINAL_RELEASE_DATE`: the date when we plan to publish the final release
+     you're preparing a RC for
+
+2. Generate the boilerplate contents from the template:
+
+        ./bin/generate-call-for-testing \
+           --version "${VERSION:?}" \
+           --tag "${TAG:?}" \
+           --date "${RELEASE_DATE:?}" \
+           --final-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+           --final-date "${FINAL_RELEASE_DATE:?}" \
+        > ${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn
+
+3. Edit `${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`:
+
+   - Mention major user-visible improvements.
+
+     This snippet can help to convert the copied changelog's issue
+     references to links:
+
+         sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
+             wiki/src/news/test_${TAG:?}.mdwn
+
+   - Document important config changes that users of the Persistent Storage have to do
+     themselves (e.g. the Pidgin proxy settings change in
+     [[!tails_gitweb_commit 9925321]] breaks all existing persistent
+     profiles).
+
+   - Document known issues.
+
+   - Look for _FIXME_.
 
 In `wiki/src/home/testing.html`, add a bullet point with a pointer to
 the call for testing for this release candidate
@@ -1532,15 +1509,6 @@ section, and publish them on the `$WEBSITE_RELEASE_BRANCH` branch:
 	git add wiki/src && \
 	git commit -m "Releasing version ${VERSION:?}" && \
 	git push origin "${WEBSITE_RELEASE_BRANCH:?}"
-
-Then, if you are preparing a final release, email
-<tails-l10n@boum.org>, pointing them to:
-
- - the `$WEBSITE_RELEASE_BRANCH` branch
- - the PO files for the release notes
-
- … so that these pages get translated shortly, perhaps even soon
-enough to merge the translations before you publish the release.
 
 Draft the Tor blog post
 -----------------------
@@ -1594,7 +1562,7 @@ Go wild!
 Wait for the HTTP mirrors to catch up
 -------------------------------------
 
-Test downloading the ISO, USB image, and IUK over HTTP.
+Test downloading the ISO, USB image, and one of the new IUKs over HTTP.
 
 Make sure every active mirror in the pool has the new version:
 
@@ -1603,40 +1571,18 @@ Make sure every active mirror in the pool has the new version:
 
 Ask the mirrors team to disable mirrors that are lagging behind:
 
- - either over email: <tails-mirrors@boum.org> [encrypted]
+ - either over email: <tails-mirrors@boum.org>
  - or by creating a merge request that modifies the
-   [mirrors configuration file](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json)
+   [mirrors pool](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json)
 
 Sanity checks
 -------------
 
 * Check the outcome of the "Testing" section above.
 * Wait for the Mozilla security advisory (MFSA)
-  [to be published](https://www.mozilla.org/en-US/security/advisories/).
+  [to be published](https://www.mozilla.org/en-US/security/advisories/):
 
-  Below you find a shell function that will exit once a new MFSA is
-  published, so you can `wait_for_new_mfsa ; notify-send "New MFSA!"`
-  or similar to automate the wait:
-
-      current_mfsa() {
-          local current="$(
-              torsocks --isolate curl --silent https://www.mozilla.org/en-US/security/advisories/ | \
-              sed --regexp-extended -n 's@.*<a href="/en-US/security/advisories/(mfsa[0-9]+-[0-9]+)/".*>@\1@p' | \
-              sort -n | \
-              tail -n 1
-          )"
-          echo "$(date --rfc-3339=s): got ${current}" >&2
-          echo "${current}"
-      }
-      wait_for_new_mfsa() {
-          local initial="$(current_mfsa)"
-          while true; do
-              local new="$(current_mfsa)"
-              [ -z "${new}" ] && continue
-              [ "${new}" != "${initial}" ] && break
-              sleep 60
-          done
-      }
+        new=$("${RELEASE_CHECKOUT:?}/bin/wait-for-new-mfsa") notify-send --urgency=critical "New MFSA: $new"
 
 * Add the relevant MFSA to
   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`
@@ -1781,10 +1727,19 @@ If you just released a final release
      `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_STABLE_VERSION:?}/`
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
      (ISO and USB image, use comma-separated values)
-     with `ssh bittorrent.lizard transmission-remote --list` and then
-     delete them with
-     `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
-	 then re-run `ssh bittorrent.lizard transmission-remote --list` and make sure everything looks good
+     with:
+
+         ssh bittorrent.lizard transmission-remote --list
+
+     Then delete them with:
+
+         ssh bittorrent.lizard transmission-remote \
+             -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete
+
+     Finally, check that everything looks good:
+
+         ssh bittorrent.lizard transmission-remote --list
+
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. If you've published a final release, remove IUKs that upgrade to an
@@ -1842,10 +1797,18 @@ If you just released a final release
    `debian/changelog`. Explanation: the
    post-release APT repository steps from the previous stable release
    will usually have had us prepare for an emergency release that was
-   never made.
+   never made. [XXX:automate]
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel`.
+   `devel`:
+
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git fetch origin && \
+        git checkout stable && \
+        git merge origin/master && \
+        git checkout devel && \
+        git merge stable
+
    Note: After a final *major* release is published, it's normal to
    leave the `testing` branch alone: it will only become relevant
    again when the next freeze starts. In this case, keep a single
@@ -1863,42 +1826,9 @@ If you just released a final release
 
         cd "${RELEASE_CHECKOUT:?}" && \
         git checkout "${RELEASE_BRANCH:?}" && \
-        for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
-        (
-            echo "${dir:?}:"
-            cd "${dir:?}" && \
-            for ARCHIVE in * ; do
-                SERIAL="$(cat ${ARCHIVE:?}/serial)"
-                if [ "${SERIAL:?}" = 'latest' ]; then
-                    EXPIRY='never'
-                    if [ "${ARCHIVE:?}" != 'debian-security' ]; then
-                        echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
-                    fi
-                else
-                    case "${ARCHIVE:?}" in
-                        'debian-security')
-                            DIST='buster/updates'
-                            ;;
-                        'torproject')
-                            DIST='buster'
-                            ;;
-                        *)
-                            DIST='stable'
-                            ;;
-                    esac
-                    EXPIRY="$(curl --silent "https://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/${DIST:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
-                fi
-                echo "* Archive '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
-            done
-            echo ---
-        )
-        done
+        ./bin/apt-snapshots-expiry
 
 1. Push the resulting branches.
-1. Make sure Jenkins manages to build all updated major branches:
-   <https://jenkins.tails.boum.org/>.
-1. Make sure you pushed all changes in every of our Git repo (including our
-   Debian packages ones).
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
 1. Check the Mozilla release calendars:
@@ -1920,6 +1850,8 @@ If you just released a final release
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager#shift]].
    Otherwise, kindly remind the next release manager about this :)
+1. Make sure Jenkins manages to build all updated major branches:
+   <https://jenkins.tails.boum.org/>.
 
 If you just released an RC
 --------------------------

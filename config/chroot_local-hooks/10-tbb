@@ -88,44 +88,6 @@ install_tor_browser() {
     # Otherwise the "General" section in the preferences is not displayed.
     install -d -m 0755 "${prep}"/TorBrowser/UpdateInfo
 
-    # Apply 10.0-build2 → 10.0-build3 changes:
-    (
-        local tmp
-        tmp="$(mktemp -d)"
-        cd "${tmp}"
-        7z x -tzip "${prep}/browser/omni.ja"
-        # Any $ in the below in-line patch must be escaped!
-        patch -p1 <<EOF
-commit fb9428098b5b85eed400daa6e0010ac63faf8848 (tag: tor-browser-78.3.0esr-10.0-2-build2, origin/tor-browser-78.3.0esr-10.0-2)
-Author: Matthew Finkel <sysrqb@torproject.org>
-Date:   Sat Sep 19 17:03:53 2020 +0000
-
-    Revert "fixup! TB4: Tor Browser's Firefox preference overrides."
-    
-    This reverts commit c386fb3312237fd6c0d123ba9aaad662f8740e56.
-    
-    We continue using the old webextensions storage backend due to #40137.
-
-diff --git a/browser/app/profile/000-tor-browser.js b/browser/app/profile/000-tor-browser.js
-index bac98ce06540..7e29c788b720 100644
---- a/defaults/preferences/000-tor-browser.js
-+++ b/defaults/preferences/000-tor-browser.js
-@@ -286,6 +286,8 @@ pref("extensions.htmlaboutaddons.recommendations.enabled", false);
- pref("extensions.legacy.exceptions", "{972ce4c6-7e08-4474-a285-3208198ce6fd},torbutton@torproject.org");
- // Bug 26114: Allow NoScript to access addons.mozilla.org etc.
- pref("extensions.webextensions.restrictedDomains", "");
-+// Bug 31396: Disable indexedDB WebExtension storage backend.
-+pref("extensions.webextensions.ExtensionStorageIDB.enabled", false);
- // Bug 28896: Make sure our bundled WebExtensions are running in Private Browsing Mode
- pref("extensions.allowPrivateBrowsingByDefault", true);
- 
-EOF
-        touch --date="@${TBB_TIMESTAMP:?}" defaults/preferences/000-tor-browser.js
-        rm "${prep}/browser/omni.ja"
-        7z a -mtc=off -tzip "${prep}/browser/omni.ja" *
-        rm -r "${tmp}"
-    )
-    
     mv "${prep}" "${destination}"
     rm -r "${tmp}"
 }
@@ -325,7 +287,7 @@ install_debian_extensions() {
     fake_firefox_version=${firefox_version}+fake1
     install_fake_package firefox "${fake_firefox_version}" web
 
-    apt-get install --yes webext-ublock-origin
+    apt-get install --yes webext-ublock-origin-firefox
     patch -p1 < /usr/share/tails/uBlock-disable-autoUpdate.diff
 
     # Apply the same hack for our extension as the Tor Browser does
@@ -335,7 +297,7 @@ install_debian_extensions() {
     embed_extensions_in_omni_ja "${destination}" "${timestamp}"
     # ... and then remove the packages we just installed, since we
     # don't need them outside of omni.ja.
-    apt purge --yes firefox webext-ublock-origin
+    apt purge --yes firefox webext-ublock-origin-firefox
 }
 
 create_default_profile() {

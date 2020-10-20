@@ -14,16 +14,17 @@ goodcrypto.com converted from bash to python and added basic tests.
 <BLANKLINE>
 """
 
+import gettext
 import os
-import sys
-import time
-from gettext import gettext
-
-import sh
 import psutil
+import sys
+import sh
+import time
 
 os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
-os.environ['TEXTDOMAIN'] = 'tails'
+
+translation = gettext.translation("tails", '/usr/share/locale', fallback=True)
+_ = translation.gettext
 
 CMD = os.path.basename(sys.argv[0])
 # While running iuk.git:features/frontend:
@@ -32,7 +33,7 @@ CMD = os.path.basename(sys.argv[0])
 MIN_AVAILABLE_MEMORY = (200 * 1024 * 1024)  # In Bytes
 RUN_AS_USER = 'tails-upgrade-frontend'
 
-ERROR_MESSAGE = gettext('''\"<b>Not enough memory available to check for upgrades.</b>
+ERROR_MESSAGE = _('''<b>Not enough memory available to check for upgrades.</b>
 
 Make sure this system satisfies the requirements for running Tails.
 See file:///usr/share/doc/tails/website/doc/about/requirements.en.html
@@ -40,7 +41,7 @@ See file:///usr/share/doc/tails/website/doc/about/requirements.en.html
 Try to restart Tails to check for upgrades again.
 
 Or do a manual upgrade.
-See https://tails.boum.org/doc/first_steps/upgrade#manual\"''')
+See https://tails.boum.org/doc/upgrade#manual''')
 
 
 def main(*args):
@@ -70,8 +71,8 @@ def main(*args):
 
 def error(msg):
     """Show error and exit."""
-    cli_text = '{}: {} {}'.format(CMD, gettext('error:'), msg)
-    dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(gettext('Error'),
+    cli_text = '{}: {} {}'.format(CMD, _('error:'), msg)
+    dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(_('Error'),
                                                           msg)
     print(cli_text, file=sys.stderr)
 

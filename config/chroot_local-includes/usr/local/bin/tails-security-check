@@ -35,15 +35,12 @@ See https://tails.boum.org/.
 use Carp;
 use Carp::Assert::More;
 use Fatal qw{open close};
-use Locale::gettext;
+use Locale::TextDomain 'tails';
 use POSIX;
 use Tails::Download::HTTPS;
 use Try::Tiny;
 use XML::Atom;
 use XML::Atom::Feed;
-
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
 
 ### configuration
 
@@ -121,7 +118,7 @@ Notify the user about the Atom entries passed as arguments.
 sub notify_user {
     my @entries = @_;
 
-    my $body = gettext('This version of Tails has known security issues:') . "\n";
+    my $body = __('This version of Tails has known security issues:') . "\n";
 
     for (@entries) {
         $body .= '• ' . '<a href="' . $_->id . '">' . $_->title . '</a>' . "\n";
@@ -132,7 +129,7 @@ sub notify_user {
     exec(
         qw{/usr/bin/zenity --warning},
         q{--ellipsize},
-        q{--title}, gettext('Known security issues'),
+        q{--title}, __('Known security issues'),
         q{--text},  $body,
     );
 }
