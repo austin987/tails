@@ -92,41 +92,6 @@ def download_iuks_from_jenkins(
         destdir: str,
         jenkins_iuks_base_url: str,
         jenkins_build_id: int) -> None:
-
-    # This assumes same basename for hashes, locally and in Jenkins:
-    log.info("Downloading IUK hashes (if available) from Jenkins to %s…" % (desthost))
-    try:
-        url = "%s/%s/archive/%s" % (
-            jenkins_iuks_base_url,
-            jenkins_build_id,
-            Path(hashes_file).name
-        )
-        jenkins_hashes = '%(d)s/%(f)s' % {
-            "d": destdir,
-            "f": '%s.jenkins' % Path(hashes_file).name
-        }
-        our_hashes = '%(d)s/%(f)s' % {
-            "d": destdir,
-            "f": Path(hashes_file).name,
-        }
-        subprocess.run(
-            ["ssh", desthost, "wget", "--quiet", "--no-clobber",
-             "-O", jenkins_hashes, url],
-            check=True
-        )
-        subprocess.run(
-            ["ssh", desthost,
-             "sh -c \"if ! cmp -s '%(j_h)s' '%(o_h)s'; then "
-             "echo 'WARNING: IUK hashes seem different'; else "
-             "echo 'OK: IUK hashes seem similar'; fi\"" % {
-                 "j_h": jenkins_hashes,
-                 "o_h": our_hashes,
-             }],
-            check=True
-        )
-    except subprocess.CalledProcessError:
-        log.error("Unable to download/validate IUK hashes from Jenkins")
-
     log.info("Downloading IUKs from Jenkins to %s…" % (desthost))
     iuks = iuks_listed_in(hashes_file)
     log.debug("IUKS: %s" % ', '.join(iuks))
