@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+NAME=$(basename "${0}")
+LONGOPTS="version:,isos:,release-branch:,matching-jenkins-images-build-id:"
+OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
+eval set -- "$OPTS"
+while [ $# -gt 0 ]; do
+    case $1 in
+        --version)
+	    shift
+            VERSION="$1"
+            ;;
+	--isos)
+	    shift
+	    ISOS="$1"
+	    ;;
+	--release-branch)
+	    shift
+	    RELEASE_BRANCH="$1"
+	    ;;
+	--matching-jenkins-images-build-id)
+	    shift
+	    MATCHING_JENKINS_IMAGES_BUILD_ID="$1"
+	    ;;
+    esac
+    shift
+done
+
+ssh misc.lizard mkdir "tails-amd64-${VERSION:?}"
+
+scp "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}."{apt-sources,build-manifest,buildlog,packages,iso.sig,img.sig} \
+    "misc.lizard:tails-amd64-${VERSION:?}"
+
+ssh misc.lizard gpg --import < "wiki/src/tails-signing.key"
+
+ssh misc.lizard << EOF
+   cd tails-amd64-${VERSION:?} && \
+   wget --quiet \
+      "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
+      "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
+   gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
+   gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
+EOF
+
+ssh misc.lizard << EOF
+   ( [ -d isos ] || git clone gitolite@puppet-git.lizard:isos.git ) && \
+   cd isos && \
+   git annex init && \
+   git annex sync && \
+   git annex import ../tails-amd64-${VERSION:?} && \
+   rmdir ../tails-amd64-${VERSION:?} && \
+   git commit -m "Add Tails ${VERSION:?}" && \
+   git annex sync && \
+   git annex copy tails-amd64-${VERSION:?} --to origin && \
+   git annex drop tails-amd64-${VERSION:?} && \
+   git annex sync
+EOF

@@ -934,32 +934,12 @@ repo, so that:
 Make sure that Jenkins has finished building so you have set
 `MATCHING_JENKINS_IMAGES_BUILD_ID` (see above), then run:
 
-    ssh misc.lizard mkdir tails-amd64-${VERSION:?} && \
-    scp "${ISOS:?}"/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages,iso.sig,img.sig} \
-        misc.lizard:tails-amd64-${VERSION:?} && \
-    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
-       | ssh misc.lizard gpg --import && \
-    ssh misc.lizard << EOF
-       cd tails-amd64-${VERSION:?} && \
-       wget --quiet \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
-       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
-       gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
-    EOF
-    ssh misc.lizard << EOF
-       ( [ -d isos ] || git clone gitolite@puppet-git.lizard:isos.git ) && \
-       cd isos && \
-       git annex init && \
-       git annex sync && \
-       git annex import ../tails-amd64-${VERSION:?} && \
-       rmdir ../tails-amd64-${VERSION:?} && \
-       git commit -m "Add Tails ${VERSION:?}" && \
-       git annex sync && \
-       git annex copy tails-amd64-${VERSION:?} --to origin && \
-       git annex drop tails-amd64-${VERSION:?} && \
-       git annex sync
-    EOF
+    cd "${RELEASE_CHECKOUT:?}" && \
+    ./bin/add-release-to-iso-history \
+        --version "${VERSION:?}" \
+        --isos "${ISOS:?}" \
+        --release-branch "${RELEASE_BRANCH:?}" \
+        --matching-jenkins-images-build-id "${MATCHING_JENKINS_IMAGES_BUILD_ID:?}"
 
 Then, wait (a few minutes, `*/15` crontab) until the images appear
 on <https://iso-history.tails.boum.org/?C=M&O=D>.
