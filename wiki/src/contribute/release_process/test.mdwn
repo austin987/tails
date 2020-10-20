@@ -59,6 +59,11 @@ In a directory with many Tails ISO and USB images:
 
 This section can **not** be done by the RM.
 
+0. Check that the <https://tails.boum.org/contribute/calendar/>
+   documents who is the _Trusted Reproducer_ for this release.
+   If this is not the case, ask the RM (this is the only exception
+   to "do not trust anything said by the RM about this process").
+
 1. Download the ISO and USB images.
 
 2. Clear-sign the hashes of all products using your OpenPGP key
@@ -77,8 +82,7 @@ This section can **not** be done by the RM.
         echo "$DEST_DIR/TR-bits.gz"
 
 4. Send the aforementioned generated file as an attachment
-   to the _Trusted Reproducer_, whose name is on the
-   [release calendar](https://tails.boum.org/contribute/calendar/).
+   to the _Trusted Reproducer_.
 
 5. If the _Trusted Reproducer_ is around, ask them:
 
@@ -188,12 +192,6 @@ at the application level:
    verify that it only contains `127.0.0.1`:
    `sudo tcpdump -A -r dump | grep EHLO`
 
-# Tor
-
-* The version of Tor should be the latest stable one, which is the highest version number
-  before alpha releases on <https://deb.torproject.org/torproject.org/pool/main/t/tor/>. (automate:
-  [[!tails_ticket 10259]])
-
 # WhisperBack
 
 * I should be able to send a bug report with WhisperBack.
@@ -213,7 +211,7 @@ at the application level:
 
 # APT (automate: [[!tails_ticket 17017 desc="#17017"]])
 
-     grep -r jenw7xbd6tf7vfhp.onion /etc/apt/sources.list*
+     grep -r umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd.onion /etc/apt/sources.list*
 
 * Make sure the Tails repository suite in matching the release tag (for example
   the release version number) is in APT sources.
@@ -314,18 +312,6 @@ On a computer configured to prefer legacy BIOS boot:
 3. Boot this USB stick a second time.
 4. You should see the Welcome Screen appear.
 
-# Documentation
-
-* The "Tails documentation" desktop launcher should open the
-  [[doc]] page (automate: [[!tails_ticket 8788]]):
-  - in one language to which the website is translated
-  - in one language to which the website is not translated: this
-    should open the page in English
-* Browse around in the documentation shipped in the image and check
-  that internal links work fine (automate: [[!tails_ticket 10254]]):
-
-        file:///usr/share/doc/tails/website/index.en.html
-
 # Internationalization
 
 ## Tier-1 languages
@@ -355,9 +341,8 @@ release under testing was built from:
 
     git grep -E '^hunspell' config/chroot_local-packageslists/tails-common.list
 
-Then do the follow in the same Tor Browser session running in the
-`en_US.UTF-8` locale (or whatever locale you are most comfortable
-identifying other language names in):
+Then, in one single Tor Browser session, running in the locale you are most
+comfortable identifying other language names in:
 
 * Check that the expected languages are listed in the list of languages for
   spell checking. (automate: [[!tails_ticket 10269]])
@@ -371,8 +356,6 @@ identifying other language names in):
 
 # Misc
 
-* Check that all seems well during init: (automate: [[!tails_ticket 10277]])
-  - `systemctl --failed --all` should either say `0 loaded units listed`,
-    or list `rng-tools.service` as the only unit in `failed` state.
-  - the output of `sudo journalctl` should seem OK. For a quick overview,
-    something like `sudo journalctl -p 0..3` can be helpful.
+* Check that the output of `sudo journalctl` should seem OK.
+  For a quick overview, something like `sudo journalctl -p 0..3` can be helpful.
+  `[can't-automate]`

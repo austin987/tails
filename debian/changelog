@@ -1,3 +1,462 @@
+tails (4.12) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade libx11 to 2:1.6.7-1+deb10u1
+
+  * Hardware support
+    - Upgrade firmware-linux-nonfree to 20200918-1
+
+  * Upgrade to Tor Browser 10.0.2 (based on Firefox 78.4) (tails/tails!208)
+
+    Closes issues:
+      - Upgrade to Tor Browser 10.0.2 (based on Firefox 78.4) (tails/tails#17971)
+
+    Commits:
+      - Revert "Tor Browser: patch in prefs changes introduced in 10.0-build3."
+      - Fetch Tor Browser from our own archive.
+      - Upgrade Tor Browser to 10.0.2-build2.
+
+  * Use v3 Onion service to connect to our custom APT repository (tails/tails!201)
+
+    Closes issues:
+      - Migrate deb.tails.boum.org APT source to v3 onion (tails/tails#17937)
+
+    Commits:
+      - Use v3 Onion service to connect to our custom APT repository
+
+  * onion-grater: fix rate limiting of how often we try to connect to tor
+    (tails/tails!199)
+
+    Commits:
+      - onion-grater: fix rate limiting of how often we try to connect to tor
+
+  * Electrum & Upgrader wrappers: fix i18n support and use canonical URL for manual
+    upgrade doc (tails/tails!198)
+
+    Closes issues:
+      - tails-upgrade-frontend-wrapper points users to a 404 URL for manual upgrades in
+        French (tails/tails#17958)
+      - Some Python scripts fail to set the gettext text domain correctly
+        (tails/tails#17758)
+
+    Commits:
+      - Lint
+      - Electrum & Upgrader wrappers: fix internationalization support, by setting the
+        text domain correctly
+      - Unfuzzy 2 translation strings
+      - Update POT and PO files
+      - tails-upgrade-frontend-wrapper: remove spurious double quotes surrounding error
+        message
+      - Update POT and PO files
+      - tails-upgrade-frontend-wrapper: use canonical URLs for manual upgrade doc
+
+  * Keep installing Thunderbird 68 until we're ready for 78 (tails/tails!197)
+
+    Closes issues:
+      - All branches FTBFS since Thunderbird 78 reached the Buster security repo
+        (tails/tails#17962)
+
+    Commits:
+      - Install Thunderbird 68 until we're ready for 78
+
+  * WhisperBack: sanitize HTTP(s) URLs (tails/tails!196)
+
+    Closes issues:
+      - Unscrubbed URL in WhisperBack reports (tails/tails#10695)
+
+    Commits:
+      - WhisperBack: sanitize HTTP(s) URLs
+
+  * Avoid mirrors and rsync.lizard running out of disk space during the release
+    process when upgrades to a beta/RC are present (tails/tails!195)
+
+    Closes issues:
+      - Avoid mirrors and rsync.lizard running out of disk space during the release
+        process when upgrades to a beta/RC are present (tails/tails#17944)
+
+    Commits:
+      - Release process: delete beta/RC IUKs before uploading the IUKs for the final
+        version
+      - Call for testing: set a deadline for providing feedback (2 days before the
+        final release)
+      - Release process: automate generation of call for testing
+
+  * Installer: fix various internationalization bugs (tails/tails!194)
+
+    Closes issues:
+      - Various internationalization bugs in the Installer (tails/tails#17961)
+
+    Commits:
+      - Update POT and PO files, to match translatable strings changes
+      - Installer: allow translators to reorder string arguments in translations
+      - Installer: fix translations being unused due to translatable string being
+        computed at runtime
+
+  * Upgrade Linux to 5.8 and Debian to 10.6 (tails/tails!188)
+
+    Closes issues:
+      - Upgrade Linux to 5.8 (tails/tails#17896)
+      - Upgrade to Buster 10.6 (tails/tails#17930)
+      - Regression with Intel Corporation [8086:22b0] and [8086:22b1] GPU since 4.9
+        (tails/tails#17953)
+
+    Commits:
+      - Tor Browser AppArmor profile: allow access to DRI nodes
+      - Tor Browser AppArmor profile: update patch to apply on top of 0.3.2-14
+      - Update GNOME Shell to 3.30.2-11~deb10u2.0tails1
+      - Update systemd to 241-7~deb10u4.0tails1
+      - Refresh uBlock patch to apply cleanly on top of webext-ublock-origin-firefox
+        1.30.0+dfsg-1
+      - Adjust for webext-ublock-origin package split
+      - Adjust fake linux-compiler-gcc-N-x86 hack to Linux 5.8's needs
+      - Kernel command line: drop init_on_alloc=1, now set by default in Debian
+      - Upgrade Linux to 5.8.0-2 (currently at version 5.8.10-1)
+      - Bump snapshot of the Debian archive to 2020101002
+
+  * Upgrade to tor 0.4.4.5 (tails/tails!187)
+
+    Closes issues:
+      - Upgrade to tor 0.4.4 (tails/tails#17932)
+
+    Commits:
+      - Bump APT snapshot of the "torproject" archive to 2020091901, that has tor
+        0.4.4.x
+
+  * Port Perl code to translatable strings format supported by GNU gettext
+    (tails/tails!181)
+
+    Closes issues:
+      - Port Perl code to translatable strings format supported by GNU gettext
+        (tails/tails#17928)
+
+    Commits:
+      - refresh-translations: check PO files while converting them to MO
+      - Upgrader, Persistence wizard: set the UTF-8 flag on all strings returned by
+        Locale::TextDomain
+      - Re-add loading POSIX: we use it for more than setlocale
+      - Upgrader, Persistence wizard: assume UTF-8 locale
+      - Drop unneeded call to setlocale
+      - Drop meaningless attempt at localization
+      - Persistence setup: encode output when displaying errors on stdout
+      - IUK creation: make saveas method benchmarking info honor its $outfile_name
+        argument
+      - Port Perl code to translatable strings format supported by GNU gettext
+
+  * Import WhisperBack into our main Git repository (tails/tails!179)
+
+    Closes issues:
+      - Move WhisperBack source to our main Git repository (tails/tails#16936)
+
+    Commits:
+      - generate-changelog: don't consider obsolete tails/whisperback project
+      - Integrate WhisperBack into our l10n setup
+      - Import WhisperBack
+
+  * Import Tails Installer into our main Git repository and delete its dead code
+    (tails/tails!159)
+
+    Closes issues:
+      - Move Tails Installer to our main Git repository (tails/tails#17917)
+
+    Commits:
+      - generate-changelog: don't consider obsolete tails/installer project
+      - Adjust tails-installer.desktop to l10n setup
+      - Installer: adjust gettext files lookup
+      - Installer: adjust data directory lookup
+      - Update Transifex script & doc: most of our Transifex projects are obsolete
+      - Adjust code and doc to the fact Tails Installer now lives in tails.git
+      - Import Tails Installer
+
+  * Add a button to cancel the upgrade while downloading (tails/tails!12)
+
+    Closes issues:
+      - Add a button to cancel the upgrade while it's downloading (tails/tails#17310)
+
+    Commits:
+      - Fix regression introduced by 26b9b1b83f3857232474dd2291889867e80a3b45
+      - Upgrader: port code added in !12 to the l10n setup we switched to in !181
+      - Lint
+      - Convert tails-iuk-get-target-file | zenity pipeline to  start / pump / finish
+      - Untabify
+      - Update design doc wrt. new tails-iuk-get-target-file permissions
+      - Remove unnecessary exit code handling
+      - Fix typo
+      - Allow tails-upgrade-frontend to kill the download process
+      - Set a signal handler to cancel the download when the zenity dialog is closed
+      - Add a button to cancel the upgrade while it is downloading
+
+ -- Tails developers <tails@boum.org>  Mon, 19 Oct 2020 08:35:44 +0000
+
+tails (4.11) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Linux kernel to 5.7.0-3 at 5.7.17-1 (#17895).
+    - Upgrade Tor Browser to 10.0 (#17933).
+    - Upgrade Thunderbird to 68.12.0-1~deb10u1.
+    - Upgrade xorg-server to 1.20.4-1+deb10u1.
+    - Upgrade openexr to 2.2.1-4.1+deb10u1.
+    - Upgrade bind9 to 9.11.5.P4+dfsg-5.1+deb10u2.
+    - Upgrade ghostscript to 9.27~dfsg-2+deb10u4.
+    - Upgrade libzmq5 to 4.3.1-4+deb10u2.
+
+  * Minor improvements and updates
+    - Upgrade Electrum to 4.0.2-2.
+
+  * Tor Browser 10.0 (tails/tails!189)
+
+    Commits:
+      - Tor Browser: patch in prefs changes introduced in 10.0-build3.
+      - Test suite: make scenario titles consistently not end with period
+      - Unsafe Browser: adjust disabling add-ons to Tor Browser 10
+      - Unsafe Browser: add missing escaping
+      - Upgrade Tor Browser to 10.0-build2 (refs: #17933).
+      - Rename, refactor, reorganize.
+      - Tor Browser: use new trick to avoid mandatory extension signing.
+      - Upgrade Tor Browser to 10.0a7.
+
+  * Test suite: use versioned python2 interpreter for otr-bot.py (tails/tails!186)
+
+    Commits:
+      - Test suite: use versioned python2 interpreter for otr-bot.py
+
+  * Test suite: switch to virtio transport for the remote shell (tails/tails!185)
+
+    Closes issues:
+      - Improve the remote shell's performance by switching to a virtio channel
+        (tails/tails#11888)
+
+    Commits:
+      - Test suite: make SocketReadTimeout inherit from RuntimeError
+      - Lint.
+      - Test suite: use factorized way to get and update the domain's XML definition
+      - Fix Layout/EmptyLineAfterGuardClause Rubocop regression
+      - Fix Style/StringLiterals Rubocop regression
+      - Fix Naming/HeredocDelimiterNaming Rubocop regression
+      - Rubocop: fix a Security/JSONLoad regression
+      - tails-autotest-remote-shell: lint
+      - tails-autotest-remote-shell: remove unused import
+      - Remote shell: improve warning.
+      - Test suite: log whenever remote_shell_is_up?() returns false.
+      - Remote shell: use timed read() for virtio channel.
+      - Remote shell: switch from serial to virtio transport (refs: #11888).
+
+  * Release process: generate UDFs to non-final releases from any supported
+    previous version (tails/tails!178)
+
+    Closes issues:
+      - UDF generation is broken for release candidates (tails/tails#17921)
+
+    Commits:
+      - Don't generate UDFs on the stable channel to point to a release candidate
+      - Release process: generate UDFs to non-final releases from any supported
+        previous version
+
+  * Don't override Debian's system-wide Thunderbird configuration (tails/tails!177)
+
+    Commits:
+      - Adding comment explaining extensions.update.enabled Thunderbird pref (Refs:
+        #16021)
+      - Removing network.protocol-handler.app.http[s] Thunderbird preferences (Refs:
+        #16021)
+      - Removing intl.locale.requested Thunderbird preference (Refs: #16021)
+      - Changing header in Thunderbird's prefs file indicating they are Tails' prefs
+        (Refs: #16021)
+      - aa_tails.js: Removing repeated thunderbird preferences
+      - Moving local included thunderbird config to not overwrite debian default (Will-
+        fix: #16021)
+
+  * Clarify phrasing of KeePassXC database renaming dialog (tails/tails!175)
+
+    Commits:
+      - Explicit (#17286)
+      - Explain that the change came from KeePassXC (#17286)
+
+  * Test Thunderbird with local email server on Jenkins (tails/tails!172)
+
+    Closes issues:
+      - Checking credentials in Thunderbird autoconfig wizard sometimes fails in the
+        test suite (tails/tails#11890)
+      - Run our own email (IMAP/POP3/SMTP) server for automated tests run on lizard
+        (tails/tails#12277)
+
+    Commits:
+      - Test suite: fix Rubocop offenses
+      - Lint.
+      - Test suite: add debug logging so we can tell whether we're installing the
+        hosts' email server's snakeoil certificate
+      - Test suite: add missing newline.
+      - Test suite: set promiscuous trust for the certificate we import.
+      - Test suite: import isotesters' snakoil SSL cert into Thunderbird.
+      - Test suite: complete the switch from Icedove to Thunderbird namespace in
+        configuration (refs: #12277)
+
+  * Chutney docs and logging (tails/tails!167)
+
+    Commits:
+      - Test suite: improve logging message for initial Chutney cleanup.
+      - Test suite: also log when Chutney is up and running.
+      - Test suite: make Chutney logging visible without debug formatter.
+      - Test suite: document our usage of Chutney (refs: #17801).
+
+  * Install python3-trezor from buster-backports (tails/tails!165)
+
+    Commits:
+      - Install trezor packages from buster-backports
+
+  * Fix “return to Greeter when clicking the Start Tails button” on Intel+AMD dual-
+    GPU systems (tails/tails!163)
+
+    Commits:
+      - tails-unblock-network: skip most graphics-related devices when triggering udev
+
+  * Round the download size in "Upgrade available" dialog (tails/tails!162)
+
+    Commits:
+      - Rounds the size of numbers displayed in stderr if is not possible to do an
+        incremental upgrade because there is no free memory or disk space available
+      - Round the download size in Upgrade available IUK dialog
+
+  * Save KeePassXC database in persistent directory (tails/tails!161)
+
+    Commits:
+      - Adjust end-user documentation for new default KeePassXC database filename
+      - Open Passwords.kdbx by default (#17286)
+      - Install KeePassXC 2.5.4 from buster-backports (#17286)
+
+  * Support audio on recent Intel platforms: Comet Lake, Whiskey Lake, etc.
+    (tails/tails!157)
+
+    Commits:
+      - auto/build: enable the pipefail option
+      - Add Intel SOF Firmware and Topology binaries as a submodule and install them
+      - build-tails: give our build scripts access to submodules' refs
+      - Make code fail hard if it becomes obsolete
+
+  * "Synchronizing the system's clock" notification: hidden → onion services
+    (tails/tails!156)
+
+    Commits:
+      - update hidden to onion services
+        (https://gitlab.tails.boum.org/tails/tails/-/issues/15354)
+
+  * Drop obsolete workaround for python3-qdarkstyle, fixing devel FTBFS
+    (tails/tails!154)
+
+    Commits:
+      - Drop now unneeded APT pinning on helpdev and python3-qdarkstyle
+      - Revert "Avoid installing python3-qdarkstyle by default"
+
+  * Build the changelog from GitLab MRs rather than from Git commits
+    (tails/tails!153)
+
+    Commits:
+      - generate-changelog: only list merged MRs
+      - Changelog generation: support preparing a non-final (alpha, beta, RC) release
+      - Update comment
+      - Release process: update obsolete reference to Stretch
+      - Release process: use HTTPS URIs
+      - Remove obsolete "release" script
+      - RM doc: drop obsolete process hack around painful changelog generation
+      - Release process and release notes checklist: switch to automated changelog
+        generation
+      - changelog.jinja2: add newlines for nicer formatting if rendered as Markdown
+      - generate-changelog: skip merge commits
+      - Add PoC script that generates a changelog from GitLab MRs
+
+  * Include "initially installed Tails version" info in WhisperBack reports
+    (tails/tails!152)
+
+    Commits:
+      - Include "initially installed Tails version" in WhisperBack reports
+      - Reorder debugging info: keep persistence-related info together
+
+  * try_for() timeout is not honored (tails/tails!151)
+
+    Closes issues:
+      - Test suite: try_for timeout is not honored (tails/tails#17822)
+
+    Commits:
+      - Revert "Revert "Test suite: revert exception handling change in try_for""
+
+  * Enable persistence for all Greeter settings (tails/tails!149)
+
+    Commits:
+      - Test suite: make sure Greeter settings are default when they should.
+      - Test suite: add scenario testing persistent Greeter options (refs: #17136).
+      - Test suite: support entering sudo/persistent password in German.
+      - Test suite: simplify.
+      - Test suite: refactor.
+      - Test suite: restore $language after reboot during the same scenario.
+      - Test suite: consistently wait for notifications after logging in.
+      - Greeter: Explain in a comment why we need this ugly workaround
+      - Greeter: expand persistence support to all settings.
+
+  * Tor browser 10.0.x based on ESR78 (tails/tails!148)
+
+    Commits:
+      - Automate Tor Browser import branch name generation.
+      - Tor Browser: disable update checks via Enterprise Policy mechanism.
+      - Revert "Tor Browser: disable the update check with a hack."
+      - Upgrade Tor Browser to 10.0a6.
+      - Tor Browser: disable the update check with a hack.
+      - Test Suite: bump image.
+      - Test Suite: bump UnsafeBrowserStartPage.fa.png.
+      - Unsafe Browser: enable userChrome.css.
+      - Unsafe Browser: Fix pref → user_pref error.
+      - Tor Browser: drop userChrome.css.
+      - Unsafe Browsesr: make DNS resolution work.
+      - Revert "Tor Browser: remove leftover .orig."
+      - Revert "Tor Browser: delete all Namecoin stuff."
+      - Revert "Tor Browser: temporarily disable all non-en_US locales."
+      - Tor Browser: refresh extension hacks patches.
+      - Upgrade Tor Browser to 10.0a5-build2.
+      - Move variables.
+      - Don't ignore grep failure.
+      - Tor Browser: delete all Namecoin stuff.
+      - Tor Browser: use the bundled libstdc++.so.6.
+      - Tor Browser: remove leftover .orig.
+      - Tor Browser: temporarily disable all non-en_US locales.
+      - Upgrade Tor Browser to 10.x nightly build as of 2020-08-13.
+      - Tor Browser: naming scheme for nightly builds has changed.
+
+  * Hide broken "Turn on Wi-Fi Hotspot" feature in GNOME Wi-Fi settings
+    (tails/tails!147)
+
+    Commits:
+      - Hide broken "Turn on Wi-Fi Hotspot" feature in GNOME Wi-Fi settings (#17887)
+
+  * Upgrade Linux to 5.7.17-1, adjust for updated Electrum dependencies, support
+    older TREZOR firmware (tails/tails!142)
+
+    Commits:
+      - Avoid installing python3-qdarkstyle by default
+      - Install python3-hid, to support the HID version of TREZOR
+      - Install python3-qdarkstyle from Bullseye: Electrum now depends on it (#17904)
+      - Upgrade Linux to 5.7.0-3, currently at version 5.7.17-1 (#17895)
+      - Revert "Install python3-cryptography, otherwise Electrum 4.0.2-0.1 won't start"
+      - Install python3-construct from buster-backports: python3-trezor needs it
+        (#17904)
+
+  * Fix sorting Intel GPUs last in the "Error starting GDM" message
+    (tails/tails!141)
+
+    Closes issues:
+      - Multiple GPUs are not sorted in the intended order in the "Error starting GDM"
+        message (tails/tails#17903)
+
+    Commits:
+      - Fix sorting Intel GPUs last in the "Error starting GDM" message (#17903)
+
+  * Include information about the contents of the system partition in WhisperBack
+    reports (tails/tails!140)
+
+    Commits:
+      - tails-debugging-info: include information about the contents of the system
+        partition
+      - tails-debugging-info: add support for commands that need to go through a shell
+
+ -- Tails developers <tails@boum.org>  Mon, 21 Sep 2020 12:03:51 +0200
+
 tails (4.10) unstable; urgency=medium
 
   * Security fixes

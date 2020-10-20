@@ -2,20 +2,12 @@
 
 [[!toc levels=1]]
 
-Everything on this page happens in the
-`config/chroot_local-includes/usr/src/iuk` directory.
-
 Pre-requisites
 =============
 
 * a Debian Stretch (or newer) system
 * a user that has sudo credentials
 * [[Install perl5lib's dependencies|perl5lib#build-deps]]
-* Environment:
-  - Export location of a checkout of the `stable` branch of the main
-    Tails Git repository:
-
-        export TAILS_GIT_CHECKOUT="/path/to/your/tails/git/repo"
 
 <a id="build-deps"></a>
 
@@ -29,6 +21,7 @@ Install dependencies needed to generate IUKs, UDFs, and to run the test suite
        libdist-zilla-plugin-test-notabs-perl \
        libdist-zilla-plugin-test-perl-critic-perl \
        libdist-zilla-app-command-authordebs-perl && \
+    cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/iuk" && \
     dzil authordebs --install && \
     sudo apt install \
        attr \
@@ -57,11 +50,26 @@ conditions closer to production):
     sudo true
     umask 077
     
-Run the upstream test suite:
+Run the full test suite:
 
+    cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/iuk" && \
+    TAILS_GIT_CHECKOUT="$(git rev-parse --show-toplevel)" \
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
     PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
        RELEASE_TESTING=1 \
        LC_ALL=C \
        dzil test
+
+To run only BDD tests (ala Cucumber) defined under
+`config/chroot_local-includes/usr/src/iuk/features`, use `pherkin`.
+For example:
+
+    cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/iuk" && \
+    TAILS_GIT_CHECKOUT="$(git rev-parse --show-toplevel)" \
+    NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
+    PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
+    PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
+       RELEASE_TESTING=1 \
+       LC_ALL=C \
+       pherkin features/download_upgrade-description_file

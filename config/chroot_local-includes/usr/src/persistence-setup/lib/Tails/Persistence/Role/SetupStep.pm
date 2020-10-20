@@ -14,10 +14,8 @@ use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use Gtk3 qw{-init};
 
-use Locale::gettext;
+use Locale::TextDomain 'tails';
 use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
 
 use Moo::Role;
 use MooX::late;

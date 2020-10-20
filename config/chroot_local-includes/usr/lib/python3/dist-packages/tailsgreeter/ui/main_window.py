@@ -19,6 +19,7 @@ import locale
 import logging
 from typing import TYPE_CHECKING
 import gi
+import glob
 import os
 import sh
 
@@ -350,11 +351,8 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         return False
 
     def cb_button_start_clicked(self, widget, user_data=None):
-        # Cherry-pick the settings we want to persist
-        # (currently only the Unsafe Browser setting)
-        sh.cp("-a",
-              os.path.join(settings_dir, unsafe_browser_setting_filename),
-              persistent_settings_dir)
+        for setting in glob.glob(os.path.join(settings_dir, 'tails.*')):
+            sh.cp("-a", setting, persistent_settings_dir)
 
         self.greeter.login()
         return False

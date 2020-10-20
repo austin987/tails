@@ -44,6 +44,20 @@ Feature: Tails persistence
     And the 1st network device has a spoofed MAC address configured
     And no network device leaked the real MAC address
 
+  Scenario: Persistent Greeter options
+    Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
+    When I enable persistence
+    Then no persistent Greeter options were restored
+    When I set all Greeter options to non-default values
+    And I log in to a new session
+    Then all Greeter options are set to non-default values
+    When I cold reboot the computer
+    And the computer reboots Tails
+    Given I enable persistence
+    Then persistent Greeter options were restored
+    When I log in to a new session
+    Then all Greeter options are set to non-default values
+
   Scenario: Deleting a Tails persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session

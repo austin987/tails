@@ -1,15 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-  // A/B testing
-  let variant;
-  if (Math.round(Date.now() / 1000 / 60 / 60 / 5) % 2 == 0) { // divide time since epoch by slots of 5 hours
-    variant = "default";
-    document.getElementById("variant-forced").remove();
-  } else {
-    variant = "forced";
-    document.getElementById("variant-default").remove();
-  }
-
   function hide(elm) {
     elm.style.display = "none";
   }
@@ -28,11 +18,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function getCustom() {
+    return JSON.parse(document.getElementById("custom").value);
+  }
+
+  function setCustom(custom) {
+    document.getElementById("custom").value = JSON.stringify(custom);
+  }
+  setCustom({});
+
   // Show version with JavaScript
   show(document.getElementById('paypal-with-js'));
   hide(document.getElementById('paypal-without-js'));
 
-  // default donation is in $
+  // Default donation is in $
   toggle(document.getElementsByClassName('donate-dollars'), "show");
   toggle(document.getElementsByClassName('donate-euros'), "hide");
 
@@ -67,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('t3').value = 'Y';
   }
 
-  // toggle button groups
+  // Toggle button groups
   var element = document.getElementsByClassName('btn');
   for (let i = 0; i < element.length; i++) {
     element[i].addEventListener('click', function() {
@@ -79,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // change donation values on change and on click
+  // Change donation values on change and on click
   var defaultvalue = 5;
   var belement = document.getElementsByClassName('btn-amount');
   for (let i = 0; i < belement.length; i++) {
@@ -134,20 +133,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  if (variant == "forced") {
-    // Make sure that a frequency is selected
-    var frequency = false;
-    document.getElementById("donate-paypal-button").onclick = function(e) {
-      frequencies = document.getElementsByName("frequency");
-      for (let i = 0; i < frequencies.length; i++) {
-        if (frequencies[i].checked) frequency = frequencies[i].id;
-      }
-      if (!frequency) {
-        e.preventDefault();
-        console.log(document.getElementById("donate-paypal-button").classList.remove("active"));
-        document.getElementById("frequency-buttons").classList.add("shake");
-      }
+  // Make sure that a frequency is selected
+  var frequency = false;
+  document.getElementById("donate-paypal-button").onclick = function(e) {
+    frequencies = document.getElementsByName("frequency");
+    for (let i = 0; i < frequencies.length; i++) {
+      if (frequencies[i].checked) frequency = frequencies[i].id;
     }
+    if (!frequency) {
+      e.preventDefault();
+      document.getElementById("donate-paypal-button").classList.remove("active");
+      document.getElementById("frequency-buttons").classList.add("shake");
+    }
+  }
+
+  // Newsletter subscription
+  function newsletterSubscription() {
+    var custom = getCustom();
+    if (document.getElementById("opt-in").checked) {
+      custom.newsletter = true;
+      show(document.getElementById("email"));
+    } else {
+      custom.newsletter = false;
+      hide(document.getElementById("email"));
+    }
+    setCustom(custom);
+  }
+  newsletterSubscription();
+  document.getElementById("opt-in").onclick = function(e) {
+    newsletterSubscription();
   }
 
 });
