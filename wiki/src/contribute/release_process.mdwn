@@ -1599,31 +1599,9 @@ Sanity checks
 
 * Check the outcome of the "Testing" section above.
 * Wait for the Mozilla security advisory (MFSA)
-  [to be published](https://www.mozilla.org/en-US/security/advisories/).
+  [to be published](https://www.mozilla.org/en-US/security/advisories/):
 
-  Below you find a shell function that will exit once a new MFSA is
-  published, so you can `wait_for_new_mfsa ; notify-send --urgency=critical "New MFSA!"`
-  or similar to automate the wait:
-
-      current_mfsa() {
-          local current="$(
-              torsocks --isolate curl --silent https://www.mozilla.org/en-US/security/advisories/ | \
-              sed --regexp-extended -n 's@.*<a href="/en-US/security/advisories/(mfsa[0-9]+-[0-9]+)/".*>@\1@p' | \
-              sort -n | \
-              tail -n 1
-          )"
-          echo "$(date --rfc-3339=s): got ${current}" >&2
-          echo "${current}"
-      }
-      wait_for_new_mfsa() {
-          local initial="$(current_mfsa)"
-          while true; do
-              local new="$(current_mfsa)"
-              [ -z "${new}" ] && continue
-              [ "${new}" != "${initial}" ] && break
-              sleep 60
-          done
-      }
+        new=$("${RELEASE_CHECKOUT:?}/bin/wait-for-new-mfsa") notify-send --urgency=critical "New MFSA: $new"
 
 * Add the relevant MFSA to
   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`
