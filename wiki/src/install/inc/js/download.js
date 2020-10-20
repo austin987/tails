@@ -199,7 +199,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Direct download
   document.getElementById("download-img").onclick = function(e) { download(e, this); }
+  document.getElementById("download-img-retry").onclick = function(e) { download(e, this); }
   document.getElementById("download-iso").onclick = function(e) { download(e, this); }
+  document.getElementById("download-iso-retry").onclick = function(e) { download(e, this); }
 
   function download(e, elm) {
     try {
