@@ -119,7 +119,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   step "I open a new tab in the #{browser}"
   info = xul_application_info(browser)
   open_address = proc do
-    @screen.find_any(info[:address_bar_images])[1].click
+    @screen.find_any(info[:address_bar_images])[:match].click
     # This static here since we have no reliable visual indicators
     # that we can watch to know when typing is "safe".
     sleep 5
@@ -339,7 +339,7 @@ Then(/^the screen keyboard works in Tor Browser$/) do
   @screen.wait('ScreenKeyboard.png', 10)
   @screen.wait_any(
     ['ScreenKeyboardKeyX.png', 'ScreenKeyboardKeyPersian.png'], 10
-  )[1].click
+  )[:match].click
   @screen.wait_any(
     [
       'BrowserAddressBarX.png',

@@ -176,7 +176,10 @@ class Screen
     end
     patterns.each do |pattern|
       begin
-        return [pattern, find(pattern, **opts.clone.update(log: false))]
+        return {
+          found_pattern: pattern,
+          match:         find(pattern, **opts.clone.update(log: false)),
+        }
       rescue FindFailed
         # Ignore. We'll throw an appropriate exception after having
         # looped through all patterns and found none of them.

@@ -286,7 +286,7 @@ Then(/^the screen keyboard works in Thunderbird$/) do
   @screen.wait('ScreenKeyboard.png', 10)
   @screen.wait_any(
     ['ScreenKeyboardKeyX.png', 'ScreenKeyboardKeyPersian.png'], 10
-  )[1].click
+  )[:match].click
   @screen.wait_any(
     [
       'ThunderbirdX.png',
