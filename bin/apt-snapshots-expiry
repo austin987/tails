@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
+(
+    set -eu
+    echo "${dir:?}:"
+    cd "${dir:?}" && \
+    for ARCHIVE in * ; do
+        SERIAL="$(cat ${ARCHIVE:?}/serial)"
+        if [ "${SERIAL:?}" = 'latest' ]; then
+            EXPIRY='never'
+            if [ "${ARCHIVE:?}" != 'debian-security' ]; then
+                echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
+            fi
+        else
+            case "${ARCHIVE:?}" in
+                'debian-security')
+                    DIST='buster/updates'
+                    ;;
+                'torproject')
+                    DIST='buster'
+                    ;;
+                *)
+                    DIST='stable'
+                    ;;
+            esac
+            EXPIRY="$(curl --silent "https://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/${DIST:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+        fi
+        echo "* Archive '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
+    done
+    echo ---
+)
+done
