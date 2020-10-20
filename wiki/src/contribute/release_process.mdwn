@@ -1800,7 +1800,15 @@ If you just released a final release
    never made. [XXX:automate]
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel`.
+   `devel`:
+
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git fetch origin && \
+        git checkout stable && \
+        git merge origin/master && \
+        git checkout devel && \
+        git merge stable
+
    Note: After a final *major* release is published, it's normal to
    leave the `testing` branch alone: it will only become relevant
    again when the next freeze starts. In this case, keep a single
