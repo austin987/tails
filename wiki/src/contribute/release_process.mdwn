@@ -1727,10 +1727,19 @@ If you just released a final release
      `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_STABLE_VERSION:?}/`
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
      (ISO and USB image, use comma-separated values)
-     with `ssh bittorrent.lizard transmission-remote --list` and then
-     delete them with
-     `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
-	 then re-run `ssh bittorrent.lizard transmission-remote --list` and make sure everything looks good
+     with:
+
+         ssh bittorrent.lizard transmission-remote --list
+
+     Then delete them with:
+
+         ssh bittorrent.lizard transmission-remote \
+             -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete
+
+     Finally, check that everything looks good:
+
+         ssh bittorrent.lizard transmission-remote --list
+
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. If you've published a final release, remove IUKs that upgrade to an
