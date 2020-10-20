@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", function() {
 
+  //specify url of json file containing valid checksums for ISO and USB images below:
+  //var URLofJsonFileContainingChecksums='https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json';  						//this URL will only work if download.html is served from  served from https://tails.boum.org/ because of same origin because of same-origin policy.
+  var URLofJsonFileContainingChecksums='https://cors-anywhere.herokuapp.com/https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json';  		//use this URL to get around same-origin policy (SOP) if you are staging this locally.  The https://cors-anywhere.herokuapp.com/ proxy includes the necessary CORS headers to relax SOP.
+
+  var sha256;
+
   /* Generic functions */
 
   function hide(elm) {
@@ -247,16 +253,40 @@ document.addEventListener("DOMContentLoaded", function() {
   // Trigger verification when file is chosen
   document.getElementById("verify-file").onchange = function(e) { verifyFile(e, this); }
 
-  function verifyFile(e, elm) {
+  async function verifyFile(e, elm) {
     file = elm.files[0]
-    /* Dummy code that simulates the various states of a verification
-       This is where the verification logic should go. */
-    showVerifyingDownload(file.name);
-    showVerificationProgress(50);
-    setTimeout(function(){ showVerificationResult("error"); }, 2500);
-    setTimeout(function(){ showVerificationResult("failed"); }, 5000);
-    setTimeout(function(){ showVerificationResult("failed-again"); }, 7500);
-    setTimeout(function(){ showVerificationResult("successful"); }, 10000);
+
+    try {
+      var response=await fetch(URLofJsonFileContainingChecksums);
+      var checksumjson=await response.text();
+      console.log('json file containing checksums for ISO and USB images downloaded from ' + URLofJsonFileContainingChecksums + '.');
+      //console.log(checksumjson);
+    } catch(err) {
+      console.log('json file containing checksums for ISO and USB images could not be downloaded from ' + URLofJsonFileContainingChecksums + '.');
+      console.error(err);
+      showVerificationResult("error");
+      return;
+    }
+
+    try {
+      showVerifyingDownload(file.name);
+      sha256=forge.md.sha256.create();
+      await readFile(file);
+      var fileactualchecksum = sha256.digest().toHex();
+      console.log('checksum of downloaded file: ' + fileactualchecksum);
+    } catch(err) {
+      console.log('error reading file and calculating checksum.');
+      console.error(err);
+      showVerificationResult("error");
+      return;
+    }
+
+    //If downloaded file is valid, then fileactualchecksum should be 64 hex characters in length, and should be contained within checksumjson.  Otherwise, consider downloaded file to be invalid.
+    if(fileactualchecksum.length==64 && (checksumjson.includes(fileactualchecksum.toUpperCase()) || checksumjson.includes(fileactualchecksum.toLowerCase()))) {
+      showVerificationResult("successful");
+    } else {
+      showVerificationResult("failed");
+    }
   }
 
   /* Final initialization */
@@ -271,6 +301,44 @@ document.addEventListener("DOMContentLoaded", function() {
   detectBrowser();
   showVerifyButton();
   toggleContinueLink("skip-download");
+
+  async function readFile(file) {
+    var CHUNK_SIZE = 2 * 1024 *1024;
+    var offset = 0;
+    lastCalculatedPercentage=0;
+    while(true) {
+      var chunk = await readChunk(file, offset, CHUNK_SIZE);
+      sha256.update(chunk);
+      offset+=chunk.length;
+
+      var progressPercent = parseInt(offset * 100.0 / file.size);
+      if (progressPercent!=lastCalculatedPercentage) {
+        lastCalculatedPercentage = progressPercent;
+        showVerificationProgress(progressPercent);
+      }
+
+      if (chunk.length < CHUNK_SIZE) { return; }
+    }
+  }
+
+  function readChunk(file, chunk_offset, chunk_size) {
+    return new Promise(function(resolve, reject) {
+      let fr = new FileReader();
+      fr.onload = e => {
+        resolve(e.target.result);
+      };
+
+      // on error, reject the promise
+      fr.onerror = (e) => {
+        reject(e);
+      };
+      let slice = file.slice(chunk_offset, chunk_offset + chunk_size);
+
+      // This API is non-standard: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsBinaryString
+      // We use it for performance reasons, see #15059.
+      fr.readAsBinaryString(slice);
+    });
+  }
 
   // To debug the display of the different states:
   // showVerifyingDownload('test.img');
