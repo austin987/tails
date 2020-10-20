@@ -81,7 +81,7 @@ def tor_launcher_application_info(defaults)
       new_tab_button_image:        nil,
       browser_reload_button_image: nil,
       browser_stop_button_image:   nil,
-      address_bar_image:           nil,
+      address_bar_images:          [],
       # The standalone Tor Launcher uses fewer libs than the full
       # browser.
       unused_tbb_libs:             defaults[:unused_tbb_libs]
@@ -93,8 +93,9 @@ end
 
 def xul_application_info(application)
   defaults = {
-    address_bar_image: "BrowserAddressBar#{$language}.png",
-    unused_tbb_libs:   ['libnssdbm3.so', 'libmozavcodec.so', 'libmozavutil.so'],
+    address_bar_images: ["BrowserAddressBar#{$language}.png",
+                         "BrowserAddressBar#{$language}Alt.png",],
+    unused_tbb_libs:    ['libnssdbm3.so', 'libmozavcodec.so', 'libmozavutil.so'],
   }
   case application
   when 'Tor Browser'
@@ -111,14 +112,14 @@ end
 When /^I open a new tab in the (.*)$/ do |browser|
   info = xul_application_info(browser)
   @screen.click(info[:new_tab_button_image])
-  @screen.wait(info[:address_bar_image], 10)
+  @screen.wait_any(info[:address_bar_images], 10)
 end
 
 When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   step "I open a new tab in the #{browser}"
   info = xul_application_info(browser)
   open_address = proc do
-    @screen.click(info[:address_bar_image])
+    @screen.find_any(info[:address_bar_images])[1].click
     # This static here since we have no reliable visual indicators
     # that we can watch to know when typing is "safe".
     sleep 5
