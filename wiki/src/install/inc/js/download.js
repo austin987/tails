@@ -172,9 +172,12 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (result === "failed-again") {
       show(document.getElementById("verification-failed-again"));
     }
-    else if (result === "error") {
-      showVerifyButton();
-      show(document.getElementById("verification-error"));
+    else if (result === "error-json") {
+      show(document.getElementById("verification-error-json"));
+      document.getElementById("checksum-file").setAttribute('href', URLofJsonFileContainingChecksums);
+    }
+    else if (result === "error-image") {
+      show(document.getElementById("verification-error-image"));
     }
   }
 
@@ -183,7 +186,8 @@ document.addEventListener("DOMContentLoaded", function() {
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
     hide(document.getElementById("verification-failed-again"));
-    hide(document.getElementById("verification-error"));
+    hide(document.getElementById("verification-error-json"));
+    hide(document.getElementById("verification-error-image"));
     show(document.getElementById("verification"));
     toggleContinueLink("skip-verification");
   }
@@ -261,12 +265,9 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       var response=await fetch(URLofJsonFileContainingChecksums);
       var checksumjson=await response.text();
-      console.log('json file containing checksums for ISO and USB images downloaded from ' + URLofJsonFileContainingChecksums + '.');
-      //console.log(checksumjson);
+      //console.log('IDF downloaded from ' + URLofJsonFileContainingChecksums + '.');
     } catch(err) {
-      console.log('json file containing checksums for ISO and USB images could not be downloaded from ' + URLofJsonFileContainingChecksums + '.');
-      console.error(err);
-      showVerificationResult("error");
+      showVerificationResult("error-json");
       return;
     }
 
@@ -277,9 +278,7 @@ document.addEventListener("DOMContentLoaded", function() {
       var fileactualchecksum = sha256.digest().toHex();
       console.log('checksum of downloaded file: ' + fileactualchecksum);
     } catch(err) {
-      console.log('error reading file and calculating checksum.');
-      console.error(err);
-      showVerificationResult("error");
+      showVerificationResult("error-image");
       return;
     }
 
@@ -290,6 +289,10 @@ document.addEventListener("DOMContentLoaded", function() {
       showVerificationResult("failed");
     }
   }
+
+  // Retry after error during verification
+  document.getElementById("retry-json").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
+  document.getElementById("retry-image").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
 
   /* Final initialization */
 
@@ -348,6 +351,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // showVerificationResult("successful");
   // showVerificationResult("failed");
   // showVerificationResult("failed-again");
-  // showVerificationResult("error");
+  // showVerificationResult("error-json");
+  // showVerificationResult("error-image");
 
 });
