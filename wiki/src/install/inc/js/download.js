@@ -276,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function() {
       sha256=forge.md.sha256.create();
       await readFile(file);
       var fileactualchecksum = sha256.digest().toHex();
-      console.log('checksum of downloaded file: ' + fileactualchecksum);
+      console.log('Checksum of the downloaded file: ' + fileactualchecksum);
     } catch(err) {
       showVerificationResult("error-image");
       return;
