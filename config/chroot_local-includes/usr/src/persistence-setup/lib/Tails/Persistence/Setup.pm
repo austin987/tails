@@ -698,9 +698,7 @@ method goto_next_step () {
             q{Persistence wizard - Finished}
         ));
         $self->current_step->subtitle->set_text(__(
-            q{Any changes you have made will only take effect after restarting Tails.
-
-You may now close this application.}
+            q{Any changes you have made will only take effect after restarting Tails.}
         ));
         $self->current_step->description->set_text(' ');
         $self->current_step->status_area->hide;
