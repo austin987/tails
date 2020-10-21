@@ -201,6 +201,7 @@ def sanitize_hardware_info(log_string):
     
     - labeled as serial numbers and UUID;
     - looking like IPs or MAC addresses.
+    - looking like web URLs (starting with http(s)://)
 
     @param  log_string  the string to be sanitized
 
@@ -242,6 +243,11 @@ def sanitize_hardware_info(log_string):
     log_string = re.sub(r'(?i)([0-9A-F]{2}:){5,}[0-9A-F]{2}',
                         r'[MAC REMOVED]',
                         log_string)
+    # HTTP(s) URLs
+    log_string = re.sub(r'(http(s?)://)[^\s]+',
+                        r'\1[URL REMOVED]',
+                        log_string)
+
     return log_string
 
 

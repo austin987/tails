@@ -32,7 +32,7 @@ When /^I configure APT to use non-onion sources$/ do
   s{vwakviie2ienjx6t[.]onion}{ftp.us.debian.org};
   s{sgvtcaew4bxjd7ln[.]onion}{security.debian.org};
   s{sdscoq7snqtznauu[.]onion}{deb.torproject.org};
-  s{jenw7xbd6tf7vfhp[.]onion}{deb.tails.boum.org};
+  s{umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion}{deb.tails.boum.org};
   SCRIPT
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way
