@@ -32,71 +32,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  function detectBrowser() {
-    /* To list the APIs that our extension is using, execute: git grep "chrome."
-       Browser compatibility:
-
-         - https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs
-         - https://developer.chrome.com/extensions/api_index
-    */
-    minVersion = {
-      "firefox": 52,  // Tor Browser when releasing Tails Verification 1.0
-      "chrome": 57,   // Version from Debian Jessie, the oldest I could test
-      "torbrowser": 7 // First release based on Firefox 52
-    };
-    document.getElementById("min-version-firefox").textContent = minVersion.firefox.toString();
-    document.getElementById("min-version-chrome").textContent = minVersion.chrome.toString();
-    document.getElementById("min-version-tor-browser").textContent = minVersion.torbrowser.toString();
-
-    version = navigator.userAgent.match(/\b(Chrome|Firefox)\/(\d+)/);
-    version = version && parseInt(version[2]) || 0;
-    overrideVersion = location.search.match(/\bversion=(\w+)/);
-    if (overrideVersion) {
-      version = overrideVersion[1];
-    }
-
-    overrideBrowser = location.search.match(/\bbrowser=(\w+)/);
-    if (overrideBrowser) {
-      browser = overrideBrowser[1];
-    } else if (window.InstallTrigger) {
-      browser = "Firefox";
-    } else if ((/\bChrom/).test(navigator.userAgent) && (/\bGoogle Inc\./).test(navigator.vendor)) {
-      browser = "Chrome";
-    }
-
-    if (browser === "Firefox" || browser === "Chrome") {
-      document.getElementById("detected-browser").textContent = browser + " " + version.toString();
-    } else {
-      // Don't bother displaying version number for unsupported browsers as it's probably more error prone.
-      document.getElementById("detected-browser").textContent = browser;
-    }
-
-    toggleDisplay(document.getElementsByClassName("no-js"), "hide");
-    if (browser === "Firefox") {
-      if (version >= minVersion.firefox) {
-        // Supported Firefox
-        toggleDisplay(document.getElementsByClassName("supported-browser"), "show");
-        toggleDisplay(document.getElementsByClassName("chrome"), "hide");
-        toggleDisplay(document.getElementsByClassName("firefox"), "show");
-      } else {
-        // Outdated Firefox
-        toggleDisplay(document.getElementsByClassName("outdated-browser"), "show");
-      }
-    } else if (browser === "Chrome") {
-      if (version >= minVersion.chrome) {
-        // Supported Chrome
-        toggleDisplay(document.getElementsByClassName("supported-browser"), "show");
-        toggleDisplay(document.getElementsByClassName("firefox"), "hide");
-        toggleDisplay(document.getElementsByClassName("chrome"), "show");
-      } else {
-        // Outdated Chrome
-        toggleDisplay(document.getElementsByClassName("outdated-browser"), "show");
-      }
-    } else {
-      toggleDisplay(document.getElementsByClassName("unsupported-browser"), "show");
-    }
-  }
-
   function hitCounter(status) {
     try {
       var counter_url, url, scenario, version, cachebust;
@@ -294,7 +229,9 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("retry-json").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
   document.getElementById("retry-image").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
 
-  /* Final initialization */
+  /* No JavaScript */
+
+  hide(document.getElementById("no-js"));
 
   // Display floating-toggleable-links to prevent people without JS to
   // either always see the toggles or have broken toggle links.
@@ -303,9 +240,15 @@ document.addEventListener("DOMContentLoaded", function() {
     show(links[i]);
   }
 
-  detectBrowser();
-  showVerifyButton();
   toggleContinueLink("skip-download");
+
+  /* Internet Explorer */
+
+  if ( navigator.userAgent.indexOf('MSIE') > -1 || navigator.userAgent.indexOf('Trident') > -1 ) {
+    show(document.getElementById("ie"));
+  } else {
+    showVerifyButton();
+  }
 
   async function readFile(file) {
     var CHUNK_SIZE = 2 * 1024 *1024;
