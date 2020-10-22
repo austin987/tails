@@ -432,6 +432,58 @@ first, to ensure you're not asking them to do something that's outside
 of the scope of their job. And please justify your suggestions.
 Please check these views once in a while and talk to us! :)
 
+<a id="access-control"></a>
+
+# Access control
+
+<a id="request-access"></a>
+
+## Requesting access
+
+If you need to do something in GitLab and you appear to lack the
+needed credentials, please ask the Tails
+[[system administrators|working_together/roles/sysadmins#communication]]
+to grant you more power.
+
+For example, you will need "Reporter" access on the [[!tails_gitlab
+tails/tails]] project in order to add labels or assign issues.
+
+## Adding/removing access
+
+Do not grant access via the web interface:
+
+ - Such manual changes would be later overwritten by automated processes.
+ - Manual changes can easily have side effects that violate our access control
+   requirements.
+
+Instead, after following the relevant process (if any),
+request the access modification from the Tails
+[[system administrators|working_together/roles/sysadmins#communication]].
+
+## Relevant GitLab doc
+
+ - [[!tails_gitlab help/user/permissions.html desc="Permissions"]]
+ - [[!tails_gitlab help/user/project/merge_requests/authorization_for_merge_requests.html desc="Authorization for Merge requests"]]
+ - [[!tails_gitlab help/user/project/protected_branches.html desc="Protected Branches"]]
+ - [[!tails_gitlab help/user/group/index.md desc="Groups"]]
+
+## Access levels
+
+We use the [[!tails_gitlab
+help/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow
+desc="Protected branch flow"]]:
+
+ - Our major branches and release tags are marked as "Protected".
+ - Committers get "Maintainer" access.
+ - Regular, particularly trusted contributors, who are not granted full commit
+   access but have access to our CI, get "Developer" access. They can push
+   a topic branch to the canonical Git repository and our CI will pick it up.
+   They can also modify any non-protected topic branch.
+ - Other contributors get access strictly lower than "Developer".
+   They push topic branches to their own fork of the repository and
+   create merge requests.
+ - Our Jenkins CI jobs generation process is the same as in pre-GitLab days.
+
 <a id="operations"></a>
 
 # Operations
