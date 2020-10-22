@@ -225,31 +225,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Retry after error during verification
-  document.getElementById("retry-json").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
-  document.getElementById("retry-image").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
-
-  /* No JavaScript */
-
-  hide(document.getElementById("no-js"));
-
-  // Display floating-toggleable-links to prevent people without JS to
-  // either always see the toggles or have broken toggle links.
-  var links = document.getElementsByClassName("floating-toggleable-link");
-  for (let i = 0; i < links.length; i++) {
-    show(links[i]);
-  }
-
-  toggleContinueLink("skip-download");
-
-  /* Internet Explorer */
-
-  if ( navigator.userAgent.indexOf('MSIE') > -1 || navigator.userAgent.indexOf('Trident') > -1 ) {
-    show(document.getElementById("ie"));
-  } else {
-    showVerifyButton();
-  }
-
   async function readFile(file) {
     var CHUNK_SIZE = 2 * 1024 *1024;
     var offset = 0;
@@ -286,6 +261,31 @@ document.addEventListener("DOMContentLoaded", function() {
       // We use it for performance reasons, see #15059.
       fr.readAsBinaryString(slice);
     });
+  }
+
+  // Retry after error during verification
+  document.getElementById("retry-json").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
+  document.getElementById("retry-image").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
+
+  /* No JavaScript */
+
+  hide(document.getElementById("no-js"));
+
+  // Display floating-toggleable-links to prevent people without JS to
+  // either always see the toggles or have broken toggle links.
+  var links = document.getElementsByClassName("floating-toggleable-link");
+  for (let i = 0; i < links.length; i++) {
+    show(links[i]);
+  }
+
+  toggleContinueLink("skip-download");
+
+  /* Internet Explorer */
+
+  if ( navigator.userAgent.indexOf('MSIE') > -1 || navigator.userAgent.indexOf('Trident') > -1 ) {
+    show(document.getElementById("ie"));
+  } else {
+    showVerifyButton();
   }
 
   // To debug the display of the different states:
