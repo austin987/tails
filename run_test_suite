@@ -310,11 +310,12 @@ if [ -n "${JENKINS_URL:-}" ]; then
        || [ "$(git_current_branch)" = feature/tor-nightly-master ] \
        || [ "$(git_current_branch)" = devel ] ; then
         TAGS_ARGS=""
-    elif [ "$(git_current_commit)" != "$(git_base_branch_head)" ] && \
-           git_only_doc_changes_since "$(git_base_branch_head)"; then
-        TAGS_ARGS="--tag ~@fragile --tag @doc"
     else
         TAGS_ARGS="--tag ~@fragile"
+    fi
+    if [ "$(git_current_commit)" != "$(git_base_branch_head)" ] && \
+           git_only_doc_changes_since "$(git_base_branch_head)"; then
+        TAGS_ARGS="${TAGS_ARGS} --tag @doc"
     fi
 fi
 
