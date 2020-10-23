@@ -305,11 +305,10 @@ TAGS_ARGS=""
 if [ -n "${JENKINS_URL:-}" ]; then
     . auto/scripts/utils.sh
     if git_current_branch | grep -q -E '[+-]force-all-tests$' \
+       || git_on_a_tag \
        || [ "$(git_current_branch)" = testing ] \
        || [ "$(git_current_branch)" = feature/tor-nightly-master ] \
        || [ "$(git_current_branch)" = devel ] ; then
-        TAGS_ARGS=""
-    elif git_on_a_tag; then
         TAGS_ARGS=""
     elif [ "$(git_current_commit)" != "$(git_base_branch_head)" ] && \
            git_only_doc_changes_since "$(git_base_branch_head)"; then
