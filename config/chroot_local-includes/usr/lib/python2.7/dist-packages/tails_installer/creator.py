@@ -362,7 +362,7 @@ class TailsInstallerCreator(object):
         chmod'ing them since Python for Windows is unable to delete
         read-only files.
         """
-        self.log.info(_('Removing existing Live OS'))
+        self.log.info(_('Removing existing Tails system'))
         for path in self.get_liveos_toplevel_files(absolute=True):
             if not os.path.exists(path):
                 continue
@@ -378,7 +378,7 @@ class TailsInstallerCreator(object):
                 except:
                     raise TailsInstallerError(_(
                         "Unable to remove file from"
-                        " previous LiveOS: %(message)s") %
+                        " previous Tails system: %(message)s") %
                        {'message': str(e)})
             elif os.path.isdir(path):
                 try:
@@ -392,7 +392,7 @@ class TailsInstallerCreator(object):
                 except OSError, e:
                     raise TailsInstallerError(_(
                         "Unable to remove directory from"
-                        " previous LiveOS: %(message)s") %
+                        " previous Tails system: %(message)s") %
                         {'message': str(e)})
 
     def get_liveos(self):
