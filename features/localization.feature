@@ -50,5 +50,5 @@ Feature: Localization
       | Persian    | s           | ir     | ir         |
       | Portuguese | s           | pt     | us         |
       | Russian    | s           | ru     | ru         |
-      # | Turkish  | XXX: #17974 | tr                  |
-      # | Spanish  | XXX: #17974 | es                  |
+      | Spanish    | t           | es     | us         |
+      | Turkish    | b           | tr     | us         |
