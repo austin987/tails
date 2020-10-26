@@ -17,7 +17,7 @@ Feature: Localization
     Then the Unsafe Browser works in all supported languages
 
   # Not necessarily fragile, but not worth making every single test
-  # suite run 20+ minutels longer
+  # suite run 20+ minutes longer
   @fragile
   Scenario Outline: Tails is localized for every tier-1 language
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
