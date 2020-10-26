@@ -981,7 +981,8 @@ class LinuxTailsInstallerCreator(TailsInstallerCreator):
         self.popen('%s %s -d %s %s' % (
                 tmp_syslinux,
                 ' '.join(self.syslinux_options()),
-                'syslinux', self.drive['device']))
+                'syslinux', self.drive['device']),
+                   env={"LC_CTYPE": "C"})
         shutil.rmtree(tmpdir)
 
     def get_free_bytes(self, device=None):
