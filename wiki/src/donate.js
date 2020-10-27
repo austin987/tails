@@ -1,15 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-  // A/B testing
-  let variant;
-  if (false) { // Math.round(Date.now() / 1000 / 60 / 60 / 5) % 2 == 0) { // divide time since epoch by slots of 5 hours
-    variant = "default";
-    document.getElementById("variant-forced").remove();
-  } else {
-    variant = "forced";
-    document.getElementById("variant-default").remove();
-  }
-
   function hide(elm) {
     elm.style.display = "none";
   }
@@ -143,19 +133,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  if (variant == "forced") {
-    // Make sure that a frequency is selected
-    var frequency = false;
-    document.getElementById("donate-paypal-button").onclick = function(e) {
-      frequencies = document.getElementsByName("frequency");
-      for (let i = 0; i < frequencies.length; i++) {
-        if (frequencies[i].checked) frequency = frequencies[i].id;
-      }
-      if (!frequency) {
-        e.preventDefault();
-        document.getElementById("donate-paypal-button").classList.remove("active");
-        document.getElementById("frequency-buttons").classList.add("shake");
-      }
+  // Make sure that a frequency is selected
+  var frequency = false;
+  document.getElementById("donate-paypal-button").onclick = function(e) {
+    frequencies = document.getElementsByName("frequency");
+    for (let i = 0; i < frequencies.length; i++) {
+      if (frequencies[i].checked) frequency = frequencies[i].id;
+    }
+    if (!frequency) {
+      e.preventDefault();
+      document.getElementById("donate-paypal-button").classList.remove("active");
+      document.getElementById("frequency-buttons").classList.add("shake");
     }
   }
 

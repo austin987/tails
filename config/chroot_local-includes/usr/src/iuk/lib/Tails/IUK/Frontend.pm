@@ -577,13 +577,36 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             $exit_code = $?;
         }
         else {
-            IPC::Run::run \@cmd, '2>', \$stderr,
-                '|', [qw{zenity --progress --percentage=0 --auto-close
-                         --no-cancel}, '--title', $title, '--text', $info]
-                or $success = 0;
-            $exit_code = $?;
+            my ($download_h, $zenity_h, $download_out);
+            $download_h =  IPC::Run::start \@cmd,
+                \undef, \$download_out, '2>', \$stderr;
+            $zenity_h = IPC::Run::start
+                [
+                    qw{zenity --progress --percentage=0 --auto-close},
+                    '--title', $title, '--text', $info
+                ],
+                \$download_out;
+            try {
+                while ($zenity_h->pumpable && $download_h->pumpable ) {
+                    $download_h->pump_nb;
+                    $zenity_h->pump_nb;
+                }
+            }
+            catch {
+                $stderr = $_;
+            }
+            finally {
+                $zenity_h->kill_kill;
+                if ($zenity_h->result) {
+                    $self->cancel_download;
+                    kill TERM => -getpgrp();
+                }
+                else {
+                    $success =  $download_h->finish;
+                    $exit_code = $download_h->result;
+                }
+            };
         }
-
         $success or $self->fatal(
             errf("<b>%{error_msg}s</b>\n\n%{details}s",
                  {
@@ -716,6 +739,17 @@ method shutdown_network () {
         error_title => __(q{Error while shutting down the network}),
         error_msg => __(q{Failed to shutdown network}),
         as        => 'root',
+    ) unless $ENV{HARNESS_ACTIVE};
+}
+
+method cancel_download () {
+    $self->info("Cancelling the upgrade download");
+
+    $self->fatal_run_cmd(
+        cmd         => ['tails-iuk-cancel-download'],
+        error_title => __(q{Error while cancelling the upgrade download}),
+        error_msg   => __(q{Failed to cancel the upgrade download}),
+        as          => 'root',
     ) unless $ENV{HARNESS_ACTIVE};
 }
 
