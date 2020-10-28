@@ -147,7 +147,7 @@ method _build__presets () {
             id          => 'Thunderbird',
             name        => __(q{Thunderbird}),
             description => __(
-                q{Thunderbird emails, feeds, and settings}
+                q{Thunderbird emails, feeds, and OpenPGP keys}
             ),
             icon_name   => 'thunderbird',
             enabled     => 0,
@@ -162,7 +162,7 @@ method _build__presets () {
             id          => 'GnuPG',
             name        => __(q{GnuPG}),
             description => __(
-                q{GnuPG keyrings and configuration}
+                q{OpenPGP keys outside of Thunderbird}
             ),
             icon_name   => 'seahorse-key',
             enabled     => 0,
