@@ -303,18 +303,22 @@ fi
 
 TAGS_ARGS=""
 if [ -n "${JENKINS_URL:-}" ]; then
+    # The current Git state may not reflect the state at the time the
+    # upstream job was started (e.g. since then we git fetch + git
+    # reset --hard) so we trust the Git state described in Jenkins'
+    # environment variables instead.
     . auto/scripts/utils.sh
-    if git_current_branch | grep -q -E '[+-]force-all-tests$' \
+    if echo "${UPSTREAMJOB_GIT_BRANCH}" | grep -q -E '[+-]force-all-tests$' \
        || git_on_a_tag \
-       || [ "$(git_current_branch)" = testing ] \
-       || [ "$(git_current_branch)" = feature/tor-nightly-master ] \
-       || [ "$(git_current_branch)" = devel ] ; then
+       || [ "${GIT_BRANCH#origin/}" = testing ] \
+       || [ "${GIT_BRANCH#origin/}" = feature/tor-nightly-master ] \
+       || [ "${GIT_BRANCH#origin/}" = devel ] ; then
         TAGS_ARGS=""
     else
         TAGS_ARGS="--tag ~@fragile"
     fi
-    if [ "$(git_current_commit)" != "$(git_base_branch_head)" ] && \
-           git_only_doc_changes_since "$(git_base_branch_head)"; then
+    if [ "${UPSTREAMJOB_GIT_COMMIT}" != "${UPSTREAMJOB_GIT_BASE_BRANCH_HEAD}" ] && \
+           git_only_doc_changes_since "${UPSTREAMJOB_GIT_BASE_BRANCH_HEAD}"; then
         TAGS_ARGS="${TAGS_ARGS} --tag @doc"
     fi
 fi
