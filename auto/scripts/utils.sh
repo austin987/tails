@@ -3,7 +3,7 @@
 
 BASE_BRANCHES="stable testing devel"
 
-# Returns "" if in undetached head
+# Returns "" if in detached head
 git_current_branch() {
 	local git_ref
 	if git_ref="$(git symbolic-ref HEAD 2>/dev/null)"; then
