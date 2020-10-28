@@ -161,7 +161,13 @@ class Screen
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for #{pattern} to vanish") if opts[:log]
     try_for(timeout, delay: 0, log: false) do
-      !exists(pattern, **opts.clone.update(log: false))
+      # Call Screen#wait directly to bypass the timeout passed by
+      # Screen#find to Screen#wait, which would mess with our own
+      # timeout: it can prevent our try_for loop from iterating
+      # enough times, effectively bypassing our retrying logic.
+      wait(pattern, 0.5, **opts.clone.update(log: false)).nil?
+    rescue FindFailed
+      true
     end
     debug_log("Screen: #{pattern} has vanished") if opts[:log]
     nil
