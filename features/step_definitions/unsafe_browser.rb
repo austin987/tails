@@ -10,13 +10,16 @@ def supported_torbrowser_languages
   File.read(localization_descriptions).split("\n").map do |line|
     # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
     first, second = line.sub('-', '_').split(':')
-    candidates = ["#{first}_#{second}.UTF-8", "#{first}_#{second}.utf8",
-                  "#{first}.UTF-8", "#{first}.utf8",
-                  "#{first}_#{second}", first,]
+    candidates = ["#{first}_#{second}.utf8",
+                  "#{first}.utf8",
+                  "#{first}_#{second}",
+                  first,]
+    supported_locales = $vm.execute_successfully(
+      'localedef --list-archive /usr/lib/locale/locale-archive'
+    ).stdout.split
     when_not_found = proc { raise "Could not find a locale for '#{line}'" }
     candidates.find(when_not_found) do |candidate|
-      $vm.directory_exist?("/usr/lib/locale/#{candidate}") ||
-        $vm.directory_exist?("/usr/share/locale/#{candidate}")
+      supported_locales.include?(candidate)
     end
   end
 end
