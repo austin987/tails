@@ -1,0 +1,65 @@
+#!/usr/bin/python3
+
+# Iterate through all .po files, run msgfmt for each of them, and output any
+# errors together with their context.
+
+import glob
+import re
+import subprocess
+import sys
+
+
+WARNINGS_1 = re.compile('^[^\s]+\.po:[0-9]: warning:')
+WARNINGS_2 = re.compile('^msgfmt: [^\s]+\.po: warning:')
+WARNINGS_3 = re.compile('^\s*warning:')
+
+ERRORS= re.compile('^([^\s]+\.po):([0-9]+): ')
+
+
+def print_error_context(file, line_number):
+    """
+    Print full msgid and msgstr surrounding the given line_number.
+    """
+    with open(file) as f:
+        content = f.readlines()
+
+    start = line_number - 1
+    while not content[start].startswith('msgid '):
+        start -= 1
+
+    end = line_number
+    while not end == len(content) and content[end] != '\n':
+        end += 1
+
+    for line in range(start, end):
+        print(content[line].strip())
+
+
+def check_po_msgfmt():
+
+    errors = False
+
+    # find all .po files and run msgfmt for each of them
+    for f in glob.glob('**/*.po', recursive=True):
+        proc = subprocess.Popen(['msgfmt', '-c', '-o', '/dev/null', f],
+                                stderr=subprocess.PIPE)
+        for line in proc.stderr:
+            line = line.strip().decode('utf-8')
+
+            # filter out warnings
+            if not (WARNINGS_1.match(line) or WARNINGS_2.match(line) or WARNINGS_3.match(line)):
+
+                # print errors and their contexts
+                match = ERRORS.match(line)
+                if match:
+                    errors = True
+                    print(line)
+                    f, n = match.groups()
+                    print_error_context(f, int(n))
+
+    if errors:
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    check_po_msgfmt()
