@@ -11,6 +11,11 @@ lint-po:
   - git clone https://gitlab.tails.boum.org/tails/jenkins-tools.git /tmp/jenkins-tools
   - /tmp/jenkins-tools/slaves/lint_po
 
+test-python-doctest:
+  script:
+  - apt-get -qy install python3
+  - config/chroot_local-includes/usr/local/lib/tails-gdm-error-message doctest --verbose
+
 test-whisperback:
   script:
   - 'cat config/chroot_local-packageslists/whisperback.list | grep -E -v "^#"
