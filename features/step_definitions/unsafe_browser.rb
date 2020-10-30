@@ -35,8 +35,9 @@ Then /^the Unsafe Browser works in all supported languages$/ do
   # We always want the locale which we verify the startup page warning
   # for, and one RTL locale ...
   languages = ['fr_FR.UTF-8', 'fa_IR.UTF-8']
-  # ... then we just pick one *other* random locale.
-  languages += (supported_torbrowser_languages - languages).sample(1)
+  # ... then we just pick one *other* random non-English locale.
+  languages += (supported_torbrowser_languages - languages - ['en_US.utf8'])
+               .sample(1)
   languages.each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
