@@ -1727,10 +1727,19 @@ If you just released a final release
      `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_STABLE_VERSION:?}/`
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
      (ISO and USB image, use comma-separated values)
-     with `ssh bittorrent.lizard transmission-remote --list` and then
-     delete them with
-     `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
-	 then re-run `ssh bittorrent.lizard transmission-remote --list` and make sure everything looks good
+     with:
+
+         ssh bittorrent.lizard transmission-remote --list
+
+     Then delete them with:
+
+         ssh bittorrent.lizard transmission-remote \
+             -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete
+
+     Finally, check that everything looks good:
+
+         ssh bittorrent.lizard transmission-remote --list
+
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. If you've published a final release, remove IUKs that upgrade to an
@@ -1788,10 +1797,18 @@ If you just released a final release
    `debian/changelog`. Explanation: the
    post-release APT repository steps from the previous stable release
    will usually have had us prepare for an emergency release that was
-   never made.
+   never made. [XXX:automate]
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel`.
+   `devel`:
+
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git fetch origin && \
+        git checkout stable && \
+        git merge origin/master && \
+        git checkout devel && \
+        git merge stable
+
    Note: After a final *major* release is published, it's normal to
    leave the `testing` branch alone: it will only become relevant
    again when the next freeze starts. In this case, keep a single
@@ -1812,10 +1829,6 @@ If you just released a final release
         ./bin/apt-snapshots-expiry
 
 1. Push the resulting branches.
-1. Make sure Jenkins manages to build all updated major branches:
-   <https://jenkins.tails.boum.org/>.
-1. Make sure you pushed all changes in every of our Git repo (including our
-   Debian packages ones).
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
 1. Check the Mozilla release calendars:
@@ -1837,6 +1850,8 @@ If you just released a final release
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager#shift]].
    Otherwise, kindly remind the next release manager about this :)
+1. Make sure Jenkins manages to build all updated major branches:
+   <https://jenkins.tails.boum.org/>.
 
 If you just released an RC
 --------------------------
