@@ -27,5 +27,9 @@ test-whisperback:
        | xargs apt-get -qy install'
   - apt-get -qy install python3-pytest
   - 'PYTHONPATH=config/chroot_local-includes/usr/lib/python3/dist-packages
-       pytest-3 --verbose
+       pytest-3 --verbose --junit-xml=report.xml
        config/chroot_local-includes/usr/lib/python3/dist-packages/whisperBack/test.py'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
