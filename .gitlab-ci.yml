@@ -16,6 +16,41 @@ check-po-msgfmt:
   - apt-get -qy install python3 gettext
   - ./bin/check-po-msgfmt
 
+test-iuk:
+  script:
+  - 'cat config/chroot_local-packageslists/tails-perl5lib.list
+         config/chroot_local-packageslists/tails-iuk.list
+       | grep -E -v "^#"
+       | xargs apt-get -qy install'
+  - 'apt-get -qy install
+       apt-file
+       libdist-zilla-plugin-test-notabs-perl
+       libdist-zilla-plugin-test-perl-critic-perl
+       libdist-zilla-app-command-authordebs-perl
+       libmodule-build-perl
+       sudo
+       attr
+       bsdtar
+       libdevice-cdio-perl
+       faketime
+       genisoimage
+       gnutls-bin
+       libdata-dumper-concise-perl
+       libdatetime-perl
+       libfile-copy-recursive-perl'
+  - apt-get update -qq # Take into account APT configuration added by apt-file
+  # Otherwise, apt-get called by "dzil authordebs --install" asks confirmation
+  - echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/yes
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/iuk
+  - dzil authordebs --install
+  - export SOURCE_DATE_EPOCH=$(date --utc +%s)
+  - 'TAILS_GIT_CHECKOUT=$CI_PROJECT_DIR
+     NODE_PATH=$CI_PROJECT_DIR/submodules/mirror-pool-dispatcher/lib/js
+     PATH=$CI_PROJECT_DIR/submodules/mirror-pool-dispatcher/bin:$PATH
+     PERL5LIB=$CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib/lib
+     LC_ALL=C.UTF-8
+     dzil test --all'
+
 test-perl5lib:
   script:
   - 'cat config/chroot_local-packageslists/tails-perl5lib.list
