@@ -35,6 +35,66 @@ test-perl5lib:
   - dzil authordebs --install
   - dzil test --all
 
+test-persistence-setup:
+  script:
+  - apt-get -qy install apt-file
+  - 'echo "deb http://deb.debian.org/debian buster-backports main"
+       > /etc/apt/sources.list.d/buster-backports.list'
+  - 'echo "deb http://deb.debian.org/debian bullseye main"
+       > /etc/apt/sources.list.d/bullseye.list'
+  # Needs to be kept in sync' with config/chroot_apt/preferences
+  - |
+    cat > /etc/apt/preferences.d/electrum.pref <<-'EOF'
+    Explanation: unavailable in Buster
+    Package: electrum python3-electrum python3-aiohttp-socks python3-aiorpcx python3-ecdsa
+    Pin: release o=Debian,n=bullseye
+    Pin-Priority: 999
+
+    Explanation: Electrum needs a version newer than the one in Buster
+    Package: python3-attr python3-protobuf libprotobuf23
+    Pin: release o=Debian Backports,n=buster-backports
+    Pin-Priority: 990
+
+    Explanation: Electrum 4.0.2 and recent TREZOR firmware need 0.12
+    Package: python3-trezor trezor
+    Pin: release o=Debian Backports,n=buster-backports
+    Pin-Priority: 999
+
+    Package: *
+    Pin: release o=Debian,n=bullseye
+    Pin-Priority: -10
+    EOF
+  - apt-get update -qq
+  - 'cat config/chroot_local-packageslists/tails-perl5lib.list
+         config/chroot_local-packageslists/tails-persistence-setup.list
+       | grep -E -v "^#"
+       | xargs apt-get -qy install'
+  - 'apt-get -qy install
+       libdist-zilla-plugin-test-notabs-perl
+       libdist-zilla-plugin-test-perl-critic-perl
+       libdist-zilla-app-command-authordebs-perl
+       libmodule-build-perl
+       libtest-most-perl
+       libtest-spec-perl
+       libtest-bdd-cucumber-perl
+       liblwp-online-perl
+       libdata-dumper-concise-perl
+       libtest-fatal-perl
+       libsys-statistics-linux-perl
+       sudo
+       xvfb'
+  # Otherwise, apt-get called by "dzil authordebs --install" asks confirmation
+  - echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/yes
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib
+  - dzil authordebs --install
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/persistence-setup
+  - dzil authordebs --install
+  - >
+    PERL5LIB=$CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib/lib
+    TAILS_GIT_CHECKOUT=$CI_PROJECT_DIR
+    LC_ALL=C.UTF-8
+    xvfb-run --auto-servernum dzil test --all
+
 test-python-doctest:
   script:
   - apt-get -qy install python3
