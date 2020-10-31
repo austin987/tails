@@ -1,6 +1,7 @@
 use Test::Spec;
 
 use 5.10.1;
+use strictures 2;
 use Data::Dumper;
 use File::Temp qw{tempdir tempfile};
 use Path::Tiny;
