@@ -16,6 +16,25 @@ check-po-msgfmt:
   - apt-get -qy install python3 gettext
   - ./bin/check-po-msgfmt
 
+test-perl5lib:
+  script:
+  - 'cat config/chroot_local-packageslists/tails-perl5lib.list
+       | grep -E -v "^#"
+       | xargs apt-get -qy install'
+  - 'apt-get -qy install
+       apt-file
+       libdist-zilla-plugin-test-notabs-perl
+       libdist-zilla-plugin-test-perl-critic-perl
+       libdist-zilla-app-command-authordebs-perl
+       libmodule-build-perl
+       sudo'
+  - apt-get update -qq # Take into account APT configuration added by apt-file
+  # Otherwise, apt-get called by "dzil authordebs --install" asks confirmation
+  - echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/yes
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib
+  - dzil authordebs --install
+  - dzil test --all
+
 test-python-doctest:
   script:
   - apt-get -qy install python3
