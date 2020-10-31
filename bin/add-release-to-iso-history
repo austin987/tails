@@ -29,6 +29,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+# shellcheck disable=SC2029
 ssh misc.lizard mkdir "tails-amd64-${VERSION:?}"
 
 scp "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}."{apt-sources,build-manifest,buildlog,packages,iso.sig,img.sig} \
@@ -36,6 +37,7 @@ scp "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}."{apt-sources,b
 
 ssh misc.lizard gpg --import < "wiki/src/tails-signing.key"
 
+# shellcheck disable=SC2087
 ssh misc.lizard << EOF
    cd tails-amd64-${VERSION:?} && \
    wget --quiet \
@@ -45,6 +47,7 @@ ssh misc.lizard << EOF
    gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
 EOF
 
+# shellcheck disable=SC2087
 ssh misc.lizard << EOF
    ( [ -d isos ] || git clone gitolite@puppet-git.lizard:isos.git ) && \
    cd isos && \
