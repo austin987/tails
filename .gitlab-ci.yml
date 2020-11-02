@@ -19,9 +19,15 @@ check-po-msgfmt:
 shellcheck:
   image: debian:testing
   script:
-  - apt-get -qy install python3 shellcheck
+  - apt-get -qy install python3 shellcheck xmlstarlet
   - shellcheck --version
-  - ./bin/shellcheck-tree
+  - './bin/shellcheck-tree --format=checkstyle
+       | xmlstarlet tr config/ci/shellcheck/checkstyle2junit.xslt
+       > shellcheck.xml'
+  artifacts:
+    when: always
+    reports:
+      junit: shellcheck.xml
 
 test-python-doctest:
   script:
