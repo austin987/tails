@@ -7,6 +7,9 @@ def supported_torbrowser_languages
   localization_descriptions =
     "#{Dir.pwd}/config/chroot_local-includes/" \
     'usr/share/tails/browser-localization/descriptions'
+  supported_locales = $vm.execute_successfully(
+    'localedef --list-archive /usr/lib/locale/locale-archive'
+  ).stdout.split
   File.read(localization_descriptions).split("\n").map do |line|
     # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
     first, second = line.sub('-', '_').split(':')
@@ -14,9 +17,6 @@ def supported_torbrowser_languages
                   "#{first}.utf8",
                   "#{first}_#{second}",
                   first,]
-    supported_locales = $vm.execute_successfully(
-      'localedef --list-archive /usr/lib/locale/locale-archive'
-    ).stdout.split
     when_not_found = proc { raise "Could not find a locale for '#{line}'" }
     candidates.find(when_not_found) do |candidate|
       supported_locales.include?(candidate)
