@@ -344,14 +344,23 @@ Given /^I set the language to (.*)$/ do |lang|
   @screen.press('Return')
 end
 
-Given /^I log in to a new session(?: in (.*) with accelerator "([^"]+)")?$/ do |lang, start_accel|
-  start_accel ||= 's'
+Given /^I log in to a new session(?: in (.*)?)$/ do |lang|
+  # We'll record the location of the login button before changing
+  # language so we only need one (English) image for the button while
+  # still being able to click it in any language.
+  if RTL_LANGUAGES.include?(lang)
+    # If we select a RTL language below, the login and shutdown
+    # buttons will swap place.
+    login_button_region = @screen.find('TailsGreeterShutdownButton.png')
+  else
+    login_button_region = @screen.find('TailsGreeterLoginButton.png')
+  end
   step "I set the language to #{lang}" if lang && lang != 'English'
   # After selecting options (language, administration password, etc.),
   # the Greeter needs some time to focus the main window back, so that
   # typing the accelerator for the "Start Tails" button is honored.
   sleep(1)
-  @screen.press('alt', start_accel)
+  login_button_region.click
   step 'the Tails desktop is ready'
 end
 

@@ -7,7 +7,7 @@ Feature: Localization
   @doc
   Scenario: The Report an Error launcher opens the support documentation in supported non-English locales
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
-    And I log in to a new session in German with accelerator "s"
+    And I log in to a new session in German
     When I double-click on the Report an Error launcher on the desktop
     Then the support documentation page opens in Tor Browser
 
@@ -21,7 +21,7 @@ Feature: Localization
   @fragile
   Scenario Outline: Tails is localized for every tier-1 language
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
-    When I log in to a new session in <language> with accelerator "<start_accel>"
+    When I log in to a new session in <language>
     Then the keyboard layout is set to "<layout>"
     When the network is plugged
     And Tor is ready
@@ -38,17 +38,17 @@ Feature: Localization
     #  - Not all localized layouts exist in the GNOME screen keyboard: #8444
     #  - Arabic's layout should be "ara": #12638
     Examples:
-      | language   | start_accel | layout | osk_layout |
-      | Arabic     | s           | us     | us         |
-      | Chinese    | s           | cn     | us         |
-      | English    | s           | us     | us         |
-      | French     | d           | fr     | fr         |
-      | German     | s           | de     | de         |
-      | Hindi      | s           | in     | us         |
-      | Indonesian | s           | id     | us         |
-      | Italian    | s           | it     | us         |
-      | Persian    | s           | ir     | ir         |
-      | Portuguese | s           | pt     | us         |
-      | Russian    | s           | ru     | ru         |
-      | Spanish    | t           | es     | us         |
-      | Turkish    | b           | tr     | us         |
+      | language   | layout | osk_layout |
+      | Arabic     | us     | us         |
+      | Chinese    | cn     | us         |
+      | English    | us     | us         |
+      | French     | fr     | fr         |
+      | German     | de     | de         |
+      | Hindi      | in     | us         |
+      | Indonesian | id     | us         |
+      | Italian    | it     | us         |
+      | Persian    | ir     | ir         |
+      | Portuguese | pt     | us         |
+      | Russian    | ru     | ru         |
+      | Spanish    | es     | us         |
+      | Turkish    | tr     | us         |
