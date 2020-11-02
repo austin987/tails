@@ -184,7 +184,7 @@ class Screen
       begin
         return {
           found_pattern: pattern,
-          match:         find(pattern, **opts.clone.update(log: false)),
+          match:         real_find(pattern, **opts.clone.update(log: false)),
         }
       rescue FindFailed
         # Ignore. We'll throw an appropriate exception after having
