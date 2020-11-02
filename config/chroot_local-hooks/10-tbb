@@ -16,6 +16,8 @@ echo "Install the Tor Browser"
 # Import install_fake_package and strip_nondeterminism_wrapper
 . /usr/local/lib/tails-shell-library/build.sh
 
+LANGUAGES_FILE="/usr/share/tails/greeter/supported_languages"
+
 download_and_verify_files() {
     local base_url target_files destination apt_proxy
     base_url="${1}"
@@ -252,6 +254,18 @@ strip_nondeterminism () {
     done
 }
 
+supported_locale () {
+    local locale
+    locale="$1"
+
+    for supported_language in $(cat "$LANGUAGES_FILE") ; do
+        if echo "$locale" | grep -qs -E "^${supported_language}"; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 install_langpacks() {
     local langpacks_tarball destination tmp
     langpacks_tarball="${1}"
@@ -262,6 +276,7 @@ install_langpacks() {
     tar --directory="${tmp}" -xf "${langpacks_tarball}"
     for xpi in "${tmp}"/*.xpi; do
         locale="$(basename "${xpi}" .xpi)"
+        supported_locale "$locale" || continue
         dest_basename="langpack-${locale}@firefox.mozilla.org.xpi"
         [ "${locale}" = en-US ] || mv "${xpi}" "${destination}/${dest_basename}"
     done
