@@ -7,16 +7,19 @@ def supported_torbrowser_languages
   localization_descriptions =
     "#{Dir.pwd}/config/chroot_local-includes/" \
     'usr/share/tails/browser-localization/descriptions'
+  supported_locales = $vm.execute_successfully(
+    'localedef --list-archive /usr/lib/locale/locale-archive'
+  ).stdout.split
   File.read(localization_descriptions).split("\n").map do |line|
     # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
     first, second = line.sub('-', '_').split(':')
-    candidates = ["#{first}_#{second}.UTF-8", "#{first}_#{second}.utf8",
-                  "#{first}.UTF-8", "#{first}.utf8",
-                  "#{first}_#{second}", first,]
+    candidates = ["#{first}_#{second}.utf8",
+                  "#{first}.utf8",
+                  "#{first}_#{second}",
+                  first,]
     when_not_found = proc { raise "Could not find a locale for '#{line}'" }
     candidates.find(when_not_found) do |candidate|
-      $vm.directory_exist?("/usr/lib/locale/#{candidate}") ||
-        $vm.directory_exist?("/usr/share/locale/#{candidate}")
+      supported_locales.include?(candidate)
     end
   end
 end
@@ -32,8 +35,9 @@ Then /^the Unsafe Browser works in all supported languages$/ do
   # We always want the locale which we verify the startup page warning
   # for, and one RTL locale ...
   languages = ['fr_FR.UTF-8', 'fa_IR.UTF-8']
-  # ... then we just pick one *other* random locale.
-  languages += (supported_torbrowser_languages - languages).sample(1)
+  # ... then we just pick one *other* random non-English locale.
+  languages += (supported_torbrowser_languages - languages - ['en_US.utf8'])
+               .sample(1)
   languages.each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
