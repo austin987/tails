@@ -63,8 +63,6 @@ Options affecting the 'list' action:
   --media=VALUE         override 'persistent-media'
 
 Options affecting the 'activate' action:
-  --read-only           enable 'persistent-read-only'
-  --read-write          disable 'persistent-read-only'
   --union=VALUE         override 'union'
 "
 }
@@ -82,15 +80,9 @@ add_persistence_preset()
 	local PRESET="${1}"
 	local PRESET_SOURCE="${2}"
 	local CONFIG="${3}"
-	if [ "${PERSISTENCE_READONLY}" = true ]
-	then
-		warning "We are trying to add a persistence preset while" \
-		        "persistence is in read-only mode"
-	else
-		echo "${PRESET}	source=${PRESET_SOURCE}" \
-		    >> "${CONFIG}" || error "Failed to make ${PRESET}: $?"
-		warning "Successfully made ${PRESET} persistent"
-	fi
+	echo "${PRESET}	source=${PRESET_SOURCE}" \
+	    >> "${CONFIG}" || error "Failed to make ${PRESET}: $?"
+	warning "Successfully made ${PRESET} persistent"
 }
 
 remove_persistence_preset()
@@ -416,12 +408,7 @@ activate_volumes ()
 			# persistent directories.
 			[ $(stat -c '%U' "$subdir") = 'amnesia' ] || continue
 			[ $(stat -c '%G' "$subdir") = 'amnesia' ] || continue
-			if [ "$PERSISTENCE_READONLY" = true ]
-			then
-				warning "Permissions of '$subdir' may need to be fixed, but read only was selected; please retry in read-write mode"
-			else
-				chmod go= "$subdir"
-			fi
+			chmod go= "$subdir"
 		done
 	done
 
@@ -529,12 +516,6 @@ main ()
 				;;
 			--media=*)
 				export PERSISTENCE_MEDIA="${1#*=}"
-				;;
-			--read-only)
-				export PERSISTENCE_READONLY="true"
-				;;
-			--read-write)
-				export PERSISTENCE_READONLY=""
 				;;
 			--union=*)
 				export UNIONTYPE="${1#*=}"
