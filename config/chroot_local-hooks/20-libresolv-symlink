@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+
+echo "Creating libresolv symlink"
+
+# Thunderbird expects (exactly) libresolv.so, otherwise it will fail
+# to search OpenPGP keys by email address.
+
+target=/lib/x86_64-linux-gnu/libresolv.so
+if [ -e "${target}" ]; then
+    echo "${target} already exists, so this hook is obsolete." >&2
+    exit 1
+fi
+
+version="$(dpkg-query --showformat='${Version}' --show libc6 | sed 's/-.*//')"
+source="/lib/x86_64-linux-gnu/libresolv-${version}.so"
+if [ ! -e "${source}" ]; then
+    echo "Failed to find ${source}" >&2
+    exit 1
+fi
+
+ln -s "${source}" "${target}"
