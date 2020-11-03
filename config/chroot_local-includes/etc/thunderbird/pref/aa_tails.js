@@ -349,3 +349,9 @@ pref("layout.css.visited_links_enabled", false);
 
 // Disable third-party images.
 pref("permissions.default.image", 3);
+
+// Change default encryption policy to "Require encryption by
+// default". Otherwise users must opt-in to encryption for each mail
+// they compose, so they are just a "Send" away from leaking the
+// plaintext if they forget.
+pref("mail.identity.default.encryptionpolicy", 2);
