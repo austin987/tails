@@ -378,10 +378,7 @@ Merge `master` into the branch used for the release:
 If preparing a RC, skip this part.
 
 In the branch used to build the release, update the `wiki/src/inc/*` files to
-match the *version number* and *date* of the new release. Set the date
-at least 24 hours in the future! Between tests and mirror synchronization,
-the build will not be released on the same day. Try to make sure it
-matches the date of the future signature.
+match the *version number* and *date* of the new release:
 
 	RELEASE_DATE='2015-11-03'
 
@@ -617,12 +614,6 @@ suite should be ready, so it is time to:
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
         git push --force origin "${TAG:?}" && \
         git push origin "${RELEASE_BRANCH:?}"
-
-   Note: for Jenkins to build the release you must push the release
-   branch with its tip tagged. I.e. if you deviate from the above
-   commands by e.g. committing a commit in between `git tag` and the
-   first `git push` then Jenkins won't build from the tag -- please
-   avoid that!
 
 1. build the final images!
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
@@ -1094,11 +1085,6 @@ Prepare upgrade-description files
         git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
         git push origin master:master
 
-   XXX: ideally, we should also copy the UDFs that only advertise
-   a full upgrade path to the version we're releasing, so that
-   we can manually test that these upgrade paths work as expected.
-   Our manual test suite already has everything in place for this.
-
 Prepare the image description file for *Tails Verification*
 -----------------------------------------------------------
 
@@ -1452,12 +1438,6 @@ Write the announcement for the release:
 
    - Mention major user-visible improvements.
 
-     This snippet can help to convert the copied changelog's issue
-     references to links:
-
-         sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
-             wiki/src/news/test_${TAG:?}.mdwn
-
    - Document important config changes that users of the Persistent Storage have to do
      themselves (e.g. the Pidgin proxy settings change in
      [[!tails_gitweb_commit 9925321]] breaks all existing persistent
@@ -1509,7 +1489,6 @@ Skip this if you are preparing anything but a final, major release.
       <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
       EOF
 
-- To be in line with previous announces, remove navigation bits entirely.
 - [login to the Tor blog](https://blog.torproject.org/user)
 - click *Content* → *Add content* → *Blog Post*
 - add these tags, each in a separate text entry field (use _Add another item_):
