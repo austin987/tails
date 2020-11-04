@@ -1468,28 +1468,11 @@ Draft the Tor blog post
 
 Skip this if you are preparing anything but a final, major release.
 
-* Generate a Tor Blog-friendly post; please go through it manually,
-  and look at the previews, to make sure it looks sane!
+- Generate the draft blog post:
 
-      ikiwiki --setup ikiwiki.setup \
-              --render wiki/src/news/version_${VERSION:?}.mdwn | \
-          tidy --wrap 99999 | \
-          sed '0,/^<div id="content" role="main">$/d' | \
-          sed '/^<div id="footer" class="pagefooter" role="contentinfo">$/,$d' | \
-          sed '/^<div class="toc">$/,+7d' | \
-          sed '/^<p><img [^<>]*\/><\/p>$/d' | \
-          sed '/^<div[^<>]*\>/d' | \
-          sed '/^<\/div>$/d' | \
-          sed 's@<a name[^<>]*></a>@@g' | \
-          sed 's@href="\.\./@href="https://tails.boum.org/@g' | \
-          sed 's@src="\./@src="https://tails.boum.org/news/@g' | \
-          sed 's@\(\.en\)\?.html@/@g' \
-          > /tmp/tor-blog-post.html
-          cat >> /tmp/tor-blog-post.html <<EOF
-      <h1>Support and feedback</h1>
-      <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
-      EOF
+        ./bin/generate-Tor-blog-post "${VERSION:?}"
 
+- Proof-read the draft blog post
 - [login to the Tor blog](https://blog.torproject.org/user)
 - click *Content* → *Add content* → *Blog Post*
 - add these tags, each in a separate text entry field (use _Add another item_):
