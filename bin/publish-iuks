@@ -11,18 +11,7 @@ ssh rsync.lizard <<-EOF
 	        /srv/rsync/tails/tails/${DIST:?}/iuk/v2/
 EOF
 
-TRACE_TIME=$(date +%s)
-
-echo "${TRACE_TIME:?}" \
-    | ssh rsync.lizard sudo tee /srv/rsync/tails/tails/project/trace
-
-echo "${TRACE_TIME:?}" > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace"
-(
-    set -eux
-    cd "${MASTER_CHECKOUT:?}"
-    git commit wiki/src/inc/trace \
-	-m "Updating trace file after uploading the IUKs for ${VERSION:?}."
-    git push origin master
-)
+"$(dirname "$0")"/update-trace-time \
+   "Updating trace file after uploading the IUKs for ${VERSION:?}."
 
 ssh rsync.lizard rm -f "/srv/tmp/to_${VERSION?:}.sha256sum"

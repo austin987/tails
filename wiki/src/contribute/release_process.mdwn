@@ -1200,16 +1200,8 @@ move them in place with proper ownership and permissions:
 Update the time in `project/trace` file on our rsync server
 and on the live website (even for a release candidate):
 
-	TRACE_TIME=$(date +%s) &&
-	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
-	[ -n "${MASTER_CHECKOUT:?}" ] && \
-	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
-	(
-	   cd "${MASTER_CHECKOUT:?}" && \
-	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading the ISO and USB images for ${VERSION:?}." && \
-	   git push origin master
-	)
+	./bin/update-trace-time \
+       "Updating trace file after uploading the ISO and USB images for ${VERSION:?}."
 
 At this stage, either IUKs were reproduced by Jenkins and left on the
 rsync server in a temporary location, or you must wait until the
