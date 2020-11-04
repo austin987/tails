@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -eu
+set -x
+
+cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
+    | ssh bittorrent.lizard gpg --import
+
+for type in iso img ; do
+    image_filename="tails-amd64-${VERSION:?}.${type:?}"
+    torrent_dirname="tails-amd64-${VERSION:?}-${type:?}"
+    scp \
+        "${ISOS:?}/${image_filename:?}.torrent" \
+        "${ISOS:?}/tails-amd64-${VERSION:?}/${image_filename:?}.sig" \
+        bittorrent.lizard:
+
+    ssh bittorrent.lizard <<-EOF
+	mkdir --mode 0775 "${torrent_dirname:?}" && \
+	cd "${torrent_dirname:?}" && \
+	mv "../${image_filename:?}.sig" . && \
+	wget --quiet \
+	     "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
+	gpg --verify ${image_filename:?}{.sig,} && \
+	cd && \
+	chgrp -R debian-transmission "${torrent_dirname:?}" && \
+	chmod -R go+rX,g+w "${torrent_dirname:?}" && \
+	mv \
+	   "${torrent_dirname:?}" \
+	   /var/lib/transmission-daemon/downloads/ && \
+	transmission-remote --add ${image_filename:?}.torrent \
+	                    --find /var/lib/transmission-daemon/downloads/
+EOF
+done
