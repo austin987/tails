@@ -1216,32 +1216,12 @@ rsync server in a temporary location, or you must wait until the
 upload of the locally built IUKs (started in the first part of this
 section) is completed.
 
-Move the IUKs in place with proper
+Finally, move the IUKs in place with proper
 ownership and permissions and update the time in `project/trace` file
 on our rsync server and on the live website (even for a release
 candidate):
 
-    ssh rsync.lizard << EOF
-      sudo chown root:rsync_tails /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo chmod u=rwX,go=rX /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo mv /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk \
-              /srv/rsync/tails/tails/${DIST:?}/iuk/v2/
-    EOF
-
-	TRACE_TIME=$(date +%s) &&
-	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
-	[ -n "${MASTER_CHECKOUT:?}" ] && \
-	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
-	(
-	   cd "${MASTER_CHECKOUT:?}" && \
-	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading the IUKs for ${VERSION:?}." && \
-	   git push origin master
-	)
-
-Finally, delete the hashes file:
-
-    ssh rsync.lizard rm -f "/srv/tmp/to_${VERSION?:}.sha256sum"
+    ./bin/publish-iuks
 
 ## Announce, seed and test the Torrents
 

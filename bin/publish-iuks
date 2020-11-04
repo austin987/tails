@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -eu
+set -x
+
+ssh rsync.lizard << EOF
+      sudo chown root:rsync_tails /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo chmod u=rwX,go=rX /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo mv /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk \
+              /srv/rsync/tails/tails/${DIST:?}/iuk/v2/
+EOF
+
+TRACE_TIME=$(date +%s)
+ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace"
+echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace"
+(
+    set -eux
+    cd "${MASTER_CHECKOUT:?}"
+    git commit wiki/src/inc/trace \
+	-m "Updating trace file after uploading the IUKs for ${VERSION:?}."
+    git push origin master
+)
+
+ssh rsync.lizard rm -f "/srv/tmp/to_${VERSION?:}.sha256sum"
+
