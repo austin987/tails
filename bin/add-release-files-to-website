@@ -15,10 +15,12 @@ cp "${ISO_PATH:?}.sig" \
    "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
    "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
-LC_NUMERIC=C ls -l -h -L ${ISO_PATH:?} | \
+# shellcheck disable=SC2012
+LC_NUMERIC=C ls -l -h -L "${ISO_PATH:?}" | \
    cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
    > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html"
-LC_NUMERIC=C ls -l -h -L ${IMG_PATH:?} | \
+# shellcheck disable=SC2012
+LC_NUMERIC=C ls -l -h -L "${IMG_PATH:?}" | \
    cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
    > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html"
 
