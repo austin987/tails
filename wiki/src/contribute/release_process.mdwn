@@ -126,6 +126,10 @@ Other variables
 
 Also export the following environment variables:
 
+* `RELEASE_DATE`: the date when you plan to publish this release,
+  in the format `YYYY-MM-DD`; if preparing a non-final release,
+  use the release date for that _non-final_ release, not for the
+  corresponding final release.
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
@@ -367,63 +371,7 @@ Finally, sanity check the version and commit:
 Included website
 ----------------
 
-### Merge master
-
-Merge `master` into the branch used for the release:
-
-	git fetch origin && git merge origin/master
-
-### version number
-
-If preparing a RC, skip this part.
-
-In the branch used to build the release, update the `wiki/src/inc/*` files to
-match the *version number* and *date* of the new release:
-
-	RELEASE_DATE='2015-11-03'
-
-	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html && \
-	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html && \
-	for type in img iso; do
-	   basename="tails-amd64-${VERSION:?}"
-	   filename="${basename:?}.${type:?}"
-	   echo "TZ=UTC gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
-	        > wiki/src/inc/stable_amd64_${type:?}_gpg_verify.html && \
-	   echo "http://dl.amnesia.boum.org/tails/stable/${basename:?}/${filename:?}" \
-	        > wiki/src/inc/stable_amd64_${type:?}_url.html && \
-	   echo "https://tails.boum.org/torrents/files/${filename:?}.sig" \
-	        > wiki/src/inc/stable_amd64_${type:?}_sig_url.html && \
-	   echo "https://tails.boum.org/torrents/files/${filename:?}.torrent" \
-	        > wiki/src/inc/stable_amd64_${type:?}_torrent_url.html
-	done && \
-	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
-
-Signing key downloaded by the Upgrader
---------------------------------------
-
-    TMP_GNUPG_HOME=$(mktemp -d)
-    gpg --homedir "${TMP_GNUPG_HOME:?}" --import wiki/src/tails-signing.key && \
-    gpg --homedir "${TMP_GNUPG_HOME:?}" \
-        --export-filter drop-subkey="revoked == 1" \
-        --export-options export-minimal \
-        --armor --export "${TAILS_SIGNATURE_KEY:?}" \
-        > wiki/src/tails-signing-minimal.key && \
-    git commit wiki/src/tails-signing-minimal.key \
-        -m "Update signing key used by the Upgrader"
-    rm -rf "${TMP_GNUPG_HOME:?}"
-
-Website translations
---------------------
-
-Refresh the website PO files and commit the ones corresponding to
-pages that were added or changed accordingly to changes coming with
-the new release. This e.g. ensures that the RC call for translation
-points translators to up-to-date PO files:
-
-    ./build-website --rebuild && \
-    git add wiki/src && \
-    git commit -m 'Update website PO files.'
-    git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"
+    ./bin/prepare-included-website-for-release
 
 Enable OpenPGP signing
 ======================
@@ -1272,9 +1220,8 @@ Copy the signatures and the Torrents into the website repository:
 
 Write the announcement for the release:
 
-1. Set these environment variables, in the format `YYYY-MM-DD`:
+1. Set this environment variable, in the format `YYYY-MM-DD`:
 
-   - `RELEASE_DATE`: the date when you plan to publish this non-final release
    - `FINAL_RELEASE_DATE`: the date when we plan to publish the final release
      you're preparing a RC for
 
