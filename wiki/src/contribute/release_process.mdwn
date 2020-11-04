@@ -430,9 +430,10 @@ Enable OpenPGP signing
 
 ### If you have an OpenPGP smart card
 
-If you have an OpenPGP smart card (i.e. if you are one of the usual
-release managers) go fetch it. Remember to only plug it when needed! A
-pro tip is to never plug it unless prompted which `gpg` will do for you.
+If you have an OpenPGP smart card with a Tails signing subkey,
+go fetch it.
+
+Only plug it when `gpg` asks you to.
 
 ### Otherwise: importing the signing key
 
@@ -479,15 +480,16 @@ Tag the release in Git
 	  -m "tagging version ${VERSION:?}" "${TAG:?}" && \
 	git push origin "${TAG:?}" "${RELEASE_BRANCH:?}"
 
-(Pushing the tag is needed so that the APT repository is updated, and
-the Tails APT configuration works at build and boot time. It might be
-premature, as testing might reveal critical issues, but this is
-a signed tag, so it can be overridden later. Yes, there is room for
-improvement here.)
+Known limitations:
 
-XXX: From this push of a tag, the builds in Jenkins fail because we prevent it
-to continue if the last changelog entry is unreleased but corresponds to
-an existing tag. There are workarounds we need to decide and implement.
+- Pushing the tag is needed so that the APT repository is updated, and the Tails
+  APT configuration works at build and boot time. It might be premature, as
+  testing might reveal critical issues, but this is a signed tag, so it can be
+  overridden later.
+
+- From this push of a tag, the release branch will fail to build because the
+  last changelog entry is unreleased but corresponds to an existing tag.
+  Don't worry about it, this will be fixed shortly.
 
 Prepare the versioned APT suites
 ================================
@@ -1559,7 +1561,7 @@ following state:
           -m "Restore master's base branch." \
     )
 
-Remember to close the “Write release notes” ticket **manually** since
+Close the "Write release notes" ticket **manually** since
 `Closes:` statements are not sufficient when updating `master`.
 
 Finally, push the `master` branch to make the changes go live on our
@@ -1630,7 +1632,7 @@ Skip this part if preparing a release candidate.
 
 2. Create a GitLab issue to list them.
 
-   Title: *“Issues linked from the website” for Tails $VERSION*
+   Title: *Issues linked from the website for Tails $VERSION*
    Labels: *Core Work:Technical writing* and *To Do*
 
 Twitter
