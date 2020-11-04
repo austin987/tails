@@ -3,8 +3,8 @@
 set -eu
 set -x
 
-cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
-    | ssh bittorrent.lizard gpg --import
+ssh bittorrent.lizard gpg --import \
+    < "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key"
 
 for type in iso img ; do
     image_filename="tails-amd64-${VERSION:?}.${type:?}"
@@ -14,6 +14,7 @@ for type in iso img ; do
         "${ISOS:?}/tails-amd64-${VERSION:?}/${image_filename:?}.sig" \
         bittorrent.lizard:
 
+    # shellcheck disable=SC2087
     ssh bittorrent.lizard <<-EOF
 	mkdir --mode 0775 "${torrent_dirname:?}" && \
 	cd "${torrent_dirname:?}" && \
