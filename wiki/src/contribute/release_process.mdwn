@@ -561,28 +561,7 @@ SquashFS file order
 
    Run this command:
 
-           perl -ni -E 'chomp;
-              last if m{\Ausr/local/lib/kill-boot-profile\s}xms;
-              say unless m{(?:
-                  [.]pyc\s+\d+\z
-               | \Aboot-profile[.]pid\s
-               | \Alib/firmware/
-               | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
-               | \Alib/live/mount/overlay/rw/etc/fstab\s
-               | \Alib/live/mount/overlay/rw/etc/console-setup/cached_\S+[.](?:gz|sh)\s
-               | \Alib/live/mount/overlay/rw/etc/machine-id\s
-               | \Alib/live/mount/overlay/rw/etc/network/interfaces\s
-               | \Alib/live/mount/overlay/rw/var/log/wtmp\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/apparmor[.]d/cache/[.]features\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/(?:group|gshadow|passwd|shadow)-\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/resolv-over-clearnet[.]conf\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/skel/[.]config/autostart/end-profile[.]desktop\s
-               | \Alib/modules/.*/kernel/drivers/(?:cpufreq|net)/
-               | \Arun/
-               | \Avar/lib/AccountsService/users/Debian-gdm\s
-               | \Avar/lib/gdm3/[#]\d+\s
-               | \Avar/log/live/config[.]pipe\s
-           )}xms' config/binary_rootfs/squashfs.sort
+           ./bin/clean-squashfs-sort-file config/binary_rootfs/squashfs.sort
 
 1. Inspect the Git diff (including diff stat), apply common sense:
 
