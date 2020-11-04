@@ -344,7 +344,7 @@ Given /^I set the language to (.*)$/ do |lang|
   @screen.press('Return')
 end
 
-Given /^I log in to a new session(?: in (.*)?)$/ do |lang|
+Given /^I log in to a new session(?: in (.*))?$/ do |lang|
   # We'll record the location of the login button before changing
   # language so we only need one (English) image for the button while
   # still being able to click it in any language.
