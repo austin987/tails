@@ -1042,21 +1042,7 @@ Prepare upgrade-description files
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
 
-        cd "${RELEASE_CHECKOUT:?}" && \
-        find "${RELEASE_CHECKOUT:?}/wiki/src/upgrade/" \
-           -type f -name upgrades.yml | \
-           while read udf; do
-               if [ -n "$(git status --porcelain "${udf:?}")" ]; then
-                   for x in 1 2 3; do
-                       gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor \
-                           --detach-sign "${udf:?}" \
-                       && break
-                   done
-                   mv --force "${udf:?}.asc" "${udf:?}.pgp"
-                   ${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/iuk/bin/tails-iuk-check-upgrade-description-file "${udf:?}" \
-                      || break
-               fi
-           done
+        ./bin/sign-updated-udfs
 
 1. Add and commit the upgrade-description files and their detached
    signatures to the Git branch used to prepare the release
