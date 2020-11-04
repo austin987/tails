@@ -355,15 +355,12 @@ Update the Changelog entry for the release you're preparing:
 	git checkout "${RELEASE_BRANCH:?}" && \
 	./bin/update-changelog --version "${MILESTONE:?}"
 
-Then, gather other useful information from:
+Then, gather other useful information from the diff between the previous
+version's `.packages` file and the one from the to-be-released images; look for:
 
-* the diff between the previous version's `.packages` file and the one
-  from the to-be-released images; look for:
-  - security fixes
   - new upstream releases of applications mentioned in [[doc/about/features]]
   - new upstream releases of other important components such as the
     Linux kernel
-* the [[!tails_gitlab groups/tails/-/milestones desc="GitLab milestone"]].
 
 Finally, sanity check the version and commit:
 
@@ -437,23 +434,6 @@ points translators to up-to-date PO files:
     git add wiki/src && \
     git commit -m 'Update website PO files.'
     git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"
-
-Call for translation
-====================
-
-If at freeze time for a major release, send a call for translations to
-<tails-l10n@boum.org> [public], making it clear what Git branch the
-translations must be based on, and what are the priorities.
-
-To get a list of changes on the website:
-
-    git diff --stat ${PREVIOUS_TAG:?}.. -- \
-        wiki/src/'*'.{mdwn,html} \
-        ':!wiki/src/blueprint*' \
-        ':!wiki/src/contribute*' \
-        ':!wiki/src/inc' \
-        ':!wiki/src/news*' \
-        ':!wiki/src/security*'
 
 Enable OpenPGP signing
 ======================
@@ -1434,31 +1414,11 @@ Write an announcement listing the security bugs affecting the previous version
 in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
 order to let the users of the old versions know that they have to upgrade:
 
-1. Generate the boilerplate contents from the template:
-
         ./bin/generate-security-advisory \
            --previous-version "${PREVIOUS_STABLE_VERSION:?}" \
            --version "${VERSION:?}" \
            --tag "${TAG:?}" \
         > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn"
-
-2. Manually add to
-   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`:
-
-   - if we are not shipping Linux from Debian stable, the list of
-     CVE fixed in Linux since the one shipped in the previous release of
-     Tails; you can find them in the relevant changelog e.g.:
-     * the GitLab issue that lead to the kernel upgrade
-     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/unstable_changelog>
-     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/testing_changelog>
-     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/buster-backports_changelog>
-   - the list of DSA fixed in packages we ship since those that were in
-     the previous release of Tails: <https://www.debian.org/security/#DSAS>
-   - the list of BSA fixed in packages we ship since those that were in
-     the previous release of Tails:
-     <https://lists.debian.org/debian-backports-announce/>
-   - the list of MFSA fixed by the Tor Browser update:
-     <https://www.mozilla.org/security/announce/>
 
 Remove obsolete bits from `wiki/src/home/testing.html`. For example,
 remove any text that's specific to a release candidate we may have
@@ -1602,9 +1562,6 @@ Sanity checks
 
         new=$("${RELEASE_CHECKOUT:?}/bin/wait-for-new-mfsa") notify-send --urgency=critical "New MFSA: $new"
 
-* Add the relevant MFSA to
-  `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`
-  and commit.
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
 
@@ -1724,14 +1681,11 @@ Publish the Tor blog post
 Amnesia news
 ------------
 
-1. [Subscribe](https://www.autistici.org/mailman/listinfo/amnesia-news/)
-   to `amnesia-news@`. It's the only reliable way to check if the next
-   step has worked (the online web archive is not refreshed immediately).
+[Log in](https://www.autistici.org/mailman/admindb/amnesia-news)
+and accept the release announcement (it's been automatically sent
+to `amnesia-news@` on an hourly basis and is stuck in the
+moderation queue).
 
-2. [Log in](https://www.autistici.org/mailman/admindb/amnesia-news)
-   and accept the release announcement, that's been automatically sent
-   to `amnesia-news@` on an hourly basis, and is stuck in the
-   moderation queue.
 
 Prepare for the next development cycle
 ======================================
