@@ -458,13 +458,31 @@ Known limitations:
 Prepare the versioned APT suites
 ================================
 
-* [[Prepare the versioned APT suite in our custom APT repository|APT_repository/custom#workflow-post-tag]].
+Versioned APT suite in our custom APT repository
+------------------------------------------------
 
-* Prepare tagged snapshots of upstream APT repositories:
+Within a few minutes after pushing the new release's Git tag, a cronjob
+creates a new APT suite in our custom APT repository. This new APT suite is
+called `$TAG` and is initially empty.
 
-          ./bin/tag-apt-snapshots "${BUILD_MANIFEST:?}" "${TAG:?}"
+Wait for this APT suite to be created and initialize it with the packages
+currently found in the APT suite corresponding to the branch used to prepare
+the release:
 
-  Note:
+      while ! ssh reprepro@incoming.deb.tails.boum.org reprepro list "${TAG:?}" >/dev/null 2>&1; do
+         sleep 5
+      done && \
+      ssh reprepro@incoming.deb.tails.boum.org \
+         tails-merge-suite "$RELEASE_BRANCH" "$TAG"
+
+Tagged snapshots of upstream APT repositories
+---------------------------------------------
+
+Create tagged snapshots of upstream APT repositories:
+
+      ./bin/tag-apt-snapshots "${BUILD_MANIFEST:?}" "${TAG:?}"
+
+Note:
 
   - This command takes a while (about a dozen minutes).
     While it's running, if you don't feel the need to take a break,
