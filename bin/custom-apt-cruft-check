@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+
+# This script reports which binary/source packages that can be safely
+# deleted from the stable APT suite in our custom repo. It requires a
+# .build-manifest as the source for which packages that are used
+# during build and thus cannot be deleted.
+
+begin
+  require 'debian'
+rescue LoadError
+  raise "please install the ruby-debian package"
+end
+require 'yaml'
+
+class NoSource < StandardError
+end
+
+def source_package(p)
+  matches = []
+  APT_SOURCES.each_package do |dsc|
+    # The -dbg(sym) packages are not listed, so we look for the
+    # original package's source instead, which will be the same.
+    if dsc.binary.include?(p.sub(/-dbg(sym)?$/, ''))
+      matches << dsc
+    end
+  end
+  if matches.size == 0
+    raise NoSource.new("found no source package for #{p}")
+  elsif matches.size > 1
+    raise "found multiple source packages for #{p}"
+  end
+  matches.first.package
+end
+
+def binary_packages(p)
+  APT_SOURCES[p].binary
+end
+
+manifest_path = ARGV[0]
+if manifest_path.nil?
+  raise "please provide a .build-manifest as the only argument"
+end
+
+begin
+  APT_SOURCES = Debian::Sources.new('/var/lib/apt/lists/deb.tails.boum.org_dists_stable_main_source_Sources').freeze
+rescue
+  raise 'could not find Tails custom APT repo\'s sources, ' \
+        'please add this to your APT sources:\n' \
+        'deb-src [arch=amd64] http://deb.tails.boum.org/ stable main'
+end
+
+all_source_packages = []
+used_source_packages = []
+binary_cruft_candidates = []
+
+manifest = YAML.load_file(manifest_path)
+custom_packages = `ssh reprepro@incoming.deb.tails.boum.org reprepro list stable`
+custom_packages.each_line(chomp: true) do |line|
+  type, name, version = line.split
+  if type['source']
+    all_source_packages << name
+  else
+    installed = manifest['packages']['binary'].find { |x| x['package'] == name }
+    if installed.nil? || version != installed['version']
+      binary_cruft_candidates << name
+    else
+      used_source_packages << source_package(name)
+    end
+  end
+end
+
+puts 'Binary packages that are not used:'
+binary_cruft_candidates.each do |p|
+  begin
+    next if used_source_packages.include?(source_package(p))
+  rescue NoSource
+    # If we don't have a source for a package, it should be a package
+    # we forgot to clean up when we removed its sources.
+  end
+  puts " - #{p}"
+end
+puts
+
+puts 'Source packages that are not used:'
+source_cruft = all_source_packages.uniq - used_source_packages
+source_cruft.each { |p| puts " - #{p}" }
