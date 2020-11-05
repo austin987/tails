@@ -1569,11 +1569,14 @@ If you just released a final release
         rm -rf "${bare_repo:?}"
 
 1. On the `stable` branch, remove all old versions
-   that were never released from `wiki/src/upgrade/v2/Tails`.
-   Explanation: the
-   post-release APT repository steps from the previous stable release
-   will usually have had us prepare for an emergency release that was
-   never made. [XXX:automate]
+   that were never released from `wiki/src/upgrade/v2/Tails`:
+
+        git checkout stable && \
+        ./bin/remove-unused-udfs --before-version "${VERSION:?}"
+
+   Explanation: the post-release APT repository steps from the previous stable
+   release will usually have had us prepare for an emergency release that was
+   never made.
 1. Pull `master` back and merge it into `stable`:
 
         cd "${RELEASE_CHECKOUT:?}" && \
