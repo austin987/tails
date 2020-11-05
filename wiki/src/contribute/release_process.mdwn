@@ -243,11 +243,19 @@ Reset the release branch's `config/base_branch`:
 Bootstrap manual testing coordination:
 
 1. Create a pad.
-2. Copy the [[manual test suite|contribute/release_process/test]]
-   into it.
-3. Send the pad URL in an **encrypted** mail to the manual testers:
-   <tails-manual-testers@boum.org>.
-   Use the template email from `rm.git:manual_testers.mdwn`.
+2. Set the `PAD` environment variable to the URL of this pad.
+3. Copy the [[manual test suite|contribute/release_process/test]]
+   into this pad.
+4. Generate boilerplate for the call for manual testing:
+
+        ./bin/generate-call-for-manual-testers \
+           --pad "${PAD}" \
+           --version "${VERSION:?}"
+
+5. Send the call for manual testing:
+
+    - encrypt your email
+    - use the headers and body generated above
 
 Update included files
 =====================
