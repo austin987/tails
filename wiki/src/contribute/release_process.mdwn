@@ -1578,19 +1578,17 @@ If you just released a final release
    again when the next freeze starts. In this case, keep a single
    changelog entry for `stable` (the next *bugfix* release) and for
    `devel` (the next *major* release).
-1. If the release was a major one, then:
+1. Put the `stable` Git branch and the corresponding APT suite
+   in the desired shape:
 
-   1. Hard reset the `stable` APT suite to the state of the `testing` one:
-
-        ./bin/reset-custom-APT-suite stable testing
-
-   2. Empty `config/APT_overlays.d` in the `stable` branch:
-
-        git checkout stable && \
-		if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
-           git rm config/APT_overlays.d/* && \
-           git commit config/APT_overlays.d/ \
-              -m "Empty the list of APT overlays: they were merged"
+        if [[ "${MAJOR_RELEASE:?}" -eq 1 ]]; then
+           ./bin/reset-custom-APT-suite stable testing && \
+           git checkout stable && \
+           if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
+              git rm config/APT_overlays.d/* && \
+              git commit config/APT_overlays.d/ \
+                 -m "Empty the list of APT overlays: they were merged"
+           fi
         fi
 
 1. Merge the release branch and its APT suite into `devel`:
