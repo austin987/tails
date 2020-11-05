@@ -117,24 +117,11 @@ from now:
 
 ### Bump all snapshots' expiration date
 
-To bump `Valid-Until`, for every snapshot used by the current frozen
-`$RELEASE_BRANCH` branch, so that they are valid for `$DAYS_FROM_NOW`
+To bump `Valid-Until` for every snapshot used by the currently frozen branch
+and the corresponding builder VM, so that they are valid for `$DAYS_FROM_NOW`
 days from now:
 
-	git checkout "$RELEASE_BRANCH" && \
-	for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
-	    (
-	        cd "${dir}" && \
-	        for ARCHIVE in * ; do
-	            if ! grep -qs '^latest$' "$ARCHIVE"/serial; then
-	                ssh reprepro-time-based-snapshots@incoming.deb.tails.boum.org \
-	                    tails-bump-apt-snapshot-valid-until \
-	                        "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" \
-	                        "${DAYS_FROM_NOW:?}"
-	            fi
-	        done
-	    )
-	done
+    ./bin/bump-APT-snapshots-expiration-date "${DAYS_FROM_NOW:?}"
 
 <a id="stop-tracking-a-distribution"></a>
 
