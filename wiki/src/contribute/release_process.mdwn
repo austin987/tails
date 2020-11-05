@@ -1571,7 +1571,13 @@ If you just released a final release
    post-release APT repository steps from the previous stable release
    will usually have had us prepare for an emergency release that was
    never made. [XXX:automate]
-1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
+1. If this command outputs anything:
+
+         git show devel:config/chroot_apt/preferences \
+            | grep -E '^Explanation: freeze exception'
+
+   Then checkout the `devel` branch, and there
+   [[thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`:
 
@@ -1668,7 +1674,12 @@ If you just released a final release
 If you just released an RC
 --------------------------
 
-1. On the devel branch,
+1. If this command outputs anything:
+
+        git show devel:config/chroot_apt/preferences \
+           | grep -E '^Explanation: freeze exception'
+
+   Then checkout the `devel` branch, and there
    [[thaw|APT_repository/time-based_snapshots#freeze-exceptions-post-release]]
    all packages (if any) that were granted freeze exceptions.
 1. On the devel branch,
