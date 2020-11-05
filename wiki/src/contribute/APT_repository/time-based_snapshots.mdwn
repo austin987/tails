@@ -75,23 +75,7 @@ For example, to encode in the `$RELEASE_BRANCH` branch the set of
 [[time-based APT repository snapshots|APT_repository/time-based snapshots]]
 that shall be used during the freeze:
 
-        git checkout "$RELEASE_BRANCH" && \
-        ./auto/scripts/apt-snapshots-serials freeze
-
-Normally when freezing the APT snapshots used when building Tails we
-also freeze the snapshots used to generate our builder VM:
-
-        ( \
-            cd vagrant/definitions/tails-builder && \
-            ../../../auto/scripts/apt-snapshots-serials freeze --freeze-debian-security \
-        )
-
-Then commit:
-
-        git commit \
-            -m "Freeze APT snapshots for ${VERSION}." \
-            config/APT_snapshots.d/*/serial \
-            vagrant/definitions/tails-builder/config/APT_snapshots.d/*/serial
+        ./bin/freeze-all-APT-snapshots
 
 <a id="thaw"></a>
 
