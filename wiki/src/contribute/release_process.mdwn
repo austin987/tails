@@ -1578,11 +1578,48 @@ If you just released a final release
    again when the next freeze starts. In this case, keep a single
    changelog entry for `stable` (the next *bugfix* release) and for
    `devel` (the next *major* release).
-1. Follow the
-   [[post-release|APT_repository/custom#workflow-post-release]] custom
-   APT repository documentation. This includes some git operations,
-   like creating an appropriate _"dummy changelog entry"_ in the
-   `debian/changelog` file.
+1. If the release was a major one, then:
+
+   1. Hard reset the `stable` APT suite to the state of the `testing` one:
+
+        ./bin/reset-custom-APT-suite stable testing
+
+   2. Empty `config/APT_overlays.d` in the `stable` branch:
+
+        git checkout stable && \
+		if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
+           git rm config/APT_overlays.d/* && \
+           git commit config/APT_overlays.d/ \
+              -m "Empty the list of APT overlays: they were merged"
+        fi
+
+1. Merge the release branch and its APT suite into `devel`:
+
+        ./bin/merge-main-branch "${RELEASE_BRANCH:?}" devel
+
+1. Check if the version number of the last entry in `devel`'s `debian/changelog` matches
+   the next major release, so that
+   next builds from the `devel` branch do not use the APT suite meant
+   for the last release; if this is not the case yet, run:
+
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout devel && \
+        dch --newversion "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
+
+1. Increment the version number in stable's `debian/changelog`, so that
+   next builds from the `stable` branch do not use the APT suite meant
+   for the last release:
+
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout stable && \
+        dch --newversion "${NEXT_STABLE_CHANGELOG_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${NEXT_STABLE_CHANGELOG_VERSION:?}."
+
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
    appropriately (they should expire after the next planned major release date).
@@ -1631,11 +1668,28 @@ If you just released an RC
    [[thaw|APT_repository/time-based_snapshots#thaw]] the time-based
    APT repository snapshots. This should generally be a no-op but if
    there was some hiccup earlier it could be needed.
-1. Follow the
-   [[post-release|APT_repository/custom#workflow-post-release]] custom
-   APT repository documentation. This includes some git operations,
-   like creating an appropriate _"dummy changelog entry"_ in the
-   `debian/changelog` file.
+1. Increment the version number in `debian/changelog` on the branch
+   used for the release, to match the upcoming non-RC release, so that
+   the next builds from it do not use the APT suite meant for the RC:
+
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout "${RELEASE_BRANCH:?}" && \
+        dch --newversion "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
+
+1. Increment the version number in `devel`'s `debian/changelog` to
+   match the second next major release, so that images built from there
+   have the right version number:
+
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout devel && \
+        dch --newversion "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}."
+
 1. Merge testing into devel (keeping a single changelog entry, for the
    second next major release), and push them:
 
