@@ -220,7 +220,11 @@ When a Git *main* branch (`devel`, `testing`, `stable`)
 is merged into another *main* branch, the corresponding
 operation must be done on the APT suites.
 
-0. Set some environment variables:
+[[!tails_gitweb bin/merge-main-branch]] does both: merging in Git and in our
+custom APT repository. It also leads you through some manual checks you
+must perform.
+
+1. Set some environment variables:
 
             WORKDIR=$(mktemp -d)
             # the branch you want to merge
@@ -228,56 +232,9 @@ operation must be done on the APT suites.
             # the branch you want to merge _into_
             DST=devel
 
-1. Save the list of packages currently present in the APT suite we
-   want to merge *into*:
+2. Merge the Git branch and APT suite:
 
-            ssh reprepro@incoming.deb.tails.boum.org \
-                 reprepro list "$DST" \
-                 > "$WORKDIR/$DST.orig.list"
-
-2. Make sure you are not going to overwrite newer packages with
-   older ones:
-
-            ssh reprepro@incoming.deb.tails.boum.org \
-                  tails-diff-suites "$SRC" "$DST"
-
-   … and look for packages that are newer in `$DST` than in `$SRC`.
-
-3. Merge the APT suites:
-
-   1. Merge in Git and APT:
-
-      <div class="note">
-      If you have to resolve a merge conflict in <code>debian/changelog</code>,
-      ensure only the latest <code>UNRELEASED</code> entry is present.
-      </div>
-
-            git checkout "$DST" && \
-            git merge "origin/$DST" && \
-            git merge "$SRC" && \
-            ssh reprepro@incoming.deb.tails.boum.org \
-                 tails-merge-suite "$SRC" "$DST"
-
-   2. Restore the `config/base_branch` if needed:
-
-            echo "${DST}" > config/base_branch && \
-            git commit config/base_branch -m "Restore ${DST}'s base branch." || :
-
-   4. Push:
-
-            git push origin "${DST}:${DST}"
-
-4. Make sure not to re-add, into the branch we merge into, any package
-   that was removed from it, but still is in the branch we merge from:
-   e.g. when merging `stable` into `devel`, it may be that
-   `devel` had some packages removed (e.g. due to previously
-   merging a topic branch into it, whose purpose is to *remove* custom
-   packages). To this end, compare the resulting list of (package,
-   version) in the `devel` APT suite with the one saved before
-   the merge, check Git
-   merges history if needed, apply common sense, and remove from
-   `devel` the packages that were removed from it a while ago,
-   and were just erroneously re-added by the merge operation.
+        ./bin/merge-main-branch "${SRC:?}" "${DST:?}"
 
 <a id="workflow-reset"></a>
 
