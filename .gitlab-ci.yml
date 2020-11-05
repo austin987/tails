@@ -10,12 +10,25 @@ before_script:
 - export DEBIAN_FRONTEND=noninteractive
 - apt-get update -qq
 
+.prepare-lint-po: &prepare-lint-po
+  - apt-get -qy install git i18nspector
+  - git clone https://gitlab.tails.boum.org/tails/jenkins-tools.git /tmp/jenkins-tools
+
 lint-po:
   image: debian:testing
   script:
-  - apt-get -qy install git i18nspector
-  - git clone https://gitlab.tails.boum.org/tails/jenkins-tools.git /tmp/jenkins-tools
+  - *prepare-lint-po
   - /tmp/jenkins-tools/slaves/lint_po
+
+lint-latest-po:
+  image: debian:testing
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "stable"'
+  script:
+  - *prepare-lint-po
+  - apt-get -qy install intltool
+  - ./import-translations
+  - /tmp/jenkins-tools/slaves/lint_po po/*.po
 
 check-po-msgfmt:
   script:
