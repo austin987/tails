@@ -284,22 +284,14 @@ operation must be done on the APT suites.
 Resetting a suite to the state of another one
 ---------------------------------------------
 
-   a. First, set some environment variables:
+1. Set some environment variables:
 
-        # the suite to reset
-        OLD=testing
-        # the final state it should be in
-        NEW=devel
+   - `SUITE_TO_RESET`: the suite to reset
+   - `DESIRED_NEW_STATE`: the final state `$SUITE_TO_RESET` should be in
 
-   b. Then, empty the `OLD` suite:
+2. Reset the suite:
 
-      	ssh reprepro@incoming.deb.tails.boum.org \
-      	      reprepro removematched $OLD '\*'
-
-   c. Finally, merge `NEW` into `OLD`
-
-      	ssh reprepro@incoming.deb.tails.boum.org \
-      	      tails-merge-suite $NEW $OLD
+        ./bin/reset-custom-APT-suite "${SUITE_TO_RESET:?}" "${DESIRED_NEW_STATE:?}"
 
 <a id="workflow-merge-overlays"></a>
 
