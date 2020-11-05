@@ -330,8 +330,16 @@ Update other base branches
 
 2. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
    branch, the time-based APT repository snapshots being used
-   during the freeze. It's fine if that results in a no-op
-   (it depends on how exactly previous operations were performed).
+   during the freeze:
+
+        git checkout devel && \
+        ./auto/scripts/apt-snapshots-serials thaw && \
+        git commit \
+            -m "Thaw APT snapshots." \
+            config/APT_snapshots.d/*/serial || :
+
+   It's fine if that results in a no-op (it depends on how exactly previous
+   operations were performed).
 
 3. Try to merge the `devel` Git branch into `feature/bullseye` (if it exists),
    *without* merging the corresponding APT suite (for now `feature/bullseye` is
@@ -1665,8 +1673,16 @@ If you just released an RC
    all packages (if any) that were granted freeze exceptions.
 1. On the devel branch,
    [[thaw|APT_repository/time-based_snapshots#thaw]] the time-based
-   APT repository snapshots. This should generally be a no-op but if
-   there was some hiccup earlier it could be needed.
+   APT repository snapshots:
+
+        git checkout devel && \
+        ./auto/scripts/apt-snapshots-serials thaw && \
+        git commit \
+            -m "Thaw APT snapshots." \
+            config/APT_snapshots.d/*/serial || :
+
+   This should generally be a no-op but if there was some hiccup earlier it
+   could be needed.
 1. Increment the version number in `debian/changelog` on the branch
    used for the release, to match the upcoming non-RC release, so that
    the next builds from it do not use the APT suite meant for the RC:
