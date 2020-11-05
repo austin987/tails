@@ -310,32 +310,7 @@ This operation merges all APT overlays listed in the given branch's
 `config/APT_overlays.d/` into its own APT suite, empties
 `config/APT_overlays.d/` accordingly, then commits and pushes to Git.
 
-1. Set some environment variables:
-
-        # The branch that should have its overlays merged
-        BRANCH=devel
-
-2. Merge the APT overlays in reprepro:
-
-        git checkout "$BRANCH" && \
-        for overlay in $(ls config/APT_overlays.d/) ; do
-           if ! ssh reprepro@incoming.deb.tails.boum.org \
-                   tails-merge-suite "$overlay" "$BRANCH" ; then
-              echo "Failed to merge '$overlay' into '$BRANCH': $?" >&2
-              break
-           fi
-        done
-
-3. Empty `config/APT_overlays.d/`:
-
-        git checkout "$BRANCH" && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
-
-4. Push the Git branch:
-
-        git push origin "${BRANCH}:${BRANCH}"
+    ./bin/merge-APT-overlays "${BRANCH:?}"
 
 <a id="workflow-post-tag"></a>
 
