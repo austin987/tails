@@ -332,10 +332,17 @@ Update other base branches
    during the freeze. It's fine if that results in a no-op
    (it depends on how exactly previous operations were performed).
 
-3. Merge `devel` into `feature/bullseye` (if it exists), *without* following the instructions for
-   [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
-   (For now `feature/bullseye` is handled as any other topic branch
-   forked off `devel`: its base branch is set to `devel`.)
+3. Try to merge the `devel` Git branch into `feature/bullseye` (if it exists),
+   *without* merging the corresponding APT suite (for now `feature/bullseye` is
+   handled as any other topic branch forked off `devel`: its base branch is set
+   to `devel`):
+
+        if git describe feature/bullseye >/dev/null 2>&1; then
+           git checkout feature/bullseye && \
+           git pull && \
+           git merge devel
+        fi
+
    If the merge conflicts don't look like something you feel confident
    resolving properly, abort this merge and let the Foundations
    Team know.
