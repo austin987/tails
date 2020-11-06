@@ -16,6 +16,10 @@ before_script:
 
 lint-po:
   image: debian:testing
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^master|stable|testing|devel$/'
+    - changes:
+        - ./**.po
   script:
   - *prepare-lint-po
   - /tmp/jenkins-tools/slaves/lint_po
@@ -31,6 +35,10 @@ lint-latest-po:
   - /tmp/jenkins-tools/slaves/lint_po po/*.po
 
 check-po-msgfmt:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^master|stable|testing|devel$/'
+    - changes:
+        - ./**.po
   script:
   - apt-get -qy install python3 gettext
   - ./bin/check-po-msgfmt
