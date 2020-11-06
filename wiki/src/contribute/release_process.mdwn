@@ -148,19 +148,37 @@ Also export the following environment variables:
 Pre-freeze
 ==========
 
-The [[contribute/working_together/roles/release_manager]] role
-documentation has more tasks that should be done early enough.
+Check the Release Manager role
+------------------------------
+
+Check the [[contribute/working_together/roles/release_manager]] role
+documentation: it has more tasks that should be done early enough.
 
 Coordinate with Debian security updates
 ---------------------------------------
 
-See [[release_process/Debian_security_updates]].
+Look at the [list of upcoming Debian Security Advisories (DSA)][DSA needed]
+found in the Debian [security tracker][web]'s [Git repository][git].
+
+[web]: http://security-tracker.debian.org/tracker/
+[git]: https://salsa.debian.org/security-tracker-team/security-tracker
+[DSA needed]: https://salsa.debian.org/security-tracker-team/security-tracker/blob/master/data/dsa-needed.txt
+
+Rationale: we don't want to release Tails ISO's and learn 2 days later about
+important security issues fixed by Debian security updates. In some cases, it
+may be worth delaying a Tails release a bit, while waiting for a DSA to happen.
 
 Sanity check
 ============
 
 Visit the [Jenkins RM view](https://jenkins.tails.boum.org/view/RM/)
-and check that the jobs for the release branch have good enough results.
+and check that the jobs for the release branch have good enough results:
+
+ - the last build and reproducibility testing builds have succeeded;
+ - look at the last build of the relevant `test_Tails_ISO_*` job;
+   if anything looks unusual or fishy, check the few previous builds
+   to see if it's a one-off robustness issue, a serious regression,
+   or what not.
 
 Freeze
 ======
@@ -228,22 +246,16 @@ Bootstrap manual testing coordination:
 2. Copy the [[manual test suite|contribute/release_process/test]]
    into it.
 3. Send the pad URL in an **encrypted** mail to the manual testers:
-   <tails-manual-testers@boum.org>
+   <tails-manual-testers@boum.org>.
+   Use the template email from `rm.git:manual_testers.mdwn`.
 
 Update included files
 =====================
 
-<a id="upgrade-custom-debs"></a>
-
 Upgrade Tor Browser
 -------------------
 
-See the dedicated page: [[tor-browser]]
-
-Upgrade Tor Browser AppArmor profile
-------------------------------------
-
-See the dedicated page: [[tor-browser_AppArmor_patch]]
+If you did not import the new Tor Browser yet, [[do so now|tor-browser]].
 
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
@@ -337,15 +349,12 @@ Update the Changelog entry for the release you're preparing:
 	git checkout "${RELEASE_BRANCH:?}" && \
 	./bin/update-changelog --version "${MILESTONE:?}"
 
-Then, gather other useful information from:
+Then, gather other useful information from the diff between the previous
+version's `.packages` file and the one from the to-be-released images; look for:
 
-* the diff between the previous version's `.packages` file and the one
-  from the to-be-released images; look for:
-  - security fixes
   - new upstream releases of applications mentioned in [[doc/about/features]]
   - new upstream releases of other important components such as the
     Linux kernel
-* the [[!tails_gitlab groups/tails/-/milestones desc="GitLab milestone"]].
 
 Finally, sanity check the version and commit:
 
@@ -369,10 +378,7 @@ Merge `master` into the branch used for the release:
 If preparing a RC, skip this part.
 
 In the branch used to build the release, update the `wiki/src/inc/*` files to
-match the *version number* and *date* of the new release. Set the date
-at least 24 hours in the future! Between tests and mirror synchronization,
-the build will not be released on the same day. Try to make sure it
-matches the date of the future signature.
+match the *version number* and *date* of the new release:
 
 	RELEASE_DATE='2015-11-03'
 
@@ -390,7 +396,6 @@ matches the date of the future signature.
 	   echo "https://tails.boum.org/torrents/files/${filename:?}.torrent" \
 	        > wiki/src/inc/stable_amd64_${type:?}_torrent_url.html
 	done && \
-	./build-website --rebuild && \
 	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
 
 Signing key downloaded by the Upgrader
@@ -415,36 +420,20 @@ pages that were added or changed accordingly to changes coming with
 the new release. This e.g. ensures that the RC call for translation
 points translators to up-to-date PO files:
 
-    ./build-website && \
+    ./build-website --rebuild && \
     git add wiki/src && \
     git commit -m 'Update website PO files.'
     git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"
-
-Call for translation
-====================
-
-If at freeze time for a major release, send a call for translations to
-<tails-l10n@boum.org> [public], making it clear what Git branch the
-translations must be based on, and what are the priorities.
-
-To get a list of changes on the website:
-
-    git diff --stat ${PREVIOUS_TAG:?}.. -- \
-        wiki/src/'*'.{mdwn,html} \
-        ':!wiki/src/blueprint*' \
-        ':!wiki/src/contribute*' \
-        ':!wiki/src/inc' \
-        ':!wiki/src/news*' \
-        ':!wiki/src/security*'
 
 Enable OpenPGP signing
 ======================
 
 ### If you have an OpenPGP smart card
 
-If you have an OpenPGP smart card (i.e. if you are one of the usual
-release managers) go fetch it. Remember to only plug it when needed! A
-pro tip is to never plug it unless prompted which `gpg` will do for you.
+If you have an OpenPGP smart card with a Tails signing subkey,
+go fetch it.
+
+Only plug it when `gpg` asks you to.
 
 ### Otherwise: importing the signing key
 
@@ -491,15 +480,16 @@ Tag the release in Git
 	  -m "tagging version ${VERSION:?}" "${TAG:?}" && \
 	git push origin "${TAG:?}" "${RELEASE_BRANCH:?}"
 
-(Pushing the tag is needed so that the APT repository is updated, and
-the Tails APT configuration works at build and boot time. It might be
-premature, as testing might reveal critical issues, but this is
-a signed tag, so it can be overridden later. Yes, there is room for
-improvement here.)
+Known limitations:
 
-XXX: From this push of a tag, the builds in Jenkins fail because we prevent it
-to continue if the last changelog entry is unreleased but corresponds to
-an existing tag. There are workarounds we need to decide and implement.
+- Pushing the tag is needed so that the APT repository is updated, and the Tails
+  APT configuration works at build and boot time. It might be premature, as
+  testing might reveal critical issues, but this is a signed tag, so it can be
+  overridden later.
+
+- From this push of a tag, the release branch will fail to build because the
+  last changelog entry is unreleased but corresponds to an existing tag.
+  Don't worry about it, this will be fixed shortly.
 
 Prepare the versioned APT suites
 ================================
@@ -625,12 +615,6 @@ suite should be ready, so it is time to:
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
         git push --force origin "${TAG:?}" && \
         git push origin "${RELEASE_BRANCH:?}"
-
-   Note: for Jenkins to build the release you must push the release
-   branch with its tip tagged. I.e. if you deviate from the above
-   commands by e.g. committing a commit in between `git tag` and the
-   first `git push` then Jenkins won't build from the tag -- please
-   avoid that!
 
 1. build the final images!
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
@@ -1102,11 +1086,6 @@ Prepare upgrade-description files
         git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
         git push origin master:master
 
-   XXX: ideally, we should also copy the UDFs that only advertise
-   a full upgrade path to the version we're releasing, so that
-   we can manually test that these upgrade paths work as expected.
-   Our manual test suite already has everything in place for this.
-
 Prepare the image description file for *Tails Verification*
 -----------------------------------------------------------
 
@@ -1341,7 +1320,7 @@ Testing
    This is a public list, don't point to the pad.
 1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
    may start:
-   - use the template email from `rm.git:manual_testers.mdwn`
+   - reply to the email you've sent them earlier
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
@@ -1416,31 +1395,11 @@ Write an announcement listing the security bugs affecting the previous version
 in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
 order to let the users of the old versions know that they have to upgrade:
 
-1. Generate the boilerplate contents from the template:
-
         ./bin/generate-security-advisory \
            --previous-version "${PREVIOUS_STABLE_VERSION:?}" \
            --version "${VERSION:?}" \
            --tag "${TAG:?}" \
         > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn"
-
-2. Manually add to
-   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`:
-
-   - if we are not shipping Linux from Debian stable, the list of
-     CVE fixed in Linux since the one shipped in the previous release of
-     Tails; you can find them in the relevant changelog e.g.:
-     * the GitLab issue that lead to the kernel upgrade
-     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/unstable_changelog>
-     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/testing_changelog>
-     * <https://metadata.ftp-master.debian.org/changelogs/main/l/linux/buster-backports_changelog>
-   - the list of DSA fixed in packages we ship since those that were in
-     the previous release of Tails: <https://www.debian.org/security/#DSAS>
-   - the list of BSA fixed in packages we ship since those that were in
-     the previous release of Tails:
-     <https://lists.debian.org/debian-backports-announce/>
-   - the list of MFSA fixed by the Tor Browser update:
-     <https://www.mozilla.org/security/announce/>
 
 Remove obsolete bits from `wiki/src/home/testing.html`. For example,
 remove any text that's specific to a release candidate we may have
@@ -1479,12 +1438,6 @@ Write the announcement for the release:
 3. Edit `${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`:
 
    - Mention major user-visible improvements.
-
-     This snippet can help to convert the copied changelog's issue
-     references to links:
-
-         sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
-             wiki/src/news/test_${TAG:?}.mdwn
 
    - Document important config changes that users of the Persistent Storage have to do
      themselves (e.g. the Pidgin proxy settings change in
@@ -1537,7 +1490,6 @@ Skip this if you are preparing anything but a final, major release.
       <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
       EOF
 
-- To be in line with previous announces, remove navigation bits entirely.
 - [login to the Tor blog](https://blog.torproject.org/user)
 - click *Content* → *Add content* → *Blog Post*
 - add these tags, each in a separate text entry field (use _Add another item_):
@@ -1582,11 +1534,8 @@ Sanity checks
 * Wait for the Mozilla security advisory (MFSA)
   [to be published](https://www.mozilla.org/en-US/security/advisories/):
 
-        new=$("${RELEASE_CHECKOUT:?}/bin/wait-for-new-mfsa") notify-send --urgency=critical "New MFSA: $new"
+        new=$("${RELEASE_CHECKOUT:?}/bin/wait-for-new-mfsa") ; notify-send --urgency=critical "New MFSA: $new"
 
-* Add the relevant MFSA to
-  `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`
-  and commit.
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
 
@@ -1612,7 +1561,7 @@ following state:
           -m "Restore master's base branch." \
     )
 
-Remember to close the “Write release notes” ticket **manually** since
+Close the "Write release notes" ticket **manually** since
 `Closes:` statements are not sufficient when updating `master`.
 
 Finally, push the `master` branch to make the changes go live on our
@@ -1683,7 +1632,7 @@ Skip this part if preparing a release candidate.
 
 2. Create a GitLab issue to list them.
 
-   Title: *“Issues linked from the website” for Tails $VERSION*
+   Title: *Issues linked from the website for Tails $VERSION*
    Labels: *Core Work:Technical writing* and *To Do*
 
 Twitter
@@ -1706,14 +1655,12 @@ Publish the Tor blog post
 Amnesia news
 ------------
 
-1. [Subscribe](https://www.autistici.org/mailman/listinfo/amnesia-news/)
-   to `amnesia-news@`. It's the only reliable way to check if the next
-   step has worked (the online web archive is not refreshed immediately).
+[Log in](https://www.autistici.org/mailman/admindb/amnesia-news)
+and accept the release announcement (it's been automatically sent
+to `amnesia-news@` on an hourly basis and is stuck in the
+moderation queue).
 
-2. [Log in](https://www.autistici.org/mailman/admindb/amnesia-news)
-   and accept the release announcement, that's been automatically sent
-   to `amnesia-news@` on an hourly basis, and is stuck in the
-   moderation queue.
+The password is in keyringer in `rm.git`.
 
 Prepare for the next development cycle
 ======================================
@@ -1828,7 +1775,10 @@ If you just released a final release
         git checkout "${RELEASE_BRANCH:?}" && \
         ./bin/apt-snapshots-expiry
 
-1. Push the resulting branches.
+1. Push the resulting branches:
+
+        git push origin stable testing devel
+
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
 1. Check the Mozilla release calendars:
@@ -1850,8 +1800,9 @@ If you just released a final release
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager#shift]].
    Otherwise, kindly remind the next release manager about this :)
-1. Make sure Jenkins manages to build all updated major branches:
-   <https://jenkins.tails.boum.org/>.
+1. You're done for today! Suggestion: enjoy some time AFK :)
+1. Tomorrow, make sure Jenkins manages to build all updated major branches:
+   <https://jenkins.tails.boum.org/view/RM/>.
 
 If you just released an RC
 --------------------------
@@ -1880,10 +1831,11 @@ If you just released an RC
    Debian packages ones).
 1. Follow the "Verify that the snapshots used in the release branch
    are ok" step for final releases, above.
-1. Make sure Jenkins manages to build all updated major branches:
-   <https://jenkins.tails.boum.org/view/RM/>.
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
+1. You're done for today! Suggestion: enjoy some time AFK :)
+1. Tomorrow, make sure Jenkins manages to build all updated major branches:
+   <https://jenkins.tails.boum.org/view/RM/>.
 
 Related pages
 =============
