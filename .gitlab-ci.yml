@@ -40,3 +40,8 @@ apt-snapshots-expiry:
   script:
   - apt-get -qy install curl git
   - ./bin/apt-snapshots-expiry
+  rules:
+  - if: '$CI_COMMIT_BRANCH =~ /^stable|testing|devel$/'
+  - changes:
+    - config/APT_snapshots.d/*/serial
+    - vagrant/definitions/tails-builder/config/APT_snapshots.d/*/serial
