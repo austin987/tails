@@ -126,6 +126,10 @@ Other variables
 
 Also export the following environment variables:
 
+* `RELEASE_DATE`: the date when you plan to publish this release,
+  in the format `YYYY-MM-DD`; if preparing a non-final release,
+  use the release date for that _non-final_ release, not for the
+  corresponding final release.
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
@@ -367,63 +371,7 @@ Finally, sanity check the version and commit:
 Included website
 ----------------
 
-### Merge master
-
-Merge `master` into the branch used for the release:
-
-	git fetch origin && git merge origin/master
-
-### version number
-
-If preparing a RC, skip this part.
-
-In the branch used to build the release, update the `wiki/src/inc/*` files to
-match the *version number* and *date* of the new release:
-
-	RELEASE_DATE='2015-11-03'
-
-	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html && \
-	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html && \
-	for type in img iso; do
-	   basename="tails-amd64-${VERSION:?}"
-	   filename="${basename:?}.${type:?}"
-	   echo "TZ=UTC gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
-	        > wiki/src/inc/stable_amd64_${type:?}_gpg_verify.html && \
-	   echo "http://dl.amnesia.boum.org/tails/stable/${basename:?}/${filename:?}" \
-	        > wiki/src/inc/stable_amd64_${type:?}_url.html && \
-	   echo "https://tails.boum.org/torrents/files/${filename:?}.sig" \
-	        > wiki/src/inc/stable_amd64_${type:?}_sig_url.html && \
-	   echo "https://tails.boum.org/torrents/files/${filename:?}.torrent" \
-	        > wiki/src/inc/stable_amd64_${type:?}_torrent_url.html
-	done && \
-	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
-
-Signing key downloaded by the Upgrader
---------------------------------------
-
-    TMP_GNUPG_HOME=$(mktemp -d)
-    gpg --homedir "${TMP_GNUPG_HOME:?}" --import wiki/src/tails-signing.key && \
-    gpg --homedir "${TMP_GNUPG_HOME:?}" \
-        --export-filter drop-subkey="revoked == 1" \
-        --export-options export-minimal \
-        --armor --export "${TAILS_SIGNATURE_KEY:?}" \
-        > wiki/src/tails-signing-minimal.key && \
-    git commit wiki/src/tails-signing-minimal.key \
-        -m "Update signing key used by the Upgrader"
-    rm -rf "${TMP_GNUPG_HOME:?}"
-
-Website translations
---------------------
-
-Refresh the website PO files and commit the ones corresponding to
-pages that were added or changed accordingly to changes coming with
-the new release. This e.g. ensures that the RC call for translation
-points translators to up-to-date PO files:
-
-    ./build-website --rebuild && \
-    git add wiki/src && \
-    git commit -m 'Update website PO files.'
-    git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"
+    ./bin/prepare-included-website-for-release
 
 Enable OpenPGP signing
 ======================
@@ -561,28 +509,7 @@ SquashFS file order
 
    Run this command:
 
-           perl -ni -E 'chomp;
-              last if m{\Ausr/local/lib/kill-boot-profile\s}xms;
-              say unless m{(?:
-                  [.]pyc\s+\d+\z
-               | \Aboot-profile[.]pid\s
-               | \Alib/firmware/
-               | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
-               | \Alib/live/mount/overlay/rw/etc/fstab\s
-               | \Alib/live/mount/overlay/rw/etc/console-setup/cached_\S+[.](?:gz|sh)\s
-               | \Alib/live/mount/overlay/rw/etc/machine-id\s
-               | \Alib/live/mount/overlay/rw/etc/network/interfaces\s
-               | \Alib/live/mount/overlay/rw/var/log/wtmp\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/apparmor[.]d/cache/[.]features\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/(?:group|gshadow|passwd|shadow)-\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/resolv-over-clearnet[.]conf\s
-               | \A(?:lib/live/mount/overlay/rw/)?etc/skel/[.]config/autostart/end-profile[.]desktop\s
-               | \Alib/modules/.*/kernel/drivers/(?:cpufreq|net)/
-               | \Arun/
-               | \Avar/lib/AccountsService/users/Debian-gdm\s
-               | \Avar/lib/gdm3/[#]\d+\s
-               | \Avar/log/live/config[.]pipe\s
-           )}xms' config/binary_rootfs/squashfs.sort
+           ./bin/clean-squashfs-sort-file config/binary_rootfs/squashfs.sort
 
 1. Inspect the Git diff (including diff stat), apply common sense:
 
@@ -738,30 +665,7 @@ images and with a `.sig` extension), then go up to the parent
 directory, create a `.torrent` file and check the generated `.torrent`
 files metadata:
 
-    mkdir -p "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-    for type in iso img ; do
-       cd "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-       mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.${type:?}" . && \
-       gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *".${type:?}" && \
-       rename 's,\.asc$,.sig,' *.asc && \
-       tmp="$(mktemp -d)" && \
-       mkdir -p "${tmp:?}/tails-amd64-${VERSION:?}-${type:?}" && \
-       cd "${tmp:?}/tails-amd64-${VERSION:?}-${type:?}" && \
-       for x in "${ISOS:?}/tails-amd64-${VERSION:?}"/*.${type:?}*; do
-           ln -s ${x} .
-       done && \
-       mktorrent \
-          -o "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" \
-          -a 'udp://tracker.torrent.eu.org:451'   \
-          -a 'udp://tracker.coppersurfer.tk:6969' \
-          "${tmp:?}/tails-amd64-${VERSION:?}-${type:?}" && \
-       transmission-show "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" && \
-       cd - && \
-       rm -rf "${tmp:?}"
-    done
-    mv "${ARTIFACTS:?}"/tails-amd64-${VERSION:?}.{apt-sources,build-manifest,buildlog,packages} \
-       "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-    cd "${RELEASE_CHECKOUT?:}"
+    ./bin/generate-images-signatures-and-torrents
 
 Lastly, let's set some variables to be used later:
 
@@ -1042,21 +946,7 @@ Prepare upgrade-description files
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
 
-        cd "${RELEASE_CHECKOUT:?}" && \
-        find "${RELEASE_CHECKOUT:?}/wiki/src/upgrade/" \
-           -type f -name upgrades.yml | \
-           while read udf; do
-               if [ -n "$(git status --porcelain "${udf:?}")" ]; then
-                   for x in 1 2 3; do
-                       gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor \
-                           --detach-sign "${udf:?}" \
-                       && break
-                   done
-                   mv --force "${udf:?}.asc" "${udf:?}.pgp"
-                   ${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/iuk/bin/tails-iuk-check-upgrade-description-file "${udf:?}" \
-                      || break
-               fi
-           done
+        ./bin/sign-updated-udfs
 
 1. Add and commit the upgrade-description files and their detached
    signatures to the Git branch used to prepare the release
@@ -1071,20 +961,7 @@ Prepare upgrade-description files
    channel in `$MASTER_CHECKOUT`, modify their content accordingly,
    sign them, commit and push:
 
-        cd ${MASTER_CHECKOUT:?} && \
-        git fetch && \
-        git merge origin/master && \
-        release_udf="wiki/src/upgrade/v2/Tails/${PREVIOUS_STABLE_VERSION:?}/amd64/${DIST:?}/upgrades.yml" && \
-        test_udf="wiki/src/upgrade/v2/Tails/${PREVIOUS_STABLE_VERSION:?}/amd64/test/upgrades.yml" && \
-        mkdir -p "$(dirname "$test_udf")" && \
-        git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
-          | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
-        echo "Signing ${test_udf:?}" && \
-        gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
-        mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
-        git add ${test_udf:?}* && \
-        git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
-        git push origin master:master
+        ./bin/publish-test-udfs
 
 Prepare the image description file for *Tails Verification*
 -----------------------------------------------------------
@@ -1200,48 +1077,20 @@ move them in place with proper ownership and permissions:
 Update the time in `project/trace` file on our rsync server
 and on the live website (even for a release candidate):
 
-	TRACE_TIME=$(date +%s) &&
-	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
-	[ -n "${MASTER_CHECKOUT:?}" ] && \
-	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
-	(
-	   cd "${MASTER_CHECKOUT:?}" && \
-	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading the ISO and USB images for ${VERSION:?}." && \
-	   git push origin master
-	)
+	./bin/update-trace-time \
+       "Updating trace file after uploading the ISO and USB images for ${VERSION:?}."
 
 At this stage, either IUKs were reproduced by Jenkins and left on the
 rsync server in a temporary location, or you must wait until the
 upload of the locally built IUKs (started in the first part of this
 section) is completed.
 
-Move the IUKs in place with proper
+Finally, move the IUKs in place with proper
 ownership and permissions and update the time in `project/trace` file
 on our rsync server and on the live website (even for a release
 candidate):
 
-    ssh rsync.lizard << EOF
-      sudo chown root:rsync_tails /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo chmod u=rwX,go=rX /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo mv /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk \
-              /srv/rsync/tails/tails/${DIST:?}/iuk/v2/
-    EOF
-
-	TRACE_TIME=$(date +%s) &&
-	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
-	[ -n "${MASTER_CHECKOUT:?}" ] && \
-	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
-	(
-	   cd "${MASTER_CHECKOUT:?}" && \
-	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading the IUKs for ${VERSION:?}." && \
-	   git push origin master
-	)
-
-Finally, delete the hashes file:
-
-    ssh rsync.lizard rm -f "/srv/tmp/to_${VERSION?:}.sha256sum"
+    ./bin/publish-iuks
 
 ## Announce, seed and test the Torrents
 
@@ -1264,32 +1113,7 @@ If not, list already running Torrents:
 
 Now you can announce and seed the Torrents for the release you're preparing:
 
-    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
-       | ssh bittorrent.lizard gpg --import
-    for type in iso img ; do
-       image_filename="tails-amd64-${VERSION:?}.${type:?}"
-       torrent_dirname="tails-amd64-${VERSION:?}-${type:?}"
-       scp \
-          "${ISOS:?}/${image_filename:?}.torrent" \
-          "${ISOS:?}/tails-amd64-${VERSION:?}/${image_filename:?}.sig" \
-          bittorrent.lizard: && \
-       ssh bittorrent.lizard << EOF
-          mkdir --mode 0775 "${torrent_dirname:?}" && \
-          cd "${torrent_dirname:?}" && \
-          mv "../${image_filename:?}.sig" . && \
-          wget --quiet \
-             "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
-          gpg --verify ${image_filename:?}{.sig,} && \
-          cd && \
-          chgrp -R debian-transmission "${torrent_dirname:?}" && \
-          chmod -R go+rX,g+w "${torrent_dirname:?}" && \
-          mv \
-             "${torrent_dirname:?}" \
-             /var/lib/transmission-daemon/downloads/ && \
-          transmission-remote --add ${image_filename:?}.torrent \
-                              --find /var/lib/transmission-daemon/downloads/
-    EOF
-    done
+    ./bin/announce-and-seed-torrents
 
 Test that you can start downloading the ISO and USB images with a BitTorrent client.
 It can take a few dozen minutes before this works.
@@ -1354,32 +1178,9 @@ If preparing a final release
 
 Skip this part if preparing a RC.
 
-Rename, copy, garbage collect and update various files.
+Rename, copy, garbage collect and update various files:
 
-	git rm \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-"*.{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
-	mkdir -p "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files" && \
-	cp "${ISO_PATH:?}.sig" \
-	   "${IMG_PATH:?}.sig" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.build-manifest" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.packages" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
-	LC_NUMERIC=C ls -l -h -L ${ISO_PATH:?} | \
-	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
-	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
-	LC_NUMERIC=C ls -l -h -L ${IMG_PATH:?} | \
-	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
-	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html" && \
-    gpg --check-trustdb && \
-    LANG=C TZ=UTC gpg --no-options --keyid-format long --trusted-key "${TAILS_SIGNATURE_KEY_LONG_ID:?}" --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
-	   perl -pE 's/\[ultimate\]$/[full]/' | \
-	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_gpg_signature_output.html" && \
-    LANG=C TZ=UTC gpg --no-options --keyid-format long --trusted-key "${TAILS_SIGNATURE_KEY_LONG_ID:?}" --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
-	   perl -pE 's/\[ultimate\]$/[full]/' | \
-	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_gpg_signature_output.html"
+	./bin/add-release-files-to-website
 
 Then, build the website and commit this last set of changes:
 
@@ -1419,9 +1220,8 @@ Copy the signatures and the Torrents into the website repository:
 
 Write the announcement for the release:
 
-1. Set these environment variables, in the format `YYYY-MM-DD`:
+1. Set this environment variable, in the format `YYYY-MM-DD`:
 
-   - `RELEASE_DATE`: the date when you plan to publish this non-final release
    - `FINAL_RELEASE_DATE`: the date when we plan to publish the final release
      you're preparing a RC for
 
@@ -1468,28 +1268,11 @@ Draft the Tor blog post
 
 Skip this if you are preparing anything but a final, major release.
 
-* Generate a Tor Blog-friendly post; please go through it manually,
-  and look at the previews, to make sure it looks sane!
+- Generate the draft blog post:
 
-      ikiwiki --setup ikiwiki.setup \
-              --render wiki/src/news/version_${VERSION:?}.mdwn | \
-          tidy --wrap 99999 | \
-          sed '0,/^<div id="content" role="main">$/d' | \
-          sed '/^<div id="footer" class="pagefooter" role="contentinfo">$/,$d' | \
-          sed '/^<div class="toc">$/,+7d' | \
-          sed '/^<p><img [^<>]*\/><\/p>$/d' | \
-          sed '/^<div[^<>]*\>/d' | \
-          sed '/^<\/div>$/d' | \
-          sed 's@<a name[^<>]*></a>@@g' | \
-          sed 's@href="\.\./@href="https://tails.boum.org/@g' | \
-          sed 's@src="\./@src="https://tails.boum.org/news/@g' | \
-          sed 's@\(\.en\)\?.html@/@g' \
-          > /tmp/tor-blog-post.html
-          cat >> /tmp/tor-blog-post.html <<EOF
-      <h1>Support and feedback</h1>
-      <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
-      EOF
+        ./bin/generate-Tor-blog-post "${VERSION:?}"
 
+- Proof-read the draft blog post
 - [login to the Tor blog](https://blog.torproject.org/user)
 - click *Content* → *Add content* → *Blog Post*
 - add these tags, each in a separate text entry field (use _Add another item_):
