@@ -36,13 +36,19 @@ end
 manifest_path = ARGV[0]
 raise 'please provide a .build-manifest as the only argument' if manifest_path.nil?
 
+current_branch=`git symbolic-ref HEAD | sed 's,refs/heads/,,'`
+allowed_branches = ['stable', 'devel']
+if ! allowed_branches.include?(current_branch)
+  raise "we only support checking the following branches' " \
+        "custom APT suites: #{allowed_branches.join(', ')}"
+end
 begin
   apt_repo_hostnames = [
     'deb.tails.boum.org',
     'umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd.onion',
   ]
   apt_repo_filenames = apt_repo_hostnames.map do |hostname|
-    "/var/lib/apt/lists/#{hostname}_dists_stable_main_source_Sources"
+    "/var/lib/apt/lists/#{hostname}_dists_#{current_branch}_main_source_Sources"
   end
   apt_repo_filename = apt_repo_filenames.find do |filename|
     File.exist?(filename)
@@ -51,7 +57,7 @@ begin
 rescue
   raise 'could not find Tails custom APT repo\'s sources, ' \
         'please add this to your APT sources:\n' \
-        'deb-src [arch=amd64] http://deb.tails.boum.org/ stable main'
+        "deb-src [arch=amd64] http://deb.tails.boum.org/ #{current_branch} main"
 end
 
 all_source_packages = []
