@@ -8,38 +8,33 @@
 begin
   require 'debian'
 rescue LoadError
-  raise "please install the ruby-debian package"
+  raise 'please install the ruby-debian package'
 end
 require 'yaml'
 
 class NoSource < StandardError
 end
 
-def source_package(p)
+def source_package(package)
   matches = []
   APT_SOURCES.each_package do |dsc|
     # The -dbg(sym) packages are not listed, so we look for the
     # original package's source instead, which will be the same.
-    if dsc.binary.include?(p.sub(/-dbg(sym)?$/, ''))
-      matches << dsc
-    end
+    matches << dsc if dsc.binary.include?(package.sub(/-dbg(sym)?$/, ''))
   end
-  if matches.size == 0
-    raise NoSource.new("found no source package for #{p}")
-  elsif matches.size > 1
-    raise "found multiple source packages for #{p}"
-  end
+  raise NoSource, "found no source package for #{package}" if matches.size.zero?
+
+  raise "found multiple source packages for #{package}" if matches.size > 1
+
   matches.first.package
 end
 
-def binary_packages(p)
-  APT_SOURCES[p].binary
+def binary_packages(package)
+  APT_SOURCES[package].binary
 end
 
 manifest_path = ARGV[0]
-if manifest_path.nil?
-  raise "please provide a .build-manifest as the only argument"
-end
+raise 'please provide a .build-manifest as the only argument' if manifest_path.nil?
 
 begin
   apt_repo_hostnames = [
