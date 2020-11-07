@@ -1,0 +1,36 @@
+image: debian:buster
+
+before_script:
+- export DEBIAN_FRONTEND=noninteractive
+- apt-get update -qq
+
+lint-po:
+  image: debian:testing
+  script:
+  - apt-get -qy install git i18nspector
+  - git clone https://gitlab.tails.boum.org/tails/jenkins-tools.git /tmp/jenkins-tools
+  - /tmp/jenkins-tools/slaves/lint_po
+
+check-po-msgfmt:
+  script:
+  - apt-get -qy install python3 gettext
+  - ./bin/check-po-msgfmt
+
+test-python-doctest:
+  script:
+  - apt-get -qy install python3
+  - config/chroot_local-includes/usr/local/lib/tails-gdm-error-message doctest --verbose
+
+test-whisperback:
+  script:
+  - 'cat config/chroot_local-packageslists/whisperback.list | grep -E -v "^#"
+       | xargs apt-get -qy install'
+  - apt-get -qy install python3-pytest
+  - 'PYTHONPATH=config/chroot_local-includes/usr/lib/python3/dist-packages
+       pytest-3 --verbose
+       config/chroot_local-includes/usr/lib/python3/dist-packages/whisperBack/test.py'
+
+apt-snapshots-expiry:
+  script:
+  - apt-get -qy install curl git
+  - ./bin/apt-snapshots-expiry
