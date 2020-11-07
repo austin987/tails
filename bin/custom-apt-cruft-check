@@ -10,6 +10,7 @@ begin
 rescue LoadError
   raise 'please install the ruby-debian package'
 end
+require 'open-uri'
 require 'yaml'
 
 class NoSource < StandardError
@@ -32,9 +33,6 @@ end
 def binary_packages(package)
   APT_SOURCES[package].binary
 end
-
-manifest_path = ARGV[0]
-raise 'please provide a .build-manifest as the only argument' if manifest_path.nil?
 
 current_branch=`git symbolic-ref HEAD | sed 's,refs/heads/,,'`
 allowed_branches = ['stable', 'devel']
@@ -60,11 +58,24 @@ rescue
         "deb-src [arch=amd64] http://deb.tails.boum.org/ #{current_branch} main"
 end
 
+
+if ARGV[0].nil?
+  url = "https://nightly.tails.boum.org/build_Tails_ISO_#{current_branch}/lastSuccessful/archive/latest.build-manifest"
+  begin
+    manifest = YAML.safe_load(
+      URI.open(url).read
+    )
+  rescue OpenURI::HTTPError
+    raise "got HTTP 404 when attempting to fetch: #{url}"
+  end
+else
+  manifest = YAML.load_file(ARGV[0])
+end
+
 all_source_packages = []
 used_source_packages = []
 binary_cruft_candidates = []
 
-manifest = YAML.load_file(manifest_path)
 custom_packages = `ssh reprepro@incoming.deb.tails.boum.org reprepro list stable`
 custom_packages.each_line(chomp: true) do |line|
   type, name, version = line.split
