@@ -285,6 +285,15 @@ Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   end
 end
 
+Then /^Tor Browser displays a "([^"]+)" heading on the "([^"]+)" page$/ do |heading, page_title|
+  try_for(60) do
+    page_has_heading("#{page_title} - Tor Browser", heading)
+  end
+end
+
+Then /^Tor Browser displays a '([^']+)' heading on the "([^"]+)" page$/ do |heading, page_title|
+  try_for(60) do
+    page_has_heading("#{page_title} - Tor Browser", heading)
   end
 end
 
