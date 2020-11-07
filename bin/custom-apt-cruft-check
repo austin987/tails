@@ -42,7 +42,17 @@ if manifest_path.nil?
 end
 
 begin
-  APT_SOURCES = Debian::Sources.new('/var/lib/apt/lists/deb.tails.boum.org_dists_stable_main_source_Sources').freeze
+  apt_repo_hostnames = [
+    'deb.tails.boum.org',
+    'umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd.onion',
+  ]
+  apt_repo_filenames = apt_repo_hostnames.map do |hostname|
+    "/var/lib/apt/lists/#{hostname}_dists_stable_main_source_Sources"
+  end
+  apt_repo_filename = apt_repo_filenames.find do |filename|
+    File.exist?(filename)
+  end
+  APT_SOURCES = Debian::Sources.new(apt_repo_filename).freeze
 rescue
   raise 'could not find Tails custom APT repo\'s sources, ' \
         'please add this to your APT sources:\n' \
