@@ -271,11 +271,20 @@ Then /^the Tails homepage loads in the Unsafe Browser$/ do
   @screen.wait('TailsHomepage.png', 60)
 end
 
+def headings_in_page(page_title)
+  @torbrowser.child(page_title, roleName: 'frame').children(roleName: 'heading')
+end
+
+def page_has_heading(page_title, heading)
+  headings_in_page(page_title).any? { |h| h.text == heading }
+end
+
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   try_for(60) do
-    page = @torbrowser.child('Problem loading page - Tor Browser',
-                             roleName: 'frame')
-    page.children(roleName: 'heading').any? { |heading| heading.text == error }
+    page_has_heading('Problem loading page - Tor Browser', error)
+  end
+end
+
   end
 end
 
