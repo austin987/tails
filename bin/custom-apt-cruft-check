@@ -36,7 +36,7 @@ end
 
 current_branch=`git symbolic-ref HEAD | sed 's,refs/heads/,,'`
 allowed_branches = ['stable', 'devel']
-if ! allowed_branches.include?(current_branch)
+unless allowed_branches.include?(current_branch)
   raise "we only support checking the following branches' " \
         "custom APT suites: #{allowed_branches.join(', ')}"
 end
@@ -57,7 +57,6 @@ rescue
         "please add this to your APT sources:\n" \
         "deb-src [arch=amd64] http://deb.tails.boum.org/ #{current_branch} main"
 end
-
 
 if ARGV[0].nil?
   url = "https://nightly.tails.boum.org/build_Tails_ISO_#{current_branch}/lastSuccessful/archive/latest.build-manifest"
@@ -108,10 +107,12 @@ end
 puts 'Binary packages that are not used:'
 binary_cruft.each { |p| puts " - #{p}" }
 puts
-puts "  Clean up command: ssh reprepro@incoming.deb.tails.boum.org reprepro remove #{current_branch} #{binary_cruft.join(' ')}"
+puts '  Clean up command: ssh reprepro@incoming.deb.tails.boum.org ' \
+     "reprepro remove #{current_branch} #{binary_cruft.join(' ')}"
 puts
 
 puts 'Source packages that are not used:'
 source_cruft.each { |p| puts " - #{p}" }
 puts
-puts "  Clean up command: ssh reprepro@incoming.deb.tails.boum.org reprepro removesrc #{current_branch} #{source_cruft.join(' ')}"
+puts '  Clean up command: ssh reprepro@incoming.deb.tails.boum.org ' \
+     "reprepro removesrc #{current_branch} #{source_cruft.join(' ')}"
