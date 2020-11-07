@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eu
+
+error () {
+    echo "error: ${*}" >&2
+    exit 1
+}
+
+USAGE="Usage: $(basename "$0") VERSION"
+
+[ $# -eq 1 ] || error "$USAGE"
+
+VERSION="$1"
+
+TMPFILE=$(mktemp /tmp/tor-blog-post-XXXXXX.html)
+
+ikiwiki --setup ikiwiki.setup \
+        --render "wiki/src/news/version_${VERSION:?}.mdwn" \
+    | tidy --quiet yes \
+	   --mute MISSING_ENDTAG_BEFORE,INSERTING_TAG,DISCARDING_UNEXPECTED,UNKNOWN_ENTITY,MISSING_ATTRIBUTE,TRIM_EMPTY_ELEMENT,STRING_CONTENT_LOOKS \
+	   --wrap 99999 \
+    | sed '0,/^<div id="content" role="main">$/d' \
+    | sed '/^<div id="footer" class="pagefooter" role="contentinfo">$/,$d' \
+    | sed '/^<div class="toc">$/,+7d'\
+    | sed '/^<p><img [^<>]*\/><\/p>$/d' \
+    | sed '/^<div[^<>]*\>/d' \
+    | sed '/^<\/div>$/d' \
+    | sed 's@<a name[^<>]*></a>@@g' \
+    | sed 's@href="\.\./@href="https://tails.boum.org/@g' \
+    | sed 's@src="\./@src="https://tails.boum.org/news/@g' \
+    | sed 's@\(\.en\)\?.html@/@g' \
+    > "$TMPFILE"
+
+cat >> "$TMPFILE" <<EOF
+<h1>Support and feedback</h1>
+<p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
+EOF
+
+echo "Done! The draft Tor blog post was written to $TMPFILE"
