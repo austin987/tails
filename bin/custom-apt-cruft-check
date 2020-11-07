@@ -91,7 +91,8 @@ custom_packages.each_line(chomp: true) do |line|
   end
 end
 
-puts 'Binary packages that are not used:'
+source_cruft = all_source_packages.uniq - used_source_packages
+binary_cruft = []
 binary_cruft_candidates.each do |p|
   begin
     next if used_source_packages.include?(source_package(p))
@@ -99,10 +100,16 @@ binary_cruft_candidates.each do |p|
     # If we don't have a source for a package, it should be a package
     # we forgot to clean up when we removed its sources.
   end
-  puts " - #{p}"
+  binary_cruft << p
 end
+
+puts 'Binary packages that are not used:'
+binary_cruft.each { |p| puts " - #{p}" }
+puts
+puts "  Clean up command: ssh reprepro@incoming.deb.tails.boum.org reprepro remove #{current_branch} #{binary_cruft.join(' ')}"
 puts
 
 puts 'Source packages that are not used:'
-source_cruft = all_source_packages.uniq - used_source_packages
 source_cruft.each { |p| puts " - #{p}" }
+puts
+puts "  Clean up command: ssh reprepro@incoming.deb.tails.boum.org reprepro removesrc #{current_branch} #{source_cruft.join(' ')}"
