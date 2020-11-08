@@ -68,8 +68,7 @@ Unless the release process explicitly instructs you to change the
 value of one such variable, treat it as a constant: else,
 inconsistency will surely arise, which can cause trouble later on.
 
-Version numbers
----------------
+XXX: make sure to create local.yml
 
 Note:
 
@@ -87,63 +86,20 @@ Note:
   of shared constants to encode the values that must be the same on
   both sides :)
 
+    ./bin/rm-config generate-boilerplate
+    
+  Edit `~/.config/tails/release_management/current.yml` and replace
+  `FIXME`:s. Then apply:
+  
+    . $(./bin/rm-config generate-environment)
+
 Export the following environment variables:
 
-* `VERSION`: the version you're preparing (see
-  [[contribute/release_schedule#versioning]])
-* `PREVIOUS_VERSION`: the last released version (which could be a release
-  candidate, in case you're preparing a major release)
-* `PREVIOUS_STABLE_VERSION`: the current stable release of Tails. This
-  will be the same as `PREVIOUS_VERSION` except when preparing a major
-  release.
-* tags:
+### [generate]
 
-        export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
-        export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
-
-* `NEXT_PLANNED_MAJOR_VERSION`: set to the version number of the next
-  *major* Tails release; if you're preparing a RC for a major release,
-  use that major release; otherwise, use whatever the next planned
-  major release is
-* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: if you're preparing the RC
-  for a major release, set this to the version number of
-  the second next *major* Tails release; e.g. if preparing the RC for
-  the 3.9 major release, then set this to 3.12 (3.9 is the next major
-  release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
-  release).
-* `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
-  scheduled *bugfix* Tails release
-* `NEXT_PLANNED_VERSION`: use whichever is the next scheduled release
-   among `$NEXT_PLANNED_BUGFIX_VERSION` and `$NEXT_PLANNED_MAJOR_VERSION`
-* `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
-  to the next emergency release if we have to put one out; unset for a
-  release candidate
-* `NEXT_STABLE_CHANGELOG_VERSION`: if `$NEXT_PLANNED_BUGFIX_VERSION` is the next
-  scheduled release, use it; otherwise, use `$NEXT_POTENTIAL_EMERGENCY_VERSION`
-
-Other variables
----------------
-
-Also export the following environment variables:
-
-* `RELEASE_DATE`: the date when you plan to publish this release,
-  in the format `YYYY-MM-DD`; if preparing a non-final release,
-  use the release date for that _non-final_ release, not for the
-  corresponding final release.
-* `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
-  candidate for a major release, to 0 otherwise
-* `ISOS`: the directory where one stores `tails-amd64-*`
-  sub-directories like the ones downloaded with BitTorrent.
-* `ARTIFACTS`: the directory where build artifacts (e.g.
-  the `.packages` file) land.
-* `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
-  Tails Git repository.
-* `RELEASE_BRANCH=$(if [ "$MAJOR_RELEASE" = 1 ]; then echo -n testing; else echo -n stable; fi)`
-* `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
-  repository used to prepare the release (`stable` or `testing`).
-* `TAILS_SIGNATURE_KEY=A490D0F4D311A4153E2BB7CADBB802B258ACD84F`
+* export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
+* export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
 * `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}" | perl -nE 'say substr($_, -17)')`
-* `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 * `export IUKS_DIR="${ISOS:?}/iuks/v2"`
 * `export IUKS_HASHES="${IUKS_DIR:?}/to_${VERSION}.sha256sum"`
@@ -441,7 +397,13 @@ Build the almost-final images
 2. Keep the resulting build artifacts until the end of this release process.
 3. Record where the manifest of needed packages is stored:
 
-        export BUILD_MANIFEST=XXX ; \
+        ./bin/rm-config generate-boilerplate --stage built-almost-final
+
+4. Edit current.yml and set `FIXME`:s and export it to your environment:
+        
+        . $(./bin/rm-config generate-environment --stage built-almost-final)
+
+        [generate]
         [ -f "${BUILD_MANIFEST:?}" ] || echo "ERROR: BUILD_MANIFEST is incorrect"
         echo "${BUILD_MANIFEST:?}" | grep -E -qs '\.build-manifest$' \
            || echo "ERROR: BUILD_MANIFEST does not have the .build-manifest extension"
@@ -629,6 +591,12 @@ To verify that Jenkins reproduced your images:
 
      Set the `$MATCHING_JENKINS_IMAGES_BUILD_ID` environment variable
      to the ID of this job (an integer).
+     
+        ./bin/rm-config generate-boilerplate --stage reproduced-images
+        
+    Edit current.yml and export:
+    
+        . $(./bin/rm-config generate-environment --stage reproduced-images)
 
    - If there is a hash mismatch for one of the images: ouch! Now we are in a
      tricky situation: on the one hand it seems like a poor idea to
@@ -712,6 +680,7 @@ files metadata:
 
 Lastly, let's set some variables to be used later:
 
+    [generate]
     ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso"
     ISO_SHA256SUM="$(sha256sum "${ISO_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH:?}")"
@@ -735,6 +704,7 @@ Prepare the environment
 
 Compute the list of initial version install to build IUKs for:
 
+    [generate]
     cd "${RELEASE_CHECKOUT:?}" && \
 	export IUK_SOURCE_VERSIONS=$(./bin/iuk-source-versions ${VERSION:?})
     echo "${IUK_SOURCE_VERSIONS?:}"
@@ -866,6 +836,12 @@ Build the Incremental Upgrade Kits on Jenkins
 
 4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable to the ID of
    that `parallel_collect_IUKs` build (an integer).
+   
+       ./bin/rm-config generate-boilerplate --stage built-iuks
+       
+   Edit current.yml and export:
+   
+       . $(./bin/rm-config generate-environment --stage built-iuk)
 
 5. Wait until both `parallel_build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
    It should take about 10-15 minutes for each member of
