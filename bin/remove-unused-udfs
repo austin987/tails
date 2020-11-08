@@ -56,9 +56,10 @@ if __name__ == '__main__':
 
     repo = Repo(Path.cwd())
     assert not repo.bare
-    log.debug("Tags:\n%s" % repo.tags)
+    tags = repo.tags
+    log.debug("Tags:\n%s" % tags)
 
-    to_delete = dirs_to_delete(args.before_version, repo.tags)
+    to_delete = dirs_to_delete(args.before_version, tags)
     if to_delete:
         log.info("Deleting %s" % to_delete)
         repo.git.rm('-r', to_delete)
