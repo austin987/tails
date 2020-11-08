@@ -137,17 +137,21 @@ binary_cruft_candidates.each do |p|
   binary_cruft << p
 end
 
-puts 'Binary packages that are not used:'
-binary_cruft.each { |p| puts " - #{p}" }
-puts
-puts "  Clean up command:\n" \
-     '  ssh reprepro@incoming.deb.tails.boum.org ' \
-     "reprepro remove #{options.suite} #{binary_cruft.join(' ')}"
-puts
+unless binary_cruft.empty?
+  puts 'Binary packages that are not used:'
+  binary_cruft.each { |p| puts " - #{p}" }
+  puts
+  puts "  Clean up command:\n" \
+       '  ssh reprepro@incoming.deb.tails.boum.org ' \
+       "reprepro remove #{options.suite} #{binary_cruft.join(' ')}"
+  puts
+end
 
-puts 'Source packages that are not used:'
-source_cruft.each { |p| puts " - #{p}" }
-puts
-puts "  Clean up command:\n" \
-     '  ssh reprepro@incoming.deb.tails.boum.org ' \
-     "reprepro removesrcs #{options.suite} #{source_cruft.join(' ')}"
+unless source_cruft.empty?
+  puts 'Source packages that are not used:'
+  source_cruft.each { |p| puts " - #{p}" }
+  puts
+  puts "  Clean up command:\n" \
+       '  ssh reprepro@incoming.deb.tails.boum.org ' \
+       "reprepro removesrcs #{options.suite} #{source_cruft.join(' ')}"
+end
