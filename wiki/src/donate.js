@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Pass-through the ?r= parameter to /donate/thanks and /donate/canceled
+  // Pass-through the ?r= parameter to /donate/thanks, /donate/canceled, and PayPal's custom parameter
   var url = new URL(window.location.href);
   var r = url.searchParams.get("r");
   if (r) {
@@ -109,6 +109,9 @@ document.addEventListener('DOMContentLoaded', function() {
       let url = new URL(element.value);
       element.value = url.origin + url.pathname + "?r=" + r;
     }
+    var custom = getCustom();
+    custom.r = r;
+    setCustom(custom);
   }
 
   // Alternate between our different bitcoin addresses
