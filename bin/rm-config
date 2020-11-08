@@ -1,0 +1,121 @@
+#! /usr/bin/python3
+
+import argparse
+import logging
+from pathlib import Path
+import shlex
+import subprocess
+import tempfile
+from xdg.BaseDirectory import xdg_config_home
+import yaml
+
+LOG_FORMAT = "%(levelname)s %(message)s"
+log = logging.getLogger()
+
+
+def git_repo_root():
+    return Path(
+        subprocess.check_output(["git", "rev-parse", "--show-toplevel"],
+                                encoding="utf8").rstrip("\n"))
+
+
+class Config(object):
+    def __init__(self):
+        self.data = self.load_config_files()
+        self.data.update(self.generate_config())
+        self.validate()
+        log.debug("Configuration:\n%s" % self.data)
+
+    def load_config_file(self, config_file):
+        return yaml.safe_load(open(config_file, 'r'))
+
+    def config_files(self):
+        return [
+            git_repo_root() / "config/release_management/defaults.yml"
+        ] + list(
+            (Path(xdg_config_home) / "tails/release_management").glob("*.yml"))
+
+    def load_config_files(self):
+        data = {}
+        for config_file in self.config_files():
+            log.debug("Loading %s" % config_file)
+            data.update(self.load_config_file(config_file))
+        return data
+
+    def generate_config(self):
+        # FIXME: see [generate] tags in release process doc
+        return {"tag": self.data["version"].replace("~", "-")}
+
+    def validate(self):
+        # FIXME
+        pass
+
+    def to_shell(self):
+        return "\n".join([
+            "export %(key)s=%(val)s" % {
+                "key": k.upper(),
+                "val": shlex.quote(v)
+            } for (k, v) in self.data.items()
+        ])
+
+
+def generate_boilerplate(stage):
+    log.debug("Generating boilerplate for stage '%s'" % stage)
+    with open(git_repo_root()
+              / ("config/release_management/templates/%s.yml" % stage)) as src:
+        with open(
+                Path(xdg_config_home) / "tails/release_management/current.yml",
+                'a') as dst:
+            dst.write(src.read())
+
+
+def generate_environment(stage):
+    log.debug("Generating environment for stage '%s'" % stage)
+    config = Config()
+    f = tempfile.NamedTemporaryFile(delete=False)
+    with open(f.name, 'w') as fd:
+        fd.write(config.to_shell())
+    print(f.name)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Query and manage Release Management configuration")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    subparsers = parser.add_subparsers(help="sub-command help", dest="command")
+
+    parser_generate_boilerplate = subparsers.add_parser(
+        "generate-boilerplate",
+        help="Creates a configuration file template that you will fill")
+    parser_generate_boilerplate.add_argument("--stage",
+                                             type=str,
+                                             action="store",
+                                             default="base",
+                                             help="")
+    parser_generate_boilerplate.set_defaults(func=generate_boilerplate)
+
+    parser_generate_environment = subparsers.add_parser(
+        "generate-environment",
+        help="Creates a shell sourceable file with resulting environment")
+    parser_generate_environment.add_argument("--stage",
+                                             type=str,
+                                             action="store",
+                                             default="base",
+                                             help="")
+    parser_generate_environment.set_defaults(func=generate_environment)
+
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+    else:
+        logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
+    if args.command is None:
+        parser.print_help()
+    else:
+        args.func(args.stage)
+
+
+if __name__ == '__main__':
+    exit(main())
