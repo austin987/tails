@@ -106,19 +106,6 @@ you need to set a bunch of environment variables.
   of shared constants to encode the values that must be the same on
   both sides :)
 
-Export the following environment variables:
-
-### [generate]
-
-* `RELEASE_BRANCH=$(if [ "$MAJOR_RELEASE" = 1 ]; then echo -n testing; else echo -n stable; fi)`
-* export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
-* export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
-* `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}" | perl -nE 'say substr($_, -17)')`
-* `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
-* `export IUKS_DIR="${ISOS:?}/iuks/v2"`
-* `export IUKS_HASHES="${IUKS_DIR:?}/to_${VERSION}.sha256sum"`
-* `export MILESTONE=$(echo "${VERSION:?}" | sed -e 's,~.*,,')`
-
 Pre-freeze
 ==========
 

@@ -3,6 +3,7 @@
 import argparse
 import logging
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import sys
@@ -40,7 +41,20 @@ class Config():
 
     def generate_config(self):
         # FIXME: see [generate] tags in release process doc
-        return {"tag": self.data["version"].replace("~", "-")}
+        tag = self.data["version"].replace("~", "-")
+        release_branch = "testing" if self.data["major_release"] == 1 else "stable"
+        iuks_dir = Path(self.data["isos"]) / "iuks/v2"
+        iuk_hashes = Path(iuks_dir) / ("to_%s.sha256sum" % self.data["version"])
+        return {
+            "release_branch": release_branch,
+            "tag": tag,
+            "previous_tag": self.data["previous_version"].replace("~", "-"),
+            "website_release_branch": "web/release-%s" % tag,
+            "iuks_dir": str(iuks_dir),
+            "iuks_hashes": str(iuk_hashes),
+            "milestone": re.sub('~.*', '', self.data["version"]),
+            "tails_signature_key_long_id": self.data["tails_signature_key"][24:],
+        }
 
     def validate(self):
         # FIXME
