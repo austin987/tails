@@ -4,6 +4,7 @@ import logging
 from debian.changelog import Version
 from pathlib import Path
 from git import Repo
+from typing import List
 
 LOG_FORMAT = "%(levelname)s %(message)s"
 log = logging.getLogger()
@@ -11,7 +12,7 @@ log = logging.getLogger()
 UDFS_DIR = Path("wiki/src/upgrade/v2/Tails")
 
 
-def dirs_to_delete(before_version: str) -> list:
+def dirs_to_delete(before_version: str, tags: List[str]) -> list:
     to_delete = []
 
     for version_dir in [
@@ -55,10 +56,9 @@ if __name__ == '__main__':
 
     repo = Repo(Path.cwd())
     assert not repo.bare
-    tags = repo.tags
-    log.debug("Tags:\n%s" % tags)
+    log.debug("Tags:\n%s" % repo.tags)
 
-    to_delete = dirs_to_delete(args.before_version)
+    to_delete = dirs_to_delete(args.before_version, repo.tags)
     if to_delete:
         log.info("Deleting %s" % to_delete)
         repo.git.rm('-r', to_delete)
