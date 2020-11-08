@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 import shlex
 import subprocess
+import sys
 import tempfile
 from xdg.BaseDirectory import xdg_config_home
 import yaml
@@ -19,27 +20,22 @@ def git_repo_root():
                                 encoding="utf8").rstrip("\n"))
 
 
-class Config(object):
+class Config():
     def __init__(self):
-        self.data = self.load_config_files()
-        self.data.update(self.generate_config())
-        self.validate()
-        log.debug("Configuration:\n%s" % self.data)
-
-    def load_config_file(self, config_file):
-        return yaml.safe_load(open(config_file, 'r'))
-
-    def config_files(self):
-        return [
+        self.config_files = [
             git_repo_root() / "config/release_management/defaults.yml"
         ] + list(
             (Path(xdg_config_home) / "tails/release_management").glob("*.yml"))
+        self.data = self.load_config_files()
+        self.data.update(self.generate_config())
+        self.validate()
+        log.debug("Configuration:\n%s", self.data)
 
     def load_config_files(self):
         data = {}
-        for config_file in self.config_files():
-            log.debug("Loading %s" % config_file)
-            data.update(self.load_config_file(config_file))
+        for config_file in self.config_files:
+            log.debug("Loading %s", config_file)
+            data.update(yaml.safe_load(open(config_file, 'r')))
         return data
 
     def generate_config(self):
@@ -60,7 +56,7 @@ class Config(object):
 
 
 def generate_boilerplate(stage):
-    log.debug("Generating boilerplate for stage '%s'" % stage)
+    log.debug("Generating boilerplate for stage '%s'", stage)
     with open(git_repo_root()
               / ("config/release_management/templates/%s.yml" % stage)) as src:
         with open(
@@ -70,12 +66,12 @@ def generate_boilerplate(stage):
 
 
 def generate_environment(stage):
-    log.debug("Generating environment for stage '%s'" % stage)
+    log.debug("Generating environment for stage '%s'", stage)
     config = Config()
-    f = tempfile.NamedTemporaryFile(delete=False)
-    with open(f.name, 'w') as fd:
-        fd.write(config.to_shell())
-    print(f.name)
+    shell_snippet = tempfile.NamedTemporaryFile(delete=False)
+    with open(shell_snippet.name, 'w') as shell_snippet_fd:
+        shell_snippet_fd.write(config.to_shell())
+    print(shell_snippet.name)
 
 
 def main():
@@ -118,4 +114,4 @@ def main():
 
 
 if __name__ == '__main__':
-    exit(main())
+    sys.exit(main())
