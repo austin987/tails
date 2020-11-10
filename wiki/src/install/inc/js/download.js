@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   //specify url of json file containing valid checksums for ISO and USB images below:
-  //var URLofJsonFileContainingChecksums='https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json';  						//this URL will only work if download.html is served from  served from https://tails.boum.org/ because of same origin because of same-origin policy.
-  var URLofJsonFileContainingChecksums='https://cors-anywhere.herokuapp.com/https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json';  		//use this URL to get around same-origin policy (SOP) if you are staging this locally.  The https://cors-anywhere.herokuapp.com/ proxy includes the necessary CORS headers to relax SOP.
+  //var URLofJsonFileContainingChecksums="https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json";  						//this URL will only work if download.html is served from  served from https://tails.boum.org/ because of same origin because of same-origin policy.
+  var URLofJsonFileContainingChecksums="https://cors-anywhere.herokuapp.com/https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json";  		//use this URL to get around same-origin policy (SOP) if you are staging this locally.  The https://cors-anywhere.herokuapp.com/ proxy includes the necessary CORS headers to relax SOP.
 
   var sha256;
 
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function() {
       counter_url = "/install/download/counter";
       url = window.location.href.split("/");
       if (window.location.href.match(/\/upgrade\//)) {
-        scenario = 'upgrade';
+        scenario = "upgrade";
       } else {
         scenario = url[url.lastIndexOf("install") + 1];
       }
@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (result === "error-json") {
       show(document.getElementById("verification-error-json"));
-      document.getElementById("checksum-file").setAttribute('href', URLofJsonFileContainingChecksums);
+      document.getElementById("checksum-file").setAttribute("href", URLofJsonFileContainingChecksums);
     }
     else if (result === "error-image") {
       show(document.getElementById("verification-error-image"));
@@ -295,15 +295,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
   /* Internet Explorer */
 
-  if ( navigator.userAgent.indexOf('MSIE') > -1 || navigator.userAgent.indexOf('Trident') > -1 ) {
+  if ( navigator.userAgent.indexOf("MSIE") > -1 || navigator.userAgent.indexOf("Trident") > -1 ) {
     show(document.getElementById("ie"));
   } else {
     showVerifyButton();
   }
 
   // To debug the display of the different states:
-  // showVerifyingDownload('test.img');
-  // showVerificationProgress('50');
+  // showVerifyingDownload("test.img");
+  // showVerificationProgress("50");
   // showVerificationResult("successful");
   // showVerificationResult("failed");
   // showVerificationResult("failed-again");
