@@ -33,11 +33,11 @@ log = logging.getLogger()
 
 
 class GitLabWrapper(gitlab.Gitlab):
-    @functools.lru_cache
+    @functools.lru_cache(maxsize=None)
     def project(self, project_id):
         return self.projects.get(project_id)
 
-    @functools.lru_cache
+    @functools.lru_cache(maxsize=None)
     def project_from_name(self, project_name):
         project = [
             p for p in self.projects.list(all=True)
