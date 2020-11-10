@@ -156,7 +156,6 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
       var response=await fetch(URLofJsonFileContainingChecksums);
       var checksumjson=await response.text();
-      //console.log('IDF downloaded from ' + URLofJsonFileContainingChecksums + '.');
     } catch(err) {
       showVerificationResult("error-json");
       return;
@@ -166,7 +165,6 @@ document.addEventListener("DOMContentLoaded", function() {
       sha256=forge.md.sha256.create();
       await readFile(file);
       var fileactualchecksum = sha256.digest().toHex();
-      console.log('Checksum of the downloaded file: ' + fileactualchecksum);
     } catch(err) {
       showVerificationResult("error-image");
       return;
