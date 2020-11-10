@@ -129,6 +129,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function resetVerificationResult(result) {
+    showVerificationProgress(0);
     hide(document.getElementById("verifying-download"));
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
