@@ -14,6 +14,7 @@ use English qw{-no_match_vars};
 use Env;
 use File::Copy::Recursive qw{dircopy};
 use Function::Parameters;
+use IPC::Run;
 use Test::More;
 use Test::BDD::Cucumber::StepFile;
 
@@ -407,14 +408,16 @@ Given qr{^(a valid|an invalid) signature made(| in the future) by (a trusted|an 
             );
         }
 
-        system(
+        my ($stdout, $stderr);
+        IPC::Run::run [
             @precmd,
             qw{gpg --batch --quiet},
             qw{--armor --detach-sign},
             '--homedir', $gnupg_homedir,
             '--output',  $sig,
             $desc,
-        );
+        ], '>', \$stdout, '2>', \$stderr
+            or croak "gpg exited with $?:\n$stdout\n$stderr";
     }
     else {
         $sig->spew("invalid signature");
