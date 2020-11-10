@@ -150,6 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   async function verifyFile(e, elm) {
     file = elm.files[0]
+    showVerifyingDownload(file.name);
 
     try {
       var response=await fetch(URLofJsonFileContainingChecksums);
@@ -161,7 +162,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     try {
-      showVerifyingDownload(file.name);
       sha256=forge.md.sha256.create();
       await readFile(file);
       var fileactualchecksum = sha256.digest().toHex();
