@@ -109,6 +109,15 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser loads the startup page
     Then the Tor Browser has no plugins installed
 
+  Scenario: WebRTC is disabled in Tor Browser
+    Given I have started Tails from DVD and logged in and the network is connected
+    When I start the Tor Browser
+    And the Tor Browser loads the startup page
+    When I open the address "https://net.ipcalf.com/" in the Tor Browser
+    Then Tor Browser displays a 'ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1' heading on the "Network IP Address via ipcalf.com" page
+    When I open the address "https://mozilla.github.io/webrtc-landing/pc_test.html" in the Tor Browser
+    Then Tor Browser displays a "RTCPeerConnection is missing!" heading on the "Simple RTCPeerConnection Video Test" page
+
   #15336
   @fragile
   Scenario: The persistent Tor Browser directory is usable
