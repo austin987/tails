@@ -1,13 +1,22 @@
 #! /usr/bin/python3
 
 import functools
-import gitlab
+import sys
 import logging
 import os
-
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+
+try:
+    import gitlab  # type: ignore
+except ImportError:
+    sys.exit("You need to install python3-gitlab to use this program.")
+
+try:
+    from dateutil.relativedelta import relativedelta
+except ImportError:
+    sys.exit("You need to install python3-dateutil to use this program.")
 from pathlib import Path
+
 
 PYTHON_GITLAB_CONFIG_FILE = os.getenv('PYTHON_GITLAB_CONFIG_FILE',
                                       default=Path.home() /
