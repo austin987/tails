@@ -146,65 +146,7 @@ document.addEventListener("DOMContentLoaded", function() {
     show(document.getElementById(state));
   }
 
-  /* Initialize event handlers */
-
-  // Direct download
-  document.getElementById("download-img").onclick = function(e) { download(e, this); }
-  document.getElementById("download-img-retry").onclick = function(e) { download(e, this); }
-  document.getElementById("download-iso").onclick = function(e) { download(e, this); }
-  document.getElementById("download-iso-retry").onclick = function(e) { download(e, this); }
-
-  function download(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-image");
-      toggleJavaScriptBitTorrent("javascript");
-      resetVerificationResult();
-      showAnotherMirror();
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
-  }
-
-  // BitTorrent download
-  document.getElementById("download-img-torrent").onclick = function(e) { downloadTorrent(e, this); }
-  document.getElementById("download-iso-torrent").onclick = function(e) { downloadTorrent(e, this); }
-
-  function downloadTorrent(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-torrent");
-      toggleJavaScriptBitTorrent("bittorrent");
-      toggleContinueLink("next");
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
-  }
-
-  // Download again after failure
-  document.getElementById("download-img-again").onclick = function(e) { downloadAgain(e, this); }
-  document.getElementById("download-iso-again").onclick = function(e) { downloadAgain(e, this); }
-
-  function downloadAgain(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-image-again");
-      toggleJavaScriptBitTorrent("javascript");
-      resetVerificationResult();
-      showVerifyButton();
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
-  }
-
-  // Trigger verification when file is chosen
-  document.getElementById("verify-file").onchange = function(e) { verifyFile(e, this); }
+  /* Verification logic functions */
 
   async function verifyFile(e, elm) {
     file = elm.files[0]
@@ -274,6 +216,66 @@ document.addEventListener("DOMContentLoaded", function() {
       fr.readAsBinaryString(slice);
     });
   }
+
+  /* Initialize event handlers */
+
+  // Direct download
+  document.getElementById("download-img").onclick = function(e) { download(e, this); }
+  document.getElementById("download-img-retry").onclick = function(e) { download(e, this); }
+  document.getElementById("download-iso").onclick = function(e) { download(e, this); }
+  document.getElementById("download-iso-retry").onclick = function(e) { download(e, this); }
+
+  function download(e, elm) {
+    try {
+      e.preventDefault();
+      hitCounter("download-image");
+      toggleJavaScriptBitTorrent("javascript");
+      resetVerificationResult();
+      showAnotherMirror();
+    } finally {
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(elm.getAttribute("href"), "_blank");
+    }
+  }
+
+  // BitTorrent download
+  document.getElementById("download-img-torrent").onclick = function(e) { downloadTorrent(e, this); }
+  document.getElementById("download-iso-torrent").onclick = function(e) { downloadTorrent(e, this); }
+
+  function downloadTorrent(e, elm) {
+    try {
+      e.preventDefault();
+      hitCounter("download-torrent");
+      toggleJavaScriptBitTorrent("bittorrent");
+      toggleContinueLink("next");
+    } finally {
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(elm.getAttribute("href"), "_blank");
+    }
+  }
+
+  // Download again after failure
+  document.getElementById("download-img-again").onclick = function(e) { downloadAgain(e, this); }
+  document.getElementById("download-iso-again").onclick = function(e) { downloadAgain(e, this); }
+
+  function downloadAgain(e, elm) {
+    try {
+      e.preventDefault();
+      hitCounter("download-image-again");
+      toggleJavaScriptBitTorrent("javascript");
+      resetVerificationResult();
+      showVerifyButton();
+    } finally {
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(elm.getAttribute("href"), "_blank");
+    }
+  }
+
+  // Trigger verification when file is chosen
+  document.getElementById("verify-file").onchange = function(e) { verifyFile(e, this); }
 
   // Retry after error during verification
   document.getElementById("retry-json").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
