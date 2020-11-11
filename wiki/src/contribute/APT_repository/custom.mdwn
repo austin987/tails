@@ -34,8 +34,7 @@ Basically, a cronjob fetches the Tails Git repository every
 few minutes, detects new branches, and accordingly create new suites
 in the custom APT repository.
 
-We manage our APT repository with
-[reprepro](http://mirrorer.alioth.debian.org/).
+We manage our APT repository with [[!debpts reprepro]].
 See the corresponding
 [[documentation|contribute/working_together/roles/sysadmins#custom-apt-repository]]
 for details.
@@ -220,7 +219,11 @@ When a Git *main* branch (`devel`, `testing`, `stable`)
 is merged into another *main* branch, the corresponding
 operation must be done on the APT suites.
 
-0. Set some environment variables:
+[[!tails_gitweb bin/merge-main-branch]] does both: merging in Git and in our
+custom APT repository. It also leads you through some manual checks you
+must perform.
+
+1. Set some environment variables:
 
             WORKDIR=$(mktemp -d)
             # the branch you want to merge
@@ -228,78 +231,23 @@ operation must be done on the APT suites.
             # the branch you want to merge _into_
             DST=devel
 
-1. Save the list of packages currently present in the APT suite we
-   want to merge *into*:
+2. Merge the Git branch and APT suite:
 
-            ssh reprepro@incoming.deb.tails.boum.org \
-                 reprepro list "$DST" \
-                 > "$WORKDIR/$DST.orig.list"
-
-2. Make sure you are not going to overwrite newer packages with
-   older ones:
-
-            ssh reprepro@incoming.deb.tails.boum.org \
-                  tails-diff-suites "$SRC" "$DST"
-
-   … and look for packages that are newer in `$DST` than in `$SRC`.
-
-3. Merge the APT suites:
-
-   1. Merge in Git and APT:
-
-      <div class="note">
-      If you have to resolve a merge conflict in <code>debian/changelog</code>,
-      ensure only the latest <code>UNRELEASED</code> entry is present.
-      </div>
-
-            git checkout "$DST" && \
-            git merge "origin/$DST" && \
-            git merge "$SRC" && \
-            ssh reprepro@incoming.deb.tails.boum.org \
-                 tails-merge-suite "$SRC" "$DST"
-
-   2. Restore the `config/base_branch` if needed:
-
-            echo "${DST}" > config/base_branch && \
-            git commit config/base_branch -m "Restore ${DST}'s base branch." || :
-
-   4. Push:
-
-            git push origin "${DST}:${DST}"
-
-4. Make sure not to re-add, into the branch we merge into, any package
-   that was removed from it, but still is in the branch we merge from:
-   e.g. when merging `stable` into `devel`, it may be that
-   `devel` had some packages removed (e.g. due to previously
-   merging a topic branch into it, whose purpose is to *remove* custom
-   packages). To this end, compare the resulting list of (package,
-   version) in the `devel` APT suite with the one saved before
-   the merge, check Git
-   merges history if needed, apply common sense, and remove from
-   `devel` the packages that were removed from it a while ago,
-   and were just erroneously re-added by the merge operation.
+        ./bin/merge-main-branch "${SRC:?}" "${DST:?}"
 
 <a id="workflow-reset"></a>
 
 Resetting a suite to the state of another one
 ---------------------------------------------
 
-   a. First, set some environment variables:
+1. Set some environment variables:
 
-        # the suite to reset
-        OLD=testing
-        # the final state it should be in
-        NEW=devel
+   - `SUITE_TO_RESET`: the suite to reset
+   - `DESIRED_NEW_STATE`: the final state `$SUITE_TO_RESET` should be in
 
-   b. Then, empty the `OLD` suite:
+2. Reset the suite:
 
-      	ssh reprepro@incoming.deb.tails.boum.org \
-      	      reprepro removematched $OLD '\*'
-
-   c. Finally, merge `NEW` into `OLD`
-
-      	ssh reprepro@incoming.deb.tails.boum.org \
-      	      tails-merge-suite $NEW $OLD
+        ./bin/reset-custom-APT-suite "${SUITE_TO_RESET:?}" "${DESIRED_NEW_STATE:?}"
 
 <a id="workflow-merge-overlays"></a>
 
@@ -310,123 +258,7 @@ This operation merges all APT overlays listed in the given branch's
 `config/APT_overlays.d/` into its own APT suite, empties
 `config/APT_overlays.d/` accordingly, then commits and pushes to Git.
 
-1. Set some environment variables:
-
-        # The branch that should have its overlays merged
-        BRANCH=devel
-
-2. Merge the APT overlays in reprepro:
-
-        git checkout "$BRANCH" && \
-        for overlay in $(ls config/APT_overlays.d/) ; do
-           if ! ssh reprepro@incoming.deb.tails.boum.org \
-                   tails-merge-suite "$overlay" "$BRANCH" ; then
-              echo "Failed to merge '$overlay' into '$BRANCH': $?" >&2
-              break
-           fi
-        done
-
-3. Empty `config/APT_overlays.d/`:
-
-        git checkout "$BRANCH" && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
-
-4. Push the Git branch:
-
-        git push origin "${BRANCH}:${BRANCH}"
-
-<a id="workflow-post-tag"></a>
-
-Tagging a new Tails release
----------------------------
-
-Once the new release's Git tag is pushed, a cronjob creates
-a new APT suite on the custom APT repository's side within a few minutes.
-This new APT suite is called the same as the new release version.
-
-Wait for this new (empty) APT suite to be created and initialize it
-with the packages currently found in the APT suite corresponding to
-the branch that is used to prepare the release:
-
-	while ! ssh reprepro@incoming.deb.tails.boum.org reprepro list "${TAG:?}" >/dev/null 2>&1; do
-	   sleep 5
-	done && \
-	ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite "$RELEASE_BRANCH" "$TAG"
-
-<a id="workflow-post-release"></a>
-
-After a new Tails release is out
---------------------------------
-
-### If you just put out a final release
-
-If the release was a major one, then:
-
-1. [[Hard reset the `stable` APT suite to
-   the state of the `testing` one|APT_repository/custom#workflow-reset]].
-
-2. Empty `config/APT_overlays.d` in the `stable` branch:
-
-        git checkout stable && \
-		if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
-           git rm config/APT_overlays.d/* && \
-           git commit config/APT_overlays.d/ \
-              -m "Empty the list of APT overlays: they were merged"
-        fi
-
-In any case:
-
-* [[merge `stable` or `testing` into
-  `devel`|APT_repository/custom#workflow-merge-main-branch]]
-* increment the version number in `devel`'s `debian/changelog` to match
-  the next major release, so that
-  next builds from the `devel` branch do not use the APT suite meant
-  for the last release:
-
-        cd "${RELEASE_CHECKOUT}" && \
-        git checkout devel && \
-        dch --newversion "${NEXT_PLANNED_MAJOR_VERSION:?}" \
-           "Dummy entry for next release." && \
-        git commit debian/changelog \
-           -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
-
-* increment the version number in stable's `debian/changelog`, so that
-  next builds from the `stable` branch do not use the APT suite meant
-  for the last release:
-
-        cd "${RELEASE_CHECKOUT}" && \
-        git checkout stable && \
-        dch --newversion "${NEXT_STABLE_CHANGELOG_VERSION:?}" \
-           "Dummy entry for next release." && \
-        git commit debian/changelog \
-           -m "Add dummy changelog entry for ${NEXT_STABLE_CHANGELOG_VERSION:?}."
-
-### Else, if you just released a RC
-
-* increment the version number in `debian/changelog` on the branch
-  used for the release, to match the upcoming non-RC release, so that
-  the next builds from it do not use the APT suite meant for the RC:
-
-        cd "${RELEASE_CHECKOUT}" && \
-        git checkout "${RELEASE_BRANCH:?}" && \
-        dch --newversion "${NEXT_PLANNED_MAJOR_VERSION:?}" \
-           "Dummy entry for next release." && \
-        git commit debian/changelog \
-           -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
-
-* increment the version number in `devel`'s `debian/changelog` to
-  match the second next major release, so that images built from there
-  have the right version number:
-
-        cd "${RELEASE_CHECKOUT}" && \
-        git checkout devel && \
-        dch --newversion "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}" \
-           "Dummy entry for next release." && \
-        git commit debian/changelog \
-           -m "Add dummy changelog entry for ${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}."
+    ./bin/merge-APT-overlays "${BRANCH:?}"
 
 Giving access to a core developer
 ---------------------------------

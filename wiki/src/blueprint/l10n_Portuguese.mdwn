@@ -6,6 +6,34 @@ Esta página documenta os processos de tradução do Tails para o português.
 
 A tradução do Tails para português do Brasil é organizada em uma lista de e-mails. Para inscrever-se, acesse [[a página da lista|https://www.autistici.org/mailman/listinfo/tails-l10n-pt-br]].
 
+# Tradução online usando Weblate
+
+A plataforma de tradução do Tails pode ser acessada em:
+ <https://translate.tails.boum.org/>
+
+Algumas informações:
+
+- O nome e endereço de email que você usar para se cadastrar no site será usado para identificar a tradução e ficará registrado no repositório do Tails.
+- Ao criar uma conta, edite o seu perfil para:
+  - Configurar o idioma para o qual quer traduzir.
+  - Inscrever-se no projeto "Tails" para que apareça em sua página principal.
+- Existe uma lista de [[páginas principais|https://translate.tails.boum.org/#list-core]] que devem ser priorizadas para tradução.
+- É possível ver o [[estado atual das traduções para o português|https://translate.tails.boum.org/languages/pt/tails/]]
+- Qualquer pessoa pode se inscrever, sugerir traduções, e votar em traduções sugeridas.
+- Uma tradução é aceita quando consegue 2 votos.
+- Por enquanto, as traduções ainda não são copiadas automaticamente para o site principal do Tails, mas isso está cada vez mais perto de acontecer. :)
+
+## Notas
+
+O repositório remoto do Weblate pode ser adicionado assim:
+
+    git remote add weblate https://translate.tails.boum.org/git/tails/index/
+
+Para puxar as modificações realizadas via Weblate, faça o seguinte:
+
+    git fetch weblate
+    find . -name '*.pt.po' -exec git checkout weblate/master --  '{}' \; && git reset
+
 # Tradução usando Git e Poedit
 
 ## Preparação
@@ -102,35 +130,3 @@ Antes de enviar, tenha certeza do seguinte:
 - As modificações têm como base o commit mais novo do repositório principal e não produzem conflitos.
 - A mensagem enviada para a lista principal está assinada com OpenPGP.
 - A mensagem enviada para a lista possui "`[pull]`" no começo do assunto, para indicar que as modificações já foram revisadas e que se trata de um pedido de inclusão no repositório principal.
-
-# Tradução online usando Weblate (experimental!)
-
-Estamos testando uma plataforma de tradução do website do Tails usando [[Weblate|https://weblate.org/pt-br/]], uma ferramenta online de tradução.
-
-A plataforma de tradução pode ser acessada em:
- <https://translate.tails.boum.org/>
-
-**Atenção: Esta plataforma é experimental e traduções feitas através do Weblate por enquanto não têm garantia de serem incluídas no site principal.**
-
-Algumas informações:
-
-- O nome e endereço de email que você usar para se cadastrar no site será usado para identificar a tradução e ficará registrado no repositório do Tails.
-- Ao criar uma conta, edite o seu perfil para:
-  - Configurar o idioma para o qual quer traduzir.
-  - Inscrever-se no projeto "Tails" para que apareça em sua página principal.
-- Existe uma lista de [[páginas principais|https://translate.tails.boum.org/#list-core]] que devem ser priorizadas para tradução.
-- É possível ver o [[estado atual das traduções para o português|https://translate.tails.boum.org/languages/pt/tails/]]
-- Qualquer pessoa pode se inscrever, sugerir traduções, e votar em traduções sugeridas.
-- Uma tradução é aceita quando consegue 2 votos.
-- Por enquanto, as traduções ainda não são copiadas automaticamente para o site principal do Tails, mas isso está cada vez mais perto de acontecer. :)
-
-## Notas
-
-O repositório remoto do Weblate pode ser adicionado assim:
-
-    git remote add weblate https://translate.tails.boum.org/git/tails/index/
-
-Para puxar as modificações realizadas via Weblate, faça o seguinte:
-
-    git fetch weblate
-    find . -name '*.pt.po' -exec git checkout weblate/master --  '{}' \; && git reset

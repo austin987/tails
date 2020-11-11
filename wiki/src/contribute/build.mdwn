@@ -139,28 +139,24 @@ You can customize the build system using two environment variables:
 
    For example, you can speed up the build by setting:
 
-        export TAILS_BUILD_OPTIONS="ram fastcomp"
+        export TAILS_BUILD_OPTIONS="ram"
 
-   This will force the build to happen in RAM and SquashFS compression
-   will be done using faster, though less efficient size-wise, settings.
+   This will force the build to happen in RAM.
 
 ## SquashFS compression settings
 
 One of the most expensive operations when building Tails is the creation
-of the final SquashFS. It also depends on the compression algorithm used.
-When working on the `stable` or `testing` branch, the image will be made
-using the slow but efficient default. Any other setup will switch to the
-faster *fastcomp*.
+of the final SquashFS. It depends on the compression algorithm used:
 
-Forcing a specific behaviour can be done using:
-
- * **fastcomp**: always use fast compression settings to create the SquashFS.
- * **defaultcomp**: always use the default compression settings.
+ * When building from a tag, the SquashFS is compressed using slow but efficient
+   size-wise compression settings (*defaultcomp*).
+ * Otherwise, the SquashFS is compressed using the faster *fastcomp* settings,
+   unless you specify the **defaultcomp** build option.
 
 ## Memory build settings
 
 Tails builds way faster when everything is done in memory. If your computer
-runs Linux and happens to have enough free memory before you
+has enough free memory before you
 start the virtual machine, it will automatically switch to 'build in RAM'
 mode.
 
@@ -292,7 +288,7 @@ More information
 To know all available Rake tasks, please run `rake -T`.
 
 More documentation about the build process can be found in the [Debian
-Live Manual](http://live.debian.net/manual/oldstable/html/live-manual.en.html).
+Live Manual](https://web.archive.org/web/20151110124406/http://live.debian.net/manual/oldstable/html/live-manual.en.html).
 
 Details about how this Vagrant build system is setup, see its
 [[design page|build/vagrant-setup]].
