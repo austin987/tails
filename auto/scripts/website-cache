@@ -11,6 +11,7 @@ import sys
 
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import List
 
 LOG_FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
 log = logging.getLogger()
@@ -102,7 +103,7 @@ def main():
 
     for key_file in KEY_FILES + [args.cache_base_dir]:
         if not Path(key_file).exists():
-            log.error("%s does not exist" % (key_file))
+            log.error("%s does not exist", key_file)
             sys.exit(1)
 
     if args.command is None:
@@ -115,16 +116,16 @@ def gc(args):
     log.info("Garbage collecting expired data from the cache…")
     cache_dirs = [d for d in Path(args.cache_base_dir).iterdir() if d.is_dir()]
     delete_before = datetime.utcnow() - timedelta(days=args.max_days)
-    log.debug("Will delete data created before %s" % (delete_before))
+    log.debug("Will delete data created before %s", delete_before)
     for cache_dir in cache_dirs:
         mtime = datetime.utcfromtimestamp(cache_dir.stat().st_mtime)
         if mtime < delete_before:
-            log.info(" - Deleting cache for %s with mtime %s"
-                     % (cache_dir.name, mtime))
+            log.info(" - Deleting cache for %s with mtime %s",
+                     cache_dir.name, mtime)
             shutil.rmtree(cache_dir)
         else:
-            log.debug(" - Cache for %s has mtime %s ⇒ keeping"
-                      % (cache_dir.name, mtime))
+            log.debug(" - Cache for %s has mtime %s ⇒ keeping",
+                      cache_dir.name, mtime)
 
 
 def get(args):
@@ -143,7 +144,7 @@ def get(args):
             raise FileNotFoundError("Found no cached %s for key %s"
                                     % (file_to_get, args.cache_key))
 
-        log.debug("Copying %s from the cache" % (file_to_get))
+        log.debug("Copying %s from the cache", file_to_get)
         if cached_file.is_dir():
             shutil.copytree(src=cached_file, dst=dest_file, symlinks=True)
         else:
@@ -161,7 +162,7 @@ def put(args):
             raise FileNotFoundError("Cannot store non-existing %s in the cache"
                                     % file_to_cache)
 
-        log.debug("Caching %s with key %s" % (file_to_cache, args.cache_key))
+        log.debug("Caching %s with key %s", file_to_cache, args.cache_key)
         cached_file.parent.mkdir(parents=True)
         if file_to_cache.is_dir():
             shutil.copytree(src=file_to_cache, dst=cached_file, symlinks=True)
@@ -173,7 +174,7 @@ def put(args):
 def forget(args):
     cache_dir = Path(args.cache_base_dir, args.cache_key)
     if cache_dir.exists():
-        log.info("Deleting cached data for key %s" % args.cache_key)
+        log.info("Deleting cached data for key %s", args.cache_key)
         shutil.rmtree(cache_dir)
     else:
         log.info("No cached data to forget for key %s", args.cache_key)
@@ -186,18 +187,19 @@ def package_version(package: str) -> str:
         check=True).stdout.rstrip()
 
 
-def compute_cache_key(key_files: [str], key_packages: [str]) -> str:
+def compute_cache_key(key_files: List[str], key_packages: List[str]) -> str:
     input_data = {
         'git_commit': subprocess.run(
             ["git", "log", "-1", "--pretty=%H", "--", *key_files],
             stdout=subprocess.PIPE, universal_newlines=True,
             check=True).stdout.rstrip(),
         'packages': dict(
-            (package, package_version(package)) for package in sorted(key_packages)
+            (package, package_version(package))
+            for package in sorted(key_packages)
         ),
     }
     serialized = json.dumps(input_data, sort_keys=True)
-    log.debug("Serialized data: " + serialized)
+    log.debug("Serialized data: %s", serialized)
     return hashlib.sha1(bytes(serialized, encoding='utf-8')).hexdigest()
 
 
