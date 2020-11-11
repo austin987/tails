@@ -114,7 +114,8 @@ def main():
 
 def gc(args):
     log.info("Garbage collecting expired data from the cache…")
-    cache_dirs = [d for d in Path(args.cache_base_dir).iterdir() if d.is_dir()]
+    cache_dirs = [d for d in Path(args.cache_base_dir).iterdir()
+                  if d.is_dir() and d.name != "lost+found"]
     delete_before = datetime.utcnow() - timedelta(days=args.max_days)
     log.debug("Will delete data created before %s", delete_before)
     for cache_dir in cache_dirs:
