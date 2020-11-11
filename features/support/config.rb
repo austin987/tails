@@ -84,6 +84,7 @@ SERVICES_EXPECTED_ON_ALL_IFACES =
   ].freeze
 # OpenDNS
 SOME_DNS_SERVER = '208.67.222.222'.freeze
+RTL_LANGUAGES = ['Arabic', 'Persian'].freeze
 VM_XML_PATH = "#{Dir.pwd}/features/domains".freeze
 
 TAILS_SIGNING_KEY = cmd_helper(

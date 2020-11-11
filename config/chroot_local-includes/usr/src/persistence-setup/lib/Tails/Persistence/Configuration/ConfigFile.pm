@@ -101,7 +101,10 @@ method backup () {
     systemx('sync', $self->backup_config_file_path->parent->stringify);
     # Ensure changes made elsewhere are written synchronously on the disk
     # (in case something else ever needs to modify this file)
-    systemx('chattr', '+S', $self->backup_config_file_path->stringify);
+    systemx('chattr', '+S', $self->backup_config_file_path->stringify)
+        # chattr is not supported on overlayfs (GitLab CI in Docker,
+        # running the test suite from inside Tails)
+        unless $ENV{AUTOMATED_TESTING};
 }
 
 =head2 save
@@ -120,7 +123,10 @@ method save () {
     systemx('sync', $self->config_file_path->parent->stringify);
     # Ensure changes made by other code (e.g. live-persist) are written
     # synchronously on the disk
-    systemx('chattr', '+S', $self->config_file_path->stringify);
+    systemx('chattr', '+S', $self->config_file_path->stringify)
+        # chattr is not supported on overlayfs (GitLab CI in Docker,
+        # running the test suite from inside Tails)
+        unless $ENV{AUTOMATED_TESTING};
     # When persistence.conf was initially empty (for example, when
     # we're initializing a new persistent volume), let's backup the
     # (probably non-empty) version of it that we've just saved.

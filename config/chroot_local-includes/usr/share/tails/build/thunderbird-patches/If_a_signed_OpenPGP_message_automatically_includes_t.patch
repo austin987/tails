@@ -1,0 +1,69 @@
+
+# HG changeset patch
+# User Kai Engert <kaie@kuix.de>
+# Date 1604310708 -3600
+# Node ID 144bc9147e436c931076abbf75be729f172f77d5
+# Parent  d69c10af148210414d7849cb543c0ad5aa5d754e
+Bug 1654950 - If a signed OpenPGP message automatically includes the public key should be configurable. r=PatrickBrunschwig a=wsmwk
+
+diff --git a/comm/mail/components/compose/content/MsgComposeCommands.js b/comm/mail/components/compose/content/MsgComposeCommands.js
+--- a/comm/mail/components/compose/content/MsgComposeCommands.js
++++ b/comm/mail/components/compose/content/MsgComposeCommands.js
+@@ -1681,17 +1681,17 @@ function isPgpConfigured() {
+ }
+ 
+ function toggleGlobalSignMessage() {
+   gSendSigned = !gSendSigned;
+   gUserTouchedSendSigned = true;
+ 
+   if (!gUserTouchedAttachMyPubKey) {
+     if (gSendSigned) {
+-      gAttachMyPublicPGPKey = true;
++      gAttachMyPublicPGPKey = gCurrentIdentity.getBoolAttribute("attachPgpKey");
+     } else {
+       gAttachMyPublicPGPKey = gAttachMyPublicPGPKeyInitial;
+     }
+   }
+ 
+   setEncSigStatusUI();
+ }
+ 
+@@ -1729,17 +1729,17 @@ function setGlobalEncryptMessage(mode) {
+       gSendSigned = true;
+     } else {
+       gSendSigned = gSendSignedInitial;
+     }
+   }
+ 
+   if (!gUserTouchedAttachMyPubKey) {
+     if (gSendSigned) {
+-      gAttachMyPublicPGPKey = true;
++      gAttachMyPublicPGPKey = gCurrentIdentity.getBoolAttribute("attachPgpKey");
+     } else {
+       gAttachMyPublicPGPKey = gAttachMyPublicPGPKeyInitial;
+     }
+   }
+ 
+   setEncSigStatusUI();
+ }
+ 
+@@ -3802,17 +3802,17 @@ function adjustSignEncryptAfterIdentityC
+     }
+ 
+     gSendEncryptedInitial = gSendEncrypted;
+     gSendSignedInitial = gSendSigned;
+     gAttachMyPublicPGPKeyInitial = gAttachMyPublicPGPKey;
+ 
+     // automatic changes after this line
+     if (gSendSigned && gSelectedTechnologyIsPGP) {
+-      gAttachMyPublicPGPKey = true;
++      gAttachMyPublicPGPKey = gCurrentIdentity.getBoolAttribute("attachPgpKey");
+     }
+   } else {
+     // When switching the Sender identity, use the more secure setting
+     // for encryption and signing, respectively.
+ 
+     // For encryption, the more secure setting is "enabled".
+ 
+     // If the user has had encryption enabled for a message initially,
+
