@@ -355,3 +355,8 @@ pref("permissions.default.image", 3);
 // they compose, so they are just a "Send" away from leaking the
 // plaintext if they forget.
 pref("mail.identity.default.encryptionpolicy", 2);
+
+// Don't automatically attach public key when sending signed
+// email. Attaching the key bloats the email (especially keys that
+// have many signatures) but also leaks who sent email when using Schleuder.
+pref("mail.identity.default.attachPgpKey", false);
