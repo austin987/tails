@@ -12,10 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  //specify url of json file containing valid checksums for ISO and USB images below:
-  //var URLofJsonFileContainingChecksums="https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json";  						//this URL will only work if download.html is served from  served from https://tails.boum.org/ because of same origin because of same-origin policy.
-  var URLofJsonFileContainingChecksums="https://cors-anywhere.herokuapp.com/https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json";  		//use this URL to get around same-origin policy (SOP) if you are staging this locally.  The https://cors-anywhere.herokuapp.com/ proxy includes the necessary CORS headers to relax SOP.
-
+  var URLofJsonFileContainingChecksums="https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json";
   var sha256;
 
   /* Generic functions */
