@@ -48,7 +48,7 @@ class PersistenceSettings(object):
             ]
         return len(self.containers)
 
-    def unlock(self, passphrase, readonly=False):
+    def unlock(self, passphrase):
         """Ask the backend to activate persistence and handle errors
 
         Returns: True if everything went fine, False if the user should try
@@ -58,8 +58,7 @@ class PersistenceSettings(object):
             try:
                 self.activate_container(
                     device=container['path'],
-                    password=passphrase,
-                    readonly=readonly)
+                    password=passphrase)
                 self.is_unlocked = True
                 return True
             except tailsgreeter.errors.WrongPassphraseError:
@@ -97,17 +96,15 @@ class PersistenceSettings(object):
         logging.debug("found containers: %s", containers)
         return containers
 
-    def activate_container(self, device, password, readonly):
+    def activate_container(self, device, password):
         cleartext_device = self.unlock_device(device, password)
         logging.debug("unlocked cleartext_device: %s", cleartext_device)
-        self.setup_persistence(cleartext_device, readonly)
+        self.setup_persistence(cleartext_device)
         # This file must be world-readable so that software running
         # as LIVE_USERNAME or tails-persistence-setup can read it.
         with open(tailsgreeter.config.persistence_state_file, 'w') as f:
             os.chmod(tailsgreeter.config.persistence_state_file, 0o644)
             f.write('TAILS_PERSISTENCE_ENABLED=true\n')
-            if readonly:
-                f.write('TAILS_PERSISTENCE_READONLY=true\n')
 
     def unlock_device(self, device, password):
         """Unlock the LUKS persistent device"""
@@ -145,12 +142,8 @@ class PersistenceSettings(object):
                 )
 
     @staticmethod
-    def setup_persistence(cleartext_device, readonly):
+    def setup_persistence(cleartext_device):
         args = ["/usr/bin/sudo", "-n", "/usr/local/sbin/live-persist"]
-        if readonly:
-            args.append('--read-only')
-        else:
-            args.append('--read-write')
         args.append('--log-file=/var/log/live-persist')
         args.append('activate')
         args.append(cleartext_device)

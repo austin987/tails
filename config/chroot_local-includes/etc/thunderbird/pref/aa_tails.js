@@ -62,12 +62,6 @@ pref("mail.sanitize_date_header", true);
 // Make all system-wide dictionaries available
 pref("spellchecker.dictionary_path", "/usr/share/hunspell");
 
-// When set to true, Thunderbird will fallback to gnupg for secret key
-// operations when Thunderbird's keyring is not enough (e.g. it
-// completely lacks the secret key). This is primarily useful for
-// users of smartcards, which Thunderbird doesn't support at all.
-pref("mail.openpgp.allow_external_gnupg", true);
-
 /*
   Network settings adopted from TorBirdy
 */
@@ -355,3 +349,9 @@ pref("layout.css.visited_links_enabled", false);
 
 // Disable third-party images.
 pref("permissions.default.image", 3);
+
+// Change default encryption policy to "Require encryption by
+// default". Otherwise users must opt-in to encryption for each mail
+// they compose, so they are just a "Send" away from leaking the
+// plaintext if they forget.
+pref("mail.identity.default.encryptionpolicy", 2);
