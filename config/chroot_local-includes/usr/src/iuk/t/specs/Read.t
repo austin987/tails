@@ -9,6 +9,10 @@ use lib qw{lib t/lib};
 use 5.10.1;
 use strictures 2;
 
+BEGIN {
+    plan skip_all => 'detected GitLab CI' if defined $ENV{GITLAB_CI};
+}
+
 use Function::Parameters;
 use IPC::System::Simple qw{systemx};
 use Path::Tiny;

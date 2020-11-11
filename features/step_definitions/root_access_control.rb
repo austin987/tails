@@ -15,6 +15,23 @@ Then /^I cannot run a command as root with sudo and the standard passwords$/ do
   end
 end
 
+Then /^I cannot login as root using su with the standard passwords$/ do
+  ['', 'live', 'amnesia'].each do |password|
+    # We use /bin/su because Tails' bash has its own su() function,
+    # which merely prints instructions.
+    step 'I run "/bin/su" in GNOME Terminal'
+    terminal = Dogtail::Application.new('gnome-terminal-server')
+                                   .child('Terminal', roleName: 'terminal')
+    terminal.text['Password:']
+    @screen.type(password, ['Return'])
+    try_for(10, msg: 'su did not return an authentication failure') do
+      terminal.text['su: Authentication failure']
+    end
+    # Ensure the previous authentication failure does not taint the next tests
+    $vm.execute('pkill -u amnesia gnome-terminal')
+  end
+end
+
 When /^running a command as root with pkexec requires PolicyKit administrator privileges$/ do
   action = 'org.freedesktop.policykit.exec'
   action_details = $vm.execute("pkaction --verbose --action-id #{action}")
@@ -42,4 +59,6 @@ Then /^I cannot run a command as root with pkexec and the standard passwords$/ d
   end
   @screen.press('Escape')
   @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
+  # Ensure we don't taint the next tests
+  $vm.execute('pkill -u amnesia gnome-terminal')
 end

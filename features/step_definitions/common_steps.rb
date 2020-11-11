@@ -335,25 +335,32 @@ Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_a
   step 'I configure APT to use non-onion sources' unless keep_apt_sources
 end
 
-Given /^I set the language to (|German)$/ do |lang|
-  case lang
-  when 'German'
-    $language = 'German'
-    @screen.wait('TailsGreeterLanguage.png', 10).click
-    @screen.wait('TailsGreeterLanguagePopover.png', 10)
-    @screen.type($language)
-    sleep(2) # Gtk needs some time to filter the results
-    @screen.press('Return')
-  when ''
-    next
-  else
-    raise "Unsupported language: #{lang}"
-  end
+Given /^I set the language to (.*)$/ do |lang|
+  $language = lang
+  @screen.wait('TailsGreeterLanguage.png', 10).click
+  @screen.wait('TailsGreeterLanguagePopover.png', 10)
+  @screen.type($language)
+  sleep(2) # Gtk needs some time to filter the results
+  @screen.press('Return')
 end
 
-Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
-  step "I set the language to #{lang}"
-  @screen.wait("TailsGreeterLoginButton#{$language}.png", 10).click
+Given /^I log in to a new session(?: in (.*))?$/ do |lang|
+  # We'll record the location of the login button before changing
+  # language so we only need one (English) image for the button while
+  # still being able to click it in any language.
+  if RTL_LANGUAGES.include?(lang)
+    # If we select a RTL language below, the login and shutdown
+    # buttons will swap place.
+    login_button_region = @screen.find('TailsGreeterShutdownButton.png')
+  else
+    login_button_region = @screen.find('TailsGreeterLoginButton.png')
+  end
+  step "I set the language to #{lang}" if lang && lang != 'English'
+  # After selecting options (language, administration password, etc.),
+  # the Greeter needs some time to focus the main window back, so that
+  # typing the accelerator for the "Start Tails" button is honored.
+  sleep(1)
+  login_button_region.click
   step 'the Tails desktop is ready'
 end
 
@@ -463,7 +470,7 @@ Given /^available upgrades have been checked$/ do
 end
 
 When /^I start the Tor Browser( in offline mode)?$/ do |offline|
-  step 'I start "Tor Browser" via GNOME Activities Overview'
+  step 'I start "TorBrowserOverviewIcon.png" via GNOME Activities Overview'
   if offline
     start_button = Dogtail::Application
                    .new('zenity')
@@ -775,18 +782,27 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
     # keyword only found in the former's .desktop file.
     app_name = 'commandline'
   end
-  @screen.wait('GnomeApplicationsMenu.png', 10)
+  @screen.wait("GnomeApplicationsMenu#{$language}.png", 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
-  @screen.wait('GnomeActivitiesOverview.png', 10)
-  # Trigger startup of search providers
-  @screen.type(app_name[0])
-  # Give search providers some time to start (#13469#note-5) otherwise
-  # our search sometimes returns no results at all.
-  sleep 2
-  # Type the rest of the search query
-  @screen.type(app_name[1..-1])
-  sleep 2
-  @screen.press('ctrl', 'Return')
+  # Only use this way of passing the app_name argument where it's
+  # really needed, e.g. to avoid having to encode lots of keymaps
+  # to be able to type the name correctly:
+  if app_name.match(/[.]png$/)
+    # This should be ctrl + click, to ensure we open a new window.
+    # Let's implement this once once of the callers needs this.
+    @screen.wait(app_name, 10).click
+  else
+    @screen.wait('GnomeActivitiesOverview.png', 10)
+    # Trigger startup of search providers
+    @screen.type(app_name[0])
+    # Give search providers some time to start (#13469#note-5) otherwise
+    # our search sometimes returns no results at all.
+    sleep 2
+    # Type the rest of the search query
+    @screen.type(app_name[1..-1])
+    sleep 2
+    @screen.press('ctrl', 'Return')
+  end
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -1215,4 +1231,42 @@ end
 Given /^I magically allow the Unsafe Browser to be started$/ do
   $vm.file_overwrite('/var/lib/live/config/tails.unsafe-browser',
                      'TAILS_UNSAFE_BROWSER_ENABLED=true')
+end
+
+def git_on_a_tag
+  system('git describe --tags --exact-match HEAD >/dev/null 2>&1')
+end
+
+def git_current_tag
+  `git describe --tags --exact-match HEAD`.chomp
+end
+
+Then /^the keyboard layout is set to "([^"]+)"$/ do |keyboard_layout|
+  input_sources = $vm.execute_successfully(
+    'gsettings get org.gnome.desktop.input-sources sources',
+    user: LIVE_USER
+  ).stdout
+  input_countrycode = input_sources.scan(/\('([^']*)', '([^']*)'\)/).first.last
+  assert_equal(keyboard_layout, input_countrycode)
+
+  mru_sources = $vm.execute_successfully(
+    'gsettings get org.gnome.desktop.input-sources mru-sources',
+    user: LIVE_USER
+  ).stdout.chomp
+  if mru_sources != '@a(ss) []'
+    mru_countrycode = mru_sources.scan(/\('([^']*)', '([^']*)'\)/).first.last
+    assert_equal(keyboard_layout, mru_countrycode)
+  end
+end
+
+When /^I enable the screen keyboard$/ do
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.a11y.applications ' \
+    'screen-keyboard-enabled true',
+    user: LIVE_USER
+  )
+end
+
+Then(/^the layout of the screen keyboard is set to "([^"]+)"$/) do |layout|
+  @screen.find("ScreenKeyboardLayout#{layout.upcase}.png")
 end
