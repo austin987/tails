@@ -358,5 +358,5 @@ pref("mail.identity.default.encryptionpolicy", 2);
 
 // Don't automatically attach public key when sending signed
 // email. Attaching the key bloats the email (especially keys that
-// have many signatures) but also leaks who sent email when using Schleuder.
+// have many signatures) but also leaks who sent email when using Schleuder's remailing functionality.
 pref("mail.identity.default.attachPgpKey", false);
