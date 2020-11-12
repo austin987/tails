@@ -2,150 +2,134 @@
 
 [[!toc levels=2]]
 
-First of all you may want to look at [the official HOWTO and
-FAQ](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq)
-to get a general understanding of what has changed. Please note that
-Tails does not include any version of <span
-class="application">Enigmail</span> so its migration mechanism is not
-available to Tails users.
+Since Tails 4.13 (November 2020), *Thunderbird* 78 replaces the
+*Enigmail* extension with built-in support for OpenPGP encryption.
 
-Instead we provide these step-by-step instructions of how to migrate
-your <span class="application">Enigmail</span> configuration from
-Tails 4.11 (or earlier) to <span class="application">Thunderbird's</span>
-built-in OpenPGP implementation.
+If you used *Enigmail* before Tails 4.13, follow the instructions below to
+migrate from *Enigmail* to *Thunderbird* 78. Tails does not include *Enigmail*
+2.2, the last version of the extension, which automates this migration.
+
+See also the official [OpenPGP in Thunderbird - HOWTO and
+FAQ](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq).
 
 <h1 id="private">Migrate your private key</h1>
 
 <h2 id="export-private">Export your private key using the <em>Passwords and Keys</em> utility</h2>
 
-1. Start
-   <span class="menuchoice">
-     <span class="guimenu">Applications</span>&nbsp;▸
-     <span class="guisubmenu">Utilities</span>&nbsp;▸
-     <span class="guimenuitem">Passwords and Keys</span></span>.
+From the desktop:
 
-1. In the list to the left, click <span class="guilabel">GnuPG keys</span>.
+1. Choose **Applications&nbsp;▸ Utilities&nbsp;▸ Passwords and Keys**.
 
-1. Double-click the key you wish to use.
+1. In the left pane, choose **GnuPG keys**.
 
-1. In the properties window, click the <span
-   class="guilabel">Details</span> tab and click <span
-   class="button">Export</span>.
+1. In the right pane, double-click on the private key that you want to
+   export and use in *Thunderbird*.
 
-1. Select a convenient place somewhere in your Home directory to
-   export the key to.
+1. In the **Details** tab of properties dialog, click **Export**.
+
+1. Save your private key in your *Home* directory.
+
+1. Close the *Passwords and Keys* utility.
 
 <h2 id="import-private">Import your private key in <em>Thunderbird</em></h2>
 
-1. Start <span class="application">Thunderbird</span> if it is not
-   already started.
+In *Thunderbird*:
 
-1. We recommend that you [[set up a Master
-   Password|openpgp_migration#master_password]] in order to protect
-   your private keys better.
+1. Choose **[[!img lib/open-menu.png alt="Menu" class="symbolic"
+   link="no"]]&nbsp;▸ Account Settings**.
 
-1. Enter
-   <span class="menuchoice">
-     <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
-     <span class="guimenuitem">Account Settings</span></span>.
+1. In the left pane, identify the account
+   that corresponds to the private key that you want to import and
+   choose **End-to-End Encryption**.
 
-1. Under the account you wish to migrate, select <span
-   class="guilabel">End-To-End Encryption</span> to open the account's
-   OpenPGP settings.
+1. In the right pane, click the **Add Key…** button.
 
-1. Click <span class="button">Add Key…</span>, select <span
-   class="guilabel">Import an existing OpenPGP Key</span> and click
-   <span class="button">Continue</span>.
+1. In the **Add a Personal OpenPGP Key** dialog, choose **Import an
+   existing OpenPGP Key** and click **Continue**.
 
-1. Click <span class="button">Select File to Import…</span> and open
-   the key file you exported in the first step.
+1. Click the **Select File to Import…** button and choose
+   the private key that your exported from the *Passwords and Keys* utility.
 
-1. Make sure your key is listed and that the <span
-   class="guilabel">Treat this key as a Personal Key</span> checkbox
-   is checked, and follow the on-screen instructions until you are
-   back at the <span class="guilabel">End-To-End Encryption</span>
-   settings.
+1. In the next dialog, make sure that your private key is listed and
+   that the option **Treat this key as a Personal Key** is selected.
 
-1. It should display "OpenPGP Keys imported successfully", and below
-   you should see your key listed. By default "None" is selected,
-   which means OpenPGP is disabled, but if you click your key to
-   select it, your account is ready for OpenPGP!
+1. Click **Continue**, enter the passphrase for your private key (if
+   any), and click **Continue** again.
 
-<h1 id="configure">Configure <em>Thunderbird</em> and set up a Master Password</h1>
+   Your private key should now be listed in the **End-to-End
+   Encryption** settings of your account.
 
-1. While you are still at the <span class="guilabel">End-To-End
-   Encryption</span> settings you may want look a bit down to
-   configure the <span class="guilabel">Default settings for sending
-   messages</span> so it suites your preferences, and helps [[avoid
-   mistakes|thunderbird#plaintext_mistake]].
+1. Select your private key to enable OpenPGP encryption for this
+   account.
 
-1. Enter the preferences through
-   <span class="menuchoice">
-     <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
-     <span class="guimenuitem">Preferences</span></span>.
+<h2 id="master-password">Set up a Master Password</h2>
 
-1. Select <span class="guilabel">Privacy & Security</span> and scroll
-   to the <span class="guilabel">Passwords</span> section.
+In *Thunderbird* 78, OpenPGP private keys are not protected by a passphrase.
+That's why we recommend that you set up a Master Password.
 
-1. Check the <span class="guilabel">Use a master password</span>
-   checkbox and follow the on-screen instructions.
+With a Master Password, your private key is encrypted in your
+*Thunderbird* profile and only unlocked while *Thunderbird* is running.
+If your *Thunderbird* profile is stored in your Persistent Storage, then
+your private key is encrypted twice: once by *Thunderbird* in your
+profile and a second time by the encryption of the Persistent Storage.
+
+1. Choose **[[!img lib/open-menu.png alt="Menu" class="symbolic"
+   link="no"]]&nbsp;▸ Preferences**.
+
+1. Choose **Privacy & Security**.
+
+1. In the **Passwords** section, select the option **Use a master
+   password**.
+
+1. In the **Change Master Password** dialog, enter your Master Password
+   and click **Ok**.
 
 <h1 id="public">Migrate the public keys of your contacts</h1>
 
-Once you are done with importing your own private key you may want to
-import any public keys you expect to send encrypted email to (or
-verify signature from).
-
 <h2 id="export-public">Export the public keys using the <em>Password and Keys</em> utility</h2>
 
-1. Start
-   <span class="menuchoice">
-     <span class="guimenu">Applications</span>&nbsp;▸
-     <span class="guisubmenu">Utilities</span>&nbsp;▸
-     <span class="guimenuitem">Passwords and Keys</span></span>.
+From the desktop:
 
-1. In the list to the left, click <span class="guilabel">GnuPG keys</span>.
+1. Choose **Applications&nbsp;▸ Utilities&nbsp;▸ Passwords and Keys**.
 
-1. Click the key you wish to export and then click
-   <span class="menuchoice">
-     <span class="guimenu">File</span>&nbsp;▸
-     <span class="guimenuitem">Export…</span></span>.
+1. In the left pane, choose **GnuPG keys**.
 
-1. Select a convenient place somewhere in your Home directory to
-   export the key to.
+1. Select the public keys that you want to migrate to *Thunderbird*.
 
-To export multiple public keys, just repeat the last two steps.
+   You can use **Shift+click** and **Ctrl+click** to select multiple keys.
 
-1. [[Export all relevant public
-   keys|openpgp_migration#export_public_key]] to somewhere in your
-   Home directory.
+1. Choose **File&nbsp;▸ Export&hellip;** and save these public keys to your
+   *Home* directory.
 
 <h2 id="import-public">Import the public keys in <em>Thunderbird</em></h2>
 
-1. Back in <span class="application">Thunderbird</span>, in the <span
-   class="guilabel">End-To-End Encryption</span> settings for your
-   account, click <span class="button">OpenPGP Key Manager</span>.
+In *Thunderbird*:
 
-1. Click
-   <span class="menuchoice">
-     <span class="guimenu">File</span>&nbsp;▸
-     <span class="guimenuitem">Import Public Key(s) From
-     File</span></span>.
+1. Choose **[[!img lib/open-menu.png alt="Menu" class="symbolic"
+   link="no"]]&nbsp;▸ Tools&nbsp;▸ OpenPGP Key Manager**.
 
-1. Select the file containing the public key and follow the on-screen
-   instructions. The key is now imported!
+1. In the **OpenPGP Key Manager**, choose **File&nbsp;▸ Import Public Key(s)
+   From File.**
 
-1. However, by default imported keys are not
-   [accepted](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq#w_what-does-key-acceptance-mean),
-   which means that you cannot encrypt email to them. To "accept" a
-   key, right-click it in the <span class="application">OpenPGP Key
-   Manager</span> and select <span class="guimenuitem">Key
-   Properties</span>.
+1. Choose the file containing the public keys that you exported from the
+   *Passwords and Keys* utility.
 
-1. Read the instructions under <span class="guimenuitem">Your
-   Acceptance</span>. In order to "accept" the key, one of the "Yes"
-   options must be selected.
+   If *Thunderbird* fails to import many public keys at once, try to split
+   these public keys into several smaller files. *Thunderbird* can only import
+   public key files of less than 5 MB.
 
-Now you are done! To familiarize yourself with this new way of doing
-OpenPGP, you may want to read [[our updated OpenPGP instructions for
-Thunderbird|thunderbird#openpgp]].
+<h2 id="accept-public">Mark the public keys as accepted</h2>
+
+By default, new public keys are not marked as "*accepted*" by *Thunderbird* and
+you cannot encrypt emails to them.
+
+To mark a public key as accepted:
+
+1. Choose **[[!img lib/open-menu.png alt="Menu" class="symbolic"
+   link="no"]]&nbsp;▸ Tools&nbsp;▸ OpenPGP Key Manager**.
+
+1. Double-click on the public key that you want to mark as accepted.
+
+1. In the **Your Acceptance** tab of the **Key Properties** dialog,
+   select the option that applies to how much you verified the public
+   key.
