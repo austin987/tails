@@ -22,7 +22,8 @@ def git_repo_root():
 
 
 class Config():
-    def __init__(self):
+    def __init__(self, stage: str):
+        self.stage = stage
         self.config_files = [
             git_repo_root() / "config/release_management/defaults.yml"
         ] + list(
@@ -81,7 +82,7 @@ def generate_boilerplate(stage: str):
 
 def generate_environment(stage: str):
     log.debug("Generating environment for stage '%s'", stage)
-    config = Config()
+    config = Config(stage=stage)
     shell_snippet = tempfile.NamedTemporaryFile(delete=False)
     with open(shell_snippet.name, 'w') as shell_snippet_fd:
         shell_snippet_fd.write(config.to_shell())
@@ -90,7 +91,7 @@ def generate_environment(stage: str):
 
 def validate_configuration(stage: str):
     log.debug("Validating configuration for stage '%s'", stage)
-    Config()
+    Config(stage=stage)
     log.info("Configuration is valid")
 
 
@@ -140,7 +141,7 @@ def main():
     if args.command is None:
         parser.print_help()
     else:
-        args.func(args.stage)
+        args.func(stage=args.stage)
 
 
 if __name__ == '__main__':
