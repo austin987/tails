@@ -88,6 +88,12 @@ def generate_environment(stage: str):
     print(shell_snippet.name)
 
 
+def validate_configuration(stage: str):
+    log.debug("Validating configuration for stage '%s'", stage)
+    Config()
+    log.info("Configuration is valid")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Query and manage Release Management configuration")
@@ -103,6 +109,16 @@ def main():
                                              default="base",
                                              help="")
     parser_generate_boilerplate.set_defaults(func=generate_boilerplate)
+
+    parser_validate_configuration = subparsers.add_parser(
+        "validate-configuration",
+        help="Validate configuration files")
+    parser_validate_configuration.add_argument("--stage",
+                                               type=str,
+                                               action="store",
+                                               default="base",
+                                               help="")
+    parser_validate_configuration.set_defaults(func=validate_configuration)
 
     parser_generate_environment = subparsers.add_parser(
         "generate-environment",
