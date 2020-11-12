@@ -9,10 +9,63 @@ import subprocess
 import sys
 import tempfile
 from xdg.BaseDirectory import xdg_config_home
+from voluptuous import Any, Schema
+from voluptuous.validators import And, Coerce, Date, IsDir, IsFile, Match, NotIn
 import yaml
 
 LOG_FORMAT = "%(levelname)s %(message)s"
 log = logging.getLogger()
+
+
+STAGES = [
+    "base",
+    "built-almost-final",
+    "reproduced-images",
+    "built-iuks",
+]
+
+InputStr = And(str, NotIn(["FIXME"]))
+IsBuildManifest = And(IsFile(), Match(re.compile(r".*[.]build-manifest$")))
+
+STAGE_SCHEMA = {
+    "base": {
+        "tails_signature_key": InputStr,
+        "isos": IsDir(),
+        "artifacts": IsDir(),
+        "master_checkout": IsDir(),
+        "release_checkout": IsDir(),
+        "version": InputStr,
+        "previous_version": InputStr,
+        "previous_stable_version": InputStr,
+        "next_planned_major_version": InputStr,
+        "second_next_planned_major_version": InputStr,
+        "next_planned_bugfix_version": InputStr,
+        "next_planned_version": InputStr,
+        "next_potential_emergency_version": InputStr,
+        "next_stable_changelog_version": InputStr,
+        "release_date": Date(),
+        "major_release": Any(0, 1),
+        "dist": Any("stable", "alpha"),
+        "release_branch": InputStr,
+        "tag": InputStr,
+        "previous_tag": InputStr,
+        "website_release_branch": InputStr,
+        "iuks_dir": IsDir(),
+        "iuks_hashes": InputStr,
+        "milestone": InputStr,
+        "tails_signature_key_long_id": InputStr,
+    },
+    "built-almost-final": {
+        "build_manifest": IsBuildManifest,
+    },
+    "reproduced-images": {
+        "matching_jenkins_images_build_id": int,
+    },
+    "built-iuks": {
+        "candidate_jenkins_iuks_build_id": int,
+        "iuks_hashes": IsFile(),
+    }
+}
 
 
 def git_repo_root():
@@ -57,9 +110,18 @@ class Config():
             "tails_signature_key_long_id": self.data["tails_signature_key"][24:],
         }
 
+    def schema(self):
+        schema = {}
+        for stage in STAGES:
+            schema.update(STAGE_SCHEMA[stage])
+            if stage == self.stage:
+                break
+        log.debug("Schema:\n%s", schema)
+        return Schema(schema, required=True)
+
     def validate(self):
-        # FIXME
-        pass
+        schema = self.schema()
+        schema(self.data)
 
     def to_shell(self):
         return "\n".join([

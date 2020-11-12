@@ -17,7 +17,7 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 transmission-cli`
+* `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -423,12 +423,6 @@ Build the almost-final images
       into your environment:
 
         . $(./bin/rm-config generate-environment --stage built-almost-final)
-
-   4. Sanity check the resulting environment [generate]:
-
-        [ -f "${BUILD_MANIFEST:?}" ] || echo "ERROR: BUILD_MANIFEST is incorrect"
-        echo "${BUILD_MANIFEST:?}" | grep -E -qs '\.build-manifest$' \
-           || echo "ERROR: BUILD_MANIFEST does not have the .build-manifest extension"
 
 Tag the release in Git
 ======================
