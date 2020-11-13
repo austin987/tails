@@ -79,12 +79,14 @@ STAGE_SCHEMA = {
 
 
 def git_repo_root():
+    """Returns the root of the current Git repository as a Path object"""
     return Path(
         subprocess.check_output(["git", "rev-parse", "--show-toplevel"],
                                 encoding="utf8").rstrip("\n"))
 
 
 def sha256_file(filename):
+    """Returns the hex-encoded SHA256 hash of FILENAME"""
     sha256 = hashlib.sha256()
     with io.open(filename, mode="rb") as input_fd:
         content = input_fd.read()
@@ -93,6 +95,7 @@ def sha256_file(filename):
 
 
 class Config():
+    """Load, validate, generate, and output Release Management configuration"""
     def __init__(self, stage: str):
         self.stage = stage
         self.config_files = [
@@ -105,6 +108,10 @@ class Config():
         self.validate()
 
     def load_config_files(self):
+        """
+        Load all relevant configuration files and return the resulting
+        configuration dict
+        """
         data = {}
         for config_file in self.config_files:
             log.debug("Loading %s", config_file)
@@ -112,6 +119,10 @@ class Config():
         return data
 
     def generate_config(self):
+        """
+        Returns a dict of supplemental, programmatically-generated,
+        configuration.
+        """
         version = self.data["version"]
         tails_signature_key = self.data["tails_signature_key"]
         tag = version.replace("~", "-")
@@ -150,6 +161,10 @@ class Config():
         return generated_config
 
     def schema(self):
+        """
+        Returns a configuration validation schema function for
+        the current stage
+        """
         schema = {}
         for stage in STAGES:
             schema.update(STAGE_SCHEMA[stage])
@@ -159,10 +174,15 @@ class Config():
         return Schema(schema, required=True)
 
     def validate(self):
+        """Checks that the configuration is valid, else raise exception"""
         schema = self.schema()
         schema(self.data)
 
     def to_shell(self):
+        """
+        Returns shell commands that, if executed, would export the
+        configuration into the environment.
+        """
         return "\n".join([
             "export %(key)s=%(val)s" % {
                 "key": k.upper(),
@@ -172,6 +192,7 @@ class Config():
 
 
 def generate_boilerplate(stage: str):
+    """Generate boilerplate for STAGE"""
     log.debug("Generating boilerplate for stage '%s'", stage)
     with open(git_repo_root() /
               ("config/release_management/templates/%s.yml" % stage)) as src:
@@ -182,6 +203,10 @@ def generate_boilerplate(stage: str):
 
 
 def generate_environment(stage: str):
+    """
+    Prints to stdout the path to a file that contains commands
+    that export the configuration for STAGE to the environment.
+    """
     log.debug("Generating environment for stage '%s'", stage)
     config = Config(stage=stage)
     shell_snippet = tempfile.NamedTemporaryFile(delete=False)
@@ -191,12 +216,14 @@ def generate_environment(stage: str):
 
 
 def validate_configuration(stage: str):
+    """Validate configuration for STAGE, raise exception if invalid"""
     log.debug("Validating configuration for stage '%s'", stage)
     Config(stage=stage)
     log.info("Configuration is valid")
 
 
 def main():
+    """Command-line entry point"""
     parser = argparse.ArgumentParser(
         description="Query and manage Release Management configuration")
     parser.add_argument("--debug", action="store_true", help="debug output")
