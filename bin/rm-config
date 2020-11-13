@@ -58,6 +58,7 @@ STAGE_SCHEMA = {
         "iuks_hashes": InputStr,
         "milestone": InputStr,
         "tails_signature_key_long_id": InputStr,
+        "iuk_source_versions": InputStr,
     },
     "built-almost-final": {
         "build_manifest": IsBuildManifest,
@@ -112,17 +113,21 @@ class Config():
         return data
 
     def generate_config(self):
-        # FIXME: see [generate] tags in release process doc
         version = self.data["version"]
         tag = version.replace("~", "-")
         release_branch = "testing" if self.data["major_release"] == 1 else "stable"
         iuks_dir = Path(self.data["isos"]) / "iuks/v2"
         iuk_hashes = Path(iuks_dir) / ("to_%s.sha256sum" % version)
+        iuk_source_versions = subprocess.check_output(
+            [git_repo_root() / "bin/iuk-source-versions", version],
+            encoding="utf8"
+        ).rstrip("\n")
         generated_config = {
             "release_branch": release_branch,
             "tag": tag,
             "previous_tag": self.data["previous_version"].replace("~", "-"),
             "website_release_branch": "web/release-%s" % tag,
+            "iuk_source_versions": iuk_source_versions,
             "iuks_dir": str(iuks_dir),
             "iuks_hashes": str(iuk_hashes),
             "milestone": re.sub('~.*', '', self.data["version"]),
