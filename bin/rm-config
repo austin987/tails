@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 
 import argparse
+import hashlib
+import io
 import logging
 from pathlib import Path
 import re
@@ -26,6 +28,8 @@ STAGES = [
 
 InputStr = And(str, NotIn(["FIXME"]))
 IsBuildManifest = And(IsFile(), Match(re.compile(r".*[.]build-manifest$")))
+IsIsoFile = And(IsFile(), Match(re.compile(r".*[.]iso$")))
+IsImgFile = And(IsFile(), Match(re.compile(r".*[.]img$")))
 
 STAGE_SCHEMA = {
     "base": {
@@ -62,6 +66,12 @@ STAGE_SCHEMA = {
         "matching_jenkins_images_build_id": int,
     },
     "built-iuks": {
+        "iso_path": IsIsoFile,
+        "img_path": IsImgFile,
+        "iso_sha256sum": str,
+        "img_sha256sum": str,
+        "iso_size_in_bytes": int,
+        "img_size_in_bytes": int,
         "candidate_jenkins_iuks_build_id": int,
         "iuks_hashes": IsFile(),
     }
@@ -72,6 +82,14 @@ def git_repo_root():
     return Path(
         subprocess.check_output(["git", "rev-parse", "--show-toplevel"],
                                 encoding="utf8").rstrip("\n"))
+
+
+def sha256_file(filename):
+    sha256 = hashlib.sha256()
+    with io.open(filename, mode="rb") as fd:
+        content = fd.read()
+        sha256.update(content)
+    return sha256.hexdigest()
 
 
 class Config():
@@ -99,7 +117,7 @@ class Config():
         release_branch = "testing" if self.data["major_release"] == 1 else "stable"
         iuks_dir = Path(self.data["isos"]) / "iuks/v2"
         iuk_hashes = Path(iuks_dir) / ("to_%s.sha256sum" % self.data["version"])
-        return {
+        generated_config = {
             "release_branch": release_branch,
             "tag": tag,
             "previous_tag": self.data["previous_version"].replace("~", "-"),
@@ -109,6 +127,21 @@ class Config():
             "milestone": re.sub('~.*', '', self.data["version"]),
             "tails_signature_key_long_id": self.data["tails_signature_key"][24:],
         }
+        if self.stage == 'built-iuks':
+            version = self.data["version"]
+            iso_path = Path(self.data["isos"]) \
+                / ("tails-amd64-%s/tails-amd64-%s.iso" % (version, version))
+            img_path = Path(self.data["isos"]) \
+                / ("tails-amd64-%s/tails-amd64-%s.img" % (version, version))
+            generated_config.update({
+                "iso_path": str(iso_path),
+                "img_path": str(img_path),
+                "iso_sha256sum": sha256_file(iso_path),
+                "img_sha256sum": sha256_file(img_path),
+                "iso_size_in_bytes": iso_path.stat().st_size,
+                "img_size_in_bytes": img_path.stat().st_size,
+            })
+        return generated_config
 
     def schema(self):
         schema = {}
