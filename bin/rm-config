@@ -86,8 +86,8 @@ def git_repo_root():
 
 def sha256_file(filename):
     sha256 = hashlib.sha256()
-    with io.open(filename, mode="rb") as fd:
-        content = fd.read()
+    with io.open(filename, mode="rb") as input_fd:
+        content = input_fd.read()
         sha256.update(content)
     return sha256.hexdigest()
 
@@ -113,14 +113,16 @@ class Config():
 
     def generate_config(self):
         version = self.data["version"]
+        tails_signature_key = self.data["tails_signature_key"]
         tag = version.replace("~", "-")
-        release_branch = "testing" if self.data["major_release"] == 1 else "stable"
+        release_branch = "testing" \
+            if self.data["major_release"] == 1 \
+            else "stable"
         iuks_dir = Path(self.data["isos"]) / "iuks/v2"
         iuk_hashes = Path(iuks_dir) / ("to_%s.sha256sum" % version)
         iuk_source_versions = subprocess.check_output(
             [git_repo_root() / "bin/iuk-source-versions", version],
-            encoding="utf8"
-        ).rstrip("\n")
+            encoding="utf8").rstrip("\n")
         generated_config = {
             "release_branch": release_branch,
             "tag": tag,
@@ -130,7 +132,7 @@ class Config():
             "iuks_dir": str(iuks_dir),
             "iuks_hashes": str(iuk_hashes),
             "milestone": re.sub('~.*', '', self.data["version"]),
-            "tails_signature_key_long_id": self.data["tails_signature_key"][24:],
+            "tails_signature_key_long_id": tails_signature_key[24:],
         }
         if self.stage == 'built-iuks':
             iso_path = Path(self.data["isos"]) \
@@ -211,8 +213,7 @@ def main():
     parser_generate_boilerplate.set_defaults(func=generate_boilerplate)
 
     parser_validate_configuration = subparsers.add_parser(
-        "validate-configuration",
-        help="Validate configuration files")
+        "validate-configuration", help="Validate configuration files")
     parser_validate_configuration.add_argument("--stage",
                                                type=str,
                                                action="store",
