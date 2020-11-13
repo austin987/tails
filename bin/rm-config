@@ -113,10 +113,11 @@ class Config():
 
     def generate_config(self):
         # FIXME: see [generate] tags in release process doc
-        tag = self.data["version"].replace("~", "-")
+        version = self.data["version"]
+        tag = version.replace("~", "-")
         release_branch = "testing" if self.data["major_release"] == 1 else "stable"
         iuks_dir = Path(self.data["isos"]) / "iuks/v2"
-        iuk_hashes = Path(iuks_dir) / ("to_%s.sha256sum" % self.data["version"])
+        iuk_hashes = Path(iuks_dir) / ("to_%s.sha256sum" % version)
         generated_config = {
             "release_branch": release_branch,
             "tag": tag,
@@ -128,7 +129,6 @@ class Config():
             "tails_signature_key_long_id": self.data["tails_signature_key"][24:],
         }
         if self.stage == 'built-iuks':
-            version = self.data["version"]
             iso_path = Path(self.data["isos"]) \
                 / ("tails-amd64-%s/tails-amd64-%s.iso" % (version, version))
             img_path = Path(self.data["isos"]) \
