@@ -788,11 +788,12 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   # really needed, e.g. to avoid having to encode lots of keymaps
   # to be able to type the name correctly:
   if app_name.match(/[.]png$/)
+    @screen.wait('GnomeActivitiesOverviewLaunchersReady.png', 10)
     # This should be ctrl + click, to ensure we open a new window.
     # Let's implement this once once of the callers needs this.
     @screen.wait(app_name, 10).click
   else
-    @screen.wait('GnomeActivitiesOverview.png', 10)
+    @screen.wait('GnomeActivitiesOverviewSearch.png', 10)
     # Trigger startup of search providers
     @screen.type(app_name[0])
     # Give search providers some time to start (#13469#note-5) otherwise

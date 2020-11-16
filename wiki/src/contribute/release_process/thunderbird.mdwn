@@ -84,15 +84,15 @@ the Tails images build process.
 
         THUNDERBIRD_GIT_COMMIT=$(git --git-dir="${THUNDERBIRD_GIT_CHECKOUT}/.git" rev-parse --verify HEAD)
         TAILS_GIT_PATCHES_DIR="config/chroot_local-includes/usr/share/tails/build/thunderbird-patches"
-		cd "$TAILS_GIT_CHECKOUT" && \
+    	cd "$TAILS_GIT_CHECKOUT" && \
         git rm -r "$TAILS_GIT_PATCHES_DIR" && \
-		cp -r "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/secure-account-creation" \
-		   "$TAILS_GIT_PATCHES_DIR" && \
-		grep -E '^secure-account-creation/' "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/series" \
+    	cp -r "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/secure-account-creation" \
+    	   "$TAILS_GIT_PATCHES_DIR" && \
+    	grep -E '^secure-account-creation/' "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/series" \
            | perl -pE 's{^secure-account-creation/}{}' \
            > "${TAILS_GIT_PATCHES_DIR}/series" && \
         git add "$TAILS_GIT_PATCHES_DIR" && \
-		git commit -m "Update Thunderbird patches from icedove.git at commit ${THUNDERBIRD_GIT_COMMIT}"
+    	git commit -m "Update Thunderbird patches from icedove.git at commit ${THUNDERBIRD_GIT_COMMIT}"
 
 1. Ensure the Thunderbird account setup wizard works in an image built
    from your tails.git branch.

@@ -5,6 +5,8 @@ create surveys:
 
 <https://survey.tails.boum.org/>
 
+[[!toc]]
+
 Infrastructure
 ==============
 
@@ -111,3 +113,31 @@ Updating LimeSurvey
 1. Remove the backup of the custom files:
 
        rm /tmp/limesurvey-*.tgz
+
+<h1 id="delete">Deleting old tables</h1>
+
+When a survey is deactivated in LimeSurvey, the data of the survey (responses
+and list of participants) is moved to MySQL tables with the prefix `old_`.
+
+To delete all these tables at once:
+
+1. Connect to the platform:
+
+       ssh unlehxtgqn5xg6ccxwnm5w3ddcrll5ctlavo7srjvkkpay67dv3sdzyd.onion
+
+1. Update the backup of the database:
+
+       sudo /usr/sbin/backupninja --now --debug --run /etc/backup.d/10.mysql
+
+1. Login as `www-data`:
+
+       sudo -u www-data bash
+
+1. Store the MySQL password in a shell variable:
+
+       grep "'password' =>" /var/www/limesurvey/application/config/config.php | sed -r "s/^\s+'password' => '(\w+)',$/\1/"
+       export PASSWORD=
+
+1. Delete all tables that have the prefix `old_`:
+
+       echo "show tables like 'old_%';" | mysql --user limesurvey --password=${PASSWORD} --skip-column-names limesurvey | while read table ; do echo "Dropping $table..." ; echo "drop table $table;" | mysql --user limesurvey --password=${PASSWORD} limesurvey ; done
