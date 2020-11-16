@@ -1,9 +1,500 @@
-tails (4.13) UNRELEASED; urgency=medium
+tails (4.13) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Tor Browser 10.0.5 (tails/tails!253)
 
- -- intrigeri <intrigeri@debian.org>  Tue, 20 Oct 2020 13:47:38 +0000
+    Closes issues:
+      - Upgrade to Tor Browser 10.0.5 (tails/tails#18017)
+      - Most Tor Browser scenarios fail (tails/tails#18016)
+      - Only ship locale definitions that the user can select in the Welcome Screen
+        (tails/tails#17139)
 
+    Commits:
+      - Mark security issue as fixed
+      - Test suite: avoid wait_any() in error-prone situation.
+      - Test suite: adapt image so it works for RTL locales too.
+      - Upgrade Tor Browser to 10.0.5-build1.
+      - Automate++
+
+  * Browsers: drop el-GR from browser localization (tails/tails!252)
+
+    Closes issues:
+      - "The Unsafe Browser can be used in all languages supported in Tails" scenario
+        fails in Greek (tails/tails#18015)
+
+    Commits:
+      - Browsers: drop el-GR from browser localization.
+
+  * Test suite: wait for GNOME Overview launchers to be ready before interacting
+    with them (tails/tails!251)
+
+    Closes issues:
+      - Most Tor Browser scenarios fail (tails/tails#18016)
+
+    Commits:
+      - Test suite: wait for GNOME Overview launchers to be ready before interacting
+        with them (fixes: #18016).
+
+  * Garbage collect website cache more aggressively (tails/tails!248)
+
+    Closes issues:
+      - Some builds fail on Jenkins due to lack of disk space to store cached built
+        website (tails/tails#18010)
+
+    Commits:
+      - website-cache: don't delete lost+found directory
+      - Lint
+      - website-cache: garbage collect cache directories older than 20 days
+
+  * generate-report: Buster compatibility, help the user install dependencies
+    (tails/tails!247)
+
+    Commits:
+      - generate-report: add helpful message on missing Python modules
+      - generate-changelog, generate-report: support Python 3.7
+
+  * custom-apt-cruft-check: fix output when there's nothing to remove
+    (tails/tails!246)
+
+    Commits:
+      - custom-apt-cruft-check: fix output when there's nothing to remove
+
+  * Release process: streamline configuration and environment management
+    (tails/tails!245)
+
+    Commits:
+      - Release process: rename variable to avoid confusion
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Fix typo in suggestion
+      - Apply 3 suggestion(s) to 3 file(s)
+      - rm-config: workaround pylint false positives
+      - remove-unused-udfs: lint
+      - remove-unused-udfs: actually use passed before_version
+      - rm-config: add mypy exceptions
+      - rm-config: add docstrings
+      - rm-config: lint
+      - rm-config: drop unused import
+      - rm-config: import generation of IUK_SOURCE_VERSIONS
+      - Factorize
+      - rm-config: import more configuration generation
+      - rm-config: validate configuration
+      - RM config template: quote "FIXME" as it should be in the manually-filled
+        version
+      - rm-config: fix generate-environment for non-string values
+      - rm-config: log config before validating
+      - rm-config: pass stage to Config()
+      - rm-config: add validate-configuration action
+      - Release process: consistently provide editor command-line
+      - rm-config: ensure generated shell snippet has a trailing newline
+      - Release process: move generation of derived values to rm-config
+      - Lint
+      - Release process: fully phrase the rm-config usage bits
+      - Release process: bring all notes together
+      - Release process: document how to get your own local.yml
+      - Release process: convert example local.yml to YAML, move generated variable out
+        of it
+      - Add type hints
+      - Lint
+      - rm-config: generate boilerplate config, read config & export it as shell
+        environment
+      - Release process: ensure the configuration does not taint the next release
+        process
+      - Document config format
+      - Ensure RM config snippets produce 1 single YAML document when concatenated
+      - Release process: specify interface for new RM config management.
+
+  * WhisperBack: include the output of lsusb in reports (tails/tails!244)
+
+    Commits:
+      - WhisperBack: include the output of lsusb in reports
+
+  * Automate Tor Browser WebRTC tests (tails/tails!243)
+
+    Closes issues:
+      - Automate Tor Browser WebRTC tests (tails/tails#10264)
+
+    Commits:
+      - Test suite: automatically test that WebRTC is disabled in Tor Browser
+      - Test suite: refactoring (extract code to function)
+
+  * GitLab CI: only run the apt-snapshots-expiry job when relevant
+    (tails/tails!242)
+
+    Commits:
+      - GitLab CI: only run the apt-snapshots-expiry job when relevant
+      - GitLab CI: switch to "Pipelines for Merge Requests" mode
+
+  * GitLab CI: check PO files that we did not import from Transifex yet, only run
+    PO checks when relevant (tails/tails!241)
+
+    Commits:
+      - Lint
+      - GitLab CI: lint
+      - GitLab CI: only run check-po-msgfmt and lint-po when relevant
+      - GitLab CI: check PO files that we did not import from Transifex yet
+
+  * Add script that checks which packages in our custom APT repo are unused
+    (tails/tails!240)
+
+    Closes issues:
+      - Remove cruft from our custom APT repository (2020Q4 edition)
+        (tails/tails#17997)
+
+    Commits:
+      - custom-apt-cruft-check: look for custom package on the suite we're working on
+      - custom-apt-cruft-check: update script description to match current usage
+      - custom-apt-cruft-check: fix generated reprepro command
+      - custom-apt-cruft-check: make output command line easier to copy'n'paste
+      - custom-apt-cruft-check: use a command line argument to specify which suite to
+        check
+      - Revert overzealous linting
+      - custom-apt-cruft-check: fix branch check
+      - Lint
+      - custom-apt-cruft-check: add helpful comment to error message
+      - custom-apt-cruft-check: output require reprepro clean up command
+      - custom-apt-cruft-check: fetch .build-manifest from Jenkins
+      - custom-apt-cruft-check: change quoting so \n becomes an actual newline
+      - custom-apt-cruft-check: also support the devel branch/APT suite
+      - Lint
+      - custom-apt-cruft-check: add support for Onion service
+      - Add script that checks which packages in our custom APT repo that are unused.
+
+  * Release process: automate removing unused UDFs (tails/tails!239)
+
+    Commits:
+      - Remove UDFs for versions we'll never release
+      - remove-unused-udfs: avoid computing the list of tags multiple times
+      - remove-unused-udfs: avoid using global variable.
+      - Release process: automate removing unused UDFs
+      - Release process: remove now-irrelevant case
+      - Release process: move cleaning up Changelog to a smarter place
+      - Release process: remove duplicate operation
+      - Release process: bundle together actions on the devel branch
+
+  * GitLab CI: check that no APT snapshot will expire within 1 month
+    (tails/tails!238)
+
+    Commits:
+      - GitLab CI: give job a name that better reflects its, well, job
+      - Cleanup
+      - GitLab CI: check that no APT snapshot will expire within 1 month.
+      - apt-snapshot-expiry: exit with error if any snapshot will expire within 1
+        month.
+      - Get rid of subshell.
+
+  * Release process: automate generation of email to manual testers
+    (tails/tails!237)
+
+    Commits:
+      - Release process: make the shell complain if setting PAD was forgotten.
+      - Release process: de-duplicate
+      - Release process: automate generating the call for manual testing
+
+  * Release process: streamline APT repository operations (tails/tails!236)
+
+    Commits:
+      - Release process: only context switch to freeze exception management if needed
+      - Release process: streamline thawing time-based APT snapshots
+      - Release process: streamline bumping time-based APT snapshots expiration date
+      - Fix Vagrant build box APT snapshots updating info
+      - Release process: streamline freezing time-based APT snapshots
+      - Release process: automate
+      - Release process: streamline post-release operations
+      - Release process: streamline initializing the versioned custom APT suite
+      - Replace link to obsolete reprepro homepage with link to Tracker
+      - Release process: automate
+      - Release process: streamline merging base branches
+      - Custom APT repo doc: move to a script merging a main branch
+      - Release process: streamline resetting custom APT suites
+      - Lint
+      - Custom APT repo doc: move to a script resetting a suite
+      - Release process: streamline merging APT overlays
+      - Release process: be extra explicit about what "freeze time" means
+      - Revert "Release process: be explicit about the required setting when merging"
+
+  * Ensure that we install the required custom packages from our custom APT repo
+    (tails/tails!235)
+
+    Commits:
+      - Release process: drop VeraCrypt reminder.
+      - Build system: ensure we install the required custom packages from our custom
+        APT repo.
+
+  * Release process: move big code snippets to scripts (tails/tails!234)
+
+    Commits:
+      - Lint
+      - Release process: move to a script preparing the included website
+      - Release process: move to a script cleaning SquashFS sort file
+      - Lint
+      - Release process: move to a script generating images signatures and Torrents
+      - Lint
+      - Release process: move to a script publishing test UDFs
+      - Lint
+      - Release process: move to a script signing UDFs
+      - Release process: move to a script updating the trace file
+      - Lint
+      - Release process: move to a script publishing IUKs
+      - Lint
+      - Release process: move to a script announcing and seeding the Torrents
+      - Lint
+      - Release process: move to a script copying release files to the website
+      - Release process: move Tor blog post generation to a script
+
+  * check-po-msgstr: Add option to sanitize .po files (tails#17661)
+    (tails/tails!232)
+
+    Commits:
+      - check-po-msgstr: Add option to sanitize .po files (tails#17661)
+
+  * GitLab CI: run the perl5lib, persistence-setup, and a subset of the upgrader
+    test suites (tails/tails!228)
+
+    Commits:
+      - Upgrader test suite: drop noisy output
+      - Add missing strictures
+      - GitLab CI: run the subset of the iuk test suite that works in a Docker
+        environment
+      - GitLab CI: run the persistence-setup test suite
+      - GitLab CI: run the perl5lib test suite
+      - Skip chattr when running in a test environment
+      - Perl program test suite doc: run tests in a UTF-8 locale
+      - Perl program test suite doc: use command-line --all flag instead of environment
+        variable
+      - Perl program test suite doc: add missing dependency
+
+  * GitLab CI: run unit tests for tails-gdm-error-message (tails/tails!224)
+
+    Commits:
+      - GitLab CI: run unit tests for tails-gdm-error-message
+
+  * GitLab CI: run WhisperBack unit tests (tails/tails!222)
+
+    Commits:
+      - GitLab CI: run WhisperBack unit tests
+
+  * GitLab CI: check PO files with lint_po, that calls i18nspector
+    (tails/tails!221)
+
+    Commits:
+      - GitLab CI: use Debian testing for lint-po stage
+      - GitLab CI: check PO files with lint_po, that calls i18nspector
+
+  * Fix test suite robustness regression introduced by the upgrade of lizard
+    isotesters to Buster (tails/tails!218)
+
+    Closes issues:
+      - Test suite robustness regressed since the lizard isotesters were upgraded to
+        Buster (tails/tails#17985)
+
+    Commits:
+      - Test suite: don't let Screen#find mess with Screen#wait_vanish's timeout
+        argument
+      - Test suite: make @screen.find() @screen.wait() for 5 seconds
+
+  * Fix Tails Installer in Turkish and in languages that have a translation for the
+    "Clone the current Tails" string (tails/tails!217)
+
+    Closes issues:
+      - Tails Installer does not allow upgrade in languages that have a translation for
+        the "Clone the current Tails" string (tails/tails#17982)
+      - tails-installer fails to operate in Turkish (tails/tails#17576)
+
+    Commits:
+      - Fix Tails Installer in Turkish
+      - Update POT and PO files
+      - Installer: s/Live.?OS/Tails/
+      - Installer: use translations for strings defined in Glade
+
+  * Move wrap_test_suite cucumber args logic into run_test_suite (tails/tails!216)
+
+    Commits:
+      - run_test_suite: use variable consistently.
+      - run_test_suite: don't use current Git state, but the one described by Jenkin's
+        environment variables.
+      - Fix comment.
+      - Test suite: print which Cucumber tags are used on start.
+      - Remove unused Rake 'test' task.
+      - run_test_suite: make @doc tag handling independent of ~@fragile.
+      - Simplify.
+      - run_test_suite: move cucumber logic from wrap_test_suite in here (refs:
+        tails/sysadmin#17772).
+
+  * Test suite: automate a few manual tests (tails/tails!213)
+
+    Closes issues:
+      - Automatically test that we cannot login as root (tails/tails#10274)
+      - Automate APT manual tests (tails/tails#17017)
+      - Test that the correct keyboard layout is set (tails/tails#10261)
+      - Test that DuckDuckGo is the default search engine in Tor Browser
+        (tails/tails#10265)
+      - Test that the on-screen keyboard works and its layout is correctly set
+        (tails/tails#10263)
+
+    Commits:
+      - Test suite: fix regexp
+      - Test suite: login using the button, not accelerators.
+      - Test suite: implement find_any() with real_find().
+      - Fix typo
+      - Test suite: enable localization tests in Spanish and Turkish
+      - Test suite: have #(exists|find|wait)_any return a hash instead of an array
+      - run_test_suite: pass --expand to Cucumber
+      - Test suite: handle the fact that the browser address bar is initialized lazily
+        (Persian edition)
+      - Test suite: make new tests not run by default
+      - Test suite: automate the screen keyboard manual tests
+      - Test suite: enable keyboard layout and browser search engine tests for Arabic
+      - Test suite: automate testing that DuckDuckGo is the default search engine in
+        all tier-1 languages
+      - Test suite: automate testing that the correct keyboard layout is set
+      - Test suite: automate manual /bin/su tests
+      - Test suite: automate manual APT tests
+      - Test suite: fix steps semantics
+      - Test suite: don't bother logging in when not needed
+
+  * Drop dead code for read-only persistence (tails/tails!211)
+
+    Closes issues:
+      - Drop dead code for read-only persistence (tails/tails#17972)
+
+    Commits:
+      - Drop dead code for read-only persistence
+
+  * Make the root directory of the persistence non-world-readable (tails/tails!210)
+
+    Closes issues:
+      - Make the root directory of the persistence non-world-readable
+        (tails/tails#7465)
+
+    Commits:
+      - Put first what matters most to the user
+      - Document shortcut
+      - Add period at the end of (imperative) sentences
+      - Fix Markdown formatting
+      - Add, and take benefit from, a GTK bookmark for the persistent Dotfiles source
+        directory
+      - Make the root directory of the persistence non-world-readable
+
+  * Make udisks less verbose about "errors" to determine whether unused loop
+    devices are encrypted (tails/tails!209)
+
+    Commits:
+      - Revert "Raise the maximum number of loop devices to 32 (refs: #12065)."
+
+  * Allow raising sound volume above 100% (tails/tails!207)
+
+    Closes issues:
+      - Allow raising sound volume above 100% (tails/tails#17322)
+      - Re-enable TCP timestamps (tails/tails#17491)
+
+    Commits:
+      - Allow raising sound volume above 100%
+
+  * Re-enable TCP timestamps (tails/tails!206)
+
+    Closes issues:
+      - Re-enable TCP timestamps (tails/tails#17491)
+
+    Commits:
+      - Re-enable TCP timestamps
+
+  * Add a button to restart Tails at the end of creating the Persistent Storage
+    (tails/tails!205)
+
+    Commits:
+      - Drop unneeded sentence
+      - Add a button to restart Tails at the end of creating the Persistent Storage
+
+  * Only install usable locales and Tor Browser langpacks (tails/tails!204)
+
+    Closes issues:
+      - Only ship locale definitions that the user can select in the Welcome Screen
+        (tails/tails#17139)
+      - Test suite often fails on Jenkins due to lack of "disk" space in
+        /tmp/TailsToaster/TailsToasterStorage (tails/tails#17984)
+
+    Commits:
+      - Test suite: calculate supported locales outside of loop.
+      - Test suite: add expected image for the Unsafe Browser in Spanish
+      - Test suite: don't use English as a way of testing localization of the Unsafe
+        Browser
+      - Test suite: adjust for the removal of locales-all
+      - Avoid localepurge deleting ll_RR.utf8 locale variants
+      - Build system: drop browser localization descriptions for languages not
+        available in the Welcome Screen
+      - Bring back localepurge, to delete unneeded localizations
+      - Only ship Tor Browser langpacks for locales that the user can select in the
+        Welcome Screen
+      - Only ship locale definitions that the user can select in the Welcome Screen
+
+  * Thunderbird 78 and Enigmail obsoletion (tails/tails!203)
+
+    Closes issues:
+      - Upgrade to Thunderbird 78 ESR (tails/tails#17148)
+      - Migrate from Enigmail to Thunderbird 78's built-in OpenPGP support
+        (tails/tails#17147)
+
+    Commits:
+      - Test suite: adjust tests for Thunderbird 78.
+      - Test suite: make local.yml load before *.d dirs, as intended.
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Add missing 'set -u' to build-time hook.
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Explicit
+      - Be more assertive
+      - I'm not sure whether it's still the case
+      - Update more references
+      - Instruct to disable the GnuPG feature of the Persistent Storage
+      - Document 'Require Encryption' by default
+      - Rewrite anonym's draft
+      - Improve grammar
+      - Fix path
+      - Simplify PO file
+      - Remove outdated screenshot
+      - Explain better the protection of the Master Password
+      - Thunderbird: drop part of patch.
+      - Thunderbird: don't automatically attach public key to signed messages.
+      - Thunderbird: backport patch introducing pref for whether to automatically
+        attach the public key.
+      - Thunderbird: backport fix for OpenPGP dialog when sending to a recipient
+        without key.
+      - Create libresolv.so → libresolv-${version}.so symlink.
+      - Thunderbird: use the "Require encryption by default" policy.
+      - Thunderbird: apply patch fixing issue with default encryption policy.
+      - Revert "Thunderbird: patch to disable protectHeaders AKA MemoryHole."
+      - Revert "Thunderbird: set allow_external_gnupg = true."
+      - Improve migration prompt
+      - Help user know how old Tails 4.13 is
+      - Update Persistent Storage UI and doc
+      - Remove fuzzy duplicates in PO files.
+      - Remove section that's too generic
+      - Remove deprecated migration instructions
+      - Add section to import private keys
+      - Move shorter and more generic sections first
+      - Use automatic TOC anchors
+      - Merge inline with its only page
+      - Add headings and make the instructions linear
+      - Thunderbird: patch to disable protectHeaders AKA MemoryHole.
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Apply 1 suggestion(s) to 1 file(s)
+      - Hook thunderbird wrapper script into our translation infrastructure.
+      - Thunderbird: notify user about Enigmail migration.
+      - Update Thunderbird OpenPGP docs for version 78.
+      - Drop everything related to Enigmail.
+      - Thunderbird: set allow_external_gnupg = true.
+      - Thunderbird: update renamed prefs from upstreamed patches.
+      - Don't install Enigmail (refs: #17147).
+      - Update Thunderbird patches from icedove.git at commit
+        90184f927783370a65bfde271a67613d21372c9f
+      - Fix indentation.
+      - Revert "Install Thunderbird 68 until we're ready for 78"
+
+ -- Tails developers <tails@boum.org>  Mon, 16 Nov 2020 10:01:00 +0000
 tails (4.12) unstable; urgency=medium
 
   * Security fixes
