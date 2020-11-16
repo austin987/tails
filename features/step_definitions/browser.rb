@@ -352,20 +352,23 @@ Then /^DuckDuckGo is the default search engine$/ do
 end
 
 Then(/^the screen keyboard works in Tor Browser$/) do
+  osk_key = 'ScreenKeyboardKeyX.png'
+  browser_bar_x = 'BrowserAddressBarX.png'
+  case $language
+  when 'Arabic'
+    browser_bar_x = 'BrowserAddressBarXRTL.png'
+  when 'Chinese'
+    browser_bar_x = 'BrowserAddressBarXChinese.png'
+  when 'Hindi'
+    browser_bar_x = 'BrowserAddressBarXHindi.png'
+  when 'Persian'
+    osk_key = 'ScreenKeyboardKeyPersian.png'
+    browser_bar_x = 'BrowserAddressBarXPersian.png'
+  end
   step 'I start the Tor Browser'
   step 'I open a new tab in the Tor Browser'
   @screen.wait('ScreenKeyboard.png', 10)
-  @screen.wait_any(
-    ['ScreenKeyboardKeyX.png', 'ScreenKeyboardKeyPersian.png'], 10
-  )[:match].click
-  @screen.wait_any(
-    [
-      'BrowserAddressBarX.png',
-      'BrowserAddressBarXChinese.png',
-      'BrowserAddressBarXHindi.png',
-      'BrowserAddressBarXPersian.png',
-      'BrowserAddressBarXRTL.png',
-    ], 20
-  )
+  @screen.wait(osk_key, 10).click
+  @screen.wait(browser_bar_x, 20)
   step 'I kill the Tor Browser'
 end
