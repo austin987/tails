@@ -17,7 +17,7 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 transmission-cli`
+* `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -58,21 +58,40 @@ To release Tails you need:
    - In the `Tails` section, set the value of the `private_token` option to a
      GitLab API token for your own user.
 
+* `~/.config/tails/release_management/local.yml`
+
+  If you have no such file yet, copy
+  `config/release_management/examples/local.yml` there and adjust to your
+  local environment.
+
 Environment
 ===========
 
 To be able to copy'n'paste the code snippets found on this page,
 you need to set a bunch of environment variables.
 
-Unless the release process explicitly instructs you to change the
-value of one such variable, treat it as a constant: else,
-inconsistency will surely arise, which can cause trouble later on.
+### Generate the base environment
 
-Version numbers
----------------
+1. To generate the `~/.config/tails/release_management/current.yml` template,
+   run:
 
-Note:
+        ./bin/rm-config generate-boilerplate
 
+2. Edit `~/.config/tails/release_management/current.yml` and replace
+  `FIXME`:s:
+
+        "${EDITOR:?}" ~/.config/tails/release_management/current.yml
+
+3. Generate the resulting environment variables and export them into your
+   environment:
+
+        . $(./bin/rm-config generate-environment)
+
+### Notes
+
+* Unless the release process explicitly instructs you to change the
+  value of one such variable, treat it as a constant: else,
+  inconsistency will surely arise, which can cause trouble later on.
 * Regarding version numbers, what follows supports just fine the case
   when we do something else than alternating bugfix and major releases
   consistently. For example, if the next two releases are bugfix ones,
@@ -86,68 +105,6 @@ Note:
   a changelog, an UDF must exist for version X as well… hence the use
   of shared constants to encode the values that must be the same on
   both sides :)
-
-Export the following environment variables:
-
-* `VERSION`: the version you're preparing (see
-  [[contribute/release_schedule#versioning]])
-* `PREVIOUS_VERSION`: the last released version (which could be a release
-  candidate, in case you're preparing a major release)
-* `PREVIOUS_STABLE_VERSION`: the current stable release of Tails. This
-  will be the same as `PREVIOUS_VERSION` except when preparing a major
-  release.
-* tags:
-
-        export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
-        export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
-
-* `NEXT_PLANNED_MAJOR_VERSION`: set to the version number of the next
-  *major* Tails release; if you're preparing a RC for a major release,
-  use that major release; otherwise, use whatever the next planned
-  major release is
-* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: if you're preparing the RC
-  for a major release, set this to the version number of
-  the second next *major* Tails release; e.g. if preparing the RC for
-  the 3.9 major release, then set this to 3.12 (3.9 is the next major
-  release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
-  release).
-* `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
-  scheduled *bugfix* Tails release
-* `NEXT_PLANNED_VERSION`: use whichever is the next scheduled release
-   among `$NEXT_PLANNED_BUGFIX_VERSION` and `$NEXT_PLANNED_MAJOR_VERSION`
-* `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
-  to the next emergency release if we have to put one out; unset for a
-  release candidate
-* `NEXT_STABLE_CHANGELOG_VERSION`: if `$NEXT_PLANNED_BUGFIX_VERSION` is the next
-  scheduled release, use it; otherwise, use `$NEXT_POTENTIAL_EMERGENCY_VERSION`
-
-Other variables
----------------
-
-Also export the following environment variables:
-
-* `RELEASE_DATE`: the date when you plan to publish this release,
-  in the format `YYYY-MM-DD`; if preparing a non-final release,
-  use the release date for that _non-final_ release, not for the
-  corresponding final release.
-* `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
-  candidate for a major release, to 0 otherwise
-* `ISOS`: the directory where one stores `tails-amd64-*`
-  sub-directories like the ones downloaded with BitTorrent.
-* `ARTIFACTS`: the directory where build artifacts (e.g.
-  the `.packages` file) land.
-* `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
-  Tails Git repository.
-* `RELEASE_BRANCH=$(if [ "$MAJOR_RELEASE" = 1 ]; then echo -n testing; else echo -n stable; fi)`
-* `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
-  repository used to prepare the release (`stable` or `testing`).
-* `TAILS_SIGNATURE_KEY=A490D0F4D311A4153E2BB7CADBB802B258ACD84F`
-* `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}" | perl -nE 'say substr($_, -17)')`
-* `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
-* `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
-* `export IUKS_DIR="${ISOS:?}/iuks/v2"`
-* `export IUKS_HASHES="${IUKS_DIR:?}/to_${VERSION}.sha256sum"`
-* `export MILESTONE=$(echo "${VERSION:?}" | sed -e 's,~.*,,')`
 
 Pre-freeze
 ==========
@@ -254,11 +211,19 @@ Reset the release branch's `config/base_branch`:
 Bootstrap manual testing coordination:
 
 1. Create a pad.
-2. Copy the [[manual test suite|contribute/release_process/test]]
-   into it.
-3. Send the pad URL in an **encrypted** mail to the manual testers:
-   <tails-manual-testers@boum.org>.
-   Use the template email from `rm.git:manual_testers.mdwn`.
+2. Set the `PAD` environment variable to the URL of this pad.
+3. Copy the [[manual test suite|contribute/release_process/test]]
+   into this pad.
+4. Generate boilerplate for the call for manual testing:
+
+        ./bin/generate-call-for-manual-testers \
+           --pad "${PAD:?}" \
+           --version "${VERSION:?}"
+
+5. Send the call for manual testing:
+
+    - encrypt your email
+    - use the headers and body generated above
 
 Update included files
 =====================
@@ -373,6 +338,9 @@ Update more included files
 Changelog
 ---------
 
+If `debian/changelog` on `$RELEASE_BRANCH` has an `UNRELEASED` entry
+for a version lower than `$VERSION`, remove it.
+
 Update the Changelog entry for the release you're preparing:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
@@ -441,10 +409,20 @@ Build the almost-final images
 2. Keep the resulting build artifacts until the end of this release process.
 3. Record where the manifest of needed packages is stored:
 
-        export BUILD_MANIFEST=XXX ; \
-        [ -f "${BUILD_MANIFEST:?}" ] || echo "ERROR: BUILD_MANIFEST is incorrect"
-        echo "${BUILD_MANIFEST:?}" | grep -E -qs '\.build-manifest$' \
-           || echo "ERROR: BUILD_MANIFEST does not have the .build-manifest extension"
+   1. To update the `~/.config/tails/release_management/current.yml` template
+      with newly required variables, run:
+
+        ./bin/rm-config generate-boilerplate --stage built-almost-final
+
+   2. Edit `~/.config/tails/release_management/current.yml` and replace
+      `FIXME`:s:
+
+        "${EDITOR:?}" ~/.config/tails/release_management/current.yml
+
+   3. Generate the resulting environment variables and export them
+      into your environment:
+
+        . $(./bin/rm-config generate-environment --stage built-almost-final)
 
 Tag the release in Git
 ======================
@@ -489,7 +467,7 @@ Tagged snapshots of upstream APT repositories
 
 Create tagged snapshots of upstream APT repositories:
 
-      ./bin/tag-apt-snapshots "${BUILD_MANIFEST:?}" "${TAG:?}"
+      ./bin/tag-apt-snapshots "${ALMOST_FINAL_BUILD_MANIFEST:?}" "${TAG:?}"
 
 Note:
 
@@ -597,14 +575,10 @@ suite should be ready, so it is time to:
    almost-final build:
 
         diff -Naur \
-           "${BUILD_MANIFEST:?}" \
+           "${ALMOST_FINAL_BUILD_MANIFEST:?}" \
            "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
    They should be identical, except that the `debian-security` serial might be higher.
-
-1. To ensure we publish the final build's `.build-manifest`, run:
-
-        export BUILD_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
 <a id="reproducibility-sanity-check-iso"></a>
 
@@ -626,9 +600,23 @@ To verify that Jenkins reproduced your images:
 
    - If the ISO and USB images hashes match: yay, we're good to go!
      The `.build-manifest` may differ — that's OK.
+     Then:
 
-     Set the `$MATCHING_JENKINS_IMAGES_BUILD_ID` environment variable
-     to the ID of this job (an integer).
+     1. To update the `~/.config/tails/release_management/current.yml` template
+        with newly required variables, run:
+
+            ./bin/rm-config generate-boilerplate --stage reproduced-images
+
+     2. Edit `~/.config/tails/release_management/current.yml`
+        and set the `matching_jenkins_images_build_id` value
+        to the ID of this job (an integer):
+
+            "${EDITOR:?}" ~/.config/tails/release_management/current.yml
+
+     3. Generate the resulting environment variables and export them
+        into your environment:
+
+            . $(./bin/rm-config generate-environment --stage reproduced-images)
 
    - If there is a hash mismatch for one of the images: ouch! Now we are in a
      tricky situation: on the one hand it seems like a poor idea to
@@ -710,15 +698,6 @@ files metadata:
 
     ./bin/generate-images-signatures-and-torrents
 
-Lastly, let's set some variables to be used later:
-
-    ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso"
-    ISO_SHA256SUM="$(sha256sum "${ISO_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
-    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH:?}")"
-    IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.img"
-    IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
-    IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
-
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
@@ -729,18 +708,6 @@ changes what the source version number of an upgrade means: it's now
 the version that was *initially installed* and *not* the currently
 running version. For details, see the corresponding
 [[design documentation|contribute/design/incremental_upgrades]].
-
-Prepare the environment
------------------------
-
-Compute the list of initial version install to build IUKs for:
-
-    cd "${RELEASE_CHECKOUT:?}" && \
-	export IUK_SOURCE_VERSIONS=$(./bin/iuk-source-versions ${VERSION:?})
-    echo "${IUK_SOURCE_VERSIONS?:}"
-
-Even if it's computed automatically, remember to store it in the file
-holding environment variables, it will be used in various places below.
 
 Sanity checks
 -------------
@@ -864,8 +831,23 @@ Build the Incremental Upgrade Kits on Jenkins
 3. Once this build is completed, Jenkins will trigger a build of the downstream
    `parallel_collect_IUKs` job.
 
-4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable to the ID of
-   that `parallel_collect_IUKs` build (an integer).
+4. Record the ID of the candidate Jenkins `parallel_collect_IUKs` build:
+
+   1. To update the `~/.config/tails/release_management/current.yml` template
+      with newly required variables, run:
+
+          ./bin/rm-config generate-boilerplate --stage built-iuks
+
+   2. Edit `~/.config/tails/release_management/current.yml`
+      and set the `candidate_jenkins_iuks_build_id` value
+      to the ID of that `parallel_collect_IUKs` build (an integer):
+
+          "${EDITOR:?}" ~/.config/tails/release_management/current.yml
+
+   3. Generate the resulting environment variables and export them
+      into your environment:
+
+          . $(./bin/rm-config generate-environment --stage built-iuks)
 
 5. Wait until both `parallel_build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
    It should take about 10-15 minutes for each member of
@@ -1189,8 +1171,8 @@ Testing
    may start:
    - reply to the email you've sent them earlier
    - point them to the up-to-date mirror you've found previously
-   - make it clear what's the deadline
-   - make it clear where and how you expect to get feedback
+   - if any of the expectations set in your initial email are outdated,
+     update them now
    - attach the Torrents
    - attach the `.packages` file
 1. Make sure someone is committed to run the automated test suite.
@@ -1560,34 +1542,25 @@ If you just released a final release
            --repo "${bare_repo:?}" && \
         rm -rf "${bare_repo:?}"
 
-1. On the `stable` and `devel` branches, remove all old versions
-   that were never released from `wiki/src/upgrade/v2/Tails` and
-   `debian/changelog`. Explanation: the
-   post-release APT repository steps from the previous stable release
-   will usually have had us prepare for an emergency release that was
-   never made. [XXX:automate]
-1. If this command outputs anything:
+1. On the `stable` branch, remove all old versions
+   that were never released from `wiki/src/upgrade/v2/Tails`:
 
-         git show devel:config/chroot_apt/preferences \
-            | grep -E '^Explanation: freeze exception'
+        git checkout stable && \
+        ./bin/remove-unused-udfs --before-version "${VERSION:?}"
 
-   Then checkout the `devel` branch, and there
-   [[thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
-1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel`:
+   Explanation: the post-release APT repository steps from the previous stable
+   release will usually have had us prepare for an emergency release that was
+   never made.
+1. Pull `master` back and merge it into `stable`:
 
         cd "${RELEASE_CHECKOUT:?}" && \
         git fetch origin && \
         git checkout stable && \
-        git merge origin/master && \
-        git checkout devel && \
-        git merge stable
+        git merge origin/master
 
    Note: After a final *major* release is published, it's normal to
    leave the `testing` branch alone: it will only become relevant
-   again when the next freeze starts. In this case, keep a single
-   changelog entry for `stable` (the next *bugfix* release) and for
-   `devel` (the next *major* release).
+   again when the next freeze starts.
 1. Put the `stable` Git branch and the corresponding APT suite
    in the desired shape:
 
@@ -1616,6 +1589,14 @@ If you just released a final release
            "Dummy entry for next release." && \
         git commit debian/changelog \
            -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
+
+1. If this command outputs anything:
+
+         git show devel:config/chroot_apt/preferences \
+            | grep -E '^Explanation: freeze exception'
+
+   Then checkout the `devel` branch, and there
+   [[thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 
 1. Increment the version number in stable's `debian/changelog`, so that
    next builds from the `stable` branch do not use the APT suite meant
@@ -1725,6 +1706,12 @@ If you just released an RC
    are ok" step for final releases, above.
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
+1. Put aside the configuration file used for this release:
+
+        mkdir -p ~/.config/tails/release_management/old && \
+        mv ~/.config/tails/release_management/current.yml \
+           ~/.config/tails/release_management/old/${VERSION:?}.yml.disabled
+
 1. You're done for today! Suggestion: enjoy some time AFK :)
 1. Tomorrow, make sure Jenkins manages to build all updated major branches:
    <https://jenkins.tails.boum.org/view/RM/>.
