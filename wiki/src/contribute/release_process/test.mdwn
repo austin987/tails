@@ -11,7 +11,7 @@ Read this document from the branch used to prepare the release.
 Keeping an eye on the changes between released versions is one of the
 many safeguards against releasing crap.
 
-## Result
+## Packages
 
 Compare the list of bundled packages and versions with the one shipped last
 time. `.packages` are usually attached to the email announcing the image is ready.
@@ -119,14 +119,8 @@ tracked by subtasks of [[!tails_ticket 10250]].
     different results for the very same version of Tor Browser).
   - Update the *Browser fingerprint* section of the
     [[known issues|support/known_issues]] if needed.
-* WebRTC should be disabled: (automate: [[!tails_ticket 10264]])
-  - In `about:config` check that `media.peerconnection.enabled` is set to
-    `false`.
-  - <http://mozilla.github.io/webrtc-landing/>, especially the `getUserMedia`
-    test. It's expected that the audio test works if you agree to share a
-    microphone with the remote website; anything else should fail.
-  - <http://net.ipcalf.com/> should display _literally_
-    `ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1`
+* In `about:config` check that `media.peerconnection.enabled` is set to
+  `false`.
 
 <a id="Thunderbird"></a>
 
@@ -165,25 +159,9 @@ at the application level:
 * When we receive this bug report on the tails-bugs mailing list,
   Schleuder tells us that it was sent encrypted.
 
-# Root access control
-
-1. Start the candidate Tails image.
-2. Do *not* set an administration password.
-3. Check you cannot login as root with `/bin/su` neither with the `amnesia` password nor
-  with the `live` one. (automate: [[!tails_ticket 10274]])
-
 # Virtualization support
 
 * Test that Tails starts and the browser launches in VirtualBox.
-
-# APT (automate: [[!tails_ticket 17017 desc="#17017"]])
-
-     grep -r umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd.onion /etc/apt/sources.list*
-
-* Make sure the Tails repository suite in matching the release tag (for example
-  the release version number) is in APT sources.
-* Make sure the Tails repository unversioned suites (e.g. `testing`,
-  `stable` and `devel`) are *not* in APT sources.
 
 <a id="incremental-upgrades"></a>
 
@@ -280,27 +258,6 @@ On a computer configured to prefer legacy BIOS boot:
    You should see the "SYSLINUX" title in the bootloader, as opposed to GRUB.
 3. Boot this USB stick a second time.
 4. You should see the Welcome Screen appear.
-
-# Internationalization
-
-## Tier-1 languages
-
-Boot and check basic functionality is working for our [[best supported
-(Tier-1) languages|contribute/how/translate#tier-1-languages]].
-
-You *really* have to reboot between each language.
-
-* The chosen keyboard layout must be applied. (automate: [[!tails_ticket 10261]])
-  This is known to be broken in some languages, such as Arabic:
-  [[!tails_ticket 12638]].
-* The screen keyboard must (automate: [[!tails_ticket 10263]]):
-  - work in Tor Browser when activated after the browser has started;
-  - work in Thunderbird when activated after Thunderbird has started;
-  - be auto-configured to use the same keyboard layout as the
-    X session (known exceptions: Chinese, Persian, Português,
-    Russian, Tiếng Việt).
-* In the Tor Browser:
-  - DuckDuckGo must be the default, pre-selected search plugin. (automate: [[!tails_ticket 10265]])
 
 # Misc
 

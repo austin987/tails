@@ -644,20 +644,6 @@ def on_jenkins?
   !ENV['JENKINS_URL'].nil?
 end
 
-desc 'Test Tails'
-task :test do
-  args = ARGV.drop_while { |x| ['test', '--'].include?(x) }
-  if on_jenkins?
-    args += ['--'] unless args.include? '--'
-    args += ['--tag', '~@fragile'] unless releasing?
-    base_branch = git_helper('base_branch')
-    if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}")
-      args += ['--tag', '@doc']
-    end
-  end
-  run_command('./run_test_suite', *args)
-end
-
 desc 'Clean up all build related files'
 task clean_all: ['vm:destroy', 'basebox:clean_all']
 

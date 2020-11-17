@@ -21,49 +21,46 @@ configure_locale() {
                      user_pref
 }
 
-disable_autocrypt() {
-    # Disable Autocrypt since it is not safe (#15923).
-    set_mozilla_pref "${PROFILE}/prefs.js"                 \
-                     "mail.server.default.enableAutocrypt" \
-                     "false"                               \
-                     user_pref
-}
-
 reconfigure_profile() {
     mkdir -p "${PROFILE}"
     configure_locale
-    disable_autocrypt
+}
 
-    # Suppress Enigmail's configuration wizard by pretending that the current
-    # version was already configured. Only do this on first run though:
-    # once we've done this we let Enigmail manage this setting itself
-    # so it can run any migration code it wants to on upgrades.
-    if thunderbird_profile_is_new; then
-	initialize_enigmail_configured_version
+native_openpgp_configured() {
+    grep -q -E '^user_pref\("mail\.identity\.id[0-9]+\.openpgp_key_id"' \
+         "${PROFILE}/prefs.js"
+}
+
+enigmail_configured() {
+    grep -q -E '^user_pref\("mail\.identity\.id[0-9]+\.enablePgp", true\);' \
+         "${PROFILE}/prefs.js"
+}
+
+notify_enigmail_migration() {
+    local dialog_msg="<b><big>`gettext \"You need to migrate your OpenPGP keys\"`</big></b>
+
+`gettext \"<i>Thunderbird</i> 78 now replaces the <i>Enigmail</i> extension with built-in support for OpenPGP encryption. To continue using your OpenPGP keys in <i>Thunderbird</i>, follow our migration instructions.\"`
+"
+    local open_docs="`gettext \"_Open Migration Instructions\"`"
+    local ignore="`gettext \"_Migrate Later\"`"
+    zenity --question --width 480 --title "OpenPGP Migration" --text "${dialog_msg}" \
+           --ok-label "${open_docs}" --cancel-label "${ignore}"
+}
+
+enigmail_migration() {
+    if native_openpgp_configured || ! enigmail_configured; then
+        return
     fi
-}
-
-thunderbird_profile_is_new() {
-   [ ! -f "${PROFILE}/extensions.json" ]
-}
-
-initialize_enigmail_configured_version() {
-    mkdir -p "${PROFILE}/preferences"
-    version="$(dpkg-query --show \
-                          --showformat='${source:Upstream-Version}' \
-                          enigmail | sed -E 's,\+.*$,,')"
-    # Set the value in prefs.js so that Enigmail can manage it itself
-    # once we've done this once.
-    set_mozilla_pref "${PROFILE}/prefs.js" \
-                     "extensions.enigmail.configuredVersion" \
-                     "\"${version}\"" \
-		     'user_pref'
+    if notify_enigmail_migration; then
+        tails-documentation doc/anonymous_internet/thunderbird/openpgp_migration &
+    fi
 }
 
 start_thunderbird() {
     export GNOME_ACCESSIBILITY=1
     unset SESSION_MANAGER
     reconfigure_profile
+    enigmail_migration
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
 

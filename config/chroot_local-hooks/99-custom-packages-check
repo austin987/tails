@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -e
+
+echo "Make sure we install the required custom Tails packages"
+
+# The following packages must be custom Tails versions, which currently is determined by ".0tails" being a substring of the version.
+TAILS_PACKAGES="
+desktop-file-utils
+fontconfig
+fontconfig-config
+gjs
+gnome-shell
+gnome-shell-common
+gtk-update-icon-cache
+gvfs-backends
+gvfs-common
+gvfs-daemons
+ibus
+libgjs0g
+libgtk-3-common
+network-manager
+"
+
+package_version() {
+    dpkg-query --show --showformat='${Version}' "${1}" 2>/dev/null
+}
+
+tails_package_installed() {
+    package_version "${1}" | grep -q "\.0tails"
+}
+
+errors=
+for p in ${TAILS_PACKAGES}; do
+    if ! tails_package_installed "${p}"; then
+        errors="${errors} ${p}"
+    fi
+done
+
+if [ -n "${errors}" ]; then
+    echo "These packages were expected to be custom Tails versions," \
+         "but are not:" >&2
+    for p in ${errors}; do
+        echo " - ${p} ($(package_version "${p}"))" >&2
+    done
+    exit 1
+fi
