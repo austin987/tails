@@ -333,21 +333,20 @@ Then /^I can watch a WebM video in Tor Browser$/ do
 end
 
 Then /^DuckDuckGo is the default search engine$/ do
+  ddg_search_prompt = 'DuckDuckGoSearchPrompt.png'
+  case $language
+  when 'Arabic', 'Persian'
+    ddg_search_prompt = "DuckDuckGoSearchPromptRTL.png"
+  when 'Chinese', 'Hindi'
+    ddg_search_prompt = "DuckDuckGoSearchPrompt#{$language}.png"
+  end
   step 'I start the Tor Browser'
   step 'I open a new tab in the Tor Browser'
   # Typing would require maintaining keymaps for every language in
   # which we run this step ⇒ instead, paste the search string.
   $vm.set_clipboard('a random search string')
   @screen.press('ctrl', 'v')
-  @screen.wait_any(
-    [
-      'DuckDuckGoSearchPrompt.png',
-      'DuckDuckGoSearchPromptHindi.png',
-      'DuckDuckGoSearchPromptChinese.png',
-      'DuckDuckGoSearchPromptPersian.png',
-    ],
-    20
-  )
+  @screen.wait(ddg_search_prompt, 20)
   step 'I kill the Tor Browser'
 end
 
