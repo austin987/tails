@@ -17,6 +17,14 @@ When /^I close the (?:Tor|Unsafe) Browser$/ do
   @screen.press('ctrl', 'q')
 end
 
+When(/^I kill the ((?:Tor|Unsafe) Browser)$/) do |browser|
+  info = xul_application_info(browser)
+  $vm.execute_successfully("pkill --full --exact '#{info[:cmd_regex]}'")
+  try_for(10) do
+    $vm.execute("pgrep --full --exact '#{info[:cmd_regex]}'").failure?
+  end
+end
+
 def tor_browser_application_info(defaults)
   user = LIVE_USER
   binary = $vm.execute_successfully(
@@ -73,7 +81,7 @@ def tor_launcher_application_info(defaults)
       new_tab_button_image:        nil,
       browser_reload_button_image: nil,
       browser_stop_button_image:   nil,
-      address_bar_image:           nil,
+      address_bar_images:          [],
       # The standalone Tor Launcher uses fewer libs than the full
       # browser.
       unused_tbb_libs:             defaults[:unused_tbb_libs]
@@ -85,8 +93,9 @@ end
 
 def xul_application_info(application)
   defaults = {
-    address_bar_image: 'BrowserAddressBar.png',
-    unused_tbb_libs:   ['libnssdbm3.so', 'libmozavcodec.so', 'libmozavutil.so'],
+    address_bar_images: ["BrowserAddressBar#{$language}.png",
+                         "BrowserAddressBar#{$language}Alt.png",],
+    unused_tbb_libs:    ['libnssdbm3.so', 'libmozavcodec.so', 'libmozavutil.so'],
   }
   case application
   when 'Tor Browser'
@@ -103,14 +112,14 @@ end
 When /^I open a new tab in the (.*)$/ do |browser|
   info = xul_application_info(browser)
   @screen.click(info[:new_tab_button_image])
-  @screen.wait(info[:address_bar_image], 10)
+  @screen.wait_any(info[:address_bar_images], 10)
 end
 
 When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   step "I open a new tab in the #{browser}"
   info = xul_application_info(browser)
   open_address = proc do
-    @screen.click(info[:address_bar_image])
+    @screen.find_any(info[:address_bar_images])[:match].click
     # This static here since we have no reliable visual indicators
     # that we can watch to know when typing is "safe".
     sleep 5
@@ -262,11 +271,29 @@ Then /^the Tails homepage loads in the Unsafe Browser$/ do
   @screen.wait('TailsHomepage.png', 60)
 end
 
+def headings_in_page(page_title)
+  @torbrowser.child(page_title, roleName: 'frame').children(roleName: 'heading')
+end
+
+def page_has_heading(page_title, heading)
+  headings_in_page(page_title).any? { |h| h.text == heading }
+end
+
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   try_for(60) do
-    page = @torbrowser.child('Problem loading page - Tor Browser',
-                             roleName: 'frame')
-    page.children(roleName: 'heading').any? { |heading| heading.text == error }
+    page_has_heading('Problem loading page - Tor Browser', error)
+  end
+end
+
+Then /^Tor Browser displays a "([^"]+)" heading on the "([^"]+)" page$/ do |heading, page_title|
+  try_for(60) do
+    page_has_heading("#{page_title} - Tor Browser", heading)
+  end
+end
+
+Then /^Tor Browser displays a '([^']+)' heading on the "([^"]+)" page$/ do |heading, page_title|
+  try_for(60) do
+    page_has_heading("#{page_title} - Tor Browser", heading)
   end
 end
 
@@ -303,4 +330,42 @@ Then /^I can watch a WebM video in Tor Browser$/ do
   retry_tor(recovery_on_failure) do
     @screen.wait('TorBrowserSampleRemoteWebMVideoFrame.png', 30)
   end
+end
+
+Then /^DuckDuckGo is the default search engine$/ do
+  ddg_search_prompt = 'DuckDuckGoSearchPrompt.png'
+  case $language
+  when 'Arabic', 'Persian'
+    ddg_search_prompt = "DuckDuckGoSearchPromptRTL.png"
+  when 'Chinese', 'Hindi'
+    ddg_search_prompt = "DuckDuckGoSearchPrompt#{$language}.png"
+  end
+  step 'I start the Tor Browser'
+  step 'I open a new tab in the Tor Browser'
+  # Typing would require maintaining keymaps for every language in
+  # which we run this step ⇒ instead, paste the search string.
+  $vm.set_clipboard('a random search string')
+  @screen.press('ctrl', 'v')
+  @screen.wait(ddg_search_prompt, 20)
+  step 'I kill the Tor Browser'
+end
+
+Then(/^the screen keyboard works in Tor Browser$/) do
+  osk_key = 'ScreenKeyboardKeyX.png'
+  browser_bar_x = 'BrowserAddressBarX.png'
+  case $language
+  when 'Arabic'
+    browser_bar_x = 'BrowserAddressBarXRTL.png'
+  when 'Chinese', 'Hindi'
+    browser_bar_x = "BrowserAddressBarX#{$language}.png"
+  when 'Persian'
+    osk_key = 'ScreenKeyboardKeyPersian.png'
+    browser_bar_x = 'BrowserAddressBarXPersian.png'
+  end
+  step 'I start the Tor Browser'
+  step 'I open a new tab in the Tor Browser'
+  @screen.wait('ScreenKeyboard.png', 10)
+  @screen.wait(osk_key, 10).click
+  @screen.wait(browser_bar_x, 20)
+  step 'I kill the Tor Browser'
 end

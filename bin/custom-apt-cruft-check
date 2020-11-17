@@ -1,0 +1,157 @@
+#!/usr/bin/env ruby
+
+# This script reports which binary/source packages that can be safely
+# deleted from one of the main APTs suite in our custom repo. It requires a
+# .build-manifest as the source for which packages that are used
+# during build and thus cannot be deleted.
+
+begin
+  require 'debian'
+rescue LoadError
+  raise 'please install the ruby-debian package'
+end
+require 'open-uri'
+require 'optparse'
+require 'yaml'
+
+class NoSource < StandardError
+end
+
+def source_package(package)
+  matches = []
+  APT_SOURCES.each_package do |dsc|
+    # The -dbg(sym) packages are not listed, so we look for the
+    # original package's source instead, which will be the same.
+    matches << dsc if dsc.binary.include?(package.sub(/-dbg(sym)?$/, ''))
+  end
+  raise NoSource, "found no source package for #{package}" if matches.size.zero?
+
+  raise "found multiple source packages for #{package}" if matches.size > 1
+
+  matches.first.package
+end
+
+def binary_packages(package)
+  APT_SOURCES[package].binary
+end
+
+Options = Struct.new(:suite, :build_manifest, keyword_init: true)
+
+class Parser
+  def self.parse(options)
+    args = Options.new(suite: nil, build_manifest: nil)
+
+    opt_parser = OptionParser.new do |opts|
+      opts.on(
+        '--suite SUITE',
+        'Look for cruft in APT suite SUITE'
+      ) do |suite|
+        args.suite = suite
+      end
+      opts.on(
+        '--build-manifest MANIFEST',
+        'Use specified build manifest instead of downloading the latest one'
+      ) do |build_manifest|
+        args.build_manifest = build_manifest
+      end
+      opts.on('-h', '--help', 'Prints this help') do
+        puts opts
+        exit
+      end
+    end
+    opt_parser.parse!(options)
+
+    !args.suite.nil? or raise 'Please use --suite SUITE'
+
+    args
+  end
+end
+options = Parser.parse(ARGV)
+
+allowed_suites = ['stable', 'devel']
+unless allowed_suites.include?(options.suite)
+  raise "we only support checking the following' " \
+        "custom APT suites: #{allowed_suites.join(', ')}"
+end
+begin
+  apt_repo_hostnames = [
+    'deb.tails.boum.org',
+    'umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd.onion',
+  ]
+  apt_repo_filenames = apt_repo_hostnames.map do |hostname|
+    "/var/lib/apt/lists/#{hostname}_dists_#{options.suite}_main_source_Sources"
+  end
+  apt_repo_filename = apt_repo_filenames.find do |filename|
+    File.exist?(filename)
+  end
+  APT_SOURCES = Debian::Sources.new(apt_repo_filename).freeze
+rescue
+  raise "could not find Tails custom APT repo's sources, " \
+        "please add this to your APT sources:\n" \
+        "deb-src [arch=amd64] http://deb.tails.boum.org/ #{options.suite} main"
+end
+
+if options.build_manifest.nil?
+  url = "https://nightly.tails.boum.org/build_Tails_ISO_#{options.suite}/lastSuccessful/archive/latest.build-manifest"
+  begin
+    manifest = YAML.safe_load(
+      URI.open(url).read
+    )
+  rescue OpenURI::HTTPError
+    raise "got HTTP 404 when attempting to fetch: #{url}\n" \
+          'Please try again in a while -- Jenkins sometimes needs some time ' \
+          'to create the latest.build-manifest symlink after a build completes'
+  end
+else
+  manifest = YAML.load_file(options.build_manifest)
+end
+
+all_source_packages = []
+used_source_packages = []
+binary_cruft_candidates = []
+
+custom_packages = `ssh reprepro@incoming.deb.tails.boum.org reprepro list #{options.suite}`
+custom_packages.each_line(chomp: true) do |line|
+  type, name, version = line.split
+  if type['source']
+    all_source_packages << name
+  else
+    installed = manifest['packages']['binary'].find { |x| x['package'] == name }
+    if installed.nil? || version != installed['version']
+      binary_cruft_candidates << name
+    else
+      used_source_packages << source_package(name)
+    end
+  end
+end
+
+source_cruft = all_source_packages.uniq - used_source_packages
+binary_cruft = []
+binary_cruft_candidates.each do |p|
+  begin
+    next if used_source_packages.include?(source_package(p))
+  rescue NoSource
+    # If we don't have a source for a package, it should be a package
+    # we forgot to clean up when we removed its sources.
+  end
+  binary_cruft << p
+end
+
+unless binary_cruft.empty?
+  puts 'Binary packages that are not used:'
+  binary_cruft.each { |p| puts " - #{p}" }
+  puts
+  puts "  Clean up command:\n" \
+       '  ssh reprepro@incoming.deb.tails.boum.org ' \
+       "reprepro remove #{options.suite} #{binary_cruft.join(' ')}"
+  puts
+end
+
+unless source_cruft.empty?
+  puts 'Source packages that are not used:'
+  source_cruft.each { |p| puts " - #{p}" }
+  puts
+  puts "  Clean up command:\n" \
+       '  ssh reprepro@incoming.deb.tails.boum.org ' \
+       "reprepro removesrcs #{options.suite} #{source_cruft.join(' ')}"
+end
