@@ -357,10 +357,8 @@ Then(/^the screen keyboard works in Tor Browser$/) do
   case $language
   when 'Arabic'
     browser_bar_x = 'BrowserAddressBarXRTL.png'
-  when 'Chinese'
-    browser_bar_x = 'BrowserAddressBarXChinese.png'
-  when 'Hindi'
-    browser_bar_x = 'BrowserAddressBarXHindi.png'
+  when 'Chinese', 'Hindi'
+    browser_bar_x = "BrowserAddressBarX#{$language}.png"
   when 'Persian'
     osk_key = 'ScreenKeyboardKeyPersian.png'
     browser_bar_x = 'BrowserAddressBarXPersian.png'
