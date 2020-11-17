@@ -1193,6 +1193,22 @@ technical writers who have likely prepared release notes:
 	   git fetch && \
 	   git merge "origin/${WEBSITE_RELEASE_BRANCH?:}"
 
+If no release notes where prepared, we add one with placeholders that
+the technical writes can update post-release:
+
+    cp wiki/src/news/version_${PREVIOUS_STABLE_VERSION:?}.mdwn \
+       wiki/src/news/version_${VERSION:?}.mdwn &&
+    ${EDITOR:?} wiki/src/news/version_${VERSION:?}.mdwn
+
+Make sure to:
+
+1. adjust the `!meta date` at the top.
+2. adjust all version numbers everywhere appropriately.
+3. add placeholders to the "Changes and updates" and "Fixed problems",
+   e.g. "This section will be updated soon. Sorry for the
+   inconvenience!".
+4. add any known issues to the "Known issues" section.
+
 If preparing a final release
 ----------------------------
 
