@@ -534,7 +534,7 @@ Then /^all persistent filesystems have safe access rights$/ do
     fs_perms = $vm.execute("stat -c %a #{mountpoint}").stdout.chomp
     assert_equal('root', fs_owner)
     assert_equal('root', fs_group)
-    assert_equal('775', fs_perms)
+    assert_equal('770', fs_perms)
   end
 end
 
@@ -864,8 +864,8 @@ Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |ver
   failure_pic = 'TailsUpgraderFailure.png'
   success_pic = "TailsUpgraderUpgradeTo#{version}.png"
   retry_tor(recovery_proc) do
-    match, = @screen.wait_any([success_pic, failure_pic], 2 * 60)
-    assert_equal(success_pic, match)
+    found_pic = @screen.wait_any([success_pic, failure_pic], 2 * 60)[:found_pattern]
+    assert_equal(success_pic, found_pic)
   end
 end
 
@@ -886,8 +886,8 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
   failure_pic = 'TailsUpgraderFailure.png'
   success_pic = 'TailsUpgraderDownloadComplete.png'
   retry_tor(recovery_proc) do
-    match, = @screen.wait_any([success_pic, failure_pic], 2 * 60)
-    assert_equal(success_pic, match)
+    found_pic = @screen.wait_any([success_pic, failure_pic], 2 * 60)[:found_pattern]
+    assert_equal(success_pic, found_pic)
   end
   @screen.click('TailsUpgraderApplyUpgradeButton.png')
   @screen.wait('TailsUpgraderDone.png', 60)

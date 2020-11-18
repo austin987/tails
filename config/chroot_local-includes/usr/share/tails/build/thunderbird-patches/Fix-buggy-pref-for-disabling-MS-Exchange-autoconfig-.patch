@@ -1,7 +1,8 @@
-From a95fe8ff521840faffecc89d9ae7a51fccc1ba82 Mon Sep 17 00:00:00 2001
+From bdf2874f60fada9a894c5be4f4846ed2fbc2c124 Mon Sep 17 00:00:00 2001
 From: anonym <anonym@riseup.net>
 Date: Fri, 24 Apr 2020 16:01:39 +0200
-Subject: [PATCH] Fix buggy pref for disabling MS Exchange autoconfig method.
+Subject: [PATCH 4/4] Fix buggy pref for disabling MS Exchange autoconfig
+ method.
 
 Before the upstream work that made the autoconfig methods happen in
 parallel this was working, but when I adapted it to that work I seem
@@ -19,13 +20,15 @@ While we're at it, let's do the same for when the MX method is
 disabled since there is no reason for it to be listed as a failure
 when disabled either.
 ---
- .../accountcreation/content/emailWizard.js    | 81 ++++++++++---------
- .../content/exchangeAutoDiscover.js           | 10 ---
- 2 files changed, 45 insertions(+), 46 deletions(-)
+ .../accountcreation/content/emailWizard.js    | 91 ++++++++++---------
+ .../content/exchangeAutoDiscover.js           | 10 --
+ 2 files changed, 50 insertions(+), 51 deletions(-)
 
+diff --git a/comm/mail/components/accountcreation/content/emailWizard.js b/comm/mail/components/accountcreation/content/emailWizard.js
+index b677bb718cd..deff02f74ad 100644
 --- a/comm/mail/components/accountcreation/content/emailWizard.js
 +++ b/comm/mail/components/accountcreation/content/emailWizard.js
-@@ -757,46 +757,55 @@
+@@ -757,51 +757,60 @@ EmailConfigWizard.prototype = {
        );
        call.setAbortable(fetch);
  
@@ -72,11 +75,9 @@ when disabled either.
 -            this.onStartOver();
 -            this.stopSpinner(); // clears status message
 -            _show("usernameRow");
--            _show("status_area");
--            _enable("manual-edit_button");
--            errorCallback(new CancelledException());
--          } else {
--            errorCallback(e);
+-            _show("status-area");
+-            if (!this._exchangeUsername) {
+-              this.showErrorStatus("credentials_incomplete");
 +      if (
 +        Services.prefs.getBoolPref(
 +          "mailnews.auto_config.fetchFromExchange.enabled",
@@ -103,12 +104,22 @@ when disabled either.
 +              this.onStartOver();
 +              this.stopSpinner(); // clears status message
 +              _show("usernameRow");
-+              _show("status_area");
++              _show("status-area");
++              if (!this._exchangeUsername) {
++                this.showErrorStatus("credentials_incomplete");
++              } else {
++                this.showErrorStatus("credentials_wrong");
++              }
 +              _enable("manual-edit_button");
 +              errorCallback(new CancelledException());
-+            } else {
+             } else {
+-              this.showErrorStatus("credentials_wrong");
 +              errorCallback(e);
-+            }
+             }
+-            _enable("manual-edit_button");
+-            errorCallback(new CancelledException());
+-          } else {
+-            errorCallback(e);
            }
 -        }
 -      );
@@ -119,9 +130,11 @@ when disabled either.
      } catch (e) {
        // e.g. when entering an invalid domain like "c@c.-com"
        this.showErrorMsg(e);
+diff --git a/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js b/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
+index 307e8c884d2..82c60099098 100644
 --- a/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
 +++ b/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
-@@ -48,16 +48,6 @@
+@@ -48,16 +48,6 @@ function fetchConfigFromExchange(
  ) {
    assert(typeof successCallback == "function");
    assert(typeof errorCallback == "function");
@@ -138,3 +151,6 @@ when disabled either.
    // <https://technet.microsoft.com/en-us/library/bb124251(v=exchg.160).aspx#Autodiscover%20services%20in%20Outlook>
    // <https://docs.microsoft.com/en-us/previous-versions/office/developer/exchange-server-interoperability-guidance/hh352638(v%3Dexchg.140)>, search for "The Autodiscover service uses one of these four methods"
    let url1 =
+-- 
+2.28.0
+
