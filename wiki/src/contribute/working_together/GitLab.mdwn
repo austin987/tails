@@ -405,6 +405,34 @@ you can:
    See [[!tails_gitlab help/user/project/issues/managing_issues.html#new-issue-via-email desc="New issue via email"]]
    in the GitLab documentation.
 
+<a id="api"></a>
+
+# Scripts that use the GitLab API
+
+We have several scripts query or manipulate data using the GitLab API:
+for example, [[!tails_gitweb bin/generate-changelog]] and [[!tails_gitweb
+bin/generate-report]].
+
+To use them:
+
+* Install the `python3-gitlab` Debian package.
+
+* Configure your `~/.python-gitlab.cfg`.
+
+  You need at least this content:
+
+        [global]
+        ssl_verify = true
+
+        [Tails]
+        url = https://gitlab.tails.boum.org
+        per_page = 100
+        private_token = XXX
+
+  In the `Tails` section, set the value of the `private_token` option to a
+  GitLab API token for your own user. To generate such a token,
+  visit [[!tails_gitlab profile/personal_access_tokens]].
+
 <a id="core-work"></a>
 
 # Core teams' work
