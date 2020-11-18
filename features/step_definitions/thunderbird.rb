@@ -269,16 +269,18 @@ end
 
 Then(/^the screen keyboard works in Thunderbird$/) do
   step 'I start Thunderbird'
+  osk_key = 'ScreenKeyboardKeyX.png'
+  thunderbird_x = 'ThunderbirdX.png'
+  case $language
+  when 'Arabic'
+    thunderbird_x = 'ThunderbirdXRTL.png'
+  when 'Chinese'
+    thunderbird_x = 'ThunderbirdXChinese.png'
+  when 'Persian'
+    osk_key = 'ScreenKeyboardKeyPersian.png'
+    thunderbird_x = 'ThunderbirdXPersian.png'
+  end
   @screen.wait('ScreenKeyboard.png', 10)
-  @screen.wait_any(
-    ['ScreenKeyboardKeyX.png', 'ScreenKeyboardKeyPersian.png'], 10
-  )[:match].click
-  @screen.wait_any(
-    [
-      'ThunderbirdX.png',
-      'ThunderbirdXChinese.png',
-      'ThunderbirdXPersian.png',
-      'ThunderbirdXRTL.png',
-    ], 20
-  )
+  @screen.wait(osk_key, 20).click
+  @screen.wait(thunderbird_x, 20)
 end
