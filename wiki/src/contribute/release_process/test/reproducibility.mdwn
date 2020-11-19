@@ -39,32 +39,8 @@ following variables as instructed:
 * `RELEASE_BRANCH`
 * `VERSION`
 
-<!-- Now for the only tricky part, setting `IUK_SOURCE_VERSIONS`. It should -->
-<!-- simply list the old Tails versions that will get an automatic upgrade -->
-<!-- to the current release, and should be set correctly by this command -->
-<!-- most of the time: -->
-
-<!--     IUK_SOURCE_VERSIONS="$( -->
-<!--         curl "http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/" \ -->
-<!--         | grep --extended-regexp --only-matching \ -->
-<!--                "Tails_amd64_[^_]+_to_${VERSION:?}.iuk" \ -->
-<!--         | sort -u \ -->
-<!--         | tr '_' ' ' \ -->
-<!--         | cut -d' ' -f3 -->
-<!--     )" -->
+<!--     IUK_SOURCE_VERSIONS="$(bin/iuk-source-versions "$VERSION")" -->
 <!--     echo -e "Got these IUK source versions:\n${IUK_SOURCE_VERSIONS}" -->
-
-<!-- Now sanity check the contents of `IUK_SOURCE_VERSIONS`: -->
-
-<!-- * If empty, the RM has probably not uploaded them yet so you may have -->
-<!--   to wait. -->
-<!-- * Make sure each listed version actually has been released! :) -->
-<!-- * [[Figure out the rules for how to set this -->
-<!--   variable|contribute/release_process#prepare-iuk]] and double-check -->
-<!--   that it makes sense! Note that exceptions happen (e.g. there could -->
-<!--   be a bug in some old versions upgrader so we skip it). -->
-<!-- * If the release notes have already been written (generally there is an -->
-<!--   issue about it) it should list which versions have automatic upgrades. -->
 
 ## Inputs from manual testers
 
