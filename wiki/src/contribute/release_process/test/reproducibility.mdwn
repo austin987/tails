@@ -27,21 +27,6 @@ mislead you.
 
 # Gather input data
 
-## Inputs from the release process
-
-Look at the "Environment" section at the beginning of [[the release
-process instructions|contribute/release_process]] and set the
-following variables as instructed:
-
-* `ARTIFACTS`
-* `DIST`
-* `ISOS`
-* `RELEASE_BRANCH`
-* `VERSION`
-
-<!--     IUK_SOURCE_VERSIONS="$(bin/iuk-source-versions "$VERSION")" -->
-<!--     echo -e "Got these IUK source versions:\n${IUK_SOURCE_VERSIONS}" -->
-
 ## Inputs from manual testers
 
 A manual tester should have sent you
@@ -52,10 +37,19 @@ clear-signed hashes for all products of this release. Then:
 2. Put the hashes, excluding the OpenPGP signature data, into a file
    called `SHA512SUMS.txt`.
 
+<!--     IUK_SOURCE_VERSIONS="$(bin/iuk-source-versions "$VERSION")" -->
+<!--     echo -e "Got these IUK source versions:\n${IUK_SOURCE_VERSIONS}" -->
+
 ## Your inputs
 
 Set these environment variables accordingly:
 
+* `ARTIFACTS`: the directory where build artifacts (e.g. the `.packages` file) land
+* `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
+* `ISOS`: the directory where one stores `tails-amd64-*` sub-directories,
+  like the ones downloaded with BitTorrent.
+* `RELEASE_BRANCH`: `testing` if this is a major release, else `stable`
+* `VERSION`: the version you're trying to reproduce
 <!-- * `ISOS_CHECKOUT`: path to your Tails ISO history repo checkout. -->
 <!-- * `PACKAGES_FILE="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.packages"` -->
 * `PUBLISHED_ARTIFACTS`: some _new_ directory where you can download
