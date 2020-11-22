@@ -16,7 +16,8 @@ tmpdir="$(mktemp -d)"
    # due to the weird omni.ja format, 7z will exit with non-zero code,
    # that we need to override
    7z x -tzip "$OMNI_JA" || true
-   for patch in $(cat "$PATCHES_DIRECTORY"/series) ; do
+   while read -r patch ; do #  < "$PATCHES_DIRECTORY"/series
+      # shellcheck disable=SC2002
       cat "$PATCHES_DIRECTORY/$patch" \
 	 | perl -p -E 's{^(--- [ab])/comm/mail/components/accountcreation/content/}{$1/chrome/messenger/content/messenger/accountcreation/}' \
 	 | perl -p -E 's{^(--- [ab])/comm/mail/components/compose/content/}{$1/chrome/messenger/content/messenger/messengercompose/}' \
@@ -25,10 +26,10 @@ tmpdir="$(mktemp -d)"
 	 | perl -p -E 's{^(--- [ab])/comm/mailnews/mime/}{$1/modules/}' \
 	 | perl -p -E 's{^(--- [ab])/comm/mailnews/}{$1/defaults/pref/}' \
 	 | patch -p1
-   done
-   find . -name *.js -exec touch --date="@$SOURCE_DATE_EPOCH" '{}' \;
+   done < "$PATCHES_DIRECTORY"/series
+   find . -name '*.js' -exec touch --date="@$SOURCE_DATE_EPOCH" '{}' \;
    rm "$OMNI_JA"
-   7z a -mtc=off -tzip "$OMNI_JA" *
+   7z a -mtc=off -tzip "$OMNI_JA" ./*
 )
 
 rm -r "${tmpdir}"
