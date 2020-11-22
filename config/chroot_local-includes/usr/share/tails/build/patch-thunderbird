@@ -17,6 +17,7 @@ tmpdir="$(mktemp -d)"
    # that we need to override
    7z x -tzip "$OMNI_JA" || true
    while read -r patch ; do #  < "$PATCHES_DIRECTORY"/series
+      echo "I: Applying $patch"
       # shellcheck disable=SC2002
       cat "$PATCHES_DIRECTORY/$patch" \
 	 | perl -p -E 's{^(--- [ab])/comm/mail/components/accountcreation/content/}{$1/chrome/messenger/content/messenger/accountcreation/}' \
