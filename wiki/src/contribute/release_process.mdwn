@@ -779,7 +779,7 @@ Push the released ISO and USB images and their artifacts (`.buildlog`,
 `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
 repo, so that:
 
- - The Jenkins `parallel_build_IUKs` job can fetch them.
+ - The Jenkins `build_IUKs` job can fetch them.
  - Our isotesters can fetch them from there for their testing.
 
 Make sure that Jenkins has finished building so you have set
@@ -795,7 +795,7 @@ Make sure that Jenkins has finished building so you have set
 Then, wait (a few minutes, `*/15` crontab) until the images appear
 on <https://iso-history.tails.boum.org/?C=M&O=D>.
 
-While waiting, you can prepare the `parallel_build_IUKs` job and build in the
+While waiting, you can prepare the `build_IUKs` job and build in the
 next section. But do **not** click _Build_ until the images have appeared in the
 ISO history.
 
@@ -808,11 +808,11 @@ Build the Incremental Upgrade Kits on Jenkins
    has finished, and that images have appeared on the web server:
    <https://iso-history.tails.boum.org/>
 
-1. On <https://jenkins.tails.boum.org/job/parallel_build_IUKs/configure>, adjust
+1. On <https://jenkins.tails.boum.org/job/build_IUKs/configure>, adjust
    the `SOURCE_VERSION` axis to list all versions in `$IUK_SOURCE_VERSIONS`,
    and save the updated configuration.
 
-1. On <https://jenkins.tails.boum.org/job/parallel_build_IUKs/build?delay=0sec>,
+1. On <https://jenkins.tails.boum.org/job/build_IUKs/build?delay=0sec>,
    fill the form with these values:
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
@@ -847,11 +847,11 @@ Build the Incremental Upgrade Kits on Jenkins
 
           . $(./bin/rm-config generate-environment --stage built-iuks)
 
-5. Wait until both `parallel_build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
+5. Wait until both `build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
    It should take about 10-15 minutes for each member of
    the `$IUK_SOURCE_VERSIONS` list, distributed across `isobuilderN` workers.
 
-6. Add the time it took for `parallel_build_IUKs` and
+6. Add the time it took for `build_IUKs` and
    `parallel_collect_IUKs` to the table of [[!tails_ticket 17750]].
 
 <a id="reproducibility-sanity-check-iuk"></a>
@@ -869,11 +869,11 @@ If this verification succeeds, move on to the next section.
 
 Else, if this verification fails, then:
 
-1. Visit this page: `https://jenkins.tails.boum.org/job/parallel_build_IUKs/lastBuild/parameters/`
+1. Visit this page: `https://jenkins.tails.boum.org/job/build_IUKs/lastBuild/parameters/`
 
    It tells you which parameters you've passed to the upstream Jenkins
    job, which spawned the many workers. Make sure to use the build
-   history browser to find the right `parallel_build_IUKs` job in case
+   history browser to find the right `build_IUKs` job in case
    there were several attempts; the URL above assumes the last build
    is what you're interested in (see `lastBuild` part).
 
@@ -893,7 +893,7 @@ Else, if this verification fails, then:
 
    Specify:
 
-    - Which set of parameters you've passed to the *parallel_build_IUKs*
+    - Which set of parameters you've passed to the *build_IUKs*
       job, so that the person who'll investigate the problem
       can reproduce it.
     - The ID of the build that failed to reproduce your
