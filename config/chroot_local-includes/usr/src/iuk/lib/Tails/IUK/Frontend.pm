@@ -28,6 +28,7 @@ use Tails::Download::HTTPS;
 use Tails::RunningSystem;
 use Tails::IUK::UpgradeDescriptionFile;
 use Tails::IUK::Utils qw{space_available_in};
+use Tails::IUK::DownloadProgress;
 use Tails::MirrorPool;
 use Try::Tiny;
 use Types::Path::Tiny qw{AbsDir AbsFile};
@@ -577,7 +578,11 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             $exit_code = $?;
         }
         else {
-            my ($download_h, $zenity_h, $download_out);
+            my ($download_h, $zenity_h, $download_out, $zenity_in);
+            my $bytes_downloaded;
+            my $download_progress =
+                Tails::IUK::DownloadProgress->new(size => $upgrade_path->{'total-size'});
+                
             $download_h =  IPC::Run::start \@cmd,
                 \undef, \$download_out, '2>', \$stderr;
             $zenity_h = IPC::Run::start
@@ -585,10 +590,23 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                     qw{zenity --progress --percentage=0 --auto-close},
                     '--title', $title, '--text', $info
                 ],
-                \$download_out;
+                \$zenity_in;
             try {
                 while ($zenity_h->pumpable && $download_h->pumpable ) {
                     $download_h->pump_nb;
+                    next unless $download_out;
+                    $zenity_in = $download_out;
+                    $zenity_h->pump_nb;
+                    ($bytes_downloaded) = split /\n/, $download_out;
+                    $bytes_downloaded = ($bytes_downloaded/100) * $download_progress->size;
+                    $download_out = undef;
+                    next unless $download_progress->update($bytes_downloaded);
+                    $zenity_in = __x(
+                        "# about {time} left - {downloaded} of {size}\n",
+                        time => $download_progress->estimated_end_time,
+                        downloaded => format_bytes($bytes_downloaded,mode => "iec", precision => 0),
+                        size => format_bytes($download_progress->size,mode => "iec", precision => 0),
+                        );
                     $zenity_h->pump_nb;
                 }
             }
