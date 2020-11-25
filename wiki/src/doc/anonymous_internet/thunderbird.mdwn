@@ -26,49 +26,77 @@ For more detailed documentation, refer to the [official
 <span class="application">Thunderbird</span>
 help](https://support.mozilla.org/en-US/products/thunderbird).
 
-Configure an email account
-==========================
+<h1 id="account">Configuring an email account</h1>
 
-[[!inline pages="doc/anonymous_internet/thunderbird/account_creation.inline" raw="yes" sort="age"]]
+1. When starting <span class="application">Thunderbird</span> for the first
+   time, an assistant appears to guide you through the process of
+   configuring <span class="application">Thunderbird</span> to access your
+   email account.
 
-OpenPGP encryption with Enigmail
-================================
+   <div class="tip">
 
-<span class="application">Thunderbird</span> in Tails includes the
-<span class="application">[Enigmail](https://www.enigmail.net/)</span>
-extension to encrypt and authenticate emails using OpenPGP.
+   <p>To start this assistant again in the future from the main window of
+   <span class="application">Thunderbird</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
+     <span class="guimenuitem">Account Settings</span>
+   </span> and then, from the <span class="guilabel">Account Settings</span>
+   dialog, choose <span class="guilabel">Account Actions</span>&nbsp;▸
+   <span class="guilabel">Add Mail Account&hellip;</span>.</p>
 
-To configure <span class="application">Enigmail</span> for your email account, you can start the
-<span class="application">Enigmail Setup Wizard</span> by choosing
-<span class="menuchoice">
-  <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
-  <span class="guisubmenu">Enigmail</span>&nbsp;▸
-  <span class="guimenuitem">Setup Wizard</span></span>.
+   </div>
 
-You can also create an OpenPGP key associated with your email address as
-part of the <span class="application">Enigmail Setup Wizard</span>.
+1. Enter your name, email address, and password into the corresponding fields.
 
-If you are new to OpenPGP, you can read the following guides on getting
-started with encrypting emails using
-<span class="application">Thunderbird</span> and
-<span class="application">Enigmail</span>:
+1. Click <span class="guilabel">Continue</span>.
 
-  - [Security-in-a-Box: Thunderbird & OpenPGP - secure email](https://securityinabox.org/en/guide/thunderbird/linux/)
-  - [Enigmail: Enigmail Quick Start Guide](https://www.enigmail.net/index.php/en/user-manual/quick-start)
+1. The assistant tries to configure automatically the correct settings
+   to connect to your email provider based on your email address.
 
-<div class="caution">
+   If the automatic configuration fails, consult your email provider
+   about how to configure your email account manually.
 
-<p>If you have GnuPG keys stored in your Persistent Storage since before Tails 4.1
-(December 2019), you should [[update your OpenPGP keyserver
-configuration|doc/encryption_and_privacy/openpgp_keyserver]] to use safe
-keyservers.</p>
+   <div class="tip" id="gmail">
 
-</div>
+   <h2>Configuring a Gmail account</h2>
 
-<a id="torbirdy"></a>
+   <p>If you are using Gmail, you need to first configure your account to
+   allow access from other email clients, such as
+   <span class="application">Thunderbird</span>.</p>
 
-Enhanced privacy
-================
+   <p>To configure your Gmail account to allow access from
+   <span class="application">Thunderbird</span>, you need to:</p>
+
+   <ol>
+     <li>Enable IMAP or POP. See <a href="https://support.google.com/mail/answer/7126229">Gmail Help: Check Gmail through other email platforms</a>.</li>
+     <li>Turn on 2-Step Verification. See <a href="https://support.google.com/accounts/answer/185839">Google Account Help: 2-Step Verification</a>.</li>
+     <li>Create an App Password. See <a href="https://support.google.com/mail/answer/185833">Gmail Help: Sign in with App Passwords</a>.</li>
+     <li>Use the App Password in <em>Thunderbird</em>.</li>
+   </ol>
+
+   </div>
+
+1. If the automatic configuration succeeds, you might have to specify
+   which protocol to use to connect to your email provider, either
+   <span class="guilabel">IMAP</span> or <span class="guilabel">POP</span>.
+
+      - With <span class="guilabel">IMAP</span>,
+        <span class="application">Thunderbird</span> constantly synchronizes
+        with the server and displays the emails and folders that are
+	currently stored on the server. IMAP is better suited if you access
+        your emails from different operating systems.
+
+      - With <span class="guilabel">POP</span>,
+        <span class="application">Thunderbird</span> downloads the emails that
+        are in the inbox on the server and possibly deletes them from the
+	server. POP is better suited if you access your emails from Tails only
+        and store them in the Persistent Storage.
+
+   To know more, see also this [comparison between POP and
+   IMAP](https://help.riseup.net/en/email/clients/#choose-imap-or-pop) by
+   Riseup.
+
+<h1 id="privacy">Enhanced privacy</h1>
 
 <span class="application">Thunderbird</span> in Tails is configured
 for additional privacy and anonymity.
@@ -77,11 +105,10 @@ For example, <span class="application">Thunderbird</span> in Tails:
 
 - Removes information about the language of your session or spellchecker
   from the headers of the emails that you send.
-- Removes information that could identify you as a Tails user, like the
-  version of GnuPG or Enigmail, from the headers of the emails that you
-  send.
+- Removes information that could identify you as a Tails user from the
+  headers of your emails.
 - Only allows secure protocols and disables insecure protocols, like
-  SSL3.
+  SSLv3.
 - Disables tracking technologies, like cookies and JavaScript, when
   viewing emails or feeds in HTML.
 
@@ -99,10 +126,7 @@ extension.
 To learn more about the security properties provided by this configuration,
 you can read the [<span class="application">TorBirdy</span> design document](https://trac.torproject.org/projects/tor/raw-attachment/wiki/doc/TorifyHOWTO/EMail/Thunderbird/Thunderbird%2BTor.pdf).
 
-<a id="language"></a>
-
-Using Thunderbird in your language
-==================================
+<h1 id="language">Using Thunderbird in your language</h1>
 
 To use <span class="application">Thunderbird</span> in your language, you can
 install the <span class="command">thunderbird-l10n-<span class="command-placeholder">lang</span></span>
@@ -110,3 +134,192 @@ package using the [[Additional Software|doc/first_steps/additional_software]]
 feature. Replace <span class="command-placeholder">lang</span> with the code
 for your language. For example, <span class="command">es</span> for Spanish or
 <span class="command">de</span> for German.
+
+<h1 id="openpgp">OpenPGP encryption</h1>
+
+<div class="note">
+
+<p>Since Tails 4.13 (November 2020), <em>Thunderbird</em> 78 replaces the
+<em>Enigmail</em> extension with built-in support for OpenPGP encryption. If
+you used <em>Enigmail</em> before Tails 4.13, follow our [[migration
+instructions|openpgp_migration]].</p>
+
+</div>
+
+See also the official [OpenPGP in Thunderbird - HOWTO and
+FAQ](https://support.mozilla.org/kb/openpgp-thunderbird-howto-and-faq).
+
+<h2 id="master-password">Setting up a Master Password (recommended)</h2>
+
+In *Thunderbird*, OpenPGP private keys are not protected by a passphrase.
+That's why we recommend that you set up a Master Password.
+
+With a Master Password, your private key is encrypted in your
+*Thunderbird* profile and is only unlocked while *Thunderbird* is running.
+If your *Thunderbird* profile is stored in your Persistent Storage, then
+your private key is encrypted twice: once by *Thunderbird* in your
+profile and a second time by the encryption of the Persistent Storage.
+
+1. Choose **[[!img lib/open-menu.png alt="Menu" class="symbolic"
+   link="no"]]&nbsp;▸ Preferences**.
+
+1. Choose **Privacy & Security**.
+
+1. In the **Passwords** section, select the option **Use a master
+   password**.
+
+1. In the **Change Master Password** dialog, enter your Master Password
+   and click **Ok**.
+
+<h2 id="import-private">Importing an existing private key</h2>
+
+*Thunderbird* uses a different keyring than *GnuPG*.
+
+If you already have an OpenPGP private key outside of *Thunderbird*, follow the
+instructions below to export it from *GnuPG* and import it into *Thunderbird*.
+
+<h3>Export your private key using the <em>Passwords and Keys</em> utility</h3>
+
+From the desktop:
+
+1. Choose **Applications&nbsp;▸ Utilities&nbsp;▸ Passwords and Keys**.
+
+1. In the left pane, choose **GnuPG keys**.
+
+1. In the right pane, double-click on the private key that you want to
+   export and use in *Thunderbird*.
+
+1. In the **Details** tab of the properties dialog, click **Export**.
+
+1. Save your private key in your *Home* directory.
+
+1. Close the *Passwords and Keys* utility.
+
+<h3>Import your private key in <em>Thunderbird</em></h3>
+
+In *Thunderbird*:
+
+1. Choose **[[!img lib/open-menu.png alt="Menu" class="symbolic"
+   link="no"]]&nbsp;▸ Account Settings**.
+
+1. In the left pane, identify the account
+   that corresponds to the private key that you want to import and
+   choose **End-to-End Encryption**.
+
+1. In the right pane, click the **Add Key…** button.
+
+1. In the **Add a Personal OpenPGP Key** dialog, choose **Import an
+   existing OpenPGP Key** and click **Continue**.
+
+1. Click the **Select File to Import…** button and choose
+   the private key that your exported from the *Passwords and Keys* utility.
+
+1. In the next dialog, make sure that your private key is listed and
+   that the option **Treat this key as a Personal Key** is selected.
+
+1. Click **Continue**, enter the passphrase for your private key (if
+   any), and click **Continue** again.
+
+   Your private key should now be listed in the **End-to-End
+   Encryption** settings of your account.
+
+1. Select your private key to enable OpenPGP encryption for this
+   account.
+
+<h2 id="generate-private">Generating a new OpenPGP private key</h2>
+
+1. Choose **[[!img lib/open-menu.png alt="Menu" class="symbolic"
+   link="no"]]&nbsp;▸ Account Settings**.
+
+1. In the left pane, identify the account
+   that corresponds to the private key that you want to import and
+   choose **End-to-End Encryption**.
+
+1. In the right pane, click the **Add Key…** button.
+
+1. In the **Add a Personal OpenPGP Key** dialog, choose **Create a new
+   OpenPGP Key**.
+
+1. Review the settings in the next dialog, click the **Generate key** button,
+   and then click **Confirm**.
+
+   Your private key should now be listed in the **End-to-End
+   Encryption** settings of your account.
+
+<h2 id="encrypting">Encrypting an email</h2>
+
+To prevent you from sending unencrypted emails by mistake, *Thunderbird*
+in Tails is configured with the option **Require Encryption** turned on
+by default.
+
+With the option **Require Encryption**, *Thunderbird* tries to encrypt
+every email before sending it.
+
+To send an unencrypted email, in the composition window, choose
+**Security** and deselect the option **Require Encryption**.
+
+<div class="bug">
+
+<p>We are unsatisfied with how the option <strong>Require
+Encryption</strong> works. Instead, <em>Thunderbird</em> should
+automatically encrypt when a public key is available and not try to
+encrypt otherwise.</p>
+
+<p>The developers of <em>Thunderbird</em> want to provide such an
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=135636">option to
+"encrypt when possible"</a> in future versions.</p>
+
+</div>
+
+When sending an encrypted email:
+
+- If you already have a public key for the recipient and have marked it as
+  accepted, *Thunderbird* encrypts the email and sends it.
+
+- If you already have a public key for the recipient but have not
+  marked it as accepted yet, *Thunderbird* fails to send the email.
+
+  To mark the public key as accepted:
+
+  1. In the error message, click **Close**.
+
+  1. In the **OpenPGP Message Security** dialog, select the recipient
+     that is marked as **not accepted key** and click the
+     **Manage keys for selected recipient&hellip;** button.
+
+     If the recipient is marked as **no key available**, you don't yet
+     have a public key for them.
+
+  1. In the next dialog, select the public key of your recipient and
+     click the **Open details and edit acceptance&hellip;** button.
+
+  1. In the **Your Acceptance** tab of the **Key Properties** dialog,
+     select the option that applies to how much you verified the public
+     key.
+
+- If you don't have a public key for the recipient, *Thunderbird* also fails
+  to send the email.
+
+  To look for a public key for this email address on the
+  [keys.openpgp.org](https://keys.openpgp.org/) keyserver:
+
+  1. In the error message, click **Close**.
+
+  1. In the **OpenPGP Message Security** dialog, select the recipient
+     that is marked as **not accepted key** and click the
+     **Manage keys for selected recipient&hellip;** button.
+
+  1. Click the **Discover new or updated key** button.
+
+     If no public key can be found, ask the recipient to send you their public
+     key.
+
+     If a public key for this email address is found, choose to import it.
+
+  1. In the **OpenPGP Message Security** dialog, select the public key that was
+     imported in the previous step and click the **Open details and edit
+     acceptance&hellip;** button.
+
+  1. In the **Your Acceptance** tab of the **Key Properties** dialog,
+     select the option that applies to how much you verified the public
+     key.

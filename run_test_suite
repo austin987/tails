@@ -301,7 +301,29 @@ if [ -n "${VNC_VIEWER:-}" ]; then
     start_vnc_viewer
 fi
 
+TAGS_ARGS=""
+if [ -n "${JENKINS_URL:-}" ]; then
+    # The current Git state may not reflect the state at the time the
+    # upstream job was started (e.g. since then we git fetch + git
+    # reset --hard) so we trust the Git state described in Jenkins'
+    # environment variables instead.
+    . auto/scripts/utils.sh
+    if echo "${GIT_BRANCH}" | grep -q -E '[+-]force-all-tests$' \
+       || git_on_a_tag \
+       || [ "${GIT_BRANCH#origin/}" = testing ] \
+       || [ "${GIT_BRANCH#origin/}" = feature/tor-nightly-master ] \
+       || [ "${GIT_BRANCH#origin/}" = devel ] ; then
+        TAGS_ARGS=""
+    else
+        TAGS_ARGS="--tag ~@fragile"
+    fi
+    if [ "${UPSTREAMJOB_GIT_COMMIT}" != "${UPSTREAMJOB_GIT_BASE_BRANCH_HEAD}" ] && \
+           git_only_doc_changes_since "${UPSTREAMJOB_GIT_BASE_BRANCH_HEAD}"; then
+        TAGS_ARGS="${TAGS_ARGS} --tag @doc"
+    fi
+fi
+
 export USER_DISPLAY="${DISPLAY:-}"
 export DISPLAY=${TARGET_DISPLAY}
 
-cucumber "${@}"
+cucumber --expand ${TAGS_ARGS} "${@}"

@@ -1062,7 +1062,7 @@ Implementation:
 - [[!tails_gitweb config/chroot_local-includes/usr/lib/thunderbird/thunderbird.cfg]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
 
-OpenPGP support is provided by the Enigmail add-on.
+OpenPGP support is integrated in *Thunderbird* since version 78.
 
 Thunderbird's email configuration wizard has security issues in its
 default configuration. For example, it trusts the result of DNS
@@ -1110,7 +1110,7 @@ GnuPG tools (namely: GPG itself and Seahorse) are configured to use
 <https://keys.opengpg.org> via its Onion service, since it's reliable.
 
 GnuPG is configured accordingly to the [OpenPGP Best
-Practices](https://help.riseup.net/en/security/message-security/openpgp/best-practices),
+Practices](https://riseup.net/en/security/message-security/openpgp/best-practices),
 e.g. to prefer non-outdated digest algorithms from the
 SHA-2 family, to force exclusion of the version string in ASCII armored
 output, to avoid automatically locating and retrieving keys, and to
@@ -1187,39 +1187,6 @@ controlled by the DHCP server.
 
 * [[!tails_gitweb_repo network-manager]]
 * [[!tails_gitweb config/chroot_local-patches/dhcp-dont-send-hostname.diff]]
-
-### 3.6.24 TCP timestamps
-
-[[!rfc 1323 desc="TCP time stamps"]] allow for tracking clock
-information with millisecond resolution. This may or may not allow an
-attacker to learn information about the system clock at such
-a resolution, depending on various issues such as network lag.
-This information is available to anyone who monitors the network
-somewhere between the attacked Tails system and the Tor entry nodes
-being used. It may allow an attacker to find out how long a given
-Tails system has been running, and to distinguish several Tails
-systems running behind NAT and using the same IP address. It might
-also allow to look for clocks that match an expected value to find the
-public IP used by a user.
-
-Hence, Tails disables this feature.
-
-- [[!tails_gitweb config/chroot_local-includes/etc/sysctl.d/tcp_timestamps.conf]]
-
-Note that TCP time stamps normally have some usefulness. They are
-needed for:
-
-* the TCP protection against wrapped sequence numbers; however, to
-  trigger a wrap, one needs to send roughly 2^32 packets in one
-  minute:  as said in [[!rfc 1700]], "The current recommended default
-  time to live (TTL) for the Internet Protocol (IP) [45,105] is 64".
-  So, we don't think this is a practical problem in the context
-  of Tails.
-
-* "Round-Trip Time Measurement", which is only useful when the user
-  manages to saturate their connection. When using Tails, we believe
-  that the limiting factor for transmission speed is rarely the
-  capacity of the user connection.
 
 ### 3.6.25 Application isolation
 
