@@ -380,16 +380,14 @@ class TailsInstallerCreator(object):
         @param kwargs: Extra arguments to pass to subprocess.Popen
         """
         if isinstance(cmd, list):
-            cmd_decoded = ' '.join(cmd)
-            cmd_bytes = unicode_to_filesystemencoding(cmd_decoded)
+            cmd_str = ' '.join(cmd)
         else:
-            cmd_decoded = cmd
-            cmd_bytes = unicode_to_filesystemencoding(cmd)
-        self.log.debug(cmd_decoded)
-        self.output.write(cmd_bytes)
+            cmd_str = cmd
+        self.log.debug(cmd_str)
+        self.output.write(cmd_str)
         kwargs = {'shell': True, 'stdin': subprocess.PIPE}
         kwargs.update(user_kwargs)
-        proc = subprocess.Popen(cmd_bytes, stdout=subprocess.PIPE,
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 **kwargs)
         self.pids.append(proc.pid)
