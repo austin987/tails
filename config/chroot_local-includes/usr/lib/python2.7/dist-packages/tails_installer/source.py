@@ -9,6 +9,7 @@ from tails_installer import _
 from tails_installer.config import CONFIG
 from tails_installer.utils import (_to_unicode, _dir_size, iso_is_live_system,
                                    unicode_to_filesystemencoding,
+                                   _set_liberal_perms_recursive,
                                    underlying_physical_device, TailsError)
 
 
@@ -83,3 +84,4 @@ class RunningLiveSystemSource(Source):
                 os.symlink(linkto, dst)
             elif os.path.isdir(src):
                 shutil.copytree(src, dst)
+        _set_liberal_perms_recursive(destination)

@@ -46,6 +46,7 @@ from gi.repository import UDisks, GLib  # NOQA: E402
 from tails_installer.utils import (_move_if_exists,  # NOQA: E402
                                    _unlink_if_exists, bytes_to_unicode,
                                    unicode_to_filesystemencoding,
+                                   _set_liberal_perms_recursive,
                                    underlying_physical_device,
                                    write_to_block_device, mbytes_to_bytes,
                                    TailsError)
@@ -504,6 +505,12 @@ class TailsInstallerCreator(object):
                         " previous Tails system: %(message)s") %
                        {'message': str(e)})
             elif os.path.isdir(path):
+                try:
+                    _set_liberal_perms_recursive(path)
+                except OSError as e:
+                    self.log.debug(_("Unable to chmod %(file)s: %(message)s")
+                                   % {'file': path,
+                                      'message': str(e)})
                 try:
                     shutil.rmtree(path)
                 except OSError as e:

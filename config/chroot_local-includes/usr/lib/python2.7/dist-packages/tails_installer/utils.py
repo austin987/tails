@@ -133,3 +133,11 @@ def write_to_block_device(block, string):
     os.write(file_desc, string)
     os.fsync(file_desc)
     os.close(file_desc)
+
+def _set_liberal_perms_recursive(path):
+    if os.path.isfile(path):
+        os.chmod(path, 0o644)
+    elif os.path.isdir(path):
+        os.chmod(path, 0o755)
+        for f in os.listdir(path):
+            _set_liberal_perms_recursive(os.path.join(path, f))
