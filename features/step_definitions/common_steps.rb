@@ -506,7 +506,7 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails GitLab)$/ d
   when 'Tails homepage'
     titles = ['Tails']
   when 'Tails GitLab'
-    titles = ['Groups · tails · GitLab']
+    titles = ['tails · GitLab']
   else
     raise "Unsupported page: #{page}"
   end
