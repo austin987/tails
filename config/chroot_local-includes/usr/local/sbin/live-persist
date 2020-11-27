@@ -185,12 +185,13 @@ mountpoint_has_correct_access_rights ()
 	local mountpoint="$1"
 	local expected_user=root
 	local expected_group=root
-	local expected_perms=775
+	local expected_perms=770
 	local expected_acl="user::rwx
 user:tails-persistence-setup:rwx
+user:amnesia:--x
 group::rwx
 mask::rwx
-other::r-x"
+other::---"
 
 	if [ "$(stat -c %U "$mountpoint")" != "$expected_user" ]
 	then
@@ -332,6 +333,13 @@ activate_volumes ()
 		mount -o remount,acl "$mountpoint"
 	done
 
+	# Migrate permissions to stricter setup (#7465)
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		chmod 0770 "$mountpoint"
+		setfacl -m user:amnesia:x "$mountpoint"
+	done
+
 	# Detect if we have incorrect ownership, permissions and ACL.
 	ACCESS_RIGHTS_ARE_CORRECT=true
 	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
@@ -429,14 +437,6 @@ activate_volumes ()
 		umask "$OLD_UMASK"
 	fi
 	rm -f "${custom_mounts}" 2> /dev/null
-
-	# Get rid of any Enigmail configuredVersion that we previously used
-	# to set in a way that would persistently override the value maintained
-	# by Enigmail itself (#12680, #15693). We stopped writing this pref
-	# there a long time ago but recently instructed users to reintroduce
-	# this problem as a workaround (#15692).
-	tb_profile="$(dirname "${conf}")/thunderbird/profile.default"
-	rm -f "${tb_profile}/preferences/0000tails.js"
 
 	for vol in ${open_volumes}
 	do

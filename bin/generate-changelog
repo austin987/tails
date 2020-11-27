@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 
+# Documentation: https://tails.boum.org/contribute/working_together/GitLab/#api
+
 import datetime
 import email.utils
 import functools
@@ -42,11 +44,11 @@ log = logging.getLogger()
 
 
 class GitLabWrapper(gitlab.Gitlab):
-    @functools.lru_cache
+    @functools.lru_cache(maxsize=None)
     def project(self, project_id):
         return self.projects.get(project_id)
 
-    @functools.lru_cache
+    @functools.lru_cache(maxsize=None)
     def project_path_with_namespace(self, project_id):
         return self.project(project_id).path_with_namespace
 

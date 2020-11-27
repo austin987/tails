@@ -5,6 +5,8 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
+  puts("Cucumber tags: #{config.tag_expressions}")
+
   # Reorder the execution of some features. As we progress through a
   # run we accumulate more and more snapshots and hence use more and
   # more disk space, but some features will leave nothing behind
@@ -222,7 +224,7 @@ Before('@product') do |scenario|
   if $config['CAPTURE']
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
-    capture = IO.popen([ffmpeg,
+    capture = IO.popen(['ffmpeg',
                         '-f', 'x11grab',
                         '-s', '1024x768',
                         '-r', '15',

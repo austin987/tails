@@ -14,3 +14,4 @@ Feature: Root access control enforcement
     And running a command as root with pkexec requires PolicyKit administrator privileges
     Then I cannot run a command as root with sudo and the standard passwords
     And I cannot run a command as root with pkexec and the standard passwords
+    Then I cannot login as root using su with the standard passwords

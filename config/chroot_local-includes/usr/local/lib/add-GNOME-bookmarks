@@ -32,6 +32,11 @@ if persistence_is_enabled_for "${HOME}/Persistent" ; then
     fi
 fi
 
+DOTFILES_SOURCE_DIR='/live/persistence/TailsData_unlocked/dotfiles'
+if [ -e "$DOTFILES_SOURCE_DIR" ]; then
+    add_gtk_bookmark_for "$DOTFILES_SOURCE_DIR" "Dotfiles"
+fi
+
 for launcher in Report_an_error tails-documentation ; do
     gio set "${HOME}/Desktop/${launcher}.desktop" metadata::trusted true
 done

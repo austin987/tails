@@ -56,7 +56,8 @@ pref("mail.server.default.enableAutocrypt", false);
 pref("mailnews.p7m_subparts_external", true);
 
 // Sanitize mime headers
-pref("mail.mime.avoid_fingerprinting", true);
+pref("mail.suppress_content_language", true);
+pref("mail.sanitize_date_header", true);
 
 // Make all system-wide dictionaries available
 pref("spellchecker.dictionary_path", "/usr/share/hunspell");
@@ -348,3 +349,14 @@ pref("layout.css.visited_links_enabled", false);
 
 // Disable third-party images.
 pref("permissions.default.image", 3);
+
+// Change default encryption policy to "Require encryption by
+// default". Otherwise users must opt-in to encryption for each mail
+// they compose, so they are just a "Send" away from leaking the
+// plaintext if they forget.
+pref("mail.identity.default.encryptionpolicy", 2);
+
+// Don't automatically attach public key when sending signed
+// email. Attaching the key bloats the email (especially keys that
+// have many signatures) but also leaks who sent email when using Schleuder's remailing functionality.
+pref("mail.identity.default.attachPgpKey", false);

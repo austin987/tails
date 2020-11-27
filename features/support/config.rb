@@ -13,7 +13,7 @@ LOCAL_CONFIG_DIRS_FILES_GLOB = "#{CONFIG_DIR}/*.d/*.yml".freeze
 assert File.exist?(DEFAULTS_CONFIG_FILE)
 $config = YAML.safe_load(File.read(DEFAULTS_CONFIG_FILE))
 config_files = Dir.glob(LOCAL_CONFIG_DIRS_FILES_GLOB).sort
-config_files.insert(0, LOCAL_CONFIG_FILE) if File.exist?(LOCAL_CONFIG_FILE)
+config_files << LOCAL_CONFIG_FILE if File.exist?(LOCAL_CONFIG_FILE)
 config_files.each do |config_file|
   yaml_struct = YAML.safe_load(File.read(config_file)) || {}
   unless yaml_struct.instance_of?(Hash)
@@ -84,6 +84,7 @@ SERVICES_EXPECTED_ON_ALL_IFACES =
   ].freeze
 # OpenDNS
 SOME_DNS_SERVER = '208.67.222.222'.freeze
+RTL_LANGUAGES = ['Arabic', 'Persian'].freeze
 VM_XML_PATH = "#{Dir.pwd}/features/domains".freeze
 
 TAILS_SIGNING_KEY = cmd_helper(

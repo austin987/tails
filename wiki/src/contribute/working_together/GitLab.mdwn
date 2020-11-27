@@ -56,6 +56,7 @@ smoother.
 The title should be a short but clear description of what this is about.
 Some people are case sensitive, please try to consider that.
 
+<a id="status"></a>
 ## Status
 
 ### Open issues
@@ -403,6 +404,42 @@ you can:
 
    See [[!tails_gitlab help/user/project/issues/managing_issues.html#new-issue-via-email desc="New issue via email"]]
    in the GitLab documentation.
+
+<a id="api"></a>
+
+# Scripts that use the GitLab API
+
+We have several scripts that query or manipulate data using the GitLab API:
+for example, [[!tails_gitweb bin/generate-changelog]] and [[!tails_gitweb
+bin/generate-report]].
+
+To use them:
+
+* Install a recent enough `python3-gitlab` Debian package:
+
+        if [ "$(lsb_release --short --codename)" = buster ]; then
+           sudo apt install python3-gitlab/bullseye
+        else
+           sudo apt install python3-gitlab
+        fi
+
+* Configure your `~/.python-gitlab.cfg`.
+
+  You need at least this content:
+
+        [global]
+        ssl_verify = true
+
+        [Tails]
+        url = https://gitlab.tails.boum.org
+        per_page = 100
+        private_token = XXX
+
+  In the `Tails` section, set the value of the `private_token` option to a
+  GitLab API token for your own user. To generate such a token,
+  visit [[!tails_gitlab profile/personal_access_tokens]].
+
+* If you are working from Tails, run the scripts using `torsocks`.
 
 <a id="core-work"></a>
 
