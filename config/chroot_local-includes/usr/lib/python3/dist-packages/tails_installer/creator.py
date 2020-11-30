@@ -273,11 +273,14 @@ class TailsInstallerCreator(object):
         # This is always made to avoid listing both the devices
         # and their parents in the gui dropdown list.
         # But we keep the parent data in case of a reinstallation.
+        drives_to_delete = set()
         for d in list(self.drives.values()):
             parent = d['parent']
             if parent is not None and parent in self.drives:
                 self.drives[d['device']]['parent_data'] = self.drives[parent].copy()
-                del self.drives[parent]
+                drives_to_delete.add(parent)
+        for d in drives_to_delete:
+            del self.drives[d]
 
         self.log.debug(pformat(mounted_parts))
 
