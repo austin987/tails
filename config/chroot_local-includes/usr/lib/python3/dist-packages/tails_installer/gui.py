@@ -576,8 +576,9 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
                                    buttons=buttons,
                                    message_format=title)
         dialog.format_secondary_text(message)
-        dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL)
-        dialog.add_button(label_string, Gtk.ResponseType.YES)
+        if not warning:
+            dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL)
+            dialog.add_button(label_string, Gtk.ResponseType.YES)
         reply = dialog.run()
         dialog.hide()
         if reply == Gtk.ResponseType.YES:
