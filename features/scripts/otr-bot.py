@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 import slixmpp
-import sys
 import potr
 import logging
 from argparse import ArgumentParser
+
 
 class OtrContext(potr.context.Context):
 
@@ -13,10 +13,11 @@ class OtrContext(potr.context.Context):
     def getPolicy(self, key):
         return True
 
-    def inject(self, body, appdata = None):
+    def inject(self, body, appdata=None):
         msg = appdata["base_reply"]
         msg["body"] = str(body)
         appdata["send_raw_message_fn"](msg)
+
 
 class BotAccount(potr.context.Account):
 
@@ -38,7 +39,7 @@ class OtrContextManager:
         self.contexts = {}
 
     def start_context(self, other):
-        if not other in self.contexts:
+        if other not in self.contexts:
             self.contexts[other] = OtrContext(self.account, other)
         return self.contexts[other]
 
@@ -49,7 +50,7 @@ class OtrContextManager:
 class OtrBot(slixmpp.ClientXMPP):
 
     def __init__(self, account, password, otr_key_path,
-                 rooms = [], connect_server = None, log_file = None):
+                 rooms=[], connect_server=None, log_file=None):
         self.__connect_server = connect_server
         self.__password = password
         self.__log_file = log_file
@@ -62,8 +63,8 @@ class OtrBot(slixmpp.ClientXMPP):
             }
         self.add_event_handler("session_start", self.start)
         self.add_event_handler("message", self.handle_message)
-        self.register_plugin("xep_0045") # Multi-User Chat
-        self.register_plugin("xep_0394") # Message Markup
+        self.register_plugin("xep_0045")  # Multi-User Chat
+        self.register_plugin("xep_0394")  # Message Markup
 
     def __otr_appdata_for_msg(self, msg):
         appdata = self.__default_otr_appdata.copy()
@@ -105,7 +106,8 @@ class OtrBot(slixmpp.ClientXMPP):
                 recipient, command = msg["body"].split(":", 1)
             except ValueError:
                 recipient, command = None, msg["body"]
-            if msg["mucnick"] == self.boundjid.user or recipient != self.boundjid.user:
+            if msg["mucnick"] == self.boundjid.user or \
+               recipient != self.boundjid.user:
                 return
             response = self.get_reply(command)
             if response:
@@ -120,7 +122,7 @@ class OtrBot(slixmpp.ClientXMPP):
         if otrctx.state == potr.context.STATE_ENCRYPTED:
             otrctx.sendMessage(potr.context.FRAGMENT_SEND_ALL,
                                msg["body"].encode("utf-8"),
-                               appdata = self.__otr_appdata_for_msg(msg))
+                               appdata=self.__otr_appdata_for_msg(msg))
         else:
             self.raw_send(msg)
 
@@ -131,48 +133,52 @@ class OtrBot(slixmpp.ClientXMPP):
         if msg["type"] == "chat":
             try:
                 appdata = self.__otr_appdata_for_msg(msg.reply())
-                plaintext, tlvs = otrctx.receiveMessage(msg["body"].encode("utf-8"),
-                                                        appdata = appdata)
+                plaintext, tlvs = otrctx.receiveMessage(
+                    msg["body"].encode("utf-8"),
+                    appdata=appdata
+                )
                 if plaintext:
                     decrypted_body = plaintext.decode("utf-8")
                 else:
                     decrypted_body = ""
                 otrctx.processTLVs(tlvs)
             except potr.context.NotEncryptedError:
-                otrctx.authStartV2(appdata = appdata)
+                otrctx.authStartV2(appdata=appdata)
                 return msg
-            except (potr.context.UnencryptedMessage, potr.context.NotOTRMessage):
+            except (potr.context.UnencryptedMessage,
+                    potr.context.NotOTRMessage):
                 decrypted_body = msg["body"]
         else:
             decrypted_body = msg["body"]
         msg["body"] = decrypted_body
         return msg
 
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
                         format="%(levelname)-8s %(message)s")
     parser = ArgumentParser()
     parser.add_argument("account",
-                        help = "the user account, given as user@domain")
+                        help="the user account, given as user@domain")
     parser.add_argument("password",
-                        help = "the user account's password")
+                        help="the user account's password")
     parser.add_argument("otr_key_path",
-                        help = "the path to the account's OTR key file")
-    parser.add_argument("-c", "--connect-server", metavar = 'ADDRESS',
-                        help = "use a Connect Server, given as host[:port] " +
+                        help="the path to the account's OTR key file")
+    parser.add_argument("-c", "--connect-server", metavar='ADDRESS',
+                        help="use a Connect Server, given as host[:port] " +
                         "(port defaults to 5222)")
-    parser.add_argument("-j", "--auto-join", nargs = '+', metavar = 'ROOMS',
-                        help = "auto-join multi-user chatrooms on start",
-                        default = [])
-    parser.add_argument("-l", "--log-file", metavar = 'LOGFILE',
-                        help = "Log to file instead of stderr")
+    parser.add_argument("-j", "--auto-join", nargs='+', metavar='ROOMS',
+                        help="auto-join multi-user chatrooms on start",
+                        default=[])
+    parser.add_argument("-l", "--log-file", metavar='LOGFILE',
+                        help="Log to file instead of stderr")
     args = parser.parse_args()
     otr_bot = OtrBot(args.account,
                      args.password,
                      args.otr_key_path,
-                     rooms = args.auto_join,
-                     connect_server = args.connect_server,
-                     log_file = args.log_file)
+                     rooms=args.auto_join,
+                     connect_server=args.connect_server,
+                     log_file=args.log_file)
     try:
         otr_bot.connect()
         otr_bot.process()
