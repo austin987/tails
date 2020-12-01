@@ -13,10 +13,10 @@ class OtrContext(potr.context.Context):
     def getPolicy(self, key):
         return True
 
-    def inject(self, msg, appdata = None):
-        mess = appdata["base_reply"]
-        mess["body"] = str(msg)
-        appdata["send_raw_message_fn"](mess)
+    def inject(self, body, appdata = None):
+        msg = appdata["base_reply"]
+        msg["body"] = str(body)
+        appdata["send_raw_message_fn"](msg)
 
 class BotAccount(potr.context.Account):
 
@@ -65,9 +65,9 @@ class OtrBot(slixmpp.ClientXMPP):
         self.register_plugin("xep_0045") # Multi-User Chat
         self.register_plugin("xep_0394") # Message Markup
 
-    def __otr_appdata_for_mess(self, mess):
+    def __otr_appdata_for_msg(self, msg):
         appdata = self.__default_otr_appdata.copy()
-        appdata["base_reply"] = mess
+        appdata["base_reply"] = msg
         return appdata
 
     def connect(self):
@@ -85,53 +85,53 @@ class OtrBot(slixmpp.ClientXMPP):
     def join_room(self, room):
         self.plugin["xep_0045"].join_muc(room, self.boundjid.user)
 
-    def raw_send(self, mess):
-        mess.send()
+    def raw_send(self, msg):
+        msg.send()
 
     def get_reply(self, command):
         if command.strip() == "ping":
             return "pong"
         return None
 
-    def handle_message(self, mess):
-        mess = self.decrypt(mess)
+    def handle_message(self, msg):
+        msg = self.decrypt(msg)
         reply = None
-        if mess["type"] == "chat":
-            if mess["html"]["body"].startswith("<p>?OTRv"):
+        if msg["type"] == "chat":
+            if msg["html"]["body"].startswith("<p>?OTRv"):
                 return
-            reply = self.get_reply(mess["body"])
-        elif mess["type"] == "groupchat":
+            reply = self.get_reply(msg["body"])
+        elif msg["type"] == "groupchat":
             try:
-                recipient, command = mess["body"].split(":", 1)
+                recipient, command = msg["body"].split(":", 1)
             except ValueError:
-                recipient, command = None, mess["body"]
-            if mess["mucnick"] == self.boundjid.user or recipient != self.boundjid.user:
+                recipient, command = None, msg["body"]
+            if msg["mucnick"] == self.boundjid.user or recipient != self.boundjid.user:
                 return
             response = self.get_reply(command)
             if response:
-                reply = "%s: %s" % (mess["mucnick"], response)
+                reply = "%s: %s" % (msg["mucnick"], response)
         else:
             return
         if reply:
-            self.send_message(mess.reply(reply))
+            self.send_message(msg.reply(reply))
 
-    def send_message(self, mess):
-        otrctx = self.__otr_manager.get_context_for_user(mess["to"])
+    def send_message(self, msg):
+        otrctx = self.__otr_manager.get_context_for_user(msg["to"])
         if otrctx.state == potr.context.STATE_ENCRYPTED:
             otrctx.sendMessage(potr.context.FRAGMENT_SEND_ALL,
-                               mess["body"].encode("utf-8"),
-                               appdata = self.__otr_appdata_for_mess(mess))
+                               msg["body"].encode("utf-8"),
+                               appdata = self.__otr_appdata_for_msg(msg))
         else:
-            self.raw_send(mess)
+            self.raw_send(msg)
 
-    def decrypt(self, mess):
-        if mess["type"] == "groupchat":
-            return mess
-        otrctx = self.__otr_manager.get_context_for_user(mess["from"])
-        if mess["type"] == "chat":
+    def decrypt(self, msg):
+        if msg["type"] == "groupchat":
+            return msg
+        otrctx = self.__otr_manager.get_context_for_user(msg["from"])
+        if msg["type"] == "chat":
             try:
-                appdata = self.__otr_appdata_for_mess(mess.reply())
-                plaintext, tlvs = otrctx.receiveMessage(mess["body"].encode("utf-8"),
+                appdata = self.__otr_appdata_for_msg(msg.reply())
+                plaintext, tlvs = otrctx.receiveMessage(msg["body"].encode("utf-8"),
                                                         appdata = appdata)
                 if plaintext:
                     decrypted_body = plaintext.decode("utf-8")
@@ -140,13 +140,13 @@ class OtrBot(slixmpp.ClientXMPP):
                 otrctx.processTLVs(tlvs)
             except potr.context.NotEncryptedError:
                 otrctx.authStartV2(appdata = appdata)
-                return mess
+                return msg
             except (potr.context.UnencryptedMessage, potr.context.NotOTRMessage):
-                decrypted_body = mess["body"]
+                decrypted_body = msg["body"]
         else:
-            decrypted_body = mess["body"]
-        mess["body"] = decrypted_body
-        return mess
+            decrypted_body = msg["body"]
+        msg["body"] = decrypted_body
+        return msg
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
