@@ -104,8 +104,8 @@ def _format_bytes_in_gb(value):
     return '%0.1f GB' % (value / 10.0**9)
 
 
-def mbytes_to_bytes(size_in_mbytes):
-    return size_in_mbytes * 1024**2
+def mebibytes_to_bytes(size_in_mebibytes):
+    return size_in_mebibytes * 1024**2
 
 
 def _get_datadir():

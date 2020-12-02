@@ -48,7 +48,7 @@ from tails_installer.utils import (_move_if_exists,  # NOQA: E402
                                    unicode_to_filesystemencoding,
                                    _set_liberal_perms_recursive,
                                    underlying_physical_device,
-                                   write_to_block_device, mbytes_to_bytes,
+                                   write_to_block_device, mebibytes_to_bytes,
                                    TailsError)
 from tails_installer import _  # NOQA: E402
 from tails_installer.config import CONFIG  # NOQA: E402
@@ -333,21 +333,21 @@ class TailsInstallerCreator(object):
         """
         # 1. Get unsupported cases out of the way
         if device_size_in_bytes \
-           < mbytes_to_bytes(self.min_installation_device_size):
+           < mebibytes_to_bytes(self.min_installation_device_size):
             raise NotImplementedError
         # 2. Handle supported cases (note: you might be surprised if
         # you looked at the actual size of USB sticks labeled "16 GB"
         # in the real world, hence the weird definition of "16 GB"
         # used below)
-        elif device_size_in_bytes >= mbytes_to_bytes(14500):
-            return mbytes_to_bytes(8 * 1024)
+        elif device_size_in_bytes >= mebibytes_to_bytes(14500):
+            return mebibytes_to_bytes(8 * 1024)
         else:
-            return mbytes_to_bytes(4 * 1024)
+            return mebibytes_to_bytes(4 * 1024)
 
     def is_device_big_enough_for_installation(self, device_size_in_bytes):
         return (
             device_size_in_bytes
-            >= mbytes_to_bytes(self.min_installation_device_size)
+            >= mebibytes_to_bytes(self.min_installation_device_size)
         )
 
     def can_read_partition_table(self, device=None):
