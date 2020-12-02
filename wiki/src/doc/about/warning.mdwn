@@ -157,26 +157,26 @@ href="https://blog.torproject.org/blog/detecting-certificate-authority-compromis
 Project: Detecting Certificate Authority compromises and web browser
 collusion</a>.</p>
 
-<h1 id="confirmation">Confirmation attacks</h1>
+<h1 id="correlation">End to end time correlation attacks</h1>
 
-The Tor design doesn't try to protect against an attacker who can see or measure
-both traffic going into the Tor network and also traffic coming out of the Tor
-network. That's because if you can see both flows, some simple statistics let
-you decide whether they match up.
+Tor network is designed to prevent traffic analysis, where someone tries
+to investigate a user in the network by observing a particular point in the circuit. A network design that monitors both the ends of a communication network impacts the low-latency communication services such as web browsing, Internet chat, or SSH connections. To ensure that the users do not experience any latency, Tor is designed not to monitor traffic that enters and exits a network. Hence, Tor does not shield you from someone who can observe both the ends of a communication network. End to end  time correlation attacks are
+possible when you can match Tor users and destination servers. Consider the following scenarios:
 
-That could also be the case if your ISP (or your local network administrator)
-and the ISP of the destination server (or the destination server itself)
-cooperate to attack you.
+* When someone monitors the timings and volume patterns of the different communications across the network, it is statistically possible to identify Tor circuits and match Tor users and destination servers. For example, a <abbr title="A global passive adversary is an organization or an entity that can observe many points of the Internet and is more likely to be in the right place at the right time. For example, National Security Agency Central (NSA). However, it does not have an absolute control of the Internet."> global passive adversary</abbr> might be able to deanonymize you.
 
-Tor tries to protect against traffic analysis, where an attacker tries to learn
-whom to investigate, but Tor can't protect against traffic confirmation (also
-known as end-to-end correlation), where an attacker tries to confirm a
-hypothesis by monitoring the right locations in the network and then doing the
-math.
+* When someone in the first relay and someone at the exit relay monitors the communication in the network to match the Tor users and destination servers. For example, the  ISP or local network administrator in the first relay and the ISP of the destination server or the destination server itself collaborate to monitor the traffic in the network; together they might be able to deanonymize you.
 
-<p class="quoted-from">Quoted from <a
-href="https://blog.torproject.org/blog/one-cell-enough">Tor Project: "One cell
-is enough to break Tor's anonymity"</a>.</p>
+However, deanonymizing using end to end time correlation is not simple. For example, to deanonymize Tor users, the FBI used the vulnerabilities in the browser rather than network
+attacks that are more complex. For more information, read this article about an attempt at <a
+href="https://arstechnica.com/information-technology/2016/11/firefox-0day-used-against-tor-users-almost-identical-to-one-fbi-used-in-2013/">deanonymizing Tor users </a>. Tails is an OS with stronger security measures and was not vulnerable to this attack.
+
+For related information about end to end time correlation attacks read:
+
+* <a href="https://blog.torproject.org/blog/one-cell-enough"> One cell is enough to break Tor's anonymity </a>
+
+* <a href="http://www.cse.hut.fi/en/publications/B/11/papers/salo.pdf"> Recent Attacks On Tor </a>
+
 
 <h1 id="encryption">Tails doesn't encrypt your documents by default</h1>
 
@@ -214,22 +214,6 @@ which the included EXIF thumbnail still shows the original picture.
 **Tails doesn't clear the metadata of your files for you**. Yet. Still it's in
 Tails' design goal to help you do that. For example, Tails already comes with
 the [Metadata anonymisation toolkit](https://0xacab.org/jvoisin/mat2).
-
-<h1 id="global-adversary">Tor doesn't protect you from a global adversary</h1>
-
-A global passive adversary would be a person or an entity able to monitor at the
-same time the traffic between all the computers in a network. By studying, for
-example, the timing and volume patterns of the different communications across
-the network, it would be statistically possible to identify Tor circuits and
-thus match Tor users and destination servers.
-
-It is part of Tor's initial trade-off not to address such a threat in order to
-create a low-latency communication service usable for web browsing, Internet
-chat or SSH connections.
-
-For more expert information see the Tor design paper, "[Tor Project: The Second-Generation Onion
-Router](https://svn.torproject.org/svn/projects/design-paper/tor-design.pdf)",
-specifically, "Part 3. Design goals and assumptions."
 
 <h1 id="identities">Tails doesn't magically separate your different contextual identities</h1>
 
