@@ -329,7 +329,7 @@ class TailsInstallerCreator(object):
     def system_partition_size(self, device_size_in_bytes):
         """ Return the optimal system partition size (in bytes) for
         a device_size_in_bytes bytes large destination device: 4 GiB on devices
-        smaller than 16000 mbytes, 8 GiB otherwise.
+        smaller than 16000 MiB, 8 GiB otherwise.
         """
         # 1. Get unsupported cases out of the way
         if device_size_in_bytes \
