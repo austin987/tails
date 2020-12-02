@@ -752,7 +752,6 @@ class TailsInstallerCreator(object):
 
         # XXX: This resets the partition type for some reason
         # (https://github.com/storaged-project/udisks/issues/418)
-        # XXX: sometimes fails (https://labs.riseup.net/code/issues/10987)
         self._set_partition_flags(system_partition, SYSTEM_PARTITION_FLAGS)
 
         # Get a fresh system_partition object, otherwise
@@ -765,7 +764,6 @@ class TailsInstallerCreator(object):
 
         # _set_partition_flags resets the partition type with udisks2 2.7.3-4,
         # so let's set the right one again
-        # XXX: sometimes fails (https://labs.riseup.net/code/issues/10987)
         system_partition.call_set_type_sync(ESP_GUID, GLib.Variant('a{sv}', None))
 
         # Give the system some more time to recognize the updated
