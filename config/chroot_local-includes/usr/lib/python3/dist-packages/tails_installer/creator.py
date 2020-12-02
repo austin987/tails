@@ -750,8 +750,6 @@ class TailsInstallerCreator(object):
         self.rescan_block_device(self._get_object().props.block)
         system_partition = self.first_partition(self.drive['udi'])
 
-        # XXX: This resets the partition type for some reason
-        # (https://github.com/storaged-project/udisks/issues/418)
         self._set_partition_flags(system_partition, SYSTEM_PARTITION_FLAGS)
 
         # Get a fresh system_partition object, otherwise
@@ -761,10 +759,6 @@ class TailsInstallerCreator(object):
         # (https://gitlab.tails.boum.org/tails/tails/-/issues/15432)
         self.rescan_block_device(self._get_object().props.block)
         system_partition = self.first_partition(self.drive['udi'])
-
-        # _set_partition_flags resets the partition type with udisks2 2.7.3-4,
-        # so let's set the right one again
-        system_partition.call_set_type_sync(ESP_GUID, GLib.Variant('a{sv}', None))
 
         # Give the system some more time to recognize the updated
         # partition, otherwise sometimes later on, when
