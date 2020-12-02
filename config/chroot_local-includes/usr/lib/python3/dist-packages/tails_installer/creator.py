@@ -758,7 +758,7 @@ class TailsInstallerCreator(object):
         # call_set_flags_sync sometimes fails with 'No such interface
         # 'org.freedesktop.UDisks2.Partition' on object at path
         # /org/freedesktop/UDisks2/block_devices/sdd1'
-        # (https://labs.riseup.net/code/issues/15432)
+        # (https://gitlab.tails.boum.org/tails/tails/-/issues/15432)
         self.rescan_block_device(self._get_object().props.block)
         system_partition = self.first_partition(self.drive['udi'])
 
