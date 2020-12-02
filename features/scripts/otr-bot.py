@@ -155,8 +155,6 @@ class OtrBot(slixmpp.ClientXMPP):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(levelname)-8s %(message)s")
     parser = ArgumentParser()
     parser.add_argument("account",
                         help="the user account, given as user@domain")
@@ -172,7 +170,13 @@ if __name__ == '__main__':
                         default=[])
     parser.add_argument("-l", "--log-file", metavar='LOGFILE',
                         help="Log to file instead of stderr")
+    parser.add_argument("-d", "--debug",
+                        help="enable debug logging",
+                        action="store_const", dest="loglevel",
+                        const=logging.DEBUG, default=logging.FATAL)
     args = parser.parse_args()
+    logging.basicConfig(level=args.loglevel,
+                        format='%(levelname)-8s %(message)s')
     otr_bot = OtrBot(args.account,
                      args.password,
                      args.otr_key_path,
