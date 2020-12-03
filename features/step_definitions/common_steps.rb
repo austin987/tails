@@ -342,6 +342,14 @@ Given /^I set the language to (.*)$/ do |lang|
   @screen.type($language)
   sleep(2) # Gtk needs some time to filter the results
   @screen.press('Return')
+  # Wait for the UI to settle
+  try_for(10) do
+    $vm.execute_successfully(
+      "journalctl --all | " \
+      "  grep --extended-regexp 'tails-greeter.desktop\\[[0-9]+\\]: .+ translate_to: translated UI to ' | " \
+      "  grep --invert-match 'translated UI to en_US'"
+    )
+  end
 end
 
 Given /^I log in to a new session(?: in (.*))?$/ do |lang|
@@ -357,11 +365,6 @@ Given /^I log in to a new session(?: in (.*))?$/ do |lang|
   end
   if lang && lang != 'English'
     step "I set the language to #{lang}"
-    # After selecting options (language, administration password,
-    # etc.), the Greeter needs some time to focus the main window
-    # back, so that typing the accelerator for the "Start Tails"
-    # button is honored.
-    sleep(10)
   end
   login_button_region.click
   step 'the Tails desktop is ready'
