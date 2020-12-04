@@ -27,7 +27,6 @@ A graphical interface for the Tails Installer
 """
 
 import os
-import sys
 import logging
 import threading
 import traceback
@@ -38,8 +37,8 @@ from datetime import datetime
 from gi.repository import Gdk, GLib, Gtk
 
 from tails_installer import TailsInstallerCreator, TailsInstallerError, _
-from tails_installer.config import config
-from tails_installer.source import SourceError, LocalIsoSource
+from tails_installer.config import CONFIG
+from tails_installer.source import LocalIsoSource
 from tails_installer.source import RunningLiveSystemSource
 from tails_installer.utils import _to_unicode, _format_bytes_in_gb, _get_datadir
 
@@ -87,9 +86,6 @@ class ProgressThread(threading.Thread):
     def stop(self):
         self.terminate = True
 
-    def __del__(self):
-        GLib.idle_add(self.parent.progress, 1.0)
-        threading.Thread.__del__(self)
 
 class TailsInstallerThread(threading.Thread):
 
@@ -147,8 +143,8 @@ class TailsInstallerThread(threading.Thread):
 
             self.live.verify_filesystem()
             if not self.live.drive['uuid'] and not self.live.label:
-                self.status(_("Error: Cannot set the label or obtain "
-                              "the UUID of your device.  Unable to continue."))
+                self.status(_('Error: Cannot set the label or obtain '
+                              'the UUID of your device.  Unable to continue.'))
                 self.live.log.removeHandler(self.handler)
                 return
 
@@ -181,13 +177,13 @@ class TailsInstallerThread(threading.Thread):
             self.live.flush_buffers()
 
             duration = str(datetime.now() - self.now).split('.')[0]
-            self.status(_("Installation complete! (%s)") % duration)
+            self.status(_('Installation complete! (%s)') % duration)
             self.installation_complete()
 
-        except Exception, e:
-            self.status(e)
-            self.status(_("Tails installation failed!"))
-            self.live.log.exception(unicode(e))
+        except Exception as ex:
+            self.status(ex)
+            self.status(_('Tails installation failed!'))
+            self.live.log.exception(str(ex))
             self.live.log.debug(traceback.format_exc())
 
         self.live.log.removeHandler(self.handler)
@@ -197,10 +193,7 @@ class TailsInstallerThread(threading.Thread):
         self.maximum = maximum
 
     def update_progress(self, value):
-        GLib.idle_add(self.parent.progress, float(value) / maximum)
-
-    def __del__(self):
-        self.wait()
+        GLib.idle_add(self.parent.progress, float(value) / self.maximum)
 
 
 class TailsInstallerLogHandler(logging.Handler):
@@ -226,7 +219,7 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         self.signals_connected = []
         self.source_available = False
         self.target_available = False
-        self.target_selected  = False
+        self.target_selected = False
         self.devices_with_persistence = []
         self.force_reinstall = False
 
@@ -237,7 +230,7 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
         # Intercept all tails_installer.INFO log messages, and display them
         # in the GUI
-        self.handler = TailsInstallerLogHandler(lambda x: self.append_to_log(x))
+        self.handler = TailsInstallerLogHandler(lambda x: self.append_to_log(str(x)))
         self.live.log.addHandler(self.handler)
         if not self.opts.verbose:
             self.live.log.removeHandler(self.live.stream_handler)
@@ -278,11 +271,10 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         # Set windows properties
         self.set_deletable(True)
         self.connect('delete-event', Gtk.main_quit)
-        self.set_title(_("Tails Installer"))
+        self.set_title(_('Tails Installer'))
 
         # Import window content from UI file
-        builder = Gtk.Builder.new_from_file(
-                os.path.join(_get_datadir(), 'tails-installer.ui'))
+        builder = Gtk.Builder.new_from_file(os.path.join(_get_datadir(), 'tails-installer.ui'))
         self.__box_installer = builder.get_object('box_installer')
         self.__image_header = builder.get_object('image_header')
         self.__infobar = builder.get_object('infobar')
@@ -313,23 +305,23 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
         # Add image header
         self.__image_header.set_from_file(
-                os.path.join(_get_datadir(), config['branding']['header']))
+            os.path.join(_get_datadir(), CONFIG['branding']['header']))
         rgba = Gdk.RGBA()
-        rgba.parse(config['branding']['color'])
+        rgba.parse(CONFIG['branding']['color'])
         self.__image_header.override_background_color(Gtk.StateFlags.NORMAL, rgba)
 
     def on_radio_button_source_iso_toggled(self, radio_button):
-        self.live.log.debug("Entering on_radio_button_source_iso_toggled")
+        self.live.log.debug('Entering on_radio_button_source_iso_toggled')
         active_radio = [r for r in radio_button.get_group() if r.get_active()][0]
-        if active_radio.get_label() == _("Clone the current Tails"):
-            self.live.log.debug("Mode: clone")
+        if active_radio.get_label() == _('Clone the current Tails'):
+            self.live.log.debug('Mode: clone')
             self.opts.clone = True
             self.live.source = RunningLiveSystemSource(
-                path=config['running_liveos_mountpoint'])
+                path=CONFIG['running_liveos_mountpoint'])
             self.source_available = True
             self.__filechooserbutton_source_file.set_sensitive(False)
-        elif active_radio.get_label() == _("Use a downloaded Tails ISO image"):
-            self.live.log.debug("Mode: from ISO")
+        elif active_radio.get_label() == _('Use a downloaded Tails ISO image'):
+            self.live.log.debug('Mode: from ISO')
             self.opts.clone = False
             self.live.source = None
             self.source_available = False
@@ -338,8 +330,8 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         self.clear_log()
         # some previously rejected devices may now be valid candidates
         # and vice-versa
-        self.live.log.debug("Calling populate_devices()"
-                            " from on_radio_button_source_iso_toggled")
+        self.live.log.debug('Calling populate_devices()'
+                            ' from on_radio_button_source_iso_toggled')
         self.populate_devices()
 
     def on_force_reinstall_clicked(self, button):
@@ -358,18 +350,17 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
     def on_target_changed(self, combobox_target):
         # get selected device
         drive = self.get_selected_drive()
-        if drive == None:
-           return
+        if drive is None:
+            return
+
         device = self.live.drives[drive]
 
         if self.live.device_can_be_upgraded(device):
             self.opts.partition = False
             self.force_reinstall = False
             self.__button_start.set_label(_('Upgrade'))
-            self.__help_link.set_label(
-                                     _('Manual Upgrade Instructions'))
-            self.__help_link.set_uri(
-                        _('https://tails.boum.org/upgrade/'))
+            self.__help_link.set_label(_('Manual Upgrade Instructions'))
+            self.__help_link.set_uri('https://tails.boum.org/upgrade/')
             if device['is_device_big_enough_for_reinstall']:
                 self.__button_force_reinstall.set_visible(True)
             else:
@@ -379,16 +370,14 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             self.force_reinstall = True
             self.__button_start.set_label(_('Install'))
             self.__button_force_reinstall.set_visible(False)
-            self.__help_link.set_label(
-                                     _('Installation Instructions'))
-            self.__help_link.set_uri(
-                        _('https://tails.boum.org/install/'))
+            self.__help_link.set_label(_('Installation Instructions'))
+            self.__help_link.set_uri('https://tails.boum.org/install/')
 
     def get_device_pretty_name(self, device):
         size = _format_bytes_in_gb(device['parent_size']
-                                    if device['parent_size']
-                                    else device['size'])
-        pretty_name = _("%(size)s %(vendor)s %(model)s device (%(device)s)") % {
+                                   if device['parent_size']
+                                   else device['size'])
+        pretty_name = _('%(size)s %(vendor)s %(model)s device (%(device)s)') % {
                     'size':   size,
                     'vendor': device['vendor'],
                     'model':  device['model'],
@@ -400,9 +389,9 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         return (self.live.source.__class__ == LocalIsoSource)
 
     def warn_ISO_not_selected(self):
-        self.show_confirmation_dialog(_("No ISO image selected"),
-                                      _("Please select a Tails ISO image."),
-                                        True)
+        self.show_confirmation_dialog(_('No ISO image selected'),
+                                      _('Please select a Tails ISO image.'),
+                                      True)
 
     def on_start_clicked(self, button):
         # If the user has chosen install from ISO, but no ISO is selected
@@ -413,8 +402,8 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
     def on_infobar_response(self, infobar, response):
         self.__infobar.set_visible(False)
-        self.__label_infobar_title.set_text("")
-        self.__label_infobar_details.set_text("")
+        self.__label_infobar_title.set_text('')
+        self.__label_infobar_details.set_text('')
 
     def clear_log(self):
         text_buffer = self.__textview_log.get_buffer()
@@ -443,10 +432,10 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             if not len(self.live.drives):
                 self.__infobar.set_message_type(Gtk.MessageType.INFO)
                 self.__label_infobar_title.set_text(
-                        _("No device suitable to install Tails could be found"))
+                        _('No device suitable to install Tails could be found'))
                 self.__label_infobar_details.set_text(
-                        _("Please plug a USB flash drive or SD card of at least %0.1f GB.")
-                        % (config['official_min_installation_device_size'] / 1000.))
+                        _('Please plug a USB flash drive or SD card of at least %0.1f GB.')
+                        % (CONFIG['official_min_installation_device_size'] / 1000.))
                 self.__infobar.set_visible(True)
                 self.target_available = False
                 self.update_start_button()
@@ -456,15 +445,12 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             self.live.log.debug('drives: %s' % self.live.drives)
             target_list = []
             self.devices_with_persistence = []
-            for device, info in self.live.drives.items():
+            for device, info in list(self.live.drives.items()):
                 # Skip the device that is the source of the copy
-                if (
-                        self.live.source and
-                        self.live.source.dev and (
-                            info['udi'] == self.live.source.dev or
-                            info['parent_udi'] == self.live.source.dev
-                        )
-                    ):
+                if (self.live.source and
+                    self.live.source.dev and (
+                        info['udi'] == self.live.source.dev or
+                        info['parent_udi'] == self.live.source.dev)):
                     self.live.log.debug('Skipping source device: %s' % info['device'])
                     continue
                 # Skip the running device
@@ -479,24 +465,24 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
                 pretty_name = self.get_device_pretty_name(info)
                 # Skip devices with non-removable bit enabled
                 if not info['removable']:
-                    message =_('The USB stick "%(pretty_name)s"'
-                               ' is configured as non-removable by its'
-                               ' manufacturer and Tails will fail to start from it.'
-                               ' Please try installing on a different model.') % {
-                               'pretty_name':  pretty_name
-                               }
+                    message = _('The USB stick "%(pretty_name)s"'
+                                ' is configured as non-removable by its'
+                                ' manufacturer and Tails will fail to start from it.'
+                                ' Please try installing on a different model.') % {
+                                'pretty_name':  pretty_name
+                                }
                     self.status(message)
                     continue
                 # Skip too small devices, but inform the user
                 if not info['is_device_big_enough_for_installation']:
-                    message =_('The device "%(pretty_name)s"'
-                               ' is too small to install'
-                               ' Tails (at least %(size)s GB is required).') % {
-                               'pretty_name': pretty_name,
-                               'size': (float(
-                                   config['official_min_installation_device_size'])
-                                        / 1000)
-                               }
+                    message = _('The device "%(pretty_name)s"'
+                                ' is too small to install'
+                                ' Tails (at least %(size)s GB is required).') % {
+                                'pretty_name': pretty_name,
+                                'size': (float(
+                                    CONFIG['official_min_installation_device_size'])
+                                         / 1000)
+                                }
                     self.status(message)
                     continue
                 # Skip devices too small for cloning, but inform the user
@@ -504,9 +490,10 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
                    and not info['is_device_big_enough_for_upgrade']:
                     message = _('To upgrade device "%(pretty_name)s"'
                                 ' from this Tails, you need to use'
-                                " a downloaded Tails ISO image:\n"
-                                'https://tails.boum.org/install/download') % {
+                                ' a downloaded Tails ISO image:\n'
+                                '%(dl_url)s') % {
                                     'pretty_name': pretty_name,
+                                    'dl_url': 'https://tails.boum.org/install/download',
                                 }
                     self.status(message)
                     continue
@@ -520,13 +507,13 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
         try:
             self.live.detect_supported_drives(callback=add_devices)
-        except TailsInstallerError, e:
+        except TailsInstallerError as e:
             self.__infobar.set_message_type(Gtk.MessageType.ERROR)
             self.__label_infobar_title.set_text(
-                    _("An error happened while installing Tails"))
+                    _('An error happened while installing Tails'))
             self.__label_infobar_details.set_text(e.args[0])
             self.__infobar.set_visible(True)
-            self.append_to_log(e.args[0])
+            self.append_to_log(str(e.args[0]))
             self.target_available = False
             self.update_start_button()
 
@@ -535,21 +522,20 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
     def status(self, obj):
         try:
-            if isinstance(obj, str) or isinstance(obj, unicode):
+            if isinstance(obj, str) or isinstance(obj, str):
                 text = obj
-            elif isinstance(obj, Exception) \
-                 and hasattr(obj, 'args') \
-                 and type(obj.args).__name__ == 'list':
-                text = obj.args[0]
+            elif isinstance(obj, Exception) and hasattr(obj, 'args') \
+                and type(obj.args).__name__ == 'list':
+                    text = obj.args[0]
             else:
                 text = str(obj)
             self.append_to_log(text)
-        except Exception as e:
+        except Exception as ex:
             self.live.log.exception(
-                "Failed to set status to object of type '{type}'"
+                'Failed to set status to object of type "{type}"'
                 .format(type=type(obj).__name__)
             )
-            raise e
+            raise ex
 
     def enable_widgets(self, enabled=True):
         if enabled:
@@ -563,9 +549,9 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
     def get_selected_drive(self):
         drive = None
-        iter = self.__combobox_target.get_active_iter()
-        if iter != None:
-            drive = self.__liststore_target.get(iter, 1)[0]
+        _iter = self.__combobox_target.get_active_iter()
+        if _iter is not None:
+            drive = self.__liststore_target.get(_iter, 1)[0]
         if drive:
             return _to_unicode(drive)
 
@@ -575,27 +561,28 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
                                    flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
                                    message_type=Gtk.MessageType.INFO,
                                    buttons=Gtk.ButtonsType.CLOSE,
-                                   message_format=_("Installation complete!"))
+                                   message_format=_('Installation complete!'))
         dialog.run()
         self.close()
 
     def show_confirmation_dialog(self, title, message, warning,
-                                 label_string=_("Install")):
-        if (warning):
-            buttons=Gtk.ButtonsType.OK
+                                 label_string=_('Install')):
+        if warning:
+            buttons = Gtk.ButtonsType.OK
         else:
-            buttons=Gtk.ButtonsType.NONE
+            buttons = Gtk.ButtonsType.NONE
         dialog = Gtk.MessageDialog(parent=self,
                                    flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
                                    message_type=Gtk.MessageType.QUESTION,
                                    buttons=buttons,
                                    message_format=title)
         dialog.format_secondary_text(message)
-        dialog.add_button(_("Cancel"), Gtk.ResponseType.CANCEL);
-        dialog.add_button(label_string, Gtk.ResponseType.YES);
+        if not warning:
+            dialog.add_button(_('Cancel'), Gtk.ResponseType.CANCEL)
+            dialog.add_button(label_string, Gtk.ResponseType.YES)
         reply = dialog.run()
         dialog.hide()
-        if (reply == Gtk.ResponseType.YES):
+        if reply == Gtk.ResponseType.YES:
             return True
         else:
             self.target_selected = None
@@ -622,11 +609,11 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         if not self.opts.partition:
             try:
                 self.live.mount_device()
-            except TailsInstallerError, e:
+            except TailsInstallerError as e:
                 self.status(e.args[0])
                 self.enable_widgets(True)
                 return
-            except OSError, e:
+            except OSError as e:
                 self.status(_('Unable to mount device'))
                 self.enable_widgets(True)
                 return
@@ -634,18 +621,17 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         if self.opts.partition:
             if not self.confirmed:
                 if self.show_confirmation_dialog(
-                        _("Confirm the target USB stick"),
-                        _("%(size)s %(vendor)s %(model)s device (%(device)s)\n\n"
-                          "All data on this USB stick will be lost.") %
-                          {'vendor': self.live.drive['vendor'],
-                           'model':  self.live.drive['model'],
-                           'device': self.live.drive['device'],
-                           'size':   _format_bytes_in_gb(self.live.drive['parent_size']
-                                    if self.live.drive['parent_size']
-                                    else self.live.drive['size'])
-                          },
-                          False,
-                          label_string=_("Install")):
+                        _('Confirm the target USB stick'),
+                        _('%(size)s %(vendor)s %(model)s device (%(device)s)\n\n'
+                          'All data on this USB stick will be lost.') %
+                        {'vendor': self.live.drive['vendor'],
+                         'model':  self.live.drive['model'],
+                         'device': self.live.drive['device'],
+                         'size':   _format_bytes_in_gb(self.live.drive['parent_size']
+                                                       if self.live.drive['parent_size']
+                                                       else self.live.drive['size'])},
+                        False,
+                        label_string=_('Install')):
                     self.confirmed = True
                 else:
                     return
@@ -654,30 +640,30 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
                 # let's go on
                 self.confirmed = False
         else:
-            description = _("%(parent_size)s %(vendor)s %(model)s device (%(device)s)") % {
+            description = _('%(parent_size)s %(vendor)s %(model)s device (%(device)s)') % {
                 'vendor': self.live.drive['vendor'],
                 'model':  self.live.drive['model'],
                 'device': self.live.drive['device'],
                 'parent_size': _format_bytes_in_gb(self.live.drive['parent_size']),
             }
-            persistence_message = ""
+            persistence_message = ''
             if self.devices_with_persistence:
-                persistence_message = _("\n\nThe persistent storage on this USB stick will be preserved.")
-            msg = _("%(description)s%(persistence_message)s") % {
+                persistence_message = _('\n\nThe persistent storage on this USB stick will be preserved.')
+            msg = _('%(description)s%(persistence_message)s') % {
                 'description': description,
                 'persistence_message': persistence_message,
             }
-            if self.show_confirmation_dialog(_("Confirm the target USB stick"), \
-               msg, False, label_string=_("Upgrade")):
+            if self.show_confirmation_dialog(_('Confirm the target USB stick'),
+               msg, False, label_string=_('Upgrade')):
                 # The user has confirmed that they wish to overwrite their
                 # existing Live OS.  Here we delete it first, in order to
                 # accurately calculate progress.
                 self.delete_existing_liveos_confirmed = False
                 try:
                     self.live.delete_liveos()
-                except TailsInstallerError, e:
-                    self.status(e.args[0])
-                    #self.live.unmount_device()
+                except TailsInstallerError as ex:
+                    self.status(ex.args[0])
+                    # self.live.unmount_device()
                     self.enable_widgets(True)
                     return
             else:
@@ -697,28 +683,25 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         else:
             raise NotImplementedError
 
-    def on_source_file_set(self, filechooserbutton):
-        self.select_source_iso(filechooserbutton.get_filename())
-
     def select_source_iso(self, isofile):
         if not os.access(isofile, os.R_OK):
-            self.status(_("The selected file is unreadable. "
-                          "Please fix its permissions or select another file."))
+            self.status(_('The selected file is unreadable. '
+                          'Please fix its permissions or select another file.'))
             return False
         try:
             self.live.source = LocalIsoSource(path=isofile)
-        except Exception, e:
-            self.status(_("Unable to use the selected file.  "
-                          "You may have better luck if you move your ISO "
-                          "to the root of your drive (ie: C:\)"))
-            self.live.log.exception(e.args[0])
+        except Exception as ex:
+            self.status(_('Unable to use the selected file.  '
+                          'You may have better luck if you move your ISO '
+                          'to the root of your drive (ie: C:\)'))
+            self.live.log.exception(ex.args[0])
             return False
 
-        self.live.log.info(_("%(filename)s selected")
-                             % {'filename': str(os.path.basename(self.live.source.path))})
+        self.live.log.info(_('%(filename)s selected')
+                           % {'filename': str(os.path.basename(self.live.source.path))})
         self.source_available = True
-        self.live.log.debug("Calling populate_devices()"
-                            " from select_source_iso")
+        self.live.log.debug('Calling populate_devices()'
+                            ' from select_source_iso')
         self.populate_devices()
 
     def terminate(self):

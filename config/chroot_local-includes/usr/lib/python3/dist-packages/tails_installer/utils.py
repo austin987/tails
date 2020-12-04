@@ -7,49 +7,49 @@ import shutil
 import stat
 import sys
 from tails_installer import _
-from tails_installer.config import config
+from tails_installer.config import CONFIG
 
 from gi.repository import GLib
+
 
 class TailsError(Exception):
     """ A generic Exception the allows us to manage error
         messages encoded in unicode """
     def __init__(self, message):
-        encoded_message=unicode_to_utf8(message)
-        super(TailsError, self).__init__(encoded_message)
-        self.message = encoded_message
+        super(TailsError, self).__init__(message)
 
-    def __unicode__(self):
-        return self.message
 
 def _to_unicode(obj, encoding='utf-8'):
-    if hasattr(obj, 'toUtf8'): # PyQt4.QtCore.QString
+    if hasattr(obj, 'toUtf8'):  # PyQt4.QtCore.QString
         obj = str(obj.toUtf8())
-    if isinstance(obj, basestring):
-        if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
+    if isinstance(obj, str):
+        if not isinstance(obj, str):
+            obj = str(obj, encoding)
     return obj
 
-def unicode_to_utf8(string):
-    if isinstance(string, unicode):
-        return string.encode('utf-8')
+
+def bytes_to_unicode(string):
+    if isinstance(string, bytes):
+        return string.decode('utf-8')
     return string
 
+
 def unicode_to_filesystemencoding(string):
-    if isinstance(string, unicode):
-        return string.encode(sys.getfilesystemencoding(), 'replace')
+    if isinstance(string, bytes):
+        return string.decode(sys.getfilesystemencoding(), 'replace')
     return string
+
 
 def extract_file_content_from_iso(iso_path, path):
     """ Return the content of that file read from inside self.iso """
 
-    cmd = ['isoinfo', '-R', '-i', unicode_to_utf8(iso_path),
-           '-x', unicode_to_utf8(path)]
+    cmd = ['isoinfo', '-R', '-i', bytes_to_unicode(iso_path),
+           '-x', bytes_to_unicode(path)]
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
-    out = unicode_to_utf8(out)
-    err = unicode_to_utf8(err)
+    out = bytes_to_unicode(out)
+    err = bytes_to_unicode(err)
     if proc.returncode:
         raise Exception(_("There was a problem executing `%(cmd)s`."
                           "%(out)s\n%(err)s") % {
@@ -59,10 +59,12 @@ def extract_file_content_from_iso(iso_path, path):
                           })
     return out
 
+
 def iso_is_live_system(iso_path):
     """ Return true iff a Live system is detected inside the iso_path file """
     version = extract_file_content_from_iso(iso_path, '/.disk/info')
     return version.startswith('Debian GNU/Linux')
+
 
 def _dir_size(source):
     total_size = os.path.getsize(source)
@@ -74,28 +76,16 @@ def _dir_size(source):
             total_size += _dir_size(itempath)
     return total_size
 
+
 def _move_if_exists(src, dest):
     if os.path.exists(src):
         shutil.move(src, dest)
+
 
 def _unlink_if_exists(path):
     if os.path.exists(path):
         os.unlink(path)
 
-def _set_liberal_perms_recursive(destination):
-    def _set_liberal_perms(arg, dirname, fnames):
-        if dirname == 'lost+found':
-            return
-        os.chmod(dirname, 0755)
-        for f in fnames:
-            if f == 'lost+found':
-                continue
-            file = os.path.join(dirname, f)
-            if os.path.isdir(file):
-                os.chmod(file, 0755)
-            elif os.path.isfile(file):
-                os.chmod(file, 0644)
-    os.path.walk(destination, _set_liberal_perms, None)
 
 def underlying_physical_device(path):
     """ Returns the physical block device UDI on which the specified file is
@@ -109,12 +99,13 @@ def underlying_physical_device(path):
     parentblock = udisksclient.get_block_for_drive(drive, get_physical=False)
     return parentblock.get_object_path()
 
+
 def _format_bytes_in_gb(value):
     return '%0.1f GB' % (value / 10.0**9)
 
 
-def MiB_to_bytes(size_in_MiB):
-    return size_in_MiB * 1024**2
+def mebibytes_to_bytes(size_in_mebibytes):
+    return size_in_mebibytes * 1024**2
 
 
 def _get_datadir():
@@ -126,16 +117,27 @@ def _get_datadir():
         return('/usr/share/tails-installer')
 
 def get_open_write_fd(block):
+    """ @returns the file descriptor for a block """
     (fd_index, fd_list) = block.call_open_for_restore_sync(
         arg_options=GLib.Variant('a{sv}', None)
     )
-    fd = fd_list.get(fd_index.get_handle())
-    if fd == -1:
-        raise Exception(_("Could not open device for writing."))
-    return fd
+    file_desc = fd_list.get(fd_index.get_handle())
+    if file_desc == -1:
+        raise Exception(_('Could not open device for writing.'))
+    return file_desc
+
 
 def write_to_block_device(block, string):
-    fd = get_open_write_fd(block)
-    os.write(fd, string)
-    os.fsync(fd)
-    os.close(fd)
+    """ Writes a string to a block """
+    file_desc = get_open_write_fd(block)
+    os.write(file_desc, string)
+    os.fsync(file_desc)
+    os.close(file_desc)
+
+def _set_liberal_perms_recursive(path):
+    if os.path.isfile(path):
+        os.chmod(path, 0o644)
+    elif os.path.isdir(path):
+        os.chmod(path, 0o755)
+        for f in os.listdir(path):
+            _set_liberal_perms_recursive(os.path.join(path, f))
