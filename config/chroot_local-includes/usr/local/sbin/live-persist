@@ -124,7 +124,8 @@ maybe_restore_gnupg_pubring()
 {
 	local KEYRING="/home/amnesia/.gnupg/pubring.kbx"
 	local KEYRING_BAK="${KEYRING}~"
-	local KEYRING_SIZE="$(stat -c %s ${KEYRING} || echo 0)"
+	local KEYRING_SIZE
+	KEYRING_SIZE="$(stat -c %s ${KEYRING} || echo 0)"
 
 	if [ ! -f "${KEYRING}" ] || [ "${KEYRING_SIZE}" -le 32 ]; then
 		warning "It seems the GnuPG keyring is corrupt"
