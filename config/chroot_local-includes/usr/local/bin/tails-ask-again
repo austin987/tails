@@ -4,7 +4,7 @@ set -eu
 
 SETTINGS_DIR='/live/persistence/TailsData_unlocked/dont-ask-again'
 if [ ! -d "${SETTINGS_DIR}" ]; then
-    # Feature not available so always ask again
+    echo 'unavailable'
     exit 0
 fi
 
@@ -35,5 +35,9 @@ else
     if [ -n "${TIMEOUT:-}" ]; then
         find "${SETTINGS_DIR}" -name "${IDENTIFIER}" -mtime +"${TIMEOUT}" -delete
     fi
-    [ ! -e "${SETTINGS_DIR}/${IDENTIFIER}" ]
+    if [ -e "${SETTINGS_DIR}/${IDENTIFIER}" ]; then
+        echo 'hide'
+    else
+        echo 'show'
+    fi
 fi

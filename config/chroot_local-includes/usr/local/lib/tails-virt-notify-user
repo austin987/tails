@@ -56,10 +56,11 @@ sub action_cb {
 
 ### main
 
-capturex([0, 1], ('/usr/local/bin/tails-ask-again',
-                  '--timeout', '30',
-                  $dont_ask_identifier));
-exit 0 if $EXITVAL == 1;
+my $dont_ask_status = capturex([0], ('/usr/local/bin/tails-ask-again',
+                                     '--timeout', '30',
+                                     $dont_ask_identifier));
+chomp($dont_ask_status);
+exit 0 if $dont_ask_status eq 'hide';
 
 # both 0 and 1 are acceptable exit values:
 #  - 0 means that we're running in a virtualized environment
@@ -88,10 +89,14 @@ else {
 
 $body = __("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
 
+my %actions = ( 'more_info' => __('Learn more') );
+if ($dont_ask_status ne 'unavailable') {
+    $actions{'hide'} =  __('Hide warning for a month');
+}
+
 $notify->create(summary => $summary,
                 body    => $body,
-                actions => { 'more_info' => __('Learn more'),
-                             'hide'      => __('Hide warning for a month')},
+                actions => \%actions,
                 hints   => { 'transient' => 1, },
                 timeout => 0)->show();
 
