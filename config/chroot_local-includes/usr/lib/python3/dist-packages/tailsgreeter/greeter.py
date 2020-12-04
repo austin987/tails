@@ -105,7 +105,6 @@ class GreeterApplication(object):
     def translate_to(self, lang):
         """Translate all windows to target language"""
         TranslatableWindow.translate_all(lang)
-        logging.info("translated UI to %s", lang)
 
     def login(self):
         """Login GDM to the server"""
