@@ -29,21 +29,37 @@ use Locale::TextDomain 'tails';
 use Net::DBus::Reactor;
 use POSIX;
 
+my $dont_ask_identifier = 'virt-notify-user';
+
 ### callbacks
 
 sub action_cb {
     my $reactor = shift;
+    my $action = pop;
     unless (fork) {
-        exec(
-            '/usr/local/bin/tails-documentation',
-            'doc/advanced_topics/virtualization',
-            'security'
-        );
+        if ($action eq 'more_info') {
+            exec(
+                '/usr/local/bin/tails-documentation',
+                'doc/advanced_topics/virtualization',
+                'security'
+            );
+        } elsif ($action eq 'hide') {
+            exec(
+                '/usr/local/bin/tails-ask-again',
+                '--dont-ask-again',
+                $dont_ask_identifier
+            );
+        }
     }
     $reactor->shutdown;
 }
 
 ### main
+
+capturex([0, 1], ('/usr/local/bin/tails-ask-again',
+                  '--timeout', '30',
+                  $dont_ask_identifier));
+exit 0 if $EXITVAL == 1;
 
 # both 0 and 1 are acceptable exit values:
 #  - 0 means that we're running in a virtualized environment
@@ -74,7 +90,8 @@ $body = __("Both the host operating system and the virtualization software are a
 
 $notify->create(summary => $summary,
                 body    => $body,
-                actions => { "moreinfo_$PID" => __('Learn more'), },
+                actions => { 'more_info' => __('Learn more'),
+                             'hide'      => __('Hide warning for a month')},
                 hints   => { 'transient' => 1, },
                 timeout => 0)->show();
 
