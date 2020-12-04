@@ -461,12 +461,12 @@ method run () {
                 "For more information about this new version, go to {details_url}\n\n".
                 "It is not possible to automatically upgrade ".
                 "your device to this new version: {explanation}.\n\n".
-                "To learn how to do a manual upgrade, go to ".
-                "https://tails.boum.org/doc/upgrade/#manual",
-                details_url => $upgrade_path->{'details-url'},
-                name        => $upgrade_description->product_name,
-                version     => $upgrade_path->{version},
-                explanation => $self->no_incremental_explanation($no_incremental_reason),
+                "To learn how to do a manual upgrade, go to {manual_upgrade_url}",
+                details_url        => $upgrade_path->{'details-url'},
+                name               => $upgrade_description->product_name,
+                version            => $upgrade_path->{version},
+                explanation        => $self->no_incremental_explanation($no_incremental_reason),
+                manual_upgrade_url => 'https://tails.boum.org/doc/upgrade/#manual',
             ),
             title => __(q{New version available}),
             type  => 'info',
