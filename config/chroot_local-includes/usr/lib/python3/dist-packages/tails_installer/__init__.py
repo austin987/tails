@@ -18,33 +18,32 @@
 # Author(s): Luke Macken <lmacken@redhat.com>
 
 import os
-import sys
 import gettext
-import locale
 
 # Add sbin to PATH to support unprivileged mode
 if os.path.exists('/usr/sbin') or os.path.exists('/usr/local/sbin'):
     try:
         os.environ['PATH'] = '/usr/local/sbin:/usr/sbin:' + os.environ['PATH']
-    except KeyError, e:
+    except KeyError as ex:
         os.environ['PATH'] = '/usr/local/sbin:/usr/sbin'
 
+
 def utf8_gettext(*args, **kwargs):
-    " Translate string, converting it to a UTF-8 encoded bytestring "
+    """ Translate string, converting it to a UTF-8 encoded bytestring """
     return gettext.translation(
                'tails', '/usr/share/locale', fallback=True
            ).gettext(*args, **kwargs)
 
+
 _ = utf8_gettext
 
-from tails_installer.creator import TailsInstallerError
+from tails_installer.creator import TailsInstallerError  # NOQA E402
+from tails_installer.creator import TailsInstallerCreator  # NOQA E402
+from tails_installer.config import CONFIG  # NOQA E402
 
-from tails_installer.creator import LinuxTailsInstallerCreator as TailsInstallerCreator
-
-from tails_installer.config import config
 branding = {
-    'distribution': config['branding']['distribution'],
-    'header':       config['branding']['header']
+    'distribution': CONFIG['branding']['distribution'],
+    'header':       CONFIG['branding']['header']
 }
 
-__all__ = ("TailsInstallerCreator", "TailsInstallerError", "TailsInstallerDialog", "_", "utf8_gettext", "branding")
+__all__ = ('TailsInstallerCreator', 'TailsInstallerError', 'TailsInstallerDialog', '_', 'utf8_gettext', 'branding')
