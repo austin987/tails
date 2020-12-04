@@ -334,10 +334,10 @@ method no_incremental_explanation (Str $no_incremental_reason) {
         );
     }
     else {
-        $self->debug(__x(
+        say STDERR __x(
                 q{No explanation available for reason '{reason}'.},
                 reason => $no_incremental_reason,
-        ));
+        );
         $explanation = $no_incremental_reason;
     }
 
