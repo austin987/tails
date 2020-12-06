@@ -12,6 +12,7 @@ Then /^I can print the current document to "([^"]+)"$/ do |output_file|
   # so we type only the desired file's basename to replace it
   $vm.set_clipboard(output_file.sub(/[.]pdf$/, ''))
   @screen.press('ctrl', 'v')
+  sleep 1 # Wait for the paste operation to register.
   @screen.press('Return')
   @screen.wait('Gtk3PrintButton.png', 10).click
   try_for(10, msg: "The document was not printed to #{output_file}") do
