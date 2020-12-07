@@ -81,23 +81,6 @@ The client must support XMPP conference rooms [(XEP-0045)](https://xmpp.org/exte
 
 # Candidate alternatives 
 
-## CoyIM
-
-* [Homepage](https://coy.im/)
-* [Github](https://github.com/coyim/coyim/)
-* CoyIM only supports XMPP.
-* CoyIM [is in Debian](https://tracker.debian.org/pkg/coyim)
-* Support for multi-user chatrooms (MUC) is [in
-  progress](https://github.com/coyim/coyim/projects/2) and lacks some
-  important features such as having a persistent list of rooms
-  persistently saved in the configuration
-* Supports Tor, TLS, OTR
-* Supports creation of random accounts.
-* Supports importing accounts from Pidgin.
-* No logging, no clickable links.
-* Not audited.
-* Test results in Tails: [[!tails_ticket 8574]]
-
 ## dino
 
 * [homepage](https://github.com/dino/dino)
@@ -121,12 +104,31 @@ People from Security-in-a-Box have used it successfully in Tails.
 Gajim ships with a plugin called "plugin installer" which allows a user to download new plugins. This sounds suspicious for security, because plugins are pieces of code running with full privilege. The implementation in Debian use unverified TLS connection, which is very very open to MITM. The development version has switched to verified HTTPS connection and is trying to make it more robust.
 However, I think that Tails should not ship this plugin at all: it allows a user to download code without needing sudo. We could work debian-side to separate gajim-plugininstaller in a separate package so that Tails can choose not to install it?
 
-## Thunderbird
+## Does not meet our requirements
+
+### CoyIM
+
+* [Homepage](https://coy.im/)
+* [Github](https://github.com/coyim/coyim/)
+* CoyIM only supports XMPP.
+* CoyIM [is in Debian](https://tracker.debian.org/pkg/coyim)
+* Support for multi-user chatrooms (MUC) is [in
+  progress](https://github.com/coyim/coyim/projects/2) and lacks some
+  important features such as having a persistent list of rooms
+  persistently saved in the configuration
+* Supports Tor, TLS, OTR
+* Supports creation of random accounts.
+* Supports importing accounts from Pidgin.
+* No logging, no clickable links.
+* Not audited.
+* Test results in Tails: [[!tails_ticket 8574]]
+* No OMEMO support.
+
+### Thunderbird
 
 - Thunderbird 75 Beta will support OTR after enabling the `chat.otr.enable`
   pref: <https://wiki.mozilla.org/Thunderbird:OTR>
-
-## No longer viable
+* No OMEMO support: <https://bugzilla.mozilla.org/show_bug.cgi?id=1237416>
 
 ### Tor Messenger ([[!tails_ticket 8577]])
 
