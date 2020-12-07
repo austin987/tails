@@ -85,7 +85,7 @@ The client must support XMPP conference rooms [(XEP-0045)](https://xmpp.org/exte
 
 # Candidate alternatives 
 
-## dino
+## Dino
 
 * [homepage](https://github.com/dino/dino)
 * implemented in GTK+/Vala
@@ -96,6 +96,37 @@ The client must support XMPP conference rooms [(XEP-0045)](https://xmpp.org/exte
 * the Debian maintainer wants to add an AppArmor profile and got in
   touch with intrigeri about it
 * Translated into 25+ languages
+* Small but quickly increasing popularity:
+  <https://qa.debian.org/popcon.php?package=dino-im>
+
+### Security
+
+- 28k lines of Vala + 1k lines of C = 29k lines of code
+
+- Track record:
+  - In 2019, [Multiple protocol implementation
+    errors](https://gultsch.de/dino_multiple.html) were discovered in Dino:
+
+    - [[!cve CVE-2019-16237]]: an attacker can send messages in the name of someone else
+      (previously found in other XMPP clients: CVE-2017-5589+)
+    - [[!cve CVE-2019-16236]]: remote attackers can modify the roster (previously
+      found in Gajim: CVE-2015-8688)
+    - [[!cve CVE-2019-16235]]: does not properly check the source of a carbons message
+
+    As that document says, "When confronted with the fact that the same trivial
+    vulnerabilities have been discovered in multiple, independent clients one
+    can not avoid the question if there is a more fundamental issue underneath
+    that causes different developers to all make the same mistakes."
+    Indeed, at the time, the corresponding XEPs lacked sufficient information
+    to implement them securely.
+
+- intrigeri's conclusion (2020-12-07):
+
+  - Looks OK to me, but Dino is pretty recent
+    and not widespread, so this could be a case that nobody bothered looking
+    closely enough.
+
+  - Dino's small feature set suggests it should be easy to confine it with AppArmor.
 
 ## Gajim
 
@@ -103,11 +134,50 @@ The client must support XMPP conference rooms [(XEP-0045)](https://xmpp.org/exte
 * in Debian
 * OMEMO plugin is in Debian Buster
 * OTR v3 plugin is not in Debian
+* People from Security-in-a-Box have used it successfully in Tails.
+* Large established user base (<https://qa.debian.org/popcon.php?package=gajim>)
+  for a XMPP client. Stagnating since about 10 years.
 
-People from Security-in-a-Box have used it successfully in Tails.
+### Security
 
-Gajim ships with a plugin called "plugin installer" which allows a user to download new plugins. This sounds suspicious for security, because plugins are pieces of code running with full privilege. The implementation in Debian use unverified TLS connection, which is very very open to MITM. The development version has switched to verified HTTPS connection and is trying to make it more robust.
-However, I think that Tails should not ship this plugin at all: it allows a user to download code without needing sudo. We could work debian-side to separate gajim-plugininstaller in a separate package so that Tails can choose not to install it?
+- 86k lines of Python + 2k for the OMEMO plugin = 88k lines of code
+
+- D-Bus capabilities: can be disabled?
+
+- Track record:
+  - [[!cve CVE-2016-10376]]: allows being controlled by the XMPP server
+  - [[!cve CVE-2015-8688]]: remote attackers can modify the roster and intercept
+    messages
+  - [[!cve CVE-2012-5524]]: custom SSL certificate verification callback
+    accepted CA-signed certificates for any domain.
+  - [[!cve CVE-2012-2085]] aka. https://dev.gajim.org/gajim/gajim/-/issues/7031:
+    remote code execution by building command lines out of untrusted input.
+
+- Gajim ships with a plugin called "plugin installer" which allows a user to
+  download new plugins. This sounds suspicious for security, because plugins are
+  pieces of code running with full privilege. The implementation in Debian use
+  unverified TLS connection, which is very very open to MITM. The development
+  version has switched to verified HTTPS connection and is trying to make it
+  more robust.
+
+  However, I think that Tails should not ship this plugin installer at all: it
+  allows a user to download code without needing sudo. We could work debian-side
+  to separate gajim-plugininstaller in a separate package so that Tails can
+  choose not to install it?
+
+- intrigeri's conclusion (2020-12-07):
+
+  - Having tons of powerful features increases attack surface and the risk of
+    secure programming mistakes. Gajim's security track record in 2012 is not
+    confidence inspiring, to say the least. OTOH the worst problems happened
+    many years ago, so perhaps the Gajim project has updated their processes to
+    lower the risks of introducing other really bad security issues?
+
+  - The plugin installer is not confidence inspiring either.
+
+  - Gajim's large feature set suggests it may be hard to write an AppArmor
+    profile that provides meaningful security, while not breaking too
+    much functionality.
 
 ## Does not meet our requirements
 
