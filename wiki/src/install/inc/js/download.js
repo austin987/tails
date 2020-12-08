@@ -116,6 +116,9 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (result === "failed-again") {
       show(document.getElementById("verification-failed-again"));
     }
+    else if (result === "error-file") {
+      show(document.getElementById("verification-error-file"));
+    }
     else if (result === "error-json") {
       show(document.getElementById("verification-error-json"));
       document.getElementById("checksum-file").setAttribute("href", URLofJsonFileContainingChecksums);
@@ -131,6 +134,7 @@ document.addEventListener("DOMContentLoaded", function() {
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
     hide(document.getElementById("verification-failed-again"));
+    hide(document.getElementById("verification-error-file"));
     hide(document.getElementById("verification-error-json"));
     hide(document.getElementById("verification-error-image"));
     show(document.getElementById("verification"));
@@ -147,8 +151,14 @@ document.addEventListener("DOMContentLoaded", function() {
   /* Verification logic functions */
 
   async function verifyFile(e, elm) {
-    file = elm.files[0]
-    showVerifyingDownload(file.name);
+
+    try {
+      file = elm.files[0];
+      showVerifyingDownload(file.name);
+    } catch(err) {
+      showVerificationResult("error-file");
+      return;
+    }
 
     try {
       var response=await fetch(URLofJsonFileContainingChecksums);
@@ -306,5 +316,6 @@ document.addEventListener("DOMContentLoaded", function() {
   // showVerificationResult("failed-again");
   // showVerificationResult("error-json");
   // showVerificationResult("error-image");
+  // verifyFile(null, null);
 
 });
