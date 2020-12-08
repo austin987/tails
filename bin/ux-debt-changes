@@ -9,6 +9,17 @@ import os
 import datetime
 
 try:
+    import requests
+except ImportError:
+    sys.exit("You need to install python3-requests to use this program.")
+
+try:
+    from cachecontrol import CacheControlAdapter  # type: ignore
+    from cachecontrol.heuristics import OneDayCache
+except ImportError:
+    sys.exit("You need to install python3-cachecontrol to use this program.")
+
+try:
     import gitlab  # type: ignore
 except ImportError:
     sys.exit("You need to install python3-gitlab to use this program.")
@@ -31,6 +42,30 @@ log = logging.getLogger()
 
 
 class GitLabWrapper(gitlab.Gitlab):
+    @classmethod
+    def from_config(cls, gitlab_name, config_files):
+        # adapter = CacheControlAdapter(heuristic=ExpiresAfter(days=1))
+        adapter = CacheControlAdapter(heuristic=OneDayCache())
+        session = requests.Session()
+        session.mount('https://', adapter)
+
+        config = gitlab.config.GitlabConfigParser(gitlab_id=gitlab_name,
+                                                  config_files=config_files)
+
+        return cls(config.url,
+                   private_token=config.private_token,
+                   oauth_token=config.oauth_token,
+                   job_token=config.job_token,
+                   ssl_verify=config.ssl_verify,
+                   timeout=config.timeout,
+                   http_username=config.http_username,
+                   http_password=config.http_password,
+                   api_version=config.api_version,
+                   per_page=config.per_page,
+                   pagination=config.pagination,
+                   order_by=config.order_by,
+                   session=session)
+
     @functools.lru_cache(maxsize=None)
     def project(self, project_id):
         return self.projects.get(project_id)
