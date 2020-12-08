@@ -37,6 +37,8 @@ PROJECT_NAME = GROUP_NAME + '/' + 'tails'
 
 LABEL = 'UX:debt'
 
+ALL_REPORTS = ['solved', 'rejected']
+
 LOG_FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
 log = logging.getLogger()
 
@@ -134,6 +136,12 @@ if __name__ == '__main__':
         type=datetime.date.fromisoformat,
         required=True,
         help="Consider changes after this date, in the format YYYY-MM-DD")
+    parser.add_argument(
+        "--report",
+        dest='reports',
+        action='append',
+        help="Only run the specified report (among %s)\n" % ALL_REPORTS +
+        "Can be specified multiple times to run several reports.")
     parser.add_argument("--debug", action="store_true", help="debug output")
     args = parser.parse_args()
 
@@ -149,20 +157,26 @@ if __name__ == '__main__':
     group = gl.groups.list(search=GROUP_NAME)[0]
     assert isinstance(group, gitlab.v4.objects.Group)
 
-    changes_generator = UxDebtChangesGenerator(gl, group, PROJECT_NAME, args.since)
+    reports = args.reports or ALL_REPORTS
+    log.debug("Preparing these reports: %s", reports)
 
-    print("Solved issues")
-    print("=============")
-    print()
-    for closed_issue in changes_generator.closed_issues(reason='resolved'):
-        print(f'- {closed_issue["title"]}')
-        print(f'  {closed_issue["web_url"]}')
-        print()
+    changes_generator = UxDebtChangesGenerator(gl, group, PROJECT_NAME,
+                                               args.since)
 
-    print("Rejected issues")
-    print("===============")
-    print()
-    for closed_issue in changes_generator.closed_issues(reason='rejected'):
-        print(f'- {closed_issue["title"]}')
-        print(f'  {closed_issue["web_url"]}')
+    if 'solved' in reports:
+        print("Solved issues")
+        print("=============")
         print()
+        for closed_issue in changes_generator.closed_issues(reason='resolved'):
+            print(f'- {closed_issue["title"]}')
+            print(f'  {closed_issue["web_url"]}')
+            print()
+
+    if 'rejected' in reports:
+        print("Rejected issues")
+        print("===============")
+        print()
+        for closed_issue in changes_generator.closed_issues(reason='rejected'):
+            print(f'- {closed_issue["title"]}')
+            print(f'  {closed_issue["web_url"]}')
+            print()
