@@ -7,6 +7,7 @@ import sys
 import logging
 import os
 import datetime
+import dateutil.parser
 
 try:
     import requests
@@ -37,7 +38,7 @@ PROJECT_NAME = GROUP_NAME + '/' + 'tails'
 
 LABEL = 'UX:debt'
 
-ALL_REPORTS = ['solved', 'rejected']
+ALL_REPORTS = ['added', 'solved', 'rejected']
 
 LOG_FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
 log = logging.getLogger()
@@ -88,7 +89,10 @@ class UxDebtChangesGenerator(object):
         self.gl = gl
         self.group = group
         self.project = self.gl.project_from_name(project_name)
-        self.after = after
+        self.after = datetime.datetime(after.year,
+                                       after.month,
+                                       after.day,
+                                       tzinfo=datetime.timezone.utc)
 
     def closed_issues(self, reason: str) -> list:
         closed_issues = []
@@ -127,6 +131,24 @@ class UxDebtChangesGenerator(object):
 
         return closed_issues
 
+    def label_added(self):
+        issues = []
+        for issue in self.project.issues.list(state='opened', labels=[LABEL]):
+            if LABEL not in issue.labels:
+                continue
+            events = issue.resourcelabelevents.list()
+            for event in events:
+                if event.action != 'add' or event.label['name'] != 'UX:debt':
+                    continue
+                event_created_at = dateutil.parser.isoparse(event.created_at)
+                if event_created_at < self.after:
+                    continue
+                issues.append({
+                    "title": issue.title,
+                    "web_url": issue.web_url,
+                })
+        return issues
+
 
 if __name__ == '__main__':
     import argparse
@@ -162,6 +184,15 @@ if __name__ == '__main__':
 
     changes_generator = UxDebtChangesGenerator(gl, group, PROJECT_NAME,
                                                args.since)
+
+    if 'added' in reports:
+        print("Issues that had the UX:debt label added")
+        print("=======================================")
+        print()
+        for issue in changes_generator.label_added():
+            print(f'- {issue["title"]}')
+            print(f'  {issue["web_url"]}')
+            print()
 
     if 'solved' in reports:
         print("Solved issues")
