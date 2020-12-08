@@ -38,7 +38,7 @@ PROJECT_NAME = GROUP_NAME + '/' + 'tails'
 
 LABEL = 'UX:debt'
 
-ALL_REPORTS = ['added', 'solved', 'rejected']
+ALL_REPORTS = ['added', 'removed', 'solved', 'rejected']
 
 LOG_FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
 log = logging.getLogger()
@@ -149,6 +149,24 @@ class UxDebtChangesGenerator(object):
                 })
         return issues
 
+    def label_removed(self):
+        issues = []
+        for issue in self.project.issues.list(state='opened'):
+            if LABEL in issue.labels:
+                continue
+            events = issue.resourcelabelevents.list()
+            for event in events:
+                if event.action != 'remove' or event.label['name'] != 'UX:debt':
+                    continue
+                event_created_at = dateutil.parser.isoparse(event.created_at)
+                if event_created_at < self.after:
+                    continue
+                issues.append({
+                    "title": issue.title,
+                    "web_url": issue.web_url,
+                })
+        return issues
+
 
 if __name__ == '__main__':
     import argparse
@@ -190,6 +208,15 @@ if __name__ == '__main__':
         print("=======================================")
         print()
         for issue in changes_generator.label_added():
+            print(f'- {issue["title"]}')
+            print(f'  {issue["web_url"]}')
+            print()
+
+    if 'removed' in reports:
+        print("Issues that had the UX:debt label removed")
+        print("=========================================")
+        print()
+        for issue in changes_generator.label_removed():
             print(f'- {issue["title"]}')
             print(f'  {issue["web_url"]}')
             print()
