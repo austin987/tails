@@ -737,7 +737,7 @@ Verify there's enough free disk space in `$IUKS_DIR`:
        echo "ERROR! Not enough free space in ${IUKS_DIR:?}"
     fi
 
-Start building the IUKs locally:
+If you can build the IUKs on your host system, run this command:
 
     (
        set -eu
@@ -759,9 +759,38 @@ Start building the IUKs locally:
            --new-version "${VERSION?:}"                                       \
            --verbose                                                          \
            --jobs "$(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
-       cd "${IUKS_DIR?:}"
-       sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
     )
+
+Else, if you need to build them in a VM (assuming you can SSH into it, as a user
+with passwordless sudo access, with `ssh buster-rm`; and [[!tails_gitlab
+tails/puppet-tails]] is cloned in the `$HOME` of that user in the VM), run:
+
+    (
+       set -eu
+       WORK_DIR=$(mktemp -d)
+       ssh buster-rm <<EOF
+       mkdir -p "${WORK_DIR:?}" && \
+       cd "${WORK_DIR?:}" && \
+       time \
+       sudo \
+       ~/puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
+           --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
+           --tails-git-commit "${TAG?:}"                                      \
+           --source-date-epoch "${SOURCE_DATE_EPOCH?:}"                       \
+           --local-isos-dir "${ISOS?:}"                                       \
+           --tmp-dir "${TMPDIR:-/tmp}"                                        \
+           --output-dir "${IUKS_DIR?:}"                                       \
+           --source-versions "${IUK_SOURCE_VERSIONS?:}"                       \
+           --new-version "${VERSION?:}"                                       \
+           --verbose                                                          \
+           --jobs "$(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
+       EOF
+    )
+
+In any case, run:
+
+     cd "${IUKS_DIR?:}" && \
+     sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
 
 Take note of the `time` output above and add it to the table in
 [[!tails_ticket 17750]].
