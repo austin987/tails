@@ -459,10 +459,14 @@ Given /^the time has synced$/ do
       try_for(300) { $vm.execute("test -e #{file}").success? }
     end
   rescue StandardError
-    File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |file|
-      file.write($vm.execute('cat /var/log/htpdate.log').stdout)
+    if file == '/run/htpdate/success'
+      File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |file|
+        file.write($vm.execute('cat /var/log/htpdate.log').stdout)
+      end
+      raise TimeSyncingError, 'Time syncing failed (htpdate)'
+    else
+      raise TimeSyncingError, 'Time syncing failed (tordate)'
     end
-    raise TimeSyncingError, 'Time syncing failed'
   end
 end
 
