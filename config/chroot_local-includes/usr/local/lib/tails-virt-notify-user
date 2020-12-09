@@ -37,13 +37,14 @@ sub action_cb {
     my $reactor = shift;
     my $action = pop;
     unless (fork) {
-        if ($action eq 'more_info') {
+        my $ppid = getppid();
+        if ($action eq "more_info_$ppid") {
             exec(
                 '/usr/local/bin/tails-documentation',
                 'doc/advanced_topics/virtualization',
                 'security'
             );
-        } elsif ($action eq 'hide') {
+        } elsif ($action eq "hide_$ppid") {
             exec(
                 '/usr/local/bin/tails-ask-again',
                 '--dont-ask-again',
@@ -89,9 +90,9 @@ else {
 
 $body = __("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
 
-my @actions = ( 'more_info', __('Learn more') );
+my @actions = ( "more_info_$PID", __('Learn more') );
 if ($dont_ask_status ne 'unavailable') {
-    push(@actions, 'hide', __('Hide warning for a month'));
+    push(@actions, "hide_$PID", __('Hide warning for a month'));
 }
 
 $notify->create(summary => $summary,
