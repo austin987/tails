@@ -41,28 +41,87 @@ the Foundations Team's duties.
 
 # Shift
 
+## Emergency release
+
+This section documents what differs, when preparing an emergency release,
+from publishing a scheduled release.
+
+### Making decisions
+
+When an event prompts us to wonder whether we shall prepare an emergency
+release, we have to make 2 decisions:
+
+ - Will we publish an emergency release?
+
+   First, create an issue about this question. **Do not** leak
+   any information that was shared with us privately.
+
+   These stakeholders must be part of the decision-making process:
+
+    - release managers: determine whether we have the capacity to prepare an
+      emergency release, and when; privately share confidential information that
+      other stakeholders need to do their job
+
+    - developers i.e. Foundations Team: assess the risk that the emergency
+      release would cancel or mitigate; propose mitigation measures that
+      we could recommend to users
+
+    - UX: evaluate the acceptability of mitigation measures proposed by
+      developers; remind everyone else that any extra upgrade has a UX cost
+
+    - technical writers: determine whether we have the capacity
+      to document mitigation measures, and when
+
+   If we decide to publish an emergency release, say so on the aforementioned
+   issue, then read on. Else, explain why on the aforementioned issue,
+   and close it with the _Rejected_ label.
+
+ - When will we prepare and publish it? (if we decided to go ahead)
+
+   This mostly depends on the availability of release managers and manual
+   testers. Privately reach out to them, asking when they could do their part of
+   the work. Then, release managers make this decision.
+
+### Additional steps
+
+1. Announce to <tails-dev@boum.org>:
+    - There's an upcoming emergency release. Don't say why if it's a secret.
+    - Announce the code freeze.
+2. Announce to manual testers: when you expect the tests to happen
+
+### Irrelevant steps
+
+Steps that are not relevant for emergency releases are tagged
+`[skip-if-emergency-release]`.
+
+### Timing
+
+By definition, an emergency release happens under timing constraints that are
+different from a scheduled release. To account for this, ignore timing
+indications below such as "Two weeks after" or "The Friday": assume everything
+is relevant shall happen as soon as reasonably possible.
+
 ## In the beginning of your shift
 
 - Check the [Tor Browser release
-  schedule](https://gitlab.torproject.org/tpo/applications/tor-browser/-/wikis/Release-Schedule).
-- Check the Mozilla release calendars:
+  schedule](https://gitlab.torproject.org/tpo/applications/tor-browser/-/wikis/Release-Schedule). `[skip-if-emergency-release]`
+- Check the Mozilla release calendars: `[skip-if-emergency-release]`
   * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
   * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
 - Reply to the email sent to <tails-dev@boum.org> and
   <tails-l10n@boum.org> by the RM for the previous release,
-  to provide any information they could not, such as:
+  to provide any information they could not, such as: `[skip-if-emergency-release]`
   - Code freeze date
   - If this will be a major release: the release schedule for its RC.
-- Ask <tails@boum.org> and <tails-foundations@boum.org> for a _Trusted Reproducer_ who will reproduce the
-  ISO and USB images for the RC and final release within 72 hours after
-  the RM has unplugged their smartcard. When accepting the offer,
-  the Trusted Reproducer must read the [["Preparation" section of
-  the instructions|contribute/release_process/test/reproducibility#preparation]].
-  If needed, the request can be extended to <tails-manual-testers@boum.org>.
+- Ask for a _Trusted Reproducer_:
+
+        ./bin/generate-call-for-trusted-reproducer \
+           --version VERSION_YOU_WILL_RELEASE
+
 - Update [[contribute/calendar]] accordingly.
-- Check if the due date of the corresponding
+- Check if there's a
   [[!tails_gitlab groups/tails/-/milestones desc="GitLab milestone"]]
-  is correct. If it is not, create a merge request against
+  with the correct due date. If it is not, create a merge request against
   [[!tails_gitlab tails/gitlab-config]] to fix it.
 - The ISO images for *every* previous beta, RC, and final release
   based on the version of Debian that will be used for the release
