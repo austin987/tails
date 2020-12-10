@@ -1,0 +1,150 @@
+[[!meta title="Verification JavaScript maintainers"]]
+
+The maintenance of the [[verification
+JavaScript|design/download_verification]] falls slightly outside of our
+current skill set and it's hard to find a person who can take over all
+its maintenance. So the work is split among different people according
+to their skills and availability:
+
+- The maintainer:
+  - Tracks the release of Forge and update it.
+  - Tests the verification JavaScript on beta versions of Firefox and Chrome.
+  - Tests and releases new versions of the verification JavaScript.
+  - Maintains the corresponding HTML and JavaScript on our website.
+  - Manages the yearly budget for the maintenance of the verification JavaScript and
+    allocate the work to be done to other contributors.
+
+- Other contributors:
+  - Ports the verification JavaScript to new versions of Firefox, Chrome,
+    and Forge.
+  - Our secret JavaScript expert when we have no other option or when we
+    require more security expertise.
+
+Release process
+===============
+
+We run this release process before releasing a new version of Forge or a change
+in the verification code.
+
+<div class="caution">
+
+<p>During the release process, you will download several pieces of software over
+TLS only which is not trustworthy enough to be compliant with the "third-party
+software" requirement of the security policy of some of our internal teams.</p>
+
+<p>You should isolate these pieces of software, for example by only running them
+in a dedicated Tails.</p>
+
+</div>
+
+Updating Forge
+--------------
+
+Website: <https://github.com/digitalbazaar/forge/>
+
+Release feed: <https://github.com/digitalbazaar/forge/releases.atom>
+
+1. Check which is the current version:
+
+       head -n 1 wiki/src/install/inc/js/forge.sha256.js
+
+1. Check the upstream Changelog for new versions:
+
+   <https://github.com/digitalbazaar/forge/blob/master/CHANGELOG.md>
+
+1. Clone the upstream repository:
+
+       git clone https://github.com/digitalbazaar/forge.git
+
+1. Install the build dependencies:
+
+       apt install -t unstable npm webpack
+
+1. Build Forge:
+
+       export FORGE_VERSION=
+       wget -O forge/webpack.config.js https://tails.boum.org/contribute/working_together/roles/verification_javascript/forge.webpack.config.js
+       cd forge
+       git reset --hard $FORGE_VERSION
+       rm dist/*
+       torsocks npm install
+       npm run build
+       cd ..
+
+1. Copy into our repo:
+
+       cp forge/dist/forge.sha256.js wiki/src/install/inc/js/forge.sha256.js
+
+1. Add copyright information:
+
+       sed -i "1s/^/\/*! Forge v$FORGE_VERSION | (c) Digital Bazaar, Inc. *\/\n/" wiki/src/install/inc/js/forge.sha256.js
+
+Which browsers to test
+----------------------
+
+Perform the following steps for each of:
+
+  - Tor Browser in the latest Tails, in a non-English locale of your choice:
+
+        LANG=pt_BR.UTF-8 tor-browser
+
+  - The version of Firefox available in Debian stable:
+
+        sudo apt install firefox-esr
+        firefox-esr
+
+  - The version of Chromium available in Debian stable:
+
+        sudo apt install chromium
+        chromium
+
+Steps
+-----
+
+1. In Tails, configure a system proxy:
+
+   Settings → Network → Network proxy → Manual
+
+   Socks Host:	127.0.0.1	9050
+
+1. Check that verifying the USB image of the last Tails version works in all browsers.
+
+1. Check that verifying a truncated USB image fails in all browsers:
+
+       dd if=tails-amd64-3.14.img of=tails-amd64-3.14-truncated.img bs=1M count=100
+
+1. Check that verifying a rogue USB image fails in all browser:
+
+       sed 's/\x54\x61\x69\x6c\x73/\x46\x61\x69\x6c\x73/' tails-amd64-3.14.img > tails-amd64-3.14-rogue.img
+
+1. To detect backward incompatible changes,
+   if any changes were made to the HTML or CSS, verify that the new
+   download page works with the previous version of the
+   `wiki/src/install/inc/js/download.js`.
+
+   Otherwise, fix the incompatibility or rename the new JavaScript file
+   as `wiki/src/install/inc/js/download-2.js`.
+
+   See our discussion about [deploying backward- incompatible
+   changes](https://gitlab.tails.boum.org/tails/tails/-/issues/16091#note_159623)
+   on GitLab.
+
+Checklist
+---------
+
+    - [ ] Tor Browser
+      - [ ] IMG
+        - [ ] Good
+        - [ ] Truncated
+        - [ ] Rogue
+    - [ ] Firefox ESR
+      - [ ] IMG
+        - [ ] Good
+        - [ ] Truncated
+        - [ ] Rogue
+    - [ ] Chromium
+      - [ ] IMG
+        - [ ] Good
+        - [ ] Truncated
+        - [ ] Rogue
+    - [ ] Backward incompatibility
