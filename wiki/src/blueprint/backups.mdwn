@@ -106,13 +106,8 @@ Implementation note:
 - It might be possible to reuse the same LUKS header to create the
   backup Persistence without prompting for a passphrase.
 
-  At first glance:
-
-  * To create the backup Persistence,
-    <span class="command">cryptsetup luksHeaderBackup/luksHeaderRestore</span> should work.
-  * To unlock the backup Persistence,
-    <span class="command">sudo dmsetup table --showkeys TailsData_unlocked</span> should dump the master key from memory and
-    <span class="command">cryptsetup --master-key-file</span> should unlock with the master key.
+  At first glance, to create the backup Persistence,
+  <span class="command">cryptsetup luksHeaderBackup/luksHeaderRestore</span> should work.
 
 Update
 ------
@@ -121,8 +116,12 @@ The action of updating the backups regularly (and maybe being reminded
 to do so). In the backend it could use rsync to only copy the files that
 have changed.
 
-Before the backup Persistence is being updated, the user is prompted for
-a passphrase.
+Before the backup Persistence is being updated, we need to unlock the backup Persistence:
+
+  * Either the user is prompted for a passphrase.
+  * Or we elevate privileges to `root` in order to get the master key from memory:
+    <span class="command">sudo dmsetup table --showkeys TailsData_unlocked</span> should dump the master key from memory and
+    <span class="command">cryptsetup --master-key-file</span> should unlock with the master key.
 
 Updating also updates the system partition of the backup Tails.
 

@@ -1,5 +1,5 @@
 [[!meta title="Tails report for November, 2020"]]
-[[!meta date="`date --rfc-2822` eg. Thu, 08 Feb 2018 07:21:15 +0000"]]
+[[!meta date="Thu, 08 Dec 2020 07:21:15 +0000"]]
 [[!pagetemplate template="news.tmpl"]]
 
 [[!toc]]
@@ -7,64 +7,126 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ((emergency release)?).
+* [[Tails 4.13 was released on November 17|news/version_4.13]].
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 4.14 is [[scheduled for December 15|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 4.13:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+* Update Thunderbird from 68.12 to 78.4.2. Thunderbird 78 replaces the Enigmail extension with built-in support for OpenPGP encryption. If you used Enigmail before Tails 4.13, follow [[our instructions to migrate from Enigmail to Thunderbird 78|https://tails.boum.org/doc/anonymous_internet/thunderbird/openpgp_migration/index.en.html]].
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+* Add a button to restart Tails at the end of creating the Persistent Storage. ([#16384](https://gitlab.tails.boum.org/tails/tails/-/issues/16384))
+
+* Only include translations for languages that are available in the Welcome Screen. This reduces the size of the download by 5%. ([#17139](https://gitlab.tails.boum.org/tails/tails/-/issues/17139))
+
+* Make the root directory of the Persistent Storage only readable by the root user. ([#7465](https://gitlab.tails.boum.org/tails/tails/-/issues/7465))
+
+* Users of the Dotfiles feature of the Persistent Storage can choose Places ▸ Dotfiles to open the /live/persistence/TailsData_unlocked/dotfiles folder in the Files browser.
+
+* Enable TCP timestamps. This might increase stability on slower Internet connections. ([#17491](https://gitlab.tails.boum.org/tails/tails/-/issues/17491))
+
+
+Release management
+------------------
+
+A year ago, when we learned we had to switch to a 4-weeks release cycle to
+follow Mozilla's lead, we acknowledged that the need to streamline our release
+process, in order to make this part of our work more sustainable. In November,
+the Tails Release Managers team had a sprint focused on this very topic, during
+which we identified a great number of issues and fixed most of them! :)
+
+For details, read the [sprint
+report](https://lists.autistici.org/message/20201116.132555.7bc56b9c.en.html).
 
 Code
 ====
 
-XXX: If you feel like it and developers, foundation team, and RMs don't do it themselves,
-     list important code work that is not covered already by the
-     Release section (for example, the changes being worked on for
-     the next version).
+- We had a meeting to prioritize & organize work on our next big things.
+  We decided to first focus on:
+
+  - Wayland blockers, that can be addressed incrementally.
+
+  - Deal with deprecation of Tor Launcher ([[!tails_ticket 17215]])
+
+  - Rewrite Persistent Storage GUI frontend ([[!tails_ticket 17803]]
+
+- We scheduled a sprint in January to bootstrap our work on the RIPE
+  grant and on Wayland blockers.
+
+- We re-bootstrapped our experiment on sharing our team's "front desk" workload.
+
+- We started reorganizing our team meetings.
+
+- We now require Debian 10 "Buster" or newer for running our test suite
+  ([[!tails_ticket 17842]]), and started to take benefit from this change.
+
+- We automated a great part of the tests we do as part of release
+  quality assurance.
 
 Documentation and website
 =========================
 
-XXX: If you feel like it and technical writers don't do it
-     themselves, explore the Git history:
+- Planned the [[!tails_ticket 16128 desc="deprecation of the Tails
+  Verification extension"]]. We will publish a [[!tails_gitweb_commit b6d965c1f5
+  desc="deprecation notice on /news"]] and remove the extension from app
+  stores a few weeks later.
 
-         git log --patch --since='1 October' --until='1 November' origin/master -- "doc**.*m*" "about**.*m*" "support**.*m*" "install**.*m*" "upgrade**.*m*"
+- Documented how to use [[GMail in
+  Thunderbird|doc/anonymous_internet/thunderbird#gmail]].
+  ([[!tails_ticket 17879]])
+
+- Explained why is a [[bad idea to use an old version of
+  Tails|support/faq#older-version]] in the FAQ. ([[!tails_ticket 18001]])
+
+- Recommended [[doing backups|install/win/usb#recommendations]] at the end of
+  our installation instructions. ([[!tails_ticket 18000]])
+
+- Decided to remove */support/learn*. ([[!tails_ticket 17920]])
+
+- Updated our doc to Thunderbird 78 and wrote [[migration
+  instructions|doc/anonymous_internet/thunderbird/openpgp_migration]].
+  ([[!tails_ticket 17147]])
 
 User experience
 ===============
 
-XXX: If you feel like it and the UX team does not do it
-     themselves, check the archives of tails-ux:
-     <https://lists.autistici.org/list/tails-XXX.html>
+- Published improved consent documents for user research: ([[!tails_ticket 16534]])
+
+  * [Consent form](https://gitlab.tails.boum.org/tails/ux/-/raw/master/tools/consent_form.fodt)
+  * [Research information sheet](https://gitlab.tails.boum.org/tails/ux/-/raw/master/tools/research_information_sheet.fodt)
+
+- Cleaned our user research data for 2021/2022. ([[!tails_ticket 17409]])
 
 Hot topics on our help desk
 ===========================
 
-XXX: Ask tails-bugs@boum.org to list hot topics for the last month.
-
-1.
-
-1.
-
-1.
-
-Infrastructure
-==============
+1. [[!tails_ticket 17955 desc="Touchpad and keyboard do not work in Asus computers"]]
+1. [[!tails_ticket 17807 desc="Some users lost their OpenPGP keys but could recover them from the backup file"]]
+1. [[!tails_ticket 17987 desc="Panda Wireless adaptors stopped working"]]
 
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
+- The first numbers that we could analyze for the donation campaign look
+  very promising compared to the same period last year:
 
-       git log --patch --since='1 December' --until='1 January' origin/master
+  * PayPal: 34% more donations, 28% more money
+  * Bitcoin: 62% more donations
+  * Monero: 205% more donations
 
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
+- We programmed our biggest Twitter campaign ever: 34 tweets, 1 tweet
+  every 2 days at most. Half of them are not direct calls to donate but
+  rather build up on the new  Home and About pages to talk about the
+  main properties of Tails.
+
+- We decided not to blog about the donation campaign for now because our
+  team is seriously overworked. It doesn't seem to have impacted the
+  campaign significantly. We might still blog about achievements and
+  plans in December.
+
+- Our grant to RIPE on [improving Tails for censorship
+  circumvention](https://www.ripe.net/support/cpf/funding-recipients-2020)
+  was approved.
 
 Outreach
 ========
@@ -72,37 +134,49 @@ Outreach
 Past events
 -----------
 
-Tails in Privacy Week 2020 <https://media.ccc.de/v/pw20-342-tails>
+* Privacy Week 2020: [Tails](https://media.ccc.de/v/pw20-342-tails).
 
-Upcoming events
----------------
+* Tails was mentioned in another Privacy Week 2020 speech: [How internet works](https://media.ccc.de/v/pw20-354-how-the-internet-really-works-what-interferes-with-information-traveling-over-the-internet-#t=1038)
 
-On-going discussions
-====================
-
-XXX: Link to the thread on <https://lists.autistici.org/list/tails-XXX.html>.
-
-Press and testimonials
-======================
-
-XXX: Copy content from [[!tails_gitweb wiki/src/press/media_appearances_2020.mdwn]]
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
+* Tails was presented (among other tools) to journalism students at [Sciences Po Rennes](http://www.sciencespo-rennes.fr/en/) (Rennes, France).
 
 Translations
 ============
 
-XXX: Add the output of (adjust month!):
+## All the website
 
-    sudo apt-get install intltool
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 28% (1897) strings translated, 14% strings fuzzy
+  - es: 51% (3392) strings translated, 6% strings fuzzy
+  - fa: 21% (1396) strings translated, 13% strings fuzzy
+  - fr: 78% (5224) strings translated, 8% strings fuzzy
+  - it: 28% (1879) strings translated, 10% strings fuzzy
+  - pt: 19% (1300) strings translated, 9% strings fuzzy
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 45% (970) strings translated, 23% strings fuzzy
+  - es: 86% (1844) strings translated, 5% strings fuzzy
+  - fa: 19% (426) strings translated, 15% strings fuzzy
+  - fr: 76% (1633) strings translated, 12% strings fuzzy
+  - it: 50% (1075) strings translated, 21% strings fuzzy
+  - pt: 38% (822) strings translated, 14% strings fuzzy
+
+## Core pages of the website for languages not activated on the website yet
+
+  - ar: 7% (165) strings translated, 8% strings fuzzy
+  - ca: 8% (174) strings translated, 8% strings fuzzy
+  - id: 6% (138) strings translated, 5% strings fuzzy
+  - pl: 7% (166) strings translated, 6% strings fuzzy
+  - ru: 8% (182) strings translated, 7% strings fuzzy
+  - sr_Latn: 5% (114) strings translated, 4% strings fuzzy
+  - tr: 8% (172) strings translated, 7% strings fuzzy
+  - zh: 10% (222) strings translated, 8% strings fuzzy
+  - zh_TW: 21% (460) strings translated, 13% strings fuzzy
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
+* Tails has been started more than 947&#8239;384 times this month. This makes 31&#8239;579 boots a day on average.
 
 [[How do we know this?|support/faq#boot-statistics]]
 
