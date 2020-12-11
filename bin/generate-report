@@ -78,10 +78,14 @@ class ReportGenerator(object):
                                                    after=self.after,
                                                    before=self.before)
 
-        gl_closed_issues = [{
+        gl_closed_issues_with_duplicates = [{
             "project_id": event.project_id,
             "iid": event.target_iid
         } for event in closed_issues_events]
+        gl_closed_issues = []
+        for issue in gl_closed_issues_with_duplicates:
+            if issue not in gl_closed_issues:
+                gl_closed_issues.append(issue)
 
         for issue in gl_closed_issues:
             project = self.gl.project(issue["project_id"])
