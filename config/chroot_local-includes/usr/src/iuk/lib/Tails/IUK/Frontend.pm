@@ -602,7 +602,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                     $download_out = undef;
                     next unless $download_progress->update($bytes_downloaded);
                     $zenity_in = __x(
-                        "# about {time} left - {downloaded} of {size}\n",
+                        "#{time} left - {downloaded} of {size}\n",
                         time => $download_progress->estimated_end_time,
                         downloaded => format_bytes($bytes_downloaded,mode => "iec", precision => 0),
                         size => format_bytes($download_progress->size,mode => "iec", precision => 0),
