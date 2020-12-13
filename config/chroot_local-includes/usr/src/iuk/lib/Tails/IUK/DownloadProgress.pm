@@ -107,7 +107,7 @@ method set_estimated_end_time () {
     $timeleft = duration($timeleft);
     $timeleft =~ s/\band\b//;
     $timeleft =~ s/\b(year|day|hour|minute|second)s?\b/$self->time_units->{$1}/eg;
-    $timeleft =~ s/\s*(\d+)\s*/$1/g;
+    $timeleft =~ s/(\d+)\s*/$1/g;
     $self->estimated_end_time($timeleft);
 }
 
