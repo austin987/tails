@@ -13,10 +13,11 @@ use 5.10.1;
 use strictures 2;
 
 use autodie qw(:all);
-use Types::Standard qw{Num Str};
+use Types::Standard qw{Num Str HashRef};
 use Time::HiRes;
 use Time::Duration;
 use Function::Parameters;
+use Locale::TextDomain 'tails';
 
 use namespace::clean;
 
@@ -58,6 +59,23 @@ has 'estimated_end_time' => (
 
 );
 
+has 'time_units' => (
+    is          => 'lazy',
+    isa     => HashRef[Str],
+);
+
+method _build_time_units () {
+    my %time_units = (
+        year   => __(q{y}),
+        day    => __(q{d}),
+        hour   => __(q{h}),
+        minute => __(q{m}),
+        second => __(q{s}),
+        );
+        
+    return \%time_units;
+}
+
 # Based on the code in  DownloadCore.jsm in Tor Browser
 method update (Num $downloaded_bytes) {
     my ($current_time) = Time::HiRes::gettimeofday();
@@ -86,8 +104,11 @@ method download_speed (Num $downloaded_bytes, Num $elapsed_time) {
 method set_estimated_end_time () {
     return  unless ($self->speed > 0); 
     my $timeleft =  $self->size_left / $self->speed;
-    $self->estimated_end_time(concise(duration($timeleft)));
-    
+    $timeleft = duration($timeleft);
+    $timeleft =~ s/\band\b//;
+    $timeleft =~ s/\b(year|day|hour|minute|second)s?\b/$self->time_units->{$1}/eg;
+    $timeleft =~ s/\s*(\d+)\s*/$1/g;
+    $self->estimated_end_time($timeleft);
 }
 
 no Moo;
