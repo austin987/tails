@@ -348,13 +348,14 @@ version's `.packages` file and the one from the to-be-released images; look for:
   - new upstream releases of other important components such as the
     Linux kernel
 
-Finally, sanity check the version and commit:
+Finally, sanity check the version, commit, and push:
 
 	if [ "$(dpkg-parsechangelog -SVersion)" = "${VERSION:?}" ]; then
 	    git commit debian/changelog -m "Update changelog for ${VERSION:?}."
 	else
 	    echo 'Error: version mismatch: please compare ${VERSION:?} with the last entry in debian/changelog'
-	fi
+	fi && \
+    git push origin "${RELEASE_BRANCH:?}"
 
 Notify technical writers on the GitLab issue about the release notes
 that the changelog is ready.
