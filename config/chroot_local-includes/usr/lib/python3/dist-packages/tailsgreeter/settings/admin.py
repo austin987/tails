@@ -43,12 +43,14 @@ class AdminSetting(object):
                 raise
 
     def load(self):
-        # We don't return the stored value, because the UI can't do
-        # anything with it since it's hashed.
+        """Read and return the *hashed* password from the settings file"""
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
             raise SettingNotFoundError("No persistent admin settings file found (path: %s)" % self.settings_file)
 
-        if settings.get('TAILS_USER_PASSWORD') is None:
+        hashed_and_salted_pw = settings.get('TAILS_USER_PASSWORD')
+        if hashed_and_salted_pw is None:
             raise SettingNotFoundError("No admin password setting found in settings file (path: %s)" % self.settings_file)
+
+        return hashed_and_salted_pw

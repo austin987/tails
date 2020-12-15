@@ -17,7 +17,7 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+* `docker.io gitlab-cli jq tidy mktorrent python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -222,7 +222,7 @@ Bootstrap manual testing coordination:
 
 5. Send the call for manual testing:
 
-    - encrypt your email
+    - encrypt and sign your email
     - use the headers and body generated above
 
 Update included files
@@ -348,13 +348,14 @@ version's `.packages` file and the one from the to-be-released images; look for:
   - new upstream releases of other important components such as the
     Linux kernel
 
-Finally, sanity check the version and commit:
+Finally, sanity check the version, commit, and push:
 
 	if [ "$(dpkg-parsechangelog -SVersion)" = "${VERSION:?}" ]; then
 	    git commit debian/changelog -m "Update changelog for ${VERSION:?}."
 	else
 	    echo 'Error: version mismatch: please compare ${VERSION:?} with the last entry in debian/changelog'
-	fi
+	fi && \
+    git push origin "${RELEASE_BRANCH:?}"
 
 Notify technical writers on the GitLab issue about the release notes
 that the changelog is ready.
@@ -363,6 +364,9 @@ Included website
 ----------------
 
     ./bin/prepare-included-website-for-release
+
+While the website is building, if this is not a good time for taking a break,
+you can follow the "Enable OpenPGP signing" instructions.
 
 Enable OpenPGP signing
 ======================
@@ -404,7 +408,9 @@ Build the almost-final images
    - Set `defaultcomp`, so we can more accurately optimize our
      SquashFS file ordering.
    - Do _not_ set `keeprunning` nor `rescue`.
+
 2. Keep the resulting build artifacts until the end of this release process.
+
 3. Record where the manifest of needed packages is stored:
 
    1. To update the `~/.config/tails/release_management/current.yml` template
@@ -493,6 +499,7 @@ recent. Also look if there's a new `-buildX` tag (e.g.
 Browser we want to ship is based on in these Git repositories:
 
 * <https://gitweb.torproject.org/builders/tor-browser-build.git>
+  (`maint-X.Y-desktop` branch)
 * <https://gitweb.torproject.org/tor-browser.git>
 
 A new tag may indicate that a new Tor Browser release or rebuild is imminent.
@@ -855,10 +862,7 @@ Build the Incremental Upgrade Kits on Jenkins
 3. After a few seconds, a new build appears on top of the _Build
    History_ sidebar. Click on the progress bar of this new build.
 
-3. Once this build is completed, Jenkins will trigger a build of the downstream
-   `parallel_collect_IUKs` job.
-
-4. Record the ID of the candidate Jenkins `parallel_collect_IUKs` build:
+4. Record the ID of the candidate Jenkins `build_IUKs` build:
 
    1. To update the `~/.config/tails/release_management/current.yml` template
       with newly required variables, run:
@@ -867,7 +871,7 @@ Build the Incremental Upgrade Kits on Jenkins
 
    2. Edit `~/.config/tails/release_management/current.yml`
       and set the `candidate_jenkins_iuks_build_id` value
-      to the ID of that `parallel_collect_IUKs` build (an integer):
+      to the ID of that `build_IUKs` build (an integer):
 
           "${EDITOR:?}" ~/.config/tails/release_management/current.yml
 
@@ -876,12 +880,11 @@ Build the Incremental Upgrade Kits on Jenkins
 
           . $(./bin/rm-config generate-environment --stage built-iuks)
 
-5. Wait until both `build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
+5. Wait until the `build_IUKs` build completes successfully.
    It should take about 10-15 minutes for each member of
    the `$IUK_SOURCE_VERSIONS` list, distributed across `isobuilderN` workers.
 
-6. Add the time it took for `build_IUKs` and
-   `parallel_collect_IUKs` to the table of [[!tails_ticket 17750]].
+6. Add the time it took for `build_IUKs` to the table of [[!tails_ticket 17750]].
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
@@ -891,7 +894,6 @@ Verify that Jenkins reproduced your IUKs
     "${RELEASE_CHECKOUT:?}"/bin/copy-iuks-to-rsync-server-and-verify \
        --hashes-file "${IUKS_HASHES:?}" \
        --work-dir /srv/tmp \
-       --debug \
        --jenkins-build-id "${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}"
 
 If this verification succeeds, move on to the next section.
@@ -1020,7 +1022,7 @@ Prepare the image description file for *Tails Verification*
 
 If preparing a RC, skip this part.
 
-Update the image description file (IDF) used by the browser extension:
+Update the image description file (IDF) used by the verification JavaScript:
 
     cd "${RELEASE_CHECKOUT?:}" && \
     ./bin/idf-content \
@@ -1194,6 +1196,7 @@ Testing
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
    This is a public list, don't point to the pad.
+
 1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
    may start:
    - reply to the email you've sent them earlier
@@ -1202,13 +1205,17 @@ Testing
      update them now
    - attach the Torrents
    - attach the `.packages` file
+
 1. Make sure someone is committed to run the automated test suite.
+
 1. Make sure that enough people are here to run the tests, that they
    report their results in due time, and that they make it clear when
    they're leaving for good.
+
 1. Fill the holes and make sure that the automated and manual test
    suites are done in due time. Clock and report this work along with
    the rest of your RM'ing work.
+
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file an issue?
    release blocker? improve the test description (steps, expected outcome)?
@@ -1260,7 +1267,7 @@ Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
 announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 
-Write an announcement listing the security bugs affecting the previous version
+Generate an announcement listing the security bugs affecting the previous version
 in `wiki/src/security/known_security_vulnerabilities_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
 order to let the users of the old versions know that they have to upgrade:
 
@@ -1387,8 +1394,6 @@ Sanity checks
 
 Push
 ----
-
-### Git
 
 Push the last commits to our Git repository and put `master` in the
 following state:
@@ -1535,6 +1540,7 @@ If you just released a final release
 
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
+
 1. If you've published a final release, remove IUKs that upgrade to an
    older version as they were superseded by this release:
 
@@ -1567,9 +1573,10 @@ If you just released a final release
         ssh rsync.lizard du -sh /srv/rsync/tails
 
    Compare it to the minimum disk space we ask of our mirror operators
-   (30 GiB) and determine if any further action is needed to either
+   (80 GiB) and determine if any further action is needed to either
    reduce our usage by deleting stuff, or asking them to give us more
    space.
+
 1. Delete Git branches that were merged:
 
         cd "${MASTER_CHECKOUT:?}" && \
@@ -1588,12 +1595,14 @@ If you just released a final release
 1. On the `stable` branch, remove all old versions
    that were never released from `wiki/src/upgrade/v2/Tails`:
 
+        cd "${RELEASE_CHECKOUT:?}" && \
         git checkout stable && \
         ./bin/remove-unused-udfs --before-version "${VERSION:?}"
 
    Explanation: the post-release APT repository steps from the previous stable
    release will usually have had us prepare for an emergency release that was
    never made.
+
 1. Pull `master` back and merge it into `stable`:
 
         cd "${RELEASE_CHECKOUT:?}" && \
@@ -1604,6 +1613,7 @@ If you just released a final release
    Note: After a final *major* release is published, it's normal to
    leave the `testing` branch alone: it will only become relevant
    again when the next freeze starts.
+
 1. Put the `stable` Git branch and the corresponding APT suite
    in the desired shape:
 
@@ -1620,6 +1630,12 @@ If you just released a final release
 1. Merge the release branch and its APT suite into `devel`:
 
         ./bin/merge-main-branch "${RELEASE_BRANCH:?}" devel
+
+   When there's a merge conflict, the script aborts to let you resolve
+   the conflict. Then:
+
+   1. Resolve the conflict, `git add` and `git merge --continue`).
+   2. Re-run the exact same `merge-main-branch` command.
 
 1. Check if the version number of the last entry in `devel`'s `debian/changelog` matches
    the next major release, so that
@@ -1667,6 +1683,7 @@ If you just released a final release
 
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
+
 1. Check the Mozilla release calendars:
 
    * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
@@ -1682,10 +1699,12 @@ If you just released a final release
    - Cc <tails-manual-testers@boum.org>,
      asking them to privately tell the RM for that release
      whether they can do manual testing on release day.
+
 1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager#shift]].
    Otherwise, kindly remind the next release manager about this :)
+
 1. Put aside the configuration file used for this release:
 
         mkdir -p ~/.config/tails/release_management/old && \
@@ -1693,6 +1712,7 @@ If you just released a final release
            ~/.config/tails/release_management/old/${VERSION:?}.yml.disabled
 
 1. You're done for today! Suggestion: enjoy some time AFK :)
+
 1. Tomorrow, make sure Jenkins manages to build all updated major branches:
    <https://jenkins.tails.boum.org/view/RM/>.
 
@@ -1707,6 +1727,7 @@ If you just released an RC
    Then checkout the `devel` branch, and there
    [[thaw|APT_repository/time-based_snapshots#freeze-exceptions-post-release]]
    all packages (if any) that were granted freeze exceptions.
+
 1. On the devel branch,
    [[thaw|APT_repository/time-based_snapshots#thaw]] the time-based
    APT repository snapshots:
@@ -1719,6 +1740,7 @@ If you just released an RC
 
    This should generally be a no-op but if there was some hiccup earlier it
    could be needed.
+
 1. Increment the version number in `debian/changelog` on the branch
    used for the release, to match the upcoming non-RC release, so that
    the next builds from it do not use the APT suite meant for the RC:
@@ -1751,17 +1773,23 @@ If you just released an RC
 
 1. Make sure you pushed all changes in every of our Git repo (including our
    Debian packages ones).
+
 1. Follow the "Verify that the snapshots used in the release branch
    are ok" step for final releases, above.
+
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
+
 1. Put aside the configuration file used for this release:
 
         mkdir -p ~/.config/tails/release_management/old && \
         mv ~/.config/tails/release_management/current.yml \
            ~/.config/tails/release_management/old/${VERSION:?}.yml.disabled
 
+1. Delete your local copy of the IUKs [XXX:automate]
+
 1. You're done for today! Suggestion: enjoy some time AFK :)
+
 1. Tomorrow, make sure Jenkins manages to build all updated major branches:
    <https://jenkins.tails.boum.org/view/RM/>.
 
