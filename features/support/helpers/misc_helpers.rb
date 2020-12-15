@@ -35,14 +35,7 @@ end
 
 def time_delta(start_time, now)
   elapsed = now - start_time
-  # XXX: Drop this version check when we drop support for running the test suite
-  # on Debian Stretch.
-  if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
-    format('%<elapsed>.2f', elapsed: elapsed)
-      .chomp('.00').chomp('.0').chomp('0')
-  else
-    elapsed.ceil(2)
-  end
+  elapsed.ceil(2)
 end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with
@@ -394,8 +387,6 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   opts ||= {}
   ruby_type_to_dbus_type = {
     String  => 'string',
-    # XXX:Buster: drop the Fixnum line once we stop supporting Stretch
-    Fixnum  => 'int32', # rubocop:disable Lint/UnifiedInteger
     Integer => 'int32',
   }
   typed_args = args.map do |arg|
@@ -424,14 +415,6 @@ def dbus_send(*args, **opts)
   ret_lines.shift
   ret = ret_lines.join("\n")
   dbus_send_ret_conv(ret)
-end
-
-def ffmpeg
-  if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
-    'avconv'
-  else
-    'ffmpeg'
-  end
 end
 
 # This is IO.popen() that ensures that we wait() for the subprocess to
