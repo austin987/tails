@@ -15,15 +15,13 @@ export SOURCE_DATE_YYYYMMDD="$(date --utc --date="$(dpkg-parsechangelog --show-f
 export SOURCE_DATE_FAKETIME="$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%Y-%m-%d %H:%M:%S')"
 
 # Base for the string that will be passed to "lb config --bootappend-live"
-# FIXME: see [[bugs/sdmem_on_eject_broken_for_CD]] for explanation why we
-# need to set block.events_dfl_poll_msecs
-AMNESIA_APPEND="live-media=removable nopersistence noprompt timezone=Etc/UTC block.events_dfl_poll_msecs=1000 splash noautologin module=Tails slab_nomerge slub_debug=FZP mce=0 vsyscall=none page_poison=1 init_on_free=1 mds=full,nosmt"
+AMNESIA_APPEND="live-media=removable nopersistence noprompt timezone=Etc/UTC splash noautologin module=Tails slab_nomerge slub_debug=FZP mce=0 vsyscall=none page_poison=1 init_on_free=1 mds=full,nosmt"
 
 # Options passed to isohybrid
 AMNESIA_ISOHYBRID_OPTS="-h 255 -s 63 --id 42 --verbose"
 
 # Kernel version
-KERNEL_VERSION='5.8.0-2'
+KERNEL_VERSION='5.9.0-0.bpo.2'
 KERNEL_SOURCE_VERSION=$(
    echo "$KERNEL_VERSION" \
        | perl -p -E 's{\A (\d+ [.] \d+) [.] .*}{$1}xms'

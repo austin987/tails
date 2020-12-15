@@ -17,7 +17,7 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+* `docker.io gitlab-cli jq tidy mktorrent python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -862,10 +862,7 @@ Build the Incremental Upgrade Kits on Jenkins
 3. After a few seconds, a new build appears on top of the _Build
    History_ sidebar. Click on the progress bar of this new build.
 
-3. Once this build is completed, Jenkins will trigger a build of the downstream
-   `parallel_collect_IUKs` job.
-
-4. Record the ID of the candidate Jenkins `parallel_collect_IUKs` build:
+4. Record the ID of the candidate Jenkins `build_IUKs` build:
 
    1. To update the `~/.config/tails/release_management/current.yml` template
       with newly required variables, run:
@@ -874,7 +871,7 @@ Build the Incremental Upgrade Kits on Jenkins
 
    2. Edit `~/.config/tails/release_management/current.yml`
       and set the `candidate_jenkins_iuks_build_id` value
-      to the ID of that `parallel_collect_IUKs` build (an integer):
+      to the ID of that `build_IUKs` build (an integer):
 
           "${EDITOR:?}" ~/.config/tails/release_management/current.yml
 
@@ -883,12 +880,11 @@ Build the Incremental Upgrade Kits on Jenkins
 
           . $(./bin/rm-config generate-environment --stage built-iuks)
 
-5. Wait until both `build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
+5. Wait until the `build_IUKs` build completes successfully.
    It should take about 10-15 minutes for each member of
    the `$IUK_SOURCE_VERSIONS` list, distributed across `isobuilderN` workers.
 
-6. Add the time it took for `build_IUKs` and
-   `parallel_collect_IUKs` to the table of [[!tails_ticket 17750]].
+6. Add the time it took for `build_IUKs` to the table of [[!tails_ticket 17750]].
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
@@ -898,7 +894,6 @@ Verify that Jenkins reproduced your IUKs
     "${RELEASE_CHECKOUT:?}"/bin/copy-iuks-to-rsync-server-and-verify \
        --hashes-file "${IUKS_HASHES:?}" \
        --work-dir /srv/tmp \
-       --debug \
        --jenkins-build-id "${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}"
 
 If this verification succeeds, move on to the next section.
