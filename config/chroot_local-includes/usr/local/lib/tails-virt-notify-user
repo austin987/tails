@@ -1,104 +1,89 @@
-#!/usr/bin/perl
+#!/usr/bin/env python3
 
-use strict;
-use warnings;
+import gettext
+import subprocess
+import sys
 
-#man{{{
+from tailslib.gnome import gnome_env_vars
 
-=head1 NAME
+import gi
 
-tails-virt-notify-user
+from gi.repository import GLib
 
-=head1 VERSION
+gi.require_version('Notify', '0.7')
+from gi.repository import Notify                                # NOQA: E402
 
-Version X.XX
+DONT_ASK_IDENTIFIER = 'virt-notify-user'
 
-=head1 AUTHOR
 
-Tails dev team <amnesia@boum.org>
-See https://tails.boum.org/.
+class VirtNotifier(object):
 
-=cut
+    def __init__(self, free_vm=False, show_suppress_button=False):
+        if free_vm:
+            self.title = _("Warning: virtual machine detected!")
+        else:
+            self.title = _("Warning: non-free virtual machine detected!")
+        self.body = _(
+            "Both the host operating system and the virtualization software "
+            "are able to monitor what you are doing in Tails. Only free "
+            "software can be considered trustworthy, for both the host "
+            "operating system and the virtualization software."
+        )
 
-#}}}
+        Notify.init("org.boum.tails.virt-notify-user")
+        # We need to hold a reference to the notification until the callbacks
+        # are called. That's why we use an instance variable.
+        self.notification = Notify.Notification.new(self.title, self.body)
+        self.notification.set_hint("transient", GLib.Variant("u", 1))
+        self.notification.set_timeout(0)
+        self.notification.add_action("documentation", _("Learn More"),
+                                     self.cb_notification_clicked)
+        if show_suppress_button:
+            self.notification.add_action("hide", _("Don't Show Again"),
+                                         self.cb_notification_clicked)
+        self.notification.connect("closed", lambda *x: sys.exit(0))
 
-use Desktop::Notify;
-use English '-no_match_vars';
-use IPC::System::Simple qw{capturex $EXITVAL};
-use Locale::TextDomain 'tails';
-use Net::DBus::Reactor;
-use POSIX;
 
-my $dont_ask_identifier = 'virt-notify-user';
+        self.notification.show()
 
-### callbacks
+    def cb_notification_clicked(self, notification, action, user_data=None):
+        if action == "hide":
+            subprocess.run(
+                ['/usr/local/bin/tails-ask-again', '--dont-ask-again',
+                 DONT_ASK_IDENTIFIER]
+            )
+        elif action == "documentation":
+            subprocess.run(
+                ["env", *gnome_env_vars(), "tails-documentation",
+                 'doc/advanced_topics/virtualization', 'security']
+            )
+        sys.exit(0)
 
-sub action_cb {
-    my $reactor = shift;
-    my $action = pop;
-    unless (fork) {
-        my $ppid = getppid();
-        if ($action eq "more_info_$ppid") {
-            exec(
-                '/usr/local/bin/tails-documentation',
-                'doc/advanced_topics/virtualization',
-                'security'
-            );
-        } elsif ($action eq "hide_$ppid") {
-            exec(
-                '/usr/local/bin/tails-ask-again',
-                '--dont-ask-again',
-                $dont_ask_identifier
-            );
-        }
-    }
-    $reactor->shutdown;
-}
 
-### main
+if __name__ == "__main__":
+    gettext.install('tails')
 
-my $dont_ask_status = capturex('/usr/local/bin/tails-ask-again',
-                               '--timeout', '30',
-                               $dont_ask_identifier);
-chomp($dont_ask_status);
-exit 0 if $dont_ask_status eq 'hide';
+    dont_ask_status = subprocess.check_output(
+        ['/usr/local/bin/tails-ask-again', '--timeout', '30',
+         DONT_ASK_IDENTIFIER]).decode().strip()
+    if dont_ask_status == 'hide':
+        sys.exit(0)
 
-# both 0 and 1 are acceptable exit values:
-#  - 0 means that we're running in a virtualized environment
-#  - 1 means that we're not running in a virtualized environment
-#  - anything else means there is a problem, and capturex will throw an exception
-my $vm_name = capturex([0, 1], qw{/usr/bin/systemd-detect-virt --vm});
-exit 0 if $EXITVAL == 1;
+    # both 0 and 1 are acceptable exit values:
+    #  - 0 means that we're running in a virtualized environment
+    #  - 1 means that we're not running in a virtualized environment
+    #  - anything else means there is a problem, and we'll exit with
+    #    an exception
+    c = subprocess.run(['/usr/bin/systemd-detect-virt', '--vm'],
+                       stdout=subprocess.PIPE)
+    if c.returncode == 1:
+        sys.exit(0)
+    vm_name = c.stdout.decode().strip()
+    free_vms = ['bochs', 'kvm', 'qemu', 'uml', 'virtualbox', 'xen']
 
-my @whitelist = qw(bochs kvm qemu uml virtualbox xen);
-
-my $reactor = Net::DBus::Reactor->main;
-
-my $notify  = Desktop::Notify->new();
-$notify->action_callback(sub { action_cb($reactor, @_) });
-$notify->close_callback(sub { $reactor->shutdown; });
-
-my ($body, $summary);
-
-chomp($vm_name);
-if (grep {$_ eq $vm_name} @whitelist) {
-    $summary = __("Warning: virtual machine detected!");
-}
-else {
-    $summary = __("Warning: non-free virtual machine detected!");
-}
-
-$body = __("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
-
-my @actions = ( "more_info_$PID", __('Learn More') );
-if ($dont_ask_status ne 'unavailable') {
-    push(@actions, "hide_$PID", __('Don\'t Show Again'));
-}
-
-$notify->create(summary => $summary,
-                body    => $body,
-                actions => \@actions,
-                hints   => { 'transient' => 1, },
-                timeout => 0)->show();
-
-$reactor->run;
+    mainloop = GLib.MainLoop.new(None, False)
+    VirtNotifier(
+        free_vm=(vm_name in free_vms),
+        show_suppress_button=(dont_ask_status != 'unavailable')
+    )
+    mainloop.run()
