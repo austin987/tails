@@ -109,10 +109,6 @@ Given /^I unplug USB drive "([^"]+)"$/ do |name|
   $vm.unplug_drive(name)
 end
 
-Given /^the computer is set to boot from the old Tails DVD$/ do
-  $vm.set_cdrom_boot(OLD_TAILS_ISO)
-end
-
 Given /^the computer is set to boot in UEFI mode$/ do
   $vm.set_os_loader('UEFI')
   @os_loader = 'UEFI'

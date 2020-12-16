@@ -19,6 +19,7 @@ use Carp::Assert::More;
 use Digest::SHA;
 use English qw{-no_match_vars};
 use Function::Parameters;
+use Memoize;
 use Path::Tiny;
 use Tails::IUK::UpgradeDescriptionFile;
 use Types::Path::Tiny qw{AbsDir AbsFile};
@@ -305,6 +306,7 @@ fun sha256_file ($file) {
     $sha->addfile($file->stringify);
     return $sha->hexdigest;
 }
+memoize('sha256_file', NORMALIZER => sub { $_[0]->stringify });
 
 fun version_for_website ($version) {
     assert_defined($version);
