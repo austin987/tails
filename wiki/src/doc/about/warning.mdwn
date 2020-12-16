@@ -157,60 +157,42 @@ href="https://blog.torproject.org/blog/detecting-certificate-authority-compromis
 Project: Detecting Certificate Authority compromises and web browser
 collusion</a>.</p>
 
-<h1 id="correlation">End-to-end time correlation attacks</h1>
+<h1 id="correlation">End-to-end correlation attacks</h1>
 
-Tor is designed to provide anonymity by preventing traffic analysis. Traffic
-analysis is where a single relay in a Tor circuit can know both the origin and
-destination of traffic.
+Tor is designed for low latency communications: the time for a request
+to go from your computer to the destination server and back is generally
+less than 1 second. Such a low latency makes it possible to use Tor for
+web browsing and instant messaging.
 
-It is intentional that Tor does not prevent monitoring of traffic entering and
-exiting the Tor network. This design choice is to reduce latency, which could
-negatively impact web browsing, Internet chat, SSH connections, and other
-Internet uses.
+As a consequence, an attacker could in theory correlate the timing and
+shape of the encrypted traffic entering and exiting the Tor network to
+potentially deanonymize Tor users.
 
-To learn more about this design choice, you can read the paper,
-<a href="https://svn-archive.torproject.org/svn/projects/design-paper/tor-design.pdf">Tor: The Second-Generation Onion Router</a>.
-Specifically, you should read section 3, "Design goals and assumptions."
+For example, an ISP and a website could potentially collaborate to
+deanonymize a Tor user by observing that a particular network traffic
+pattern enters the Tor network at the ISP and then logs in to a
+particular account on the website every day.
 
-The design choice not to prevent monitoring of traffic entering and exiting
-the Tor network, in order to reduce latency, leaves Tor vulnerable to
-end-to-end time correlation attacks, also known as confirmation attacks.
-End-to-end time correlation attacks can, in theory, be used to deanonymize Tor
-users.
+Such attacks are called *end-to-end correlation attacks*, because they
+require observing both ends of a Tor circuit at the same time.
 
-End-to-end time correlation attacks are possible when an attacker has the
-ability to monitor traffic both entering and exiting the Tor network. This is
-possible if, for example, the ISP of a Tor user, and the ISP of the server the
-Tor user is accessing, collaborate to deanonymize the Tor user.
+End-to-end correlation attacks have been studied in many research papers
+but we are not aware of any actual use to deanonymize Tor users. See
+[Tor Project: One cell is enough to break Tor's
+anonymity](https://blog.torproject.org/one-cell-enough-break-tors-anonymity)
+for an overview of the academic research on end-to-end correlation
+attacks.
 
-Also, theoretically, a global passive adversary, such as the United States
-National Security Agency (NSA), could monitor so many points of the Internet
-that the adversary could identify a Tor circuit, making end-to-end time
-correlation attacks possible.
+In the past, law enforcement agencies preferred exploiting
+vulnerabilities in Tor Browser to deanonymize Tor users instead of
+performing end-to-end correlation attacks. See [Ars Technica: Firefox
+0-day in the wild is being used to attack Tor
+users](https://arstechnica.com/information-technology/2016/11/firefox-0day-used-against-tor-users-almost-identical-to-one-fbi-used-in-2013/)
+about such an attack from 2016.
 
-In end-to-end time correlation attacks, traffic timings and traffic volumes
-are statistically correlated to match a Tor user with the traffic destination,
-thus deanonymizing the Tor user.
-
-You should know that using end-to-end time correlation attacks to deanonymize
-Tor users is not simple. Rather, the attacks are quite difficult and complex
-to perform.
-
-In known cases of a Tor user being deanonymized, attacks other than end-to-end
-time correlation were used to deanonymize the Tor user.
-
-For example, in 2013 and 2016, the United States Federal Bureau of
-Investigation (FBI) exploited a vulnerability in the Tor Browser to
-deanonymize Tor users.
-
-You can learn more about the vulnerability and how the FBI exploited it by
-reading the Ars Technica article,
-<a href="https://arstechnica.com/information-technology/2016/11/firefox-0day-used-against-tor-users-almost-identical-to-one-fbi-used-in-2013/">Firefox 0-day in the wild is being used to attack Tor users</a>.
-
-To learn more about end-to-end time correlation attacks, you can read:
-
-* <a href="https://blog.torproject.org/blog/one-cell-enough">One cell is enough to break Tor's anonymity</a>
-* <a href="http://www.cse.hut.fi/en/publications/B/11/papers/salo.pdf">Recent Attacks On Tor</a>
+Tails protects better than Tor Browser from such software
+vulnerabilities but does not protect better from end-to-end correlation
+attacks.
 
 <h1 id="encryption">Tails doesn't encrypt your documents by default</h1>
 
