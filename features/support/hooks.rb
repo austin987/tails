@@ -224,7 +224,7 @@ Before('@product') do |scenario|
   if $config['CAPTURE']
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
-    capture = IO.popen([ffmpeg,
+    capture = IO.popen(['ffmpeg',
                         '-f', 'x11grab',
                         '-s', '1024x768',
                         '-r', '15',

@@ -2,16 +2,18 @@
 
 In 2015, we worked on a complete rewrite on our installation
 instructions. This work was extended in 2017 with the design of a new
-download page. The archive of our design process as well as pending
-issues can be found in the [[corresponding
-blueprint|blueprint/bootstrapping/assistant]].
+download page.
+
+The [artifacts from our design
+process](https://gitlab.tails.boum.org/tails/ux/-/tree/master/installation%20assistant)
+are stored in Git.
 
 Our previous instructions forced people to jump through many different
 documentation pages and often to figure out by themselves what to do next. See
-this [[flowchart of the installation process as of
-2014|blueprint/bootstrapping/2014.fodg]].
+this [flowchart of the installation process as of
+2014](https://gitlab.tails.boum.org/tails/ux/-/raw/master/installation%20assistant/2014.fodg?inline=false).
 
-The objective was to make this a linear process, to be follow step-by-step, and
+The objective was to make the installation a linear process, to be followed step-by-step, and
 that would take the user from our homepage up to starting on a Tails USB stick
 with a Persistent Storage. But this process has to be adapted to the base
 operating system of the user or their technical expertise.
@@ -52,16 +54,16 @@ The assistant is divided into four sections:
 Related documents
 =================
 
-- [[Design document of *Tails Installer*|verification_extension]]
-- [[Design document of *Tails Verification*|verification_extension]]
-- [[Blueprint with archives of the past design processes and notes on future work|blueprint/bootstrapping/assistant]]
+- [[Design document of *Tails Installer*|installation]]
+- [[Design document of *Tails Verification*|download_verification]]
+- [Archive of our design artifacts](https://gitlab.tails.boum.org/tails/ux/-/tree/master/installation%20assistant)
 
 Implementation tricks
 =====================
 
-The installation assistant is basically presenting very similar content in many
-different scenarios with small variations (slightly different steps, slightly
-different terminology, etc.).
+The installation assistant is presenting very similar content in many
+different scenarios with small variations: slightly different steps, slightly
+different terminology, etc.
 
 To reuse as much content as possible and reduce the quantity of text and
 translations, our implementation relies heavily on two tricks. Both are
@@ -211,29 +213,15 @@ Depending on the installation scenario, the download page points to the
 download of the ISO image (on `dvd` and `vm`) or the USB image (on all
 other scenarios).
 
-We propose two download techniques displayed in equal weight and combined
-with two verification techniques that have a level of verification at least as
-good as HTTPS:
+We propose 2 download techniques displayed in equal weight:
 
-a. Direct download combined with a browser extension, called *Tails Verification*. See the [[dedicated design
-   document|verification_extension]] for a security analysis of this technique.
+a. Direct download.
 
-b. BitTorrent download. The Torrent file is downloaded through HTTPS
-   from our website and BitTorrent clients automatically verifies the download once
-   completed.
+b. BitTorrent download.
 
-We advertise OpenPGP verification as an optional verification technique,
-possibly done on top of the other two techniques and ideally through the
-OpenPGP Web-of-Trust. We assume that this technique is only relevant for
-people who are already knowledgeable about OpenPGP. As a consequence:
-
-- We only provide simplified instructions on how to perform the
-  verification, insisting on aspects that might still be relevant for
-  this public: verification of the date, command line options, warning
-  when the signing key is not trusted, etc.
-- We take more time to develop the verification of the signing key
-  through the OpenPGP Web of Trust because it is the only technique that is
-  really stronger than HTTPS.
+See our [[design document on download
+verification|download_verification]] for a security analysis of the
+different verification techniques that we provide.
 
 <a id="steps"></a>
 

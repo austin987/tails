@@ -113,9 +113,7 @@ Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_c
     account['username'] + '@' + account['domain'],
     account['password'],
     account['otr_key'],
-    # XXX:Buster: once we stop supporting running our test suite on Stretch,
-    # replace this with: **(bot_opts.transform_keys(&:to_sym))
-    **(bot_opts.each_with_object({}) { |(k, v), a| a[k.to_sym] = v })
+    **(bot_opts.transform_keys(&:to_sym))
   )
   @chatbot.start
   add_after_scenario_hook { @chatbot.stop }

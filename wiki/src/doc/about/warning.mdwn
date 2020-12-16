@@ -249,34 +249,51 @@ which the included EXIF thumbnail still shows the original picture.
 Tails' design goal to help you do that. For example, Tails already comes with
 the [Metadata anonymisation toolkit](https://0xacab.org/jvoisin/mat2).
 
-<h1 id="identities">Tails doesn't magically separate your different contextual identities</h1>
+<h1 id="global-adversary">Tor doesn't protect you from a global adversary</h1>
 
-It is usually not advisable to use the same Tails session to perform two tasks
-or endorse two contextual identities that you really want to keep separate
-from one another. For example hiding your location to check your email and
-anonymously publishing a document.
+A global passive adversary would be a person or an entity able to monitor at the
+same time the traffic between all the computers in a network. By studying, for
+example, the timing and volume patterns of the different communications across
+the network, it would be statistically possible to identify Tor circuits and
+thus match Tor users and destination servers.
 
-First, because Tor tends to reuse the same circuits, for example, within the same
-browsing session. Since the exit node of a circuit knows both the destination
-server (and possibly the content of the communication if it's not encrypted) and the
-address of the previous relay it received the communication from, it makes it
-easier to correlate several browsing requests as part of a same circuit and
-possibly made by the same user. If you are facing a global adversary as described
-above, it might then also be in a position to do this correlation.
+It is part of Tor's initial trade-off not to address such a threat in order to
+create a low-latency communication service usable for web browsing, Internet
+chat or SSH connections.
 
-Second, in case of a security hole or an error in using Tails or one of its
-applications, information about your session could be leaked. That could reveal
-that the same person was behind the various actions made during the session.
+For more expert information see the Tor design paper, "[Tor Project: The Second-Generation Onion
+Router](https://svn.torproject.org/svn/projects/design-paper/tor-design.pdf)",
+specifically, "Part 3. Design goals and assumptions."
 
-**The solution to both threats is to shutdown and restart Tails** every time
-you're using a new identity, if you really want to isolate them better.
+<h1 id="identities">Use Tails sessions for one purpose at a time</h1>
 
-The [[<span class="guilabel">New Identity</span> feature of
-<span class="application">Tor Browser</span>|doc/anonymous_internet/Tor_Browser#new-identity]]
-is limited to the browser.
+For example, don't use the same Tails session to both check your work email and
+anonymously publish a document. That is, unless you're OK with an adversary being able to correlate those tasks.
 
-There is no <span class="guilabel">New Identity</span> button for Tails as a
-whole.
+Adversaries could relate different tasks done in a Tails session by:
+* Analyzing your Tor circuits
+* Gaining access to your [[Persistent Storage|doc/first_steps/persistence/]]
+
+## Tor circuits
+Tails and the Tor Browser naturally connect to different websites via different [[circuits in the Tor network|doc/anonymous_internet/tor_status]].
+But if you connect to the same website several times in one session,
+like logging into two accounts on the same social media website, Tails and the Tor Browser
+use the same circuit, and all the activity on that website could be linked by an adversary.
+
+To ensure you use new Tor circuits for Internet traffic:
+* if you just use the Tor Browser, you can click its [[**New Identity** button|anonymous_internet/Tor_Browser]] to create a new circuit, or
+* if you use multiple programs to connect to the Internet, you can restart Tails.
+
+## Persistent Storage
+You can prevent Persistent Storage information from being linked
+to other activities by switching between several USB sticks that run Tails.
+That way the Persistent Storage of, say, your activist email in Thunderbird can be kept separate
+from your use of Tails for work.
+
+We also recommend this step if you worry about
+someone gaining physical access to your computer or USB sticks, or if you have to use Tails on an insecure or public computer (although [[Tails can't protect against compromised hardware|/doc/about/warning.html#compromised_hardware]]).
+
+For more about how Tor does or does not preserve anonymity, see the [Tor Project's documentation](https://support.torproject.org/#staying-anonymous).
 
 <h1 id="passwords">Tails doesn't make your crappy passwords stronger</h1>
 
