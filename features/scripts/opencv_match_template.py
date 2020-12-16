@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# XXX:Buster: when we drop support for Stretch we can remove this
-# import.
-from __future__ import print_function
-
 import cv2
 import os
 import sys

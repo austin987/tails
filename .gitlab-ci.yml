@@ -43,6 +43,20 @@ check-po-msgfmt:
     - apt-get -qy install python3 gettext
     - ./bin/check-po-msgfmt
 
+check-po-meta-date:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^master|stable|testing|devel$/'
+    - changes:
+        - ./**.po
+  script:
+    - apt-get -qy install git ruby
+    - ./bin/sanity-check-website
+
+check-translatable-live-website-urls:
+  script:
+    - apt-get -qy install python3-polib
+    - ./bin/check-translatable-live-website-urls po/tails.pot
+
 test-iuk:
   script:
   - 'cat config/chroot_local-packageslists/tails-perl5lib.list

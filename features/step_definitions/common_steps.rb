@@ -361,7 +361,7 @@ Given /^I log in to a new session(?: in (.*))?$/ do |lang|
     # etc.), the Greeter needs some time to focus the main window
     # back, so that typing the accelerator for the "Start Tails"
     # button is honored.
-    sleep(3)
+    sleep(10)
   end
   login_button_region.click
   step 'the Tails desktop is ready'
@@ -506,7 +506,7 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails GitLab)$/ d
   when 'Tails homepage'
     titles = ['Tails']
   when 'Tails GitLab'
-    titles = ['Groups · tails · GitLab']
+    titles = ['tails · GitLab']
   else
     raise "Unsupported page: #{page}"
   end
