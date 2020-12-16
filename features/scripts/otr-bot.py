@@ -1,10 +1,9 @@
-#!/usr/bin/python2
-import sys
-import jabberbot
-import xmpp
+#!/usr/bin/python3
+import slixmpp
 import potr
 import logging
 from argparse import ArgumentParser
+
 
 class OtrContext(potr.context.Context):
 
@@ -14,10 +13,10 @@ class OtrContext(potr.context.Context):
     def getPolicy(self, key):
         return True
 
-    def inject(self, msg, appdata = None):
-        mess = appdata["base_reply"]
-        mess.setBody(msg)
-        appdata["send_raw_message_fn"](mess)
+    def inject(self, body, appdata=None):
+        msg = appdata["base_reply"]
+        msg["body"] = str(body)
+        appdata["send_raw_message_fn"](msg)
 
 
 class BotAccount(potr.context.Account):
@@ -40,7 +39,7 @@ class OtrContextManager:
         self.contexts = {}
 
     def start_context(self, other):
-        if not other in self.contexts:
+        if other not in self.contexts:
             self.contexts[other] = OtrContext(self.account, other)
         return self.contexts[other]
 
@@ -48,159 +47,144 @@ class OtrContextManager:
         return self.start_context(other)
 
 
-class OtrBot(jabberbot.JabberBot):
-
-    PING_FREQUENCY = 60
+class OtrBot(slixmpp.ClientXMPP):
 
     def __init__(self, account, password, otr_key_path,
-                 connect_server = None, log_file = None):
+                 rooms=[], connect_server=None, log_file=None):
         self.__connect_server = connect_server
         self.__password = password
         self.__log_file = log_file
-        super(OtrBot, self).__init__(account, password)
+        self.__rooms = rooms
+        super().__init__(account, password)
         self.__otr_manager = OtrContextManager(account, otr_key_path)
-        self.send_raw_message_fn = super(OtrBot, self).send_message
+        self.send_raw_message_fn = self.raw_send
         self.__default_otr_appdata = {
             "send_raw_message_fn": self.send_raw_message_fn
             }
+        self.add_event_handler("session_start", self.start)
+        self.add_event_handler("message", self.handle_message)
+        self.register_plugin("xep_0045")  # Multi-User Chat
+        self.register_plugin("xep_0394")  # Message Markup
 
-    def __otr_appdata_for_mess(self, mess):
+    def __otr_appdata_for_msg(self, msg):
         appdata = self.__default_otr_appdata.copy()
-        appdata["base_reply"] = mess
+        appdata["base_reply"] = msg
         return appdata
 
-    # Unfortunately Jabberbot's connect() is not very friendly to
-    # overriding in subclasses so we have to re-implement it
-    # completely (copy-paste mostly) in order to add support for using
-    # an XMPP "Connect Server".
     def connect(self):
-        logging.basicConfig(filename = self.__log_file,
-                            level = logging.DEBUG)
-        if not self.conn:
-            conn = xmpp.Client(self.jid.getDomain(), debug=[])
-            if self.__connect_server:
-                try:
-                    conn_server, conn_port = self.__connect_server.split(":", 1)
-                except ValueError:
-                    conn_server = self.__connect_server
-                    conn_port = 5222
-                conres = conn.connect((conn_server, int(conn_port)))
-            else:
-                conres = conn.connect()
-            if not conres:
-                return None
-            authres = conn.auth(self.jid.getNode(), self.__password, self.res)
-            if not authres:
-                return None
-            self.conn = conn
-            self.conn.sendInitPresence()
-            self.roster = self.conn.Roster.getRoster()
-            for (handler, callback) in self.handlers:
-                self.conn.RegisterHandler(handler, callback)
-        return self.conn
+        address = ()
+        if self.__connect_server:
+            address = (self.__connect_server, self.default_port)
+        super().connect(address)
 
-    # Wrap OTR encryption around Jabberbot's most low-level method for
-    # sending messages.
-    def send_message(self, mess):
-        body = mess.getBody().encode('utf-8')
-        user = mess.getTo().getStripped().encode('utf-8')
-        otrctx = self.__otr_manager.get_context_for_user(user)
-        if otrctx.state == potr.context.STATE_ENCRYPTED:
-            otrctx.sendMessage(potr.context.FRAGMENT_SEND_ALL, body,
-                               appdata = self.__otr_appdata_for_mess(mess))
-        else:
-            self.send_raw_message_fn(mess)
+    async def start(self, event):
+        self.send_presence()
+        await self.get_roster()
+        for room in self.__rooms:
+            self.join_room(room)
 
-    # Wrap OTR decryption around Jabberbot's callback mechanism.
-    def callback_message(self, conn, mess):
-        body = mess.getBody().encode('utf-8')
-        user = mess.getFrom().getStripped().encode('utf-8')
-        otrctx = self.__otr_manager.get_context_for_user(user)
-        if mess.getType() == "chat":
+    def join_room(self, room):
+        self.plugin["xep_0045"].join_muc(room, self.boundjid.user)
+
+    def raw_send(self, msg):
+        msg.send()
+
+    def get_reply(self, command):
+        if command.strip() == "ping":
+            return "pong"
+        return None
+
+    def handle_message(self, msg):
+        msg = self.decrypt(msg)
+        reply = None
+        if msg["type"] == "chat":
+            if msg["html"]["body"].startswith("<p>?OTRv"):
+                return
+            reply = self.get_reply(msg["body"])
+        elif msg["type"] == "groupchat":
             try:
-                appdata = self.__otr_appdata_for_mess(mess.buildReply())
-                decrypted_body, tlvs = otrctx.receiveMessage(body,
-                                                             appdata = appdata)
+                recipient, command = msg["body"].split(":", 1)
+            except ValueError:
+                recipient, command = None, msg["body"]
+            if msg["mucnick"] == self.boundjid.user or \
+               recipient != self.boundjid.user:
+                return
+            response = self.get_reply(command)
+            if response:
+                reply = "%s: %s" % (msg["mucnick"], response)
+        else:
+            return
+        if reply:
+            self.send_message(msg.reply(reply))
+
+    def send_message(self, msg):
+        otrctx = self.__otr_manager.get_context_for_user(msg["to"])
+        if otrctx.state == potr.context.STATE_ENCRYPTED:
+            otrctx.sendMessage(potr.context.FRAGMENT_SEND_ALL,
+                               msg["body"].encode("utf-8"),
+                               appdata=self.__otr_appdata_for_msg(msg))
+        else:
+            self.raw_send(msg)
+
+    def decrypt(self, msg):
+        if msg["type"] == "groupchat":
+            return msg
+        otrctx = self.__otr_manager.get_context_for_user(msg["from"])
+        if msg["type"] == "chat":
+            try:
+                appdata = self.__otr_appdata_for_msg(msg.reply())
+                plaintext, tlvs = otrctx.receiveMessage(
+                    msg["body"].encode("utf-8"),
+                    appdata=appdata
+                )
+                if plaintext:
+                    decrypted_body = plaintext.decode("utf-8")
+                else:
+                    decrypted_body = ""
                 otrctx.processTLVs(tlvs)
             except potr.context.NotEncryptedError:
-                otrctx.authStartV2(appdata = appdata)
-                return
-            except (potr.context.UnencryptedMessage, potr.context.NotOTRMessage):
-                decrypted_body = body
+                otrctx.authStartV2(appdata=appdata)
+                return msg
+            except (potr.context.UnencryptedMessage,
+                    potr.context.NotOTRMessage):
+                decrypted_body = msg["body"]
         else:
-            decrypted_body = body
-        if decrypted_body == None:
-            return
-        if mess.getType() == "groupchat":
-            bot_prefix = self.jid.getNode() + ": "
-            if decrypted_body.startswith(bot_prefix):
-                decrypted_body = decrypted_body[len(bot_prefix):]
-            else:
-                return
-        mess.setBody(decrypted_body)
-        super(OtrBot, self).callback_message(conn, mess)
+            decrypted_body = msg["body"]
+        msg["body"] = decrypted_body
+        return msg
 
-    # Override Jabberbot quitting on keep alive failure.
-    def on_ping_timeout(self):
-        self.__lastping = None
-
-    @jabberbot.botcmd
-    def ping(self, mess, args):
-        """Why not just test it?"""
-        return "pong"
-
-    @jabberbot.botcmd
-    def say(self, mess, args):
-        """Unleash my inner parrot"""
-        return args
-
-    @jabberbot.botcmd
-    def clear_say(self, mess, args):
-        """Make me speak in the clear even if we're in an OTR chat"""
-        self.send_raw_message_fn(mess.buildReply(args))
-        return ""
-
-    @jabberbot.botcmd
-    def start_otr(self, mess, args):
-        """Make me *initiate* (but not refresh) an OTR session"""
-        if mess.getType() == "groupchat":
-            return
-        return "?OTRv2?"
-
-    @jabberbot.botcmd
-    def end_otr(self, mess, args):
-        """Make me gracefully end the OTR session if there is one"""
-        if mess.getType() == "groupchat":
-            return
-        user = mess.getFrom().getStripped().encode('utf-8')
-        self.__otr_manager.get_context_for_user(user).disconnect(appdata =
-            self.__otr_appdata_for_mess(mess.buildReply()))
-        return ""
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("account",
-                        help = "the user account, given as user@domain")
+                        help="the user account, given as user@domain")
     parser.add_argument("password",
-                        help = "the user account's password")
+                        help="the user account's password")
     parser.add_argument("otr_key_path",
-                        help = "the path to the account's OTR key file")
-    parser.add_argument("-c", "--connect-server", metavar = 'ADDRESS',
-                        help = "use a Connect Server, given as host[:port] " +
+                        help="the path to the account's OTR key file")
+    parser.add_argument("-c", "--connect-server", metavar='ADDRESS',
+                        help="use a Connect Server, given as host[:port] " +
                         "(port defaults to 5222)")
-    parser.add_argument("-j", "--auto-join", nargs = '+', metavar = 'ROOMS',
-                        help = "auto-join multi-user chatrooms on start")
-    parser.add_argument("-l", "--log-file", metavar = 'LOGFILE',
-                        help = "Log to file instead of stderr")
+    parser.add_argument("-j", "--auto-join", nargs='+', metavar='ROOMS',
+                        help="auto-join multi-user chatrooms on start",
+                        default=[])
+    parser.add_argument("-l", "--log-file", metavar='LOGFILE',
+                        help="Log to file instead of stderr")
+    parser.add_argument("-d", "--debug",
+                        help="enable debug logging",
+                        action="store_const", dest="loglevel",
+                        const=logging.DEBUG, default=logging.FATAL)
     args = parser.parse_args()
-    otr_bot_opt_args = dict()
-    if args.connect_server:
-        otr_bot_opt_args["connect_server"] = args.connect_server
-    if args.log_file:
-        otr_bot_opt_args["log_file"] = args.log_file
-    otr_bot = OtrBot(args.account, args.password, args.otr_key_path,
-                     **otr_bot_opt_args)
-    if args.auto_join:
-        for room in args.auto_join:
-            otr_bot.join_room(room)
-    otr_bot.serve_forever()
+    logging.basicConfig(level=args.loglevel,
+                        format='%(levelname)-8s %(message)s')
+    otr_bot = OtrBot(args.account,
+                     args.password,
+                     args.otr_key_path,
+                     rooms=args.auto_join,
+                     connect_server=args.connect_server,
+                     log_file=args.log_file)
+    try:
+        otr_bot.connect()
+        otr_bot.process()
+    except KeyboardInterrupt:
+        otr_bot.disconnect()
