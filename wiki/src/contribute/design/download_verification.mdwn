@@ -1,0 +1,186 @@
+[[!meta title="Download verification"]]
+
+Software verification is a critical step in the use of secure
+applications but it has traditionally been hard to provide, especially
+from a user experience perspective.
+
+Usual solutions are:
+
+- HTTPS
+
+  HTTPS is not enough in the case of Tails because we rely on [[mirrors
+  hosted by third parties|contribute/design/mirrors]].
+
+  Note that all these mirrors already use HTTPS.
+
+  HTTPS also doesn't protect from interrupted downloads leading to
+  broken Tails installations.
+
+- OpenPGP signatures
+
+  Unless the user knows how to verify the signing key through the
+  OpenPGP Web-of-Trust, this technique ultimately relies on a correct
+  download of the signing key.
+
+Tails provides 3 mechanisms for users to verify the image downloaded
+through a third party mirror, while relying on cryptographic information
+fetched from our website through HTTPS.
+
+1. JavaScript verification
+
+   The main verification mechanism relies on JavaScript code on the
+   download page. See below for more details.
+
+1. BitTorrent download
+
+   The Torrent file downloaded through HTTPS from our website includes a
+   checksum of the image. BitTorrent clients automatically verify this
+   checksum when the download finishes.
+
+1. OpenPGP signature
+
+   We advertise OpenPGP as an optional verification technique, possibly
+   done on top of the other 2 techniques and ideally through the OpenPGP
+   Web-of-Trust. We assume that this technique is only relevant for
+   people who are already knowledgeable about OpenPGP. As a consequence:
+
+   - We only provide simplified instructions on how to perform the
+     verification, insisting on aspects that might still be relevant for
+     this public: verification of the date, command line options,
+     warning when the signing key is not trusted, etc.
+
+   - We take more time to develop the verification of the signing key
+     through the OpenPGP Web of Trust because it is the only technique
+     that is really stronger than HTTPS.
+
+[[!toc levels=2]]
+
+Related documents
+=================
+
+- [[Design document of the installation assistant, including the download page|installation_assistant]]
+
+Scope of the JavaScript verification
+====================================
+
+Goals
+-----
+
+  - Provide a simple, automated, and cross-platform technique to verify
+    USB and ISO images of the current version of Tails.
+
+  - Allow verifying any current Tails image: downloaded over BitTorrent,
+    copied from a friend, downloaded from one of our mirrors.
+
+Non goals
+---------
+
+  - Verify deprecated Tails images.
+
+  - Verify Tails images downloaded from nightly.tails.boum.org.
+
+Threat model
+============
+
+We are considering here an attacker who can:
+
+  - [A] Provide a malicious Tails image to the user for example by
+    operating a rogue Tails mirror.
+
+  - [H] Operate a website that is loaded in a different tab in the same
+    browser. This threat is taken care of by the internals of the
+    browser and the proper coding of the JavaScript.
+
+We are not considering an attacker who can:
+
+  - [B] Do a man-in-the-middle attack by providing a rogue HTTPS certificate
+    for https://tails.boum.org/ signed by a certificate authority
+    trusted by the browser but under the control of the attacker.
+
+    Since the JavaScript verification is targeted at new users, a MitM or exploit on
+    our website could defeat any verification technique by providing
+    simplified instructions or by faking the verification.
+
+    Note that our website is already in the [HSTS preload list of major
+    browsers](https://hstspreload.org/?domain=tails.boum.org), which forces HTTPS connections to our website, even for
+    first time visitors.
+
+  - [C] Insert malicious content on https://tails.boum.org/ through an
+    exploit on our website as this could trick new users to skip the Tails
+    image verification all the way. To prevent this kind of attack we
+    should instead:
+
+    - Monitor externally the most relevant parts of our website.
+    - Work on integrating full upgrades in Tails Upgrader to limit the
+      number of times people have to rely on our website to upgrade. See
+      [[!tails_ticket 7499]].
+
+  - [D] Insert malicious information in our main Git repository as such
+    an attacker could do attack [C] as well.
+
+  - [E] Insert targeted malware in the user's computer or web browser as this could
+    defeat any possible verification mechanism that such JavaScript
+    can do.
+
+    For example, we cannot protect from a malicious extension installed
+    in the web browser.
+
+  - [G] Insert malicious content on https://tails.boum.org/ after taking
+    control of the web server, or entire system, behind it. Such an
+    attacker could do attack [C] as well but in such a way that could be
+    much harder to detect (for example by serving malicious content only to
+    some users).
+
+  - [J] Provide a malicious copy of our website on a similar looking URL
+    that could pretend that verification has succeeded without actually
+    verifying anything.
+
+Functioning
+===========
+
+Image description file
+----------------------
+
+When verifying a Tails image, the JavaScript:
+
+1. Downloads an image description file (IDF) from:
+
+   <https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json>
+
+   The IDF is served with the HTTP headers <span
+   class="code">`Access-Control-Allow-Origin: *`</span> to allow
+   developers to test the extension locally from a `file:///` URL.
+
+1. Verifies that the checksum of the image is present in the IDF.
+
+*Forge* library
+---------------
+
+The JavaScript uses the
+[*Forge*](https://github.com/digitalbazaar/forge/) library to calculate
+the checksum.
+
+We chose *Forge* because it was [the fastest in this benchmark of
+JavaScript checksum
+implementations](https://github.com/brillout/test-javascript-hash-implementations).
+
+We cannot use the native [SubtleCrypto.digest()
+API](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)
+because it [cannot read files as
+streams](https://github.com/w3c/webcrypto/issues/73) and would require
+loading the entire image in memory before computing its checksum.
+
+We also rely on reading the image as a stream to display the progress
+bar, which is really important since the whole verification takes close
+to 1 minute.
+
+Browser compatibility
+---------------------
+
+- Internet Explorer is not supported because our JavaScript uses the
+  [readAsBinaryString
+  API](https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsBinaryString).
+
+- Browsers without JavaScript are instructed to either enable JavaScript
+  or calculate the checksum using
+  [[GtkHash|doc/encryption_and_privacy/checksums]].
