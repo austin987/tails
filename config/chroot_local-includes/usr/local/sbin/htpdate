@@ -227,7 +227,11 @@ sub getUrlDateDiff {
         '--max-time', '30',
         '--head', '--output', catfile($tmpdir, 'headers'),
     );
-    push @curl_options, ('--socks5-hostname', $proxy) if defined $proxy;
+    # Resolve the host name "locally" rather than via the SOCKS proxy,
+    # in order to get a "curl: (6) Could not resolve host" error upon
+    # name resolution, instead of the unhelpful "curl: (7) Can't
+    # complete SOCKS5 connection".
+    push @curl_options, ('--proxy', "socks5://$proxy") if defined $proxy;
 
     my @cmdline = ('curl', @curl_options, $url);
 
