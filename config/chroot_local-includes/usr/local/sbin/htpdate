@@ -25,10 +25,11 @@ use File::Path qw(rmtree);
 use File::Spec::Functions;
 use File::Temp qw/tempdir/;
 use Getopt::Long::Descriptive;
+use IPC::Run;
 use IPC::System::Simple qw(capturex);
 use List::Util qw( shuffle );
 use open qw{:utf8 :std};
-use POSIX qw( WIFEXITED );
+use String::Errf qw{errf};
 use threads;
 use Try::Tiny;
 
@@ -221,7 +222,7 @@ sub getUrlDateDiff {
     my $tmpdir = tempdir("XXXXXXXXXX", TMPDIR => 1);
 
     my @curl_options = (
-        '--user-agent', $useragent, '--silent',
+        '--user-agent', $useragent, '--silent', '--show-error',
         '--proto', '=https', '--tlsv1',
         '--max-time', '30',
         '--head', '--output', catfile($tmpdir, 'headers'),
@@ -231,7 +232,17 @@ sub getUrlDateDiff {
     my @cmdline = ('curl', @curl_options, $url);
 
     my $before = DateTime->now->epoch();
-    WIFEXITED(system(@cmdline)) or error "Failed to fetch content from $url: $!";
+    my ($stdout, $stderr, $exit_code);
+    my $success = 1;
+    IPC::Run::run \@cmdline, '>', \$stdout, '2>', \$stderr or $success = 0;
+    $exit_code = $?;
+    $success or error errf(
+        "Failed to fetch content from $url:\n".
+        "exit code: %{exit_code}i\n\n".
+        "stdout:\n%{stdout}s\n\n".
+        "stderr:\n%{stderr}s",
+        { exit_code => $exit_code, stdout => $stdout, stderr => $stderr }
+    );
     my $local = DateTime->now->epoch();
     my $newestdt;
     eval { $newestdt = newestDateHeader($tmpdir) };
