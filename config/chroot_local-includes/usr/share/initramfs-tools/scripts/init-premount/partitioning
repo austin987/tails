@@ -81,7 +81,7 @@ fi
 
 # Get new system partition size
 DEVICE_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
-DEVICE_SIZE_IN_GiB=$((${DEVICE_SIZE} / 2 / 1024 / 1024))
+DEVICE_SIZE_IN_GiB=$(echo "scale=1; ${DEVICE_SIZE} / 2 / 1024 / 1024" | bc)
 DEVICE_SIZE_IN_MiB=$((${DEVICE_SIZE} / 2 / 1024))
 DEVICE_TOO_SMALL_ERROR_MESSAGE="Sorry, this USB stick is too small to run Tails (${DEVICE_SIZE_IN_GiB} GB). Please use a USB stick of at least 8 GB. Press ENTER to shut down."
 
