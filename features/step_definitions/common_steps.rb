@@ -457,7 +457,7 @@ Given /^the time has synced$/ do
   ['/run/tordate/done', '/run/htpdate/success'].each do |file|
     begin
       try_for(300) { $vm.execute("test -e #{file}").success? }
-    rescue StandardError
+    rescue Timeout::Error
       if file == '/run/htpdate/success'
         File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |f|
           f.write($vm.execute('cat /var/log/htpdate.log').stdout)
