@@ -453,6 +453,12 @@ end
 class TimeSyncingError < StandardError
 end
 
+class TordateError < TimeSyncingError
+end
+
+class HtpdateError < TimeSyncingError
+end
+
 Given /^the time has synced$/ do
   ['/run/tordate/done', '/run/htpdate/success'].each do |file|
     begin
@@ -462,9 +468,9 @@ Given /^the time has synced$/ do
         File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |f|
           f.write($vm.execute('cat /var/log/htpdate.log').stdout)
         end
-        raise TimeSyncingError, 'Time syncing failed (htpdate)'
+        raise HtpdateError, 'Time syncing failed'
       else
-        raise TimeSyncingError, 'Time syncing failed (tordate)'
+        raise TordateError, 'Time syncing failed'
       end
     end
   end

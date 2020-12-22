@@ -303,10 +303,8 @@ After('@product') do |scenario|
         'Chutney logs',
         "#{ARTIFACTS_DIR}/#{chutney_logs}"
       )
-    when 'TimeSyncingError'
-      if File.exists?("#{$config['TMPDIR']}/log.htpdate")
-        save_failure_artifact('Htpdate logs', "#{$config['TMPDIR']}/log.htpdate")
-      end
+    when 'HtpdateError'
+      save_failure_artifact('Htpdate logs', "#{$config['TMPDIR']}/log.htpdate")
     end
     # Note that the remote shell isn't necessarily running at all
     # times a scenario can fail (and a scenario failure could very
