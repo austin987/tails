@@ -2,6 +2,8 @@ The list of Wi-Fi adapters that work in Tails is in our documentation
 about [[Troubleshooting Wi-Fi not
 working|doc/anonymous_internet/networkmanager#wi-fi-adapters]].
 
+https://h-node.org/wifi/catalogue/en/1/1/undef/undef/undef/USB/wifi-works/undef
+
 USB Wi-Fi adapters that don't work in Tails
 ===========================================
 
