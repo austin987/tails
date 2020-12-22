@@ -454,18 +454,18 @@ class TimeSyncingError < StandardError
 end
 
 Given /^the time has synced$/ do
-  begin
-    ['/run/tordate/done', '/run/htpdate/success'].each do |file|
+  ['/run/tordate/done', '/run/htpdate/success'].each do |file|
+    begin
       try_for(300) { $vm.execute("test -e #{file}").success? }
-    end
-  rescue StandardError
-    if file == '/run/htpdate/success'
-      File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |file|
-        file.write($vm.execute('cat /var/log/htpdate.log').stdout)
+    rescue StandardError
+      if file == '/run/htpdate/success'
+        File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |f|
+          f.write($vm.execute('cat /var/log/htpdate.log').stdout)
+        end
+        raise TimeSyncingError, 'Time syncing failed (htpdate)'
+      else
+        raise TimeSyncingError, 'Time syncing failed (tordate)'
       end
-      raise TimeSyncingError, 'Time syncing failed (htpdate)'
-    else
-      raise TimeSyncingError, 'Time syncing failed (tordate)'
     end
   end
 end
