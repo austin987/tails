@@ -79,11 +79,15 @@ if [ "${GUID}" != "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3" ]; then
 	exit 0
 fi
 
-DEVICE_TOO_SMALL_ERROR_MESSAGE="Sorry, this device is too small to run Tails. Please use a device with at least 8 GiB. Press ENTER to shut down."
+# Compute the new system partition size
 
-# Get new system partition size
+# in 512 bytes sectors
 DEVICE_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
+
+DEVICE_SIZE_IN_GB=$(echo "scale=1; ${DEVICE_SIZE} / 2 / 1000 / 1000" | bc)
 DEVICE_SIZE_IN_MiB=$((${DEVICE_SIZE} / 2 / 1024))
+DEVICE_TOO_SMALL_ERROR_MESSAGE="Sorry, this USB stick is too small to run Tails (${DEVICE_SIZE_IN_GB} GB). Please use a USB stick of at least 8 GB. Press ENTER to shut down."
+
 if [ "${DEVICE_SIZE_IN_MiB}" -lt 7200 ]; then
 	plymouth message --text="${DEVICE_TOO_SMALL_ERROR_MESSAGE}"
 	plymouth watch-keystroke > /dev/null
