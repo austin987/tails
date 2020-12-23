@@ -1,8 +1,8 @@
-Then /^the OpenPGP keys shipped with Tails are valid for the next (\d+) months$/ do |months|
+Then /^the included OpenPGP keys are valid for the next (\d+) months$/ do |months|
   assert_all_keys_are_valid_for_n_months(:OpenPGP, Integer(months))
 end
 
-Then /^the shipped Debian repository key are valid for the next (\d+) months$/ do |months|
+Then /^the keys trusted by APT are valid for the next (\d+) months$/ do |months|
   assert_all_keys_are_valid_for_n_months(:APT, Integer(months))
 end
 
