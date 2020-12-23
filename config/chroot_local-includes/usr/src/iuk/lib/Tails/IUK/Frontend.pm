@@ -130,6 +130,10 @@ option 'override_free_space' =>
     predicate     => 1,
     documentation => q{Internal, for test suite only};
 
+has 'bytes_str' =>
+    is          =>  'lazy',
+    isa         =>  InstanceOf['Number::Format'];
+
 
 =head1 CONSTRUCTORS AND BUILDERS
 
@@ -163,6 +167,12 @@ method _build_free_space () {
         : space_available_in($self->running_system->liveos_mountpoint);
 }
 
+method _build_bytes_str () {
+    new Number::Format(
+        kilo_suffix => 'KB',
+        mega_suffix => 'MB',
+        giga_suffix => 'GB');
+}
 
 =head1 METHODS
 
@@ -397,8 +407,10 @@ method run () {
                     "{space_needed} ".
                     "of free space on Tails system partition, ".
                     " but only {free_space} is available.",
-                    space_needed => format_bytes($space_needed, mode => "iec", precision => 0),
-                    free_space   => format_bytes($free_space,   mode => "iec", precision => 0),
+                                space_needed => $self->bytes_str->format_bytes($space_needed,
+                                                                               precision => 0),
+                                free_space   => $self->bytes_str->format_bytes($free_space,
+                                                                               precision => 0),
                 ));
             }
         }
@@ -408,8 +420,10 @@ method run () {
                 "The available incremental upgrade requires ".
                 "{memory_needed} of free memory, but only ".
                 "{free_memory} is available.",
-                memory_needed => format_bytes($memory_needed, mode => "iec", precision => 0),
-                free_memory   => format_bytes($free_memory,   mode => "iec", precision => 0),
+                            memory_needed => $self->bytes_str->format_bytes($memory_needed,
+                                                                            precision => 0),
+                            free_memory   => $self->bytes_str->format_bytes($free_memory,
+                                                                            precision => 0),
             ));
         }
     }
@@ -446,8 +460,8 @@ method run () {
                 details_url => $upgrade_path->{'details-url'},
                 name        => $upgrade_description->product_name,
                 version     => $upgrade_path->{version},
-                size        => format_bytes($upgrade_path->{'total-size'},
-                                            mode => "iec", precision => 0),
+                size        => $self->bytes_str->format_bytes($upgrade_path->{'total-size'},
+                                                              precision => 0),
                 ),
             title        => __(q{Upgrade available}),
             ok_label     => __(q{Upgrade now}),
@@ -604,9 +618,13 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                     $zenity_in = __x(
                         "#{time} left - {downloaded} of {size} ({speed}/sec)\n",
                         time => $download_progress->estimated_end_time,
-                        downloaded => format_bytes($bytes_downloaded,mode => "iec", precision => 0),
-                        size => format_bytes($download_progress->size,mode => "iec", precision => 0),
-			speed => format_bytes($download_progress->speed,mode => "iec", precision => 0),
+
+			downloaded => $self->bytes_str->format_bytes($bytes_downloaded,
+						                     precision => 0),
+                        size =>  $self->bytes_str->format_bytes($download_progress->size,
+							             precision => 0),
+                        speed => $self->bytes_str->format_bytes($download_progress->speed,
+								     precision => 0),
                         );
                     $zenity_h->pump_nb;
                 }
