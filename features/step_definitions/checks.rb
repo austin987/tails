@@ -1,47 +1,49 @@
-def shipped_openpgp_keys
-  shipped_gpg_keys = $vm.execute_successfully(
-    'gpg --batch --with-colons --fingerprint --list-key', user: LIVE_USER
-  ).stdout
-  openpgp_fingerprints = shipped_gpg_keys.scan(/^fpr:::::::::([A-Z0-9]+):$/)
-                                         .flatten
-  openpgp_fingerprints
+Then /^the OpenPGP keys shipped with Tails are valid for the next (\d+) months$/ do |months|
+  assert_all_keys_are_valid_for_n_months(:OpenPGP, Integer(months))
 end
 
-Then /^the OpenPGP keys shipped with Tails are valid for the next (\d+) months$/ do |months|
+Then /^the shipped Debian repository key are valid for the next (\d+) months$/ do |months|
+  assert_all_keys_are_valid_for_n_months(:APT, Integer(months))
+end
+
+def assert_all_keys_are_valid_for_n_months(type, months)
+  assert([:OpenPGP, :APT].include?(type))
+  assert(months.is_a?(Integer))
+
+  cmd  = type == :OpenPGP ? 'gpg'     : 'apt-key adv'
+  user = type == :OpenPGP ? LIVE_USER : 'root'
+  all_keys = $vm.execute_successfully(
+    "#{cmd} --batch --with-colons --fingerprint --list-key", user: user
+  ).stdout.scan(/^fpr:::::::::([A-Z0-9]+):$/).flatten
+
   invalid = []
-  shipped_openpgp_keys.each do |key|
-    begin
-      step "the shipped OpenPGP key #{key} are valid " \
-           "for the next #{months} months"
-    rescue Test::Unit::AssertionFailedError
-      invalid << key
-      next
-    end
+  all_keys.each do |key|
+    assert_key_is_valid_for_n_months(type, key, months)
+  rescue Test::Unit::AssertionFailedError
+    invalid << key
+    next
   end
   assert(invalid.empty?,
-         'The following key(s) will not be valid ' \
+         "The following #{type} key(s) will not be valid " \
          "in #{months} months: #{invalid.join(', ')}")
 end
 
-Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) are valid for the next (\d+) months$/ do |fingerprint, max_months|
-  if fingerprint
-    cmd = 'gpg'
-    user = LIVE_USER
-  else
-    fingerprint = TAILS_DEBIAN_REPO_KEY
-    cmd = 'apt-key adv'
-    user = 'root'
-  end
+def assert_key_is_valid_for_n_months(type, fingerprint, months)
+  assert([:OpenPGP, :APT].include?(type))
+  assert(months.is_a?(Integer))
+
+  cmd  = type == :OpenPGP ? 'gpg'     : 'apt-key adv'
+  user = type == :OpenPGP ? LIVE_USER : 'root'
   shipped_sig_key_info = $vm.execute_successfully(
     "#{cmd} --batch --list-key #{fingerprint}", user: user
   ).stdout
   m = /\[expire[ds]: ([0-9-]*)\]/.match(shipped_sig_key_info)
-  if m
-    expiration_date = Date.parse(m[1])
-    assert((expiration_date << max_months.to_i) > DateTime.now,
-           "The shipped key #{fingerprint} will not be valid " \
-           "#{max_months} months from now.")
-  end
+  return unless m
+
+  expiration_date = Date.parse(m[1])
+  assert((expiration_date << months.to_i) > DateTime.now,
+         "The shipped key #{fingerprint} will not be valid " \
+         "#{months} months from now.")
 end
 
 Then /^the live user has been setup by live\-boot$/ do
