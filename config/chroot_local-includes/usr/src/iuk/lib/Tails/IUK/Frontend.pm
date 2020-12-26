@@ -693,7 +693,6 @@ method do_incremental_upgrade (HashRef $upgrade_path) {
     $self->dialog(
         __(
             "The upgrade was successfully downloaded.\n\n".
-            "The network connection will now be disabled.\n\n".
             "Please save your work and close all other applications."
         ),
         type     => 'info',
@@ -757,10 +756,11 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
     my $title = __("Upgrading the system");
     my $info = __(
         "<b>Your Tails device is being upgraded...</b>\n\n".
-        "For security reasons, the networking is now disabled."
+        "For security reasons, The network connection will now be disabled."
     );
     $self->info($info);
-
+    my $zenity_h = IPC::Run::start [qw{tail -f /dev/null}], '|', [qw{zenity --progress --pulsate --no-cancel --auto-close},
+                       '--title', $title, '--text', $info] unless $self->batch;
     $self->shutdown_network;
 
     my @target_files = target_files($upgrade_path, $target_files_tempdir);
@@ -776,11 +776,9 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
         @cmd = ('sudo', '-n', '-u', 'tails-install-iuk', @cmd);
     }
 
-    my ($exit_code, $stdout, $stderr, $zenity_h);
+    my ($exit_code, $stdout, $stderr);
     my $success = 1;
 
-    $zenity_h = IPC::Run::start [qw{tail -f /dev/null}], '|', [qw{zenity --progress --pulsate --no-cancel --auto-close},
-                       '--title', $title, '--text', $info] unless $self->batch;
     IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr or $success = 0;
     $exit_code = $?;
     $zenity_h->kill_kill unless $self->batch;
