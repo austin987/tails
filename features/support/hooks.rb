@@ -172,6 +172,10 @@ BeforeFeature('@product') do
       raise "The specified Tails #{type} image '#{path}' does not exist"
     end
 
+    if File.directory?(path)
+      raise "The specified Tails #{type} image '#{path}' is a directory"
+    end
+
     # Workaround: when libvirt takes ownership of the ISO/IMG image it may
     # become unreadable for the live user inside the guest in the
     # host-to-guest share used for some tests.
