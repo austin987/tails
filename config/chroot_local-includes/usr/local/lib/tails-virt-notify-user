@@ -36,11 +36,11 @@ class VirtNotifier(object):
         self.notification = Notify.Notification.new(self.title, self.body)
         self.notification.set_hint("transient", GLib.Variant("u", 1))
         self.notification.set_timeout(0)
-        self.notification.add_action("documentation", _("Learn More"),
-                                     self.cb_notification_clicked)
         if show_suppress_button:
             self.notification.add_action("hide", _("Don't Show Again"),
                                          self.cb_notification_clicked)
+        self.notification.add_action("documentation", _("Learn More"),
+                                     self.cb_notification_clicked)
         self.notification.connect("closed", lambda *x: sys.exit(0))
 
 
