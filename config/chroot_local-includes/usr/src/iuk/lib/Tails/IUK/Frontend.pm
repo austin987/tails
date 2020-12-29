@@ -756,7 +756,7 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
     my $title = __("Upgrading the system");
     my $info = __(
         "<b>Your Tails device is being upgraded...</b>\n\n".
-        "For security reasons, the network connection will now be disabled."
+        "For security reasons, the network connection is now disabled."
     );
     $self->info($info);
     my $zenity_h;
