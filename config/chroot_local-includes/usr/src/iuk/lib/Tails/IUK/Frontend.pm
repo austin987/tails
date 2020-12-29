@@ -759,7 +759,8 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
         "For security reasons, the network connection will now be disabled."
     );
     $self->info($info);
-    my $zenity_h = IPC::Run::start [qw{tail -f /dev/null}], '|', [qw{zenity --progress --pulsate --no-cancel --auto-close},
+    my $zenity_h;
+    $zenity_h = IPC::Run::start [qw{tail -f /dev/null}], '|', [qw{zenity --progress --pulsate --no-cancel --auto-close},
                        '--title', $title, '--text', $info] unless $self->batch;
     $self->shutdown_network;
 
