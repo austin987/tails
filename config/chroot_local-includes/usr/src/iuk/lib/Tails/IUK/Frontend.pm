@@ -760,8 +760,12 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
     );
     $self->info($info);
     my $zenity_h;
-    $zenity_h = IPC::Run::start [qw{tail -f /dev/null}], '|', [qw{zenity --progress --pulsate --no-cancel --auto-close},
-                       '--title', $title, '--text', $info] unless $self->batch;
+    $zenity_h = IPC::Run::start
+        [qw{tail -f /dev/null}],
+        '|',
+        [qw{zenity --progress --pulsate --no-cancel --auto-close},
+         '--title', $title, '--text', $info]
+        unless $self->batch;
     $self->shutdown_network;
 
     my @target_files = target_files($upgrade_path, $target_files_tempdir);
