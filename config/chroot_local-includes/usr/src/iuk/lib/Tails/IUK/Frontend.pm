@@ -693,6 +693,7 @@ method do_incremental_upgrade (HashRef $upgrade_path) {
     $self->dialog(
         __(
             "The upgrade was successfully downloaded.\n\n".
+            "The network connection will be disabled when applying the upgrade.\n\n".
             "Please save your work and close all other applications."
         ),
         type     => 'info',
