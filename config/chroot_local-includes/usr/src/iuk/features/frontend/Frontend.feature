@@ -76,9 +76,10 @@ Feature: upgrade frontend
     And I should be told "Downloading the upgrade"
     And I should be asked to wait
     And I should be told "Upgrade successfully downloaded"
+    And I should be told "The network connection will be disabled"
     And the network should be shutdown
     And I should be told "Your Tails device is being upgraded"
-    And I should be told "the network connection will now be disabled"
+    And I should be told "the network connection is now disabled"
     And I should be asked to wait
     And the downloaded IUK should be installed
     And I should be proposed to restart the system
