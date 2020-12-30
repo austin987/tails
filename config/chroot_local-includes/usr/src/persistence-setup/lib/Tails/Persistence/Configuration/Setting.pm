@@ -229,9 +229,7 @@ method toggled_cb () {
 
 method configuration_cb () {
     my $configuration_desktop_app_info = Gio::DesktopAppInfo->new(
-        $ENV{DEV_MODE}
-            ? 'yelp.desktop'
-            : $self->configuration_app_desktop_id,
+        $self->configuration_app_desktop_id,
     );
     $configuration_desktop_app_info->launch();
 }
