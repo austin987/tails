@@ -252,6 +252,9 @@ STREAM_ISOLATION_INFO = {
   'htpdate'                        => {
     grep_monitor_expr: 'users:(("curl"',
     socksport:         9062,
+    # htpdate is resolving names through the system resolver, not through socksport
+    # (in order to have better error messages). Let it connect to local DNS!
+    dns:           true,
   },
   'tails-security-check'           => {
     grep_monitor_expr: 'users:(("tails-security-"',
@@ -295,6 +298,7 @@ Then /^I see that (.+) is properly stream isolated(?: after (\d+) seconds)?$/ do
   info = stream_isolation_info(application)
   expected_ports = [info[:socksport]]
   expected_ports << 9051 if info[:controller]
+  expected_ports << 53 if info[:dns]
   assert_not_nil(@process_monitor_log)
   log_lines = $vm.file_content(@process_monitor_log).split("\n")
   assert(!log_lines.empty?,
