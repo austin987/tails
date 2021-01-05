@@ -1017,8 +1017,8 @@ Prepare upgrade-description files
 
         ./bin/publish-test-udfs
 
-Prepare the image description file for *Tails Verification*
------------------------------------------------------------
+Prepare the image description file for the download verification
+----------------------------------------------------------------
 
 If preparing a RC, skip this part.
 
@@ -1031,7 +1031,7 @@ Update the image description file (IDF) used by the verification JavaScript:
        --img "${IMG_PATH:?}" \
        > wiki/src/install/v2/Tails/amd64/stable/latest.json && \
     git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-    git commit -m "Update IDF file for Tails Verification." && \
+    git commit -m "Update IDF for download verification" && \
     git push origin "${WEBSITE_RELEASE_BRANCH:?}"
 
 Done with OpenPGP signing
@@ -1268,14 +1268,14 @@ Ensure our [[contribute/working_together/roles/technical_writer]] has
 announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 
 Generate an announcement listing the security bugs affecting the previous version
-in `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
+in `wiki/src/security/known_security_vulnerabilities_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
 order to let the users of the old versions know that they have to upgrade:
 
         ./bin/generate-security-advisory \
            --previous-version "${PREVIOUS_STABLE_VERSION:?}" \
            --version "${VERSION:?}" \
            --tag "${TAG:?}" \
-        > "wiki/src/security/Numerous_security_holes_in_${PREVIOUS_STABLE_VERSION:?}.mdwn"
+        > "wiki/src/security/known_security_vulnerabilities_in_${PREVIOUS_STABLE_VERSION:?}.mdwn"
 
 Remove obsolete bits from `wiki/src/home/testing.html`. For example,
 remove any text that's specific to a release candidate we may have
@@ -1595,6 +1595,7 @@ If you just released a final release
 1. On the `stable` branch, remove all old versions
    that were never released from `wiki/src/upgrade/v2/Tails`:
 
+        cd "${RELEASE_CHECKOUT:?}" && \
         git checkout stable && \
         ./bin/remove-unused-udfs --before-version "${VERSION:?}"
 
@@ -1629,6 +1630,12 @@ If you just released a final release
 1. Merge the release branch and its APT suite into `devel`:
 
         ./bin/merge-main-branch "${RELEASE_BRANCH:?}" devel
+
+   When there's a merge conflict, the script aborts to let you resolve
+   the conflict. Then:
+
+   1. Resolve the conflict, `git add` and `git merge --continue`).
+   2. Re-run the exact same `merge-main-branch` command.
 
 1. Check if the version number of the last entry in `devel`'s `debian/changelog` matches
    the next major release, so that
