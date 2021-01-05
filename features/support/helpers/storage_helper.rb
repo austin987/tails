@@ -210,7 +210,7 @@ class VMStorage
       debug_log("libguestfs: #{Guestfs.event_to_string(event)}: #{message}")
     end
     g.set_event_callback(message_callback,
-                         Guestfs::EVENT_TRACE)
+                         Guestfs::EVENT_ALL)
     g.set_autosync(1)
     disks.each do |disk|
       if disk.class == String
