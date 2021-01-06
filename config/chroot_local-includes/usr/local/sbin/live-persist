@@ -439,6 +439,13 @@ activate_volumes ()
 		done
 	done
 
+	# Enable support for "Don't ask again" (#10553)
+	for persistent_fs in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		mkdir -p "${persistent_fs}/dont-ask-again"
+		chown amnesia:amnesia "${persistent_fs}/dont-ask-again"
+	done
+
 	# Load the new persistence.conf.
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	# shellcheck disable=SC2086

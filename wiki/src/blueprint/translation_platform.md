@@ -3,6 +3,11 @@ documents how the production setup works.
 
 This page is about ideas that are not implemented (yet?).
 
+GitLab views:
+
+- [Label: Translation Platform](https://gitlab.tails.boum.org/tails/tails/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=C%3ATranslation%20Platform)
+- [Milestone: Translation Platform in Production](https://gitlab.tails.boum.org/groups/tails/-/milestones/98)
+
 [[!toc levels=2]]
 
 <a id="maintainers-responsibilities"></a>
