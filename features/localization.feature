@@ -44,8 +44,9 @@ Feature: Localization
       | English    | us     | us         |
       | French     | fr     | fr         |
       | German     | de     | de         |
-      | Hindi      | in     | us         |
-      | Indonesian | id     | us         |
+    # Tests disabled due to #18076
+    # | Hindi      | in     | us         |
+    # | Indonesian | id     | us         |
       | Italian    | it     | us         |
       | Persian    | ir     | ir         |
       | Portuguese | pt     | us         |
