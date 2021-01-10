@@ -25,11 +25,11 @@ beginning of May.
   - May 2021: sajolida
   - June 2021: ignifugo
   - July 2021: intrigeri
-  - August 2021: sajolida
+  - August 2021: 
   - September 2021: ignifugo
-  - October 2021: sajolida
+  - October 2021: 
   - November 2021: ignifugo
-  - December 2021: sajolida
+  - December 2021: 
 
 ### 2020
 
