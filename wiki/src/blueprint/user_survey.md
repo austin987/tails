@@ -146,10 +146,6 @@ We could also research:
 - Are there any other technical problems that we are not aware of, eg.
   download reliability?
 
-### Backups
-
-- Could selling online backups be a business model?
-
 Survey questions
 ----------------
 
