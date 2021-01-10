@@ -15,7 +15,6 @@ desc="rendered version"]].
 
 - MR: !123
 - issue: #18079
-- closed issue: #18095
 - commit: 5422dd25693fae2e40a5eb3273a093a74ce1ead0
 - file in current repository:
   - [sibling file](replace_Pidgin.mdwn)
