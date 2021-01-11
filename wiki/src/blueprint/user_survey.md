@@ -139,7 +139,16 @@ We could also research:
 
 - What makes people skip or delay upgrades?
 
-- Ask questions about upgrades in a survey and follow up with a few interviews
+- Ask questions about upgrades in a survey and follow up with a few interviews.
+
+- What are the biggest pain points in upgrade?
+
+- Are there any other technical problems that we are not aware of, eg.
+  download reliability?
+
+### Backups
+
+- Could selling online backups be a business model?
 
 Survey questions
 ----------------

@@ -113,9 +113,6 @@ document.addEventListener("DOMContentLoaded", function() {
       toggleDisplay(document.getElementsByClassName("use-mirror-pool-on-retry"), "show");
       replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool-on-retry"));
     }
-    else if (result === "failed-again") {
-      show(document.getElementById("verification-failed-again"));
-    }
     else if (result === "error-file") {
       show(document.getElementById("verification-error-file"));
     }
@@ -133,7 +130,6 @@ document.addEventListener("DOMContentLoaded", function() {
     hide(document.getElementById("verifying-download"));
     hide(document.getElementById("verification-successful"));
     hide(document.getElementById("verification-failed"));
-    hide(document.getElementById("verification-failed-again"));
     hide(document.getElementById("verification-error-file"));
     hide(document.getElementById("verification-error-json"));
     hide(document.getElementById("verification-error-image"));
@@ -313,7 +309,6 @@ document.addEventListener("DOMContentLoaded", function() {
   // showVerificationProgress("50");
   // showVerificationResult("successful");
   // showVerificationResult("failed");
-  // showVerificationResult("failed-again");
   // showVerificationResult("error-json");
   // showVerificationResult("error-image");
   // verifyFile(null, null);

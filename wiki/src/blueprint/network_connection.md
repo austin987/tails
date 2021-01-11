@@ -46,7 +46,7 @@ Current issues in Tails
 
 * M. No audio in Unsafe Browser breaks accessible CAPTCHAs. ([[!tails_ticket 16795]])
 
-* N. People use the Unsafe Browser to browser the Internet.
+* N. People use the Unsafe Browser to browse the Internet.
 
 * O. A persistent network connection is associated to a specific network interface
   (via its MAC address) so it cannot be reused easily when hoping between computers
@@ -106,10 +106,11 @@ Iterations
 First batch
 -----------
 
-1. Enable "bridge mode" by default and remove it from the Greeter
+1. Enable "bridge mode" by default and remove it from the Welcome Screen — [[!tails_ticket 17330]]
+
    That is, start Tor Launcher on every connection to a network,
    if we never successfully connected to tor during this session,
-   or if our last attempt to connect to tor during this session failed. ([[!tails_ticket 17330]])
+   or if our last attempt to connect to tor during this session failed.
 
    And then:
 
