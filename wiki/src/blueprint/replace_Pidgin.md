@@ -100,7 +100,7 @@ The client must support XMPP conference rooms [(XEP-0045)](https://xmpp.org/exte
   <https://qa.debian.org/popcon.php?package=dino-im>
 * Simple and modern-looking GUI
 * Simple account setup wizard. First-run experience feels good. -- intrigeri
-* Requires valid TLS certificate, which prevents connecting to Onion XMPP servers:
+* Until 0.2.0 inclusive, requires valid TLS certificate, which prevents connecting to Onion XMPP servers:
   <https://github.com/dino/dino/issues/958>
 * Reading encrypted OMEMO messages received from a Gajim user always worked out of the box.
 * Sending encrypted OMEMO messages to a Gajim user did not work initially (looks
