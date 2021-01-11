@@ -46,7 +46,7 @@ Current issues in Tails
 
 * M. No audio in Unsafe Browser breaks accessible CAPTCHAs. ([[!tails_ticket 16795]])
 
-* N. People use the Unsafe Browser to browser the Internet.
+* N. People use the Unsafe Browser to browse the Internet.
 
 * O. A persistent network connection is associated to a specific network interface
   (via its MAC address) so it cannot be reused easily when hoping between computers
