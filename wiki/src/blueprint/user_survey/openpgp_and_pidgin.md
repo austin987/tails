@@ -59,7 +59,7 @@ cost/benefit of vaguely supporting it will become even higher.
   - 16% of Enigmail users use OpenPGP mostly to communicate using a
     website.
 
-## Can we stop including an IRC client by default? (#15816)
+## Can we stop including an IRC client by default? ([[!tails_ticket 15816]])
 
 This open question has been the main blocker for replacing Pidgin for years.
 
