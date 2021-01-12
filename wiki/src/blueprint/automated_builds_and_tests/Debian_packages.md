@@ -1,7 +1,7 @@
 [[!tag archived]]
 
 See the
-[[reproducible builds blueprint|blueprint/reproducible_builds#custom-Debian-packages]],
+[[reproducible builds blueprint|reproducible_builds#custom-Debian-packages]],
 that documents why we want to build our Debian packages automatically,
 and raises a number of questions about it.
 

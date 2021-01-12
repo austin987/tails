@@ -7,7 +7,7 @@ Corresponding ticket: [[!tails_ticket 8007]]
 Remaining to do
 ===============
 
-See [[blueprint/harden_AppArmor_profiles]].
+See [[harden_AppArmor_profiles]].
 
 Checked already
 ===============
@@ -15,7 +15,7 @@ Checked already
 Could be improved later
 -----------------------
 
-See [[blueprint/harden_AppArmor_profiles]].
+See [[harden_AppArmor_profiles]].
 
 Currently OK
 ------------

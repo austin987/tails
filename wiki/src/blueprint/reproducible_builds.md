@@ -401,7 +401,7 @@ through a few additional steps, such as:
    to them.
 
 For estimates on hardware cost for Lizard ([[!tails_ticket 12002]]), see [[the
-dedicated page|blueprint/reproducible_builds/hardware]].
+dedicated page|reproducible_builds/hardware]].
 
 **Edit:** We already adapted our server infrastructure to support this project,
 integrating it in our [[Vagrant setup|contribute/build/vagrant-setup]]

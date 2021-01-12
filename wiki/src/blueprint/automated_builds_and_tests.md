@@ -78,4 +78,4 @@ with public Puppet modules.
 More specific pages
 ===================
 
-[[!map pages="blueprint/automated_builds_and_tests/*"]]
+[[!map pages="automated_builds_and_tests/*"]]

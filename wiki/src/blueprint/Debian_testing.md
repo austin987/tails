@@ -9,7 +9,7 @@ Tracking ticket: [[!tails_ticket 12615]]
 We've been thinking for a while of being based on quarterly snapshots
 of Debian testing. We've used the "porting Tails to Debian Stretch"
 cycle to evaluate how it would feel like. See the
-[[initial plan & analysis|blueprint/Debian_Stretch/#rolling]].
+[[initial plan & analysis|Debian_Stretch/#rolling]].
 
 ## Calendar
 

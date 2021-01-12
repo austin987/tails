@@ -8,7 +8,7 @@ Rationale
 * See [[!tails_ticket 8654]].
 
 * Our automated builds/testing/QA/CI/whatever system [[needs
-  that|blueprint/automated_builds_and_tests/autobuild_specs#how-to-build-it]].
+  that|automated_builds_and_tests/autobuild_specs#how-to-build-it]].
 
 * For example, it would be good to allow building Jessie-based topic
   branches with the `feature-jessie` APT suite. Right now, the only

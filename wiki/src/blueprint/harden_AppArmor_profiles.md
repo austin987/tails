@@ -4,7 +4,7 @@ Corresponding ticket: [[!tails_ticket 9533]]
 
 [[!toc levels=2]]
 
-This is a follow-up on [[blueprint/audit_AppArmor_profiles]], that
+This is a follow-up on [[audit_AppArmor_profiles]], that
 tracks improvements we would like to make.
 
 See also the [[contribute/design/application_isolation]] design
@@ -28,7 +28,7 @@ Short-term
 Wide-open access to `$HOME` except blacklist
 --------------------------------------------
 
-Everything was checked in [[blueprint/audit_AppArmor_profiles]],
+Everything was checked in [[audit_AppArmor_profiles]],
 potential issues and remaining todo items follow.
 
 ### whitelist approach

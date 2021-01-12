@@ -1,6 +1,6 @@
 [[!meta title="Monthly reports"]]
 
-[[!map pages="blueprint/monthly_report/**" show="title"]]
+[[!map pages="monthly_report/**" show="title"]]
 
 This page could be a good place to gather HOWTO, tips, template, etc.
 for the monthly reports.

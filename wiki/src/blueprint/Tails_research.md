@@ -14,9 +14,9 @@ The best way to reach us is through the [tails-dev](https://www.autistici.org/ma
 
 ## Research ideas
 
- * [Randomness seeding](https://tails.boum.org/blueprint/randomness_seeding/)
- * [Persistent Tor state](https://tails.boum.org/blueprint/persistent_Tor_state/)
- * [Time syncing](https://tails.boum.org/blueprint/robust_time_syncing/)
+ * [Randomness seeding](https://tails.boum.org/randomness_seeding/)
+ * [Persistent Tor state](https://tails.boum.org/persistent_Tor_state/)
+ * [Time syncing](https://tails.boum.org/robust_time_syncing/)
 
 If you have an idea yourself and would like to propose it, please write to us through the tails-dev mailing list.
 

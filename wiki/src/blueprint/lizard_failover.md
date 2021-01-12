@@ -15,7 +15,7 @@ than a few weeks.
 These are the services, among [[those we
 run|contribute/working_together/roles/sysadmins]], that we want
 a failover for. This is inspired by the [[priority list for service
-monitoring|blueprint/monitor_servers#services]].
+monitoring|monitor_servers#services]].
 
 - APT repository (our own one + the freezable Debian one)
 - bittorrent

@@ -345,7 +345,7 @@ Pushing to our Git repository pings Jenkins so it can run jobs as needed:
 Jenkins jobs are generated on `jenkins.lizard`, from the list of
 branches in our main Git repository. For details and pointers to the
 corresponding code, see the corresponding
-[[blueprint|blueprint/automated_builds_and_tests/jenkins]].
+[[blueprint|automated_builds_and_tests/jenkins]].
 
 Here are the kinds of jobs relevant in this discussion:
 

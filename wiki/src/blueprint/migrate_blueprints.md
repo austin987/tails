@@ -4,7 +4,7 @@ This is about [[!tails_ticket 18079]].
 
 We can use this section to test how GitLab renders Markdown in a regular
 (non-wiki) Git repository: [[!tails_gitlab
-tails/tails/-/blob/master/wiki/src/blueprint/migrate_blueprints.md
+tails/tails/-/blob/master/wiki/src/migrate_blueprints.md
 desc="rendered version"]].
 
 [[_TOC_]]

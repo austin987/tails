@@ -9,7 +9,7 @@ Corresponding ticket: [[!tails_ticket 15292]]
 # Motivation
 
 A number of the
-[[problems we've identified with the installation process|blueprint/usb_install_and_upgrade#problems]]
+[[problems we've identified with the installation process|usb_install_and_upgrade#problems]]
 will be fixed by generating, distributing and installing Tails as
 a disk image that, once copied bit-by-bit to a USB stick, produces
 a _final Tails_ (GPT, UEFI-bootable, ready to get a persistent

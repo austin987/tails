@@ -113,4 +113,4 @@ will need more when we'll add more isobuilders to cope with the charge.
 With the reproducible builds we have a lower build output time,
 meaning we will want to add more isobuilders in the future, or make
 them faster. This is being researched on
-[[blueprint/hardware_for_automated_tests_take3]].
+[[hardware_for_automated_tests_take3]].

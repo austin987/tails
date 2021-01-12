@@ -1,3 +1,3 @@
 [[!tag archived]]
 
-See [[blueprint/desktop_notifications]].
+See [[desktop_notifications]].

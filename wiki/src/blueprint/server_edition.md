@@ -1,6 +1,6 @@
 [[!tag archived]]
 
-For the recent work towards Tails Server, see [[blueprint/tails_server]].
+For the recent work towards Tails Server, see [[tails_server]].
 
 #Legacy blueprint#
 

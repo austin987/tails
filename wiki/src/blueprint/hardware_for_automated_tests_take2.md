@@ -1,7 +1,7 @@
 [[!tag archived]]
 
 This is about [[!tails_ticket 11009]] and related tickets.
-For the next iteration, see [[blueprint/hardware_for_automated_tests_take3]].
+For the next iteration, see [[hardware_for_automated_tests_take3]].
 
 [[!toc levels=2]]
 
@@ -75,7 +75,7 @@ starting with [[!tails_ticket 11113]].
 before we make the final decision here, but this should not block us from
 drafting possible solutions :)
 
-For reference, see [[lizard's specs|blueprint/hardware_for_automated_tests]].
+For reference, see [[lizard's specs|hardware_for_automated_tests]].
 
 Assuming we have upgraded lizard as explained above, we need a second machine
 able to run the test suite about 700-750 times a month. If each ISO tester on

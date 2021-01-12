@@ -50,7 +50,7 @@ Community
 Tails is made and used by very different people -- and we appreciate
 that! It is anyone's responsability to make sure everyone else feels
 welcomed and safe. Please read this event's [[anti-harassment
-policy|blueprint/HackFest_2014_Paris/policy]] before attending :)
+policy|HackFest_2014_Paris/policy]] before attending :)
 
 Contact
 =======

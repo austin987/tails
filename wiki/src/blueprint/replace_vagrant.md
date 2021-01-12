@@ -87,6 +87,6 @@ Plan
   usecases ([[!tails_ticket 7527]])
 * Mid-term: fix the situation for real, starting with evaluating
   `vagrant-lxc` (in Stretch, [[!tails_ticket 10232]]) and `vagrant-libvirt` (see
-  [[blueprint|blueprint/vagrant-libvirt]]). If none of those is good
+  [[blueprint|vagrant-libvirt]]). If none of those is good
   enough, then let's give another look to Docker ([[!tails_ticket
-  7530]], [[blueprint/evaluate_Docker]]).
+  7530]], [[evaluate_Docker]]).

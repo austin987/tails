@@ -229,7 +229,7 @@ confirm the general idea is workable.
    	Wait
    	Website
    Mark it as "used as a filter" and searchable.
-1. **done** Add a `Blueprint` text custom field, with regexp `^https://tails[.]boum[.]org/blueprint/`.
+1. **done** Add a `Blueprint` text custom field, with regexp `^https://tails[.]boum[.]org/`.
 1. **done** Add a `Fix committed` issue status.
 1. **done** Make the `Fix committed` status available in Administration -> Workflow.
 1. **done** Add a `Confirmed` issue status.
@@ -308,7 +308,7 @@ confirm the general idea is workable.
 ### Polish imported data and update the rest of the world
 
 1. **done** Mangle the content of the Git repository:
-   * Move blueprints tickets to `wiki/src/blueprint/`: 
+   * Move blueprints tickets to `wiki/src/`: 
      `PRODUCTION=1 make move-blueprints`
    * Move attachments out of the way for future processing: 
      `PRODUCTION=1 make move-attachments`

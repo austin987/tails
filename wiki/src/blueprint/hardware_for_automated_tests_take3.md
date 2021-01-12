@@ -6,7 +6,7 @@ This is about [[!tails_ticket 16960]] and related tickets.
 
 In 2016 we gave our main server some more RAM, as a temporary solution
 to cope with our workload, and as a way to learn about how to scale
-it. See [[blueprint/hardware_for_automated_tests_take2]] for our
+it. See [[hardware_for_automated_tests_take2]] for our
 reasoning, lots of benchmark results, and conclusions.
 
 It's working relatively well so far, but we may need to upgrade again
@@ -21,7 +21,7 @@ area:
  * When Jenkins has built an ISO from one of our main branches or from
    a branch that _Needs Validation_, since October 2017 we rebuild in
    in a slightly different build environment to ensure it can be
-   [[rebuilt reproducibly|blueprint/reproducible_builds]].
+   [[rebuilt reproducibly|reproducible_builds]].
    This increased substantially the number of ISO image we build
    which sometimes creates congestion in our CI pipeline (see below
    for details).

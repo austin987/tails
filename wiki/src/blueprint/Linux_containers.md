@@ -55,7 +55,7 @@ Tools to manage containers
   simple Linux containers based on them; it is e.g. used by
   [pflask-debuild](https://github.com/ghedo/pflask/blob/master/tools/pflask-debuild)
 * systemd-nspawn
-* Docker, that we're [[evaluating|blueprint/evaluate_Docker]] as
+* Docker, that we're [[evaluating|evaluate_Docker]] as
   a candidate to replace Vagrant in our easy build system
 
 Running GUI applications in containers

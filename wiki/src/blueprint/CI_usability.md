@@ -50,7 +50,7 @@ UX stumbling blocks without changing the big picture of our setup).
 As of August 2020, a full CI pipeline takes almost 7 hours to run.
 
 This problem is tracked on [[!tails_gitlab tails/sysadmin/-/issues/16960]] and
-[[a dedicated blueprint|blueprint/hardware_for_automated_tests_take3]], which
+[[a dedicated blueprint|hardware_for_automated_tests_take3]], which
 focuses on the hard facts.
 
 Here we focus on feelings and human perception.

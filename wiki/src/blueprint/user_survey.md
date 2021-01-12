@@ -7,7 +7,7 @@
 Past surveys
 ============
 
-[[!map pages="blueprint/user_survey/*" show="title"]]
+[[!map pages="user_survey/*" show="title"]]
 
 Future surveys
 ==============
@@ -128,7 +128,7 @@ What we already have:
     > (for example upgrading from 2.6 to 2.10).
 
 - Top 5 hot topic in [OpenPGP and Pidgin
-  survey](https://tails.boum.org/blueprint/user_survey/openpgp_and_pidgin/#index3h2)
+  survey](https://tails.boum.org/user_survey/openpgp_and_pidgin/#index3h2)
 
   - 5 comments were about simpler and easier upgrades without specifying
   - 4 comments were directly complaining about manual upgrades and asking for always going automatic upgrades

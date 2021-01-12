@@ -1,4 +1,4 @@
-For an overview of the more general problem, see [[blueprint/replace_vagrant]].
+For an overview of the more general problem, see [[replace_vagrant]].
 For the detailed plans and things to evaluate in Docker, see [[!tails_ticket 7530]].
 
 [[!toc levels=1]]
@@ -134,7 +134,7 @@ Random notes
   protect the host system from the build container. The main goal is
   to produce a reliable build environment.
 * For security info about Linux containers in general, see the
-  [[dedicated blueprint|blueprint/Linux_containers]].
+  [[dedicated blueprint|Linux_containers]].
 * [overclockix](https://github.com/mbentley/overclockix) uses
   live-build and provides a Dockerfile for easier building.
 * overlayfs support was added in Docker 1.4.0; we'll need that when

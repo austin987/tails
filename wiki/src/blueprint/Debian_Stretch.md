@@ -79,7 +79,7 @@ evaluate the idea of basing Tails on snapshots of Debian testing.
 
 This material is mostly useful for a historical perspective. The next
 steps and up-to-date information are documented on
-[[blueprint/Debian_testing]] instead.
+[[Debian_testing]] instead.
 
 ## Stretch cycle
 

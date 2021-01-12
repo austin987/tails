@@ -12,7 +12,7 @@ So we believe released Tails ISO images are now *almost* reproducible,
 and Tails 3.3 should definitely be… until proven otherwise :)
 
 For details about the goals and scope of this project, see our
-blueprint: <https://tails.boum.org/blueprint/reproducible_builds/>.
+blueprint: <https://tails.boum.org/reproducible_builds/>.
 
 If you want to try it out yourself, see our build and verification
 instructions:
@@ -116,7 +116,7 @@ as APT sources inside the build VM:
 <https://git-tails.immerda.ch/tails/tree/vagrant/definitions/tails-builder/config/APT_snapshots.d>.
 
 This is documented more in detail on
-<https://tails.boum.org/blueprint/reproducible_builds/#how>.
+<https://tails.boum.org/reproducible_builds/#how>.
 
 ISO filesystem
 --------------

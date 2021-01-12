@@ -6,7 +6,7 @@ See the [[design and implementation
 documentation|contribute/working_together/roles/sysadmins/Jenkins]]
 of our current setup.
 
-For Jenkins resources, see [[blueprint/automated_builds_and_tests/resources]].
+For Jenkins resources, see [[automated_builds_and_tests/resources]].
 
 [[!toc levels=2]]
 

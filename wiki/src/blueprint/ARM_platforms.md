@@ -5,7 +5,7 @@ This is about [[!tails_ticket 10972]].
 Related pages
 =============
 
-[[!map pages="blueprint/ARM_platforms/*"]]
+[[!map pages="ARM_platforms/*"]]
 
 Pros & cons
 ===========

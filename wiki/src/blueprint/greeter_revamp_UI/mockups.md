@@ -1,3 +1,3 @@
 [[!tag archived]]
 
-[[!map pages="blueprint/tails-greeter:_revamp_UI/mockups/*"]]
+[[!map pages="tails-greeter:_revamp_UI/mockups/*"]]

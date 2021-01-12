@@ -1,6 +1,6 @@
 Ticket: [[!tails_ticket 5709]]
 
-**Update:** This will be resolved with the release of [Tails Server](https://tails.boum.org/blueprint/tails_server/) ([[!tails_ticket 5688]]), which will include Mumble.
+**Update:** This will be resolved with the release of [Tails Server](https://tails.boum.org/tails_server/) ([[!tails_ticket 5688]]), which will include Mumble.
 
 We need to find out how VoIP can be usable in the context of Tails.
 

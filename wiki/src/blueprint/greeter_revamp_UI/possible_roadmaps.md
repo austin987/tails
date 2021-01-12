@@ -14,7 +14,7 @@ Possible roadmaps
    early positive input rather than late negative feedback.
    This should happen in [the dedicated
    thread](https://mailman.boum.org/pipermail/tails-dev/2012-October/001781.html).
-0. **DONE** Clarify specifications (see the [[blueprint/greeter_revamp_UI/design_rationale_phase1/]])
+0. **DONE** Clarify specifications (see the [[greeter_revamp_UI/design_rationale_phase1/]])
    0. **DONE** research a bit the pending questions
    0. **DONE** raise these topics for discussion among Tails developers
 0. **DONE** Implement plan A or plan B. Incremental UI changes (plan 1) was choosen

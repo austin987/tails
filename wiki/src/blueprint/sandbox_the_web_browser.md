@@ -6,7 +6,7 @@ Related pages
 =============
 
 * [[!tails_ticket 5525]]
-* [[blueprint/Mandatory_Access_Control]]
+* [[Mandatory_Access_Control]]
 * [[contribute/design/application_isolation]]
 * `feature/5525-sandbox-web-browser` branch
 * [nightly built images](http://nightly.tails.boum.org/build_Tails_ISO_feature-5525-sandbox-web-browser/)

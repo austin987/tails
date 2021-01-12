@@ -13,8 +13,8 @@ We want at least basic UEFI boot including Mac.
 Testing results
 ===============
 
-* [[blueprint/UEFI/syslinux]]
-* [[blueprint/UEFI/GRUB]]
+* [[UEFI/syslinux]]
+* [[UEFI/GRUB]]
 
 <a id="future-work"></a>
 
@@ -33,7 +33,7 @@ tickets on [[!tails_gitlab desc="GitLab"]], meaning that patches are
 welcome, but we do not feel committed, as a project, to make
 it happen.
 
-On the other hand, it appears that adding support for [[blueprint/UEFI_Secure_boot]] will be necessary at some point. More and more
+On the other hand, it appears that adding support for [[UEFI_Secure_boot]] will be necessary at some point. More and more
 off-the-shelf PC hardware is shipped with this functionality enabled.
 Also, having to constantly disable and re-enable Secure boot in the
 firmware configuration is not the best dual-boot user experience we
