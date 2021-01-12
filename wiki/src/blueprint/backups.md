@@ -234,9 +234,7 @@ Bloggers](http://internetfreedom.secondmuse.com/wp-content/uploads/2015/03/if_tu
 Archive of the tests of existing backup solutions
 =================================================
 
-[[!toggle id="archive" text="Archive the tests of existing backup solutions done until 2019"]]
-
-[[!toggleable id="archive" text="""
+This is an archive of existing backup solutions tested until 2019.
 
 GNOME Backups (Deja Dup)
 ------------------------
@@ -457,5 +455,3 @@ Other solutions
   - [Back In Time](https://github.com/bit-team/backintime) which has a
     GNOME frontend. It does snapshots with hardlinks to reduce space.
     Can do local and SSH as remote.
-
-"""]]
