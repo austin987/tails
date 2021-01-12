@@ -119,7 +119,7 @@ This open question has been the main blocker for replacing Pidgin for years.
   changed much since 2017.
 
   | OS | |
-  |--|
+  |--|--|
   | Windows | 45% |
   | macOS | 7% |
   | Linux | 49% |
@@ -135,7 +135,7 @@ This open question has been the main blocker for replacing Pidgin for years.
   Fraction of users that reported using a given application (at least sometimes).
 
   | Application | Total |
-  |--|
+  |--|--|
   | Tor Browser | 100% |
   | OpenPGP | 50% |
   | Electrum | 28% |
@@ -182,7 +182,7 @@ Methodology
   7-point scale from *Very Difficult* to *Very Easy*
 
   | OS | Average |
-  |--|
+  |--|--|
   | All | 5.9 |
   | Windows | 5.8 |
   | macOS | 5.9 |
@@ -306,7 +306,7 @@ Methodology
 - **How often, if at all, do you use the following tools in Tails?** (`*`)
 
   | Application | Sometimes | Most of the time | Total |
-  |--|
+  |--|--|--|--|
   | Tor Browser | 3% | 97% | 100% |
   | OpenPGP | 24% | 26% | 50% |
   | Electrum | 16% | 12% | 28% |
@@ -317,7 +317,7 @@ Methodology
 - **Other than Tails, which of the following operating systems do you use the most?**
 
   | OS | |
-  |--|
+  |--|--|
   | Windows | 45% |
   | macOS | 7% |
   | Linux | 49% |
@@ -333,7 +333,7 @@ Methodology
   Randomized array
 
 | | Never | Sometimes | Most of the time | Don't know |
-|--|--|--|--|
+|--|--|--|--|--|
 | The `gpg` command line [[!img doc/first_steps/introduction_to_gnome_and_the_tails_desktop/utilities-terminal.png size="22x22" link="no"]] | 20% | 19% | 10% | 2% |
 | *Enigmail* in *Thunderbird* [[!img doc/first_steps/persistence/thunderbird.png size="22x22" link="no"]] | 32% | 10% | 6% | 1% |
 | The OpenPGP applet in the top bar [[!img doc/encryption_and_privacy/gpgapplet/gpgapplet_with_text.png size="22x22" link="no"]] | 14% | 15% | 20% | 1% |

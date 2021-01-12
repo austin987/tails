@@ -224,7 +224,7 @@ were rewritten to prevent stylometry.
 *Q: How often do you create a hidden volume in your VeraCrypt volumes?*
 
 | Question | Answers | Fraction |
-|--|--|--|--|
+|--|--|--|
 | Sometimes | 159 | 44% |
 | Never | 119 | 33% |
 | Always or almost always | 50 | 14% |
@@ -239,7 +239,7 @@ were rewritten to prevent stylometry.
 *Q: What do you use to protect your VeraCrypt volumes?*
 
 | Question | Answers | Fraction |
-|--|--|--|--|
+|--|--|--|
 | Only passwords | 211 | 58% |
 | Mostly passwords, sometimes keyfiles | 130 | 36% |
 | Mostly keyfiles, sometimes passwords | 18 | 5% |
@@ -253,7 +253,7 @@ were rewritten to prevent stylometry.
 *Q: How many of your volumes are TrueCrypt volumes and how many are VeraCrypt volumes?*
 
 | Question | Answers | Fraction |
-|--|--|--|--|
+|--|--|--|
 | All my volumes are VeraCrypt volumes | 151 | 45% |
 | All my volumes are TrueCrypt volumes | 92 | 27% |
 | Most of my volumes are VeraCrypt volumes, some are TrueCrypt volumes | 49 | 14% |
@@ -273,7 +273,7 @@ were rewritten to prevent stylometry.
 *Q: Does the name of your file containers include the .TC or .HC extension?*
 
 | Question | Answers | Fraction |
-|--|--|--|--|
+|--|--|--|
 | Never | 91 | 39% |
 | I don't know what the extension of my file containers is | 72 | 31% |
 | Sometimes | 33 | 14% |
@@ -290,7 +290,7 @@ were rewritten to prevent stylometry.
 *Q: Which operating system other than Tails do you use the most?*
 
 | Question | Tails users | Fraction | Tails+VeraCrypt users | Fraction |
-|--|--|--|--|
+|--|--|--|--|--|
 | Windows | 456 | 45% | 201 | 52% |
 | Debian or Ubuntu | 355 | 35% | 129 | 34% |
 | macOS | 69 | 7% | 26 | 7% |
