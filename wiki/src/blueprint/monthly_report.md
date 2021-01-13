@@ -84,7 +84,7 @@ Publishing
        - "In MONTH, we worked on [...] and more: https://tails.boum.org/news/report_YEAR_MO."
        - If you don't have access to our Twitter account send your text
          for the tweet along with your merge request for the report.
-  - Email the [[simplified HTML version of the report|simplified]]:
+  - Email the [[simplified HTML version of the report|inc/simplified_monthly_report]]:
 
           To: tails-dev@boum.org
           Cc: tor-project@lists.torproject.org
