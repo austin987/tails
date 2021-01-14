@@ -1,3 +1,0 @@
-[[!tag archived]]
-
-[[!map pages="blueprint/tails-greeter:_revamp_UI/mockups/*"]]
