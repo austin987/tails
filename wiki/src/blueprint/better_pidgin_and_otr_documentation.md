@@ -1,6 +1,0 @@
-[[!tag archived]]
-
-The [[documentation about Pidgin and
-OTR|doc/anonymous_internet/pidgin/]] should be improved.
-
-Corresponding parent ticket: [[!tails_ticket 5344]].
