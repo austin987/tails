@@ -117,6 +117,7 @@ method set_estimated_end_time () {
     return  unless ($self->speed > 0); 
     my $timeleft =  $self->size_left / $self->speed;
     $timeleft = duration($timeleft);
+    return if $timeleft eq 'just now';
     $timeleft =~ s/\band\b//;
     $timeleft =~ s/\b(year|day|hour|minute|second)s?\b/$self->time_units->{$1}/eg;
     $timeleft =~ s/(\d+)\s*/$1/g;
