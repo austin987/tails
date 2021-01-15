@@ -32,7 +32,7 @@ use Tails::IUK::DownloadProgress;
 use Tails::MirrorPool;
 use Try::Tiny;
 use Types::Path::Tiny qw{AbsDir AbsFile};
-use Types::Standard qw(ArrayRef Bool CodeRef Defined HashRef InstanceOf Int Maybe Str);
+use Types::Standard qw(ArrayRef Bool CodeRef Defined HashRef InstanceOf Int Maybe Str Object);
 
 BEGIN {
     bind_textdomain_filter 'tails', \&turn_utf_8_on;
@@ -219,6 +219,33 @@ method fatal_run_cmd (Str :$error_msg, ArrayRef :$cmd, Maybe[Str] :$as = undef, 
     );
 
     return ($stdout, $stderr, $success, $exit_code);
+}
+
+method init_zenity_progress_dialog_text (Object $download_progress) {
+    # Zenity doesn't resize the width of the progress
+    # dialog if a text is bigger than the initial text.
+    # So let's give to the progress dialog initial text
+    # a value that avoids zenity break download_progress->info
+    # in to a new line.
+
+    assert_isa($download_progress, 'Tails::IUK::DownloadProgress');
+    my $init_text         = $download_progress->info;
+    my $unknow_str        = $download_progress->estimated_end_time;
+    my $speed_str         = '0000KB';
+    my $size_str          = $self->bytes_str->format_bytes($download_progress->size,
+                                                           precision => 0);
+    my ($time_unit1,$time_unit2) =
+        sort{length ($b) <=> length($a)}values(%{$download_progress->time_units});
+    my $time_str = '111' . $time_unit1 . ' ' . '111'. $time_unit2;
+    $size_str  =~ s/\d+/0000/;
+    $init_text =~ s/$unknow_str//;
+    $init_text =~ s/0/$size_str/;
+    $init_text =~ s/0\/sec/$speed_str/;
+    $init_text = $time_str . ' '. $init_text;
+    $init_text =
+        $download_progress->info if length ($download_progress->info) > length($init_text);
+
+    return $init_text;
 }
 
 method dialog (Str $question, Str :$type = 'question', Str :$title,
@@ -596,7 +623,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             my $bytes_downloaded;
             my $download_progress =
                 Tails::IUK::DownloadProgress->new(size => $upgrade_path->{'total-size'});
-                
+            $info = $self->init_zenity_progress_dialog_text($download_progress);
             $download_h =  IPC::Run::start \@cmd,
                 \undef, \$download_out, '2>', \$stderr;
             $zenity_h = IPC::Run::start
