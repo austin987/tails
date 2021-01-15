@@ -652,12 +652,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         except (ConnectionResetError, BrokenPipeError) as err:
             # Handle clients disconnecting abruptly
             disconnect_reason = str(err)
-        except stem.SocketError:
-            # Handle client closing its socket abruptly
-            disconnect_reason = "Client closed its socket"
-        except stem.SocketClosed:
-            # Handle Tor closing its socket abruptly
-            disconnect_reason = "Tor closed its socket"
+        except (stem.SocketClosed, stem.SocketError) as err:
+            # Handle Tor disconnecting abruptly
+            disconnect_reason = "Tor closed its socket: " + str(err)
         finally:
             if self.controller:
                 self.controller.close()
