@@ -615,17 +615,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                     $bytes_downloaded = ($bytes_downloaded/100) * $download_progress->size;
                     $download_out = undef;
                     next unless $download_progress->update($bytes_downloaded);
-                    $zenity_in = __x(
-                        "#{time} left - {downloaded} of {size} ({speed}/sec)\n",
-                        time => $download_progress->estimated_end_time,
-
-			downloaded => $self->bytes_str->format_bytes($bytes_downloaded,
-						                     precision => 0),
-                        size =>  $self->bytes_str->format_bytes($download_progress->size,
-							             precision => 0),
-                        speed => $self->bytes_str->format_bytes($download_progress->speed,
-								     precision => 0),
-                        );
+                    $zenity_in = $download_progress->info;
                     $zenity_h->pump_nb;
                 }
             }

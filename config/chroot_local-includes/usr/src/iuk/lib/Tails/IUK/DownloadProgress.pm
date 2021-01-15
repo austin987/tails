@@ -13,10 +13,11 @@ use 5.10.1;
 use strictures 2;
 
 use autodie qw(:all);
-use Types::Standard qw{Num Str HashRef};
+use Types::Standard qw{Num Str HashRef InstanceOf};
 use Time::HiRes;
 use Time::Duration;
 use Function::Parameters;
+use Number::Format qw(:subs);
 use Locale::TextDomain 'tails';
 
 use namespace::clean;
@@ -64,6 +65,10 @@ has 'time_units' => (
     isa     => HashRef[Str],
 );
 
+has 'bytes_str' =>
+    is          =>  'lazy',
+    isa         =>  InstanceOf['Number::Format'];
+
 method _build_time_units () {
     my %time_units = (
         year   => __(q{y}),
@@ -74,6 +79,13 @@ method _build_time_units () {
         );
         
     return \%time_units;
+}
+
+method _build_bytes_str () {
+    new Number::Format(
+        kilo_suffix => 'KB',
+        mega_suffix => 'MB',
+        giga_suffix => 'GB');
 }
 
 # Based on the code in  DownloadCore.jsm in Tor Browser
@@ -109,6 +121,21 @@ method set_estimated_end_time () {
     $timeleft =~ s/\b(year|day|hour|minute|second)s?\b/$self->time_units->{$1}/eg;
     $timeleft =~ s/(\d+)\s*/$1/g;
     $self->estimated_end_time($timeleft);
+}
+
+method info () {
+
+    __x(
+        "#{time} left — {downloaded} of {size} ({speed}/sec)\n",
+        time => $self->estimated_end_time,
+
+        downloaded => $self->bytes_str->format_bytes( $self->last_bytes_downloaded,
+                                                      precision => 0),
+        size =>       $self->bytes_str->format_bytes($self->size,
+                                                     precision => 0),
+        speed =>      $self->bytes_str->format_bytes($self->speed,
+                                                     precision => 0),
+        );
 }
 
 no Moo;
