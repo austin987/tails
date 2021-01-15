@@ -575,7 +575,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         while not controller:
             if tries >= 3:
                 time.sleep(1)
-            controller = stem.connection.connect(control_socket=global_args.control_socket_path)
+            controller = stem.control.Controller.from_socket_file(global_args.control_socket_path)
             tries += 1
         stem.connection.authenticate_cookie(controller, cookie_path=global_args.control_cookie_path)
         return controller
