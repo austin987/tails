@@ -16,9 +16,6 @@
 # Import tor_control_*(), tor_is_working(), TOR_LOG, TOR_DIR
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# Import tails_netconf()
-. /usr/local/lib/tails-shell-library/tails-greeter.sh
-
 ### Init variables
 
 TORDATE_DIR=/run/tordate

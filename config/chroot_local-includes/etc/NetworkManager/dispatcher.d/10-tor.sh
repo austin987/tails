@@ -20,9 +20,6 @@ fi
 # Import tor_control_setconf(), TOR_LOG
 . /usr/local/lib/tails-shell-library/tor.sh
 
-# Import tails_netconf()
-. /usr/local/lib/tails-shell-library/tails-greeter.sh
-
 # It's safest that Tor is not running when messing with its logs.
 systemctl stop tor@default.service
 
