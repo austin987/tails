@@ -144,7 +144,6 @@ import yaml
 DEFAULT_LISTEN_ADDRESS = 'localhost'
 DEFAULT_LISTEN_PORT = 9051
 DEFAULT_COOKIE_PATH = '/run/tor/control.authcookie'
-DEFAULT_CONTROL_SOCKET_PATH = '/run/tor/control'
 
 
 class NoRewriteMatch(RuntimeError):
@@ -575,7 +574,18 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         while not controller:
             if tries >= 3:
                 time.sleep(1)
-            controller = stem.control.Controller.from_socket_file(global_args.control_socket_path)
+            # We would prefer to use the control socket but use the
+            # TCP control port as a workaround for this Tor bug:
+            # https://gitlab.torproject.org/tpo/core/tor/-/issues/25173
+            # This workaround was added while working on the "Always
+            # start Tor Launcher" feature. It remains a mystery why we
+            # don't hit this bug when running a Tails without this
+            # feature but enabling "bridge mode", which should reach
+            # the same state as this feature.
+            # Make sure to revert the commit adding this comment once
+            # the Tor bug is fixed and we want to revert back to using
+            # the control socket.
+            controller = stem.control.Controller.from_port(port=9052)
             tries += 1
         stem.connection.authenticate_cookie(controller, cookie_path=global_args.control_cookie_path)
         return controller
@@ -693,12 +703,6 @@ def main():
         type=str, metavar='PATH', default=DEFAULT_COOKIE_PATH,
         help="specifies the path to Tor's control authentication cookie " +
              "(default: {})".format(DEFAULT_COOKIE_PATH)
-    )
-    parser.add_argument(
-        "--control-socket-path",
-        type=str, metavar='PATH', default=DEFAULT_CONTROL_SOCKET_PATH,
-        help="specifies the path to Tor's control socket " +
-             "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH)
     )
     parser.add_argument(
         "--complain",
