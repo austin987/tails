@@ -19,6 +19,13 @@ AutomapHostsSuffixes .exit,.onion
 TransPort 9040
 TransListenAddress 127.0.0.1
 
+## Pluggable transports
+ClientTransportPlugin obfs2,obfs3,obfs4,meek_lite exec /usr/bin/obfs4proxy managed
+
+## The Tor syscall sandbox is not compatible with managed proxies,
+## like we use for pluggable transports.
+Sandbox 0
+
 ## Misc
 AvoidDiskWrites 1
 
@@ -34,3 +41,7 @@ WarnPlaintextPorts 23,109
 ## but we have some code that reads Tor's logs and only supports plaintext
 ## log files at the moment, so let's keep logging to a file.
 Log notice file /var/log/tor/log
+
+## Tor Launcher will enable the network access for Tor once the user
+## has provided the configuration they desire.
+DisableNetwork 1
