@@ -114,7 +114,7 @@ configure_chroot_browser "${CHROOT}" "${BROWSER_USER}" "${BROWSER_NAME}" \
         error "`gettext \"Failed to configure browser.\"`"
 # If /etc/resolv-over-clearnet.conf file is empty or doesn't exist, we
 # have no clearnet DNS server.
-if [ "$(stat --format=%s /etc/resolv-over-clearnet.conf || echo 0)" -gt 0 ]; then
+if grep --quiet "^nameserver\s" /etc/resolv-over-clearnet.conf; then
     mount --bind /etc/resolv-over-clearnet.conf "${CHROOT}"/etc/resolv.conf
 else
     error "`gettext \"No DNS server was obtained through DHCP or manually configured in NetworkManager.\"`"
