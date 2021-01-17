@@ -168,7 +168,7 @@ method _build_free_space () {
 }
 
 method _build_bytes_str () {
-    new Number::Format(
+    Number::Format->new(
         kilo_suffix => 'KB',
         mega_suffix => 'MB',
         giga_suffix => 'GB');
