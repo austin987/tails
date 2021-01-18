@@ -1,0 +1,160 @@
+#!/usr/bin/python3
+
+from pathlib import Path
+import os
+import sys, json
+import socket
+from stem.control import Controller
+import stem.socket
+
+class StemFDSocket(stem.socket.ControlSocket):
+    def __init__(self, fd:int):
+        super().__init__()
+        self.fd = fd
+
+    def get_socket_path(self) -> str:
+        '''
+        I don't think that's ever called, but let's implement it
+
+        returns sth like socket:[12345678], which is not great
+        '''
+        fname = "/proc/%d/fd/%d" % (os.getpid(), self.fd)
+        return Path(fname).resolve().name
+
+    def _make_socket(self):
+        '''
+        We don't need to create a new socket: let's reuse the FD!
+        '''
+        return socket.socket(fileno=self.fd)
+
+
+
+def recover_fd_from_parent() -> tuple:
+    fds = [int(fd) for fd in os.getenv("INHERIT_FD").split(",")]
+    # fds[0] must be a socket to Tor Control Port
+    # fds[1] must be a rw fd for settings file
+
+    controller = None
+    # FIXME: Controller need to take its specific kind of socket as argument
+    #        creating a stem.socket.BaseSocket.ControlSocket from a low-level
+    #        socket is not trivial
+    #        So this line is actually buggy
+    socket = StemFDSocket(fds[1])
+    controller = Controller(socket)
+
+    configfile = os.fdopen(fds[0], "a+")
+
+    return (configfile, controller)
+
+
+# PROXY_TYPES is a sequence of Tor options related to proxing.
+#     Those exact values are also used by TorConnectionProxy
+PROXY_TYPES = ("Socks4Proxy", "Socks5Proxy", "HTTPSProxy")
+
+
+class TorConnectionProxy:
+    """configuration item for proxy configuration"""
+
+    def __init__(self, address, port: int, proxy_type):
+        # TODO: check that proxy_types is one of 4,5,https
+        if proxy_type not in PROXY_TYPES:
+            raise ValueError("Invalid proxy type: `%s`" % proxy_type)
+        self.proxy_type = proxy_type
+        self.address = address
+        self.port = port
+
+    @classmethod
+    def from_obj(cls, obj):
+        proxy = cls(
+            proxy_type=obj["proxy_type"], address=obj["address"], port=int(obj["port"])
+        )
+        return proxy
+
+    @classmethod
+    def from_tor_value(cls, proxy_type, val):
+        address, port = val.split(":")
+        return cls(address, int(port), proxy_type)
+
+    def to_tor_value_str(self) -> str:
+        return "%s:%d" % (self.address, self.port)
+
+
+class TorConnectionConfig:
+    def __init__(self, bridges: list = [], proxy: TorConnectionProxy = None):
+        self.bridges = bridges
+        self.proxy = proxy
+
+    @classmethod
+    def load_from_tor_stem(cls, stem_controller: Controller):
+        if stem_controller.get_conf("UseBridges") == "0":
+            bridges = []
+        else:
+            bridges = stem_controller.get_conf("Bridge", multiple=True)
+
+        proxy = None
+        for proxy_type in PROXY_TYPES:
+            val = stem_controller.get_conf(proxy_type)
+            if val is not None:
+                proxy = TorConnectionProxy.from_tor_value(proxy_type, val)
+                break
+
+        config = cls(bridges=bridges, proxy=proxy)
+
+        return config
+
+    @classmethod
+    def load_from_dict(cls, obj):
+        """this method is suitable to retrieve configuration from a JSON object"""
+        config = cls()
+        config.bridges = obj.get("bridges", [])
+        proxy = obj.get("proxy", None)
+        if proxy is not None:
+            config.proxy = TorConnectionProxy.from_obj(proxy)
+        else:
+            config.proxy = None
+        return config
+
+    def to_tor_conf(self) -> dict:
+        """
+        returns a dict whose output fits to stem.control.Controller.set_options
+        """
+        r = {}
+        r["UseBridges"] = "1" if self.bridges else "0"
+        r["Bridge"] = self.bridges
+        for proxy_type in PROXY_TYPES:
+            r[proxy_type] = None
+            if self.proxy is not None and self.proxy.proxy_type == proxy_type:
+                r[proxy_type] = self.proxy.to_tor_value_str()
+        return r
+
+
+def test():
+    from pprint import pprint
+
+    controller = Controller.from_socket_file()
+    controller.authenticate()
+
+    if len(sys.argv) > 1:
+        conf = TorConnectionConfig.load_from_dict(json.load(open(sys.argv[1])))
+    else:
+        conf = TorConnectionConfig.load_from_tor_stem(controller)
+    conf = conf.to_tor_conf()
+    pprint(conf)
+    if len(sys.argv) > 1:
+        controller.set_options(conf)
+
+
+
+def main():
+    conf, controller = recover_fd_from_parent()
+    controller.authenticate(password=None)
+    print("Right now:\n==========\n")
+    get_options = ["UseBridges", "Bridge"] + list(PROXY_TYPES)
+    for option in get_options:
+        print("%s\t%s" % (option.ljust(15), controller.get_conf(option)))
+    print()
+
+
+if __name__ == "__main__":
+    # test()
+    main()
