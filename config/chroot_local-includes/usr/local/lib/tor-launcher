@@ -1,32 +1,35 @@
 #!/usr/bin/python3
 
 from pathlib import Path
+import logging
 import os
 import sys, json
 import socket
 from stem.control import Controller
 import stem.socket
 
+log = logging.getLogger('tor-launcher')
+
 class StemFDSocket(stem.socket.ControlSocket):
-    def __init__(self, fd:int):
+    def __init__(self, fd: int):
         super().__init__()
         self.fd = fd
 
-    def get_socket_path(self) -> str:
-        '''
+    @property
+    def path(self) -> str:
+        """
         I don't think that's ever called, but let's implement it
 
         returns sth like socket:[12345678], which is not great
-        '''
+        """
         fname = "/proc/%d/fd/%d" % (os.getpid(), self.fd)
         return Path(fname).resolve().name
 
     def _make_socket(self):
-        '''
+        """
         We don't need to create a new socket: let's reuse the FD!
-        '''
+        """
         return socket.socket(fileno=self.fd)
-
 
 
 def recover_fd_from_parent() -> tuple:
@@ -42,7 +45,7 @@ def recover_fd_from_parent() -> tuple:
     socket = StemFDSocket(fds[1])
     controller = Controller(socket)
 
-    configfile = os.fdopen(fds[0], "a+")
+    configfile = os.fdopen(fds[0], "r+")
 
     return (configfile, controller)
 
@@ -69,6 +72,13 @@ class TorConnectionProxy:
             proxy_type=obj["proxy_type"], address=obj["address"], port=int(obj["port"])
         )
         return proxy
+
+    def to_dict(self):
+        return {
+            "proxy_type": self.proxy_type,
+            "address": self.address,
+            "port": self.port,
+        }
 
     @classmethod
     def from_tor_value(cls, proxy_type, val):
@@ -114,6 +124,12 @@ class TorConnectionConfig:
             config.proxy = None
         return config
 
+    def to_dict(self) -> dict:
+        return {
+            "bridges": self.bridges,
+            "proxy": self.proxy.to_dict() if self.proxy is not None else None,
+        }
+
     def to_tor_conf(self) -> dict:
         """
         returns a dict whose output fits to stem.control.Controller.set_options
@@ -126,6 +142,53 @@ class TorConnectionConfig:
             if self.proxy is not None and self.proxy.proxy_type == proxy_type:
                 r[proxy_type] = self.proxy.to_tor_value_str()
         return r
+
+
+class TorLauncherUtils:
+    def __init__(self, stem_controller: Controller, config_buf):
+        """
+        Arguments:
+        stem_controller -- an already connected and authorized stem Controller
+        config_buf -- an already open read-write buffer to the configuration file
+        """
+        self.stem_controller = stem_controller
+        self.config_buf = config_buf
+        self.tor_connection_config = None
+
+    def load_conf(self):
+        self.read_conf()
+        if self.tor_connection_config is None:
+            self.tor_connection_config = TorConnectionConfig.load_from_tor_stem(
+                self.stem_controller
+            )
+
+    def save_conf(self):
+        if self.tor_connection_config is None:
+            return
+        self.config_buf.seek(0, os.SEEK_SET)
+        self.config_buf.write(
+                json.dumps(self.tor_connection_config.to_dict(), indent=2)
+                )
+        self.config_buf.truncate()
+
+    def read_conf(self):
+        self.config_buf.seek(0, os.SEEK_END)
+        size = self.config_buf.tell()
+        if not size:
+            log.debug("Empty config file")
+            return
+        self.config_buf.seek(0)
+        try:
+            obj = json.load(self.config_buf)
+        except JSONDecodeError:
+            log.warning("Invalid config file")
+            return
+        finally:
+            self.config_buf.seek(0)
+        self.tor_connection_config = TorConnectionConfig.load_from_dict(obj)
+
+    def apply_conf(self):
+        self.stem_controller.set_options(self.tor_connection_config.to_tor_conf())
 
 
 def test():
@@ -144,17 +207,18 @@ def test():
         controller.set_options(conf)
 
 
-
 def main():
     conf, controller = recover_fd_from_parent()
     controller.authenticate(password=None)
-    print("Right now:\n==========\n")
-    get_options = ["UseBridges", "Bridge"] + list(PROXY_TYPES)
-    for option in get_options:
-        print("%s\t%s" % (option.ljust(15), controller.get_conf(option)))
-    print()
+    launcher = TorLauncherUtils(controller, conf)
+    launcher.load_conf()
+    launcher.apply_conf()
+    launcher.save_conf()
+
+    print(json.dumps(launcher.tor_connection_config.to_dict(), indent=4))
 
 
 if __name__ == "__main__":
     # test()
+    logging.basicConfig(level=logging.DEBUG)
     main()
