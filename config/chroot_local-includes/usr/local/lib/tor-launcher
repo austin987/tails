@@ -1,14 +1,17 @@
 #!/usr/bin/python3
 
 from pathlib import Path
+import time
 import logging
 import os
 import sys, json
 import socket
 from stem.control import Controller
 import stem.socket
+from typing import List, Optional, Dict, Any
 
-log = logging.getLogger('tor-launcher')
+log = logging.getLogger("tor-launcher")
+
 
 class StemFDSocket(stem.socket.ControlSocket):
     def __init__(self, fd: int):
@@ -33,7 +36,7 @@ class StemFDSocket(stem.socket.ControlSocket):
 
 
 def recover_fd_from_parent() -> tuple:
-    fds = [int(fd) for fd in os.getenv("INHERIT_FD").split(",")]
+    fds = [int(fd) for fd in os.getenv("INHERIT_FD", "").split(",")]
     # fds[0] must be a socket to Tor Control Port
     # fds[1] must be a rw fd for settings file
 
@@ -91,14 +94,13 @@ class TorConnectionProxy:
 
 class TorConnectionConfig:
     def __init__(self, bridges: list = [], proxy: TorConnectionProxy = None):
-        self.bridges = bridges
-        self.proxy = proxy
+        self.bridges: List[str] = bridges
+        self.proxy: Optional[TorConnectionProxy] = proxy
 
     @classmethod
     def load_from_tor_stem(cls, stem_controller: Controller):
-        if stem_controller.get_conf("UseBridges") == "0":
-            bridges = []
-        else:
+        bridges: List[str] = []
+        if stem_controller.get_conf("UseBridges") != "0":
             bridges = stem_controller.get_conf("Bridge", multiple=True)
 
         proxy = None
@@ -130,11 +132,11 @@ class TorConnectionConfig:
             "proxy": self.proxy.to_dict() if self.proxy is not None else None,
         }
 
-    def to_tor_conf(self) -> dict:
+    def to_tor_conf(self) -> Dict[str, Any]:
         """
         returns a dict whose output fits to stem.control.Controller.set_options
         """
-        r = {}
+        r: Dict[str, Any] = {}
         r["UseBridges"] = "1" if self.bridges else "0"
         r["Bridge"] = self.bridges
         for proxy_type in PROXY_TYPES:
@@ -167,8 +169,8 @@ class TorLauncherUtils:
             return
         self.config_buf.seek(0, os.SEEK_SET)
         self.config_buf.write(
-                json.dumps(self.tor_connection_config.to_dict(), indent=2)
-                )
+            json.dumps(self.tor_connection_config.to_dict(), indent=2)
+        )
         self.config_buf.truncate()
 
     def read_conf(self):
@@ -188,7 +190,31 @@ class TorLauncherUtils:
         self.tor_connection_config = TorConnectionConfig.load_from_dict(obj)
 
     def apply_conf(self):
+        self.stem_controller.set_conf("DisableNetwork", "1")
         self.stem_controller.set_options(self.tor_connection_config.to_tor_conf())
+        self.stem_controller.set_conf("DisableNetwork", "0")
+
+    def tor_has_bootstrapped(self) -> bool:
+        resp = self.stem_controller.get_info("status/bootstrap-phase")
+        if resp is None:
+            log.warn("No response from ControlPort")
+            return False
+        parts = resp.split(" ")
+        if parts[0] != "NOTICE":  # it is WARN
+            return False
+
+        if int(parts[2].split("=")[1]) != 100:
+            return False
+
+        # shall we really do also those checks?
+        resp = self.stem_controller.get_info("status/circuit-established")
+        if resp is None:
+            log.warn("No response from ControlPort")
+            return False
+        if not bool(int(resp)):
+            return False
+
+        return True
 
 
 def test():
@@ -212,9 +238,22 @@ def main():
     controller.authenticate(password=None)
     launcher = TorLauncherUtils(controller, conf)
     launcher.load_conf()
+    print(json.dumps(launcher.tor_connection_config.to_dict(), indent=4))
     launcher.apply_conf()
-    launcher.save_conf()
 
+    bootstrapped = False
+    for i in range(30):
+        time.sleep((i+1) * 0.5)
+        is_ok = launcher.tor_has_bootstrapped()
+        if is_ok:
+            bootstrapped = True
+            break
+
+    if not bootstrapped:
+        print("Bootstrap error!", file=sys.stderr)
+        return 1
+
+    launcher.save_conf()
     print(json.dumps(launcher.tor_connection_config.to_dict(), indent=4))
 
 
