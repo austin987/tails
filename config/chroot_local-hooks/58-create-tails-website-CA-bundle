@@ -9,7 +9,20 @@ BUNDLE=/usr/local/etc/ssl/certs/tails.boum.org-CA.pem
 mkdir -p $(dirname "${BUNDLE}")
 
 cat \
+   ### XXX: remove this after 2021-02-12
    /etc/ssl/certs/Lets-Encrypt-Authority-X3.pem \
+   ### Last updated: 2021-01-19
+   # References:
+   #  - https://letsencrypt.org/certificates/
+   #  - https://letsencrypt.org/2020/09/17/new-root-and-intermediates.html
+   # RSA 2048, active
+   /etc/ssl/certs/lets-encrypt-r3.pem \
+   # RSA 2048, backup
+   /etc/ssl/certs/lets-encrypt-r4.pem \
+   # ECDSA P-384, upcoming
+   /etc/ssl/certs/lets-encrypt-e1.pem \
+   # ECDSA P-384, upcoming backup
+   /etc/ssl/certs/lets-encrypt-e2.pem \
    > "$BUNDLE"
 
 chmod a+r "$BUNDLE"
