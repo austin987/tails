@@ -60,11 +60,6 @@ rm -rf cache/stages_rootfs
            /bin/grep -E --no-filename '[^ #]*\.in$' po/POTFILES.in \
            | sed -e 's,^config/chroot_local-includes,,' | tr "\n" ' '
          )'"
-   echo "SOF_VERSION='$(
-           git -C submodules/sof branch --all --contains HEAD \
-               --format '%(refname:short)' 'origin/stable-v*' \
-         | cut -d"-" -f 2
-         )'"
 } >> config/chroot_local-includes/usr/share/tails/build/variables
 
 # fix permissions on some source files that will be copied as is to the chroot.
@@ -155,7 +150,7 @@ BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
 ) > "$BUILD_APT_SOURCES"
 
 # make submodules available in the chroot:
-SUBMODULES_SRC="submodules/sof submodules/tails-workarounds"
+SUBMODULES_SRC="submodules/tails-workarounds"
 SUBMODULES_DST="config/chroot_local-includes/tmp/submodules"
 mkdir -p "$SUBMODULES_DST"
 # shellcheck disable=SC2086

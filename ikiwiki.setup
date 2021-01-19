@@ -36,8 +36,12 @@ rcs: ''
 add_plugins:
   - favicon
   - html
+  - htmlbalance
+  - img
   - map
+  - meta
   - mirrorlist
+  - pagestats
   - pagetemplate
   - po
   - prettydate
@@ -45,23 +49,23 @@ add_plugins:
   - sidebar
   - tag
   - toc
-  - typography
-  - meta
-  - img
-  - pagestats
   - toggle
   - trail
+  - typography
   - underlay
 # plugins to disable
 disable_plugins:
-  - comments
-  - openid
+  - anonok
+  - blogspam
+  - editpage
   - httpauth
   - lockedit
-  - signinedit
+  - openid
   - passwordauth
-  - editpage
   - recentchanges
+  - remove
+  - rename
+  - signinedit
 # additional directory to search for template files
 # templatedir: /usr/share/ikiwiki/templates
 # base wiki source location
@@ -107,9 +111,9 @@ libdir: ''
 # environment variables
 ENV: {}
 # regexp of normally excluded files to include
-# include: '^\.htaccess$'
+#include: '^\.htaccess$'
 # regexp of files that should be skipped
-exclude: '(^blueprint\/.*|^contribute\/how\/promote\/material\/.*|\/discussion\..*|\/Discussion\..*|\.(ar|ca|id|pl|ru|sr_Latn|tr|zh|zh_TW)\.po$)'
+exclude: '(^^contribute\/how\/promote\/material\/.*|\/discussion\..*|\/Discussion\..*|\.(ar|ca|id|pl|ru|sr_Latn|tr|zh|zh_TW)\.po$)'
 # specifies the characters that are allowed in source filenames
 wiki_file_chars: '-[:alnum:]+/._~'
 # allow symlinks in the path leading to the srcdir (potentially insecure)
@@ -117,12 +121,12 @@ allow_symlinks_before_srcdir: 1
 
 ######################################################################
 # core plugins
-#   (editpage, htmlscrubber, inline, link, meta, parentlinks)
+#   (editpage, git, htmlscrubber, inline, link, meta, parentlinks)
 ######################################################################
 
 # htmlscrubber plugin
 # PageSpec specifying pages not to scrub
-htmlscrubber_skip: '!blueprint/*'
+#htmlscrubber_skip: '!blueprint/*'
 
 # inline plugin
 # enable rss feeds by default?
@@ -146,23 +150,11 @@ pingurl: []
 # PageSpec to limit which pages anonymous users can edit
 #anonok_pagespec: '*/discussion'
 
-# blogspam plugin
-# PageSpec of pages to check for spam
-#blogspam_pagespec: postcomment(*)
-# options to send to blogspam server
-#blogspam_options: 'blacklist=1.2.3.4,blacklist=8.7.6.5,max-links=10'
-# blogspam server XML-RPC url
-#blogspam_server: ''
-
 # httpauth plugin
 # url to redirect to when authentication is needed
 #cgiauthurl: http://example.com/wiki/auth/ikiwiki.cgi
 # PageSpec of pages where only httpauth will be used for authentication
 #httpauth_pagespec: '!*/Discussion'
-
-# lockedit plugin
-# PageSpec controlling which pages are locked
-#locked_pages:
 
 # moderatedcomments plugin
 # PageSpec matching users or comment locations to moderate
@@ -173,12 +165,6 @@ pingurl: []
 #openid_realm: ''
 # url to ikiwiki cgi to use for openid authentication (default is cgiurl)
 #openid_cgiurl: ''
-
-# passwordauth plugin
-# a password that must be entered when signing up for an account
-#account_creation_password: s3cr1t
-# cost of generating a password using Authen::Passphrase::BlowfishCrypt
-#password_cost: 8
 
 ######################################################################
 # format plugins
@@ -370,7 +356,7 @@ mirrorlist_use_cgi: 1
 
 # prettydate plugin
 # format to use to display date
-#prettydateformat: '%X, %B %o, %Y'
+prettydateformat: '%Y-%m-%d'
 
 # recentchanges plugin
 # name of the recentchanges page
@@ -392,12 +378,9 @@ tagbase: tags
 # autocreate new tag pages?
 #tag_autocreate: 1
 # commit autocreated tag pages
-tag_autocreate_commit: 1
+#tag_autocreate_commit: 1
 
 # underlay plugin
 # extra underlay directories to add
 add_underlays:
   - /home/amnesia/Persistent/Tails/promotion-material
-
-# prettydate plugin
-prettydateformat: '%Y-%m-%d'
