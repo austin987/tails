@@ -8,7 +8,7 @@ import sys, json
 import socket
 from stem.control import Controller
 import stem.socket
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple, cast
 
 log = logging.getLogger("tor-launcher")
 
@@ -56,40 +56,84 @@ def recover_fd_from_parent() -> tuple:
 # PROXY_TYPES is a sequence of Tor options related to proxing.
 #     Those exact values are also used by TorConnectionProxy
 PROXY_TYPES = ("Socks4Proxy", "Socks5Proxy", "HTTPSProxy")
+PROXY_AUTH_OPTIONS = {
+    "HTTPSProxy": ["HTTPSProxyAuthenticator"],
+    "Socks5Proxy": ["Socks5ProxyUsername", "Socks5ProxyPassword"],
+}
 
 
 class TorConnectionProxy:
     """configuration item for proxy configuration"""
 
-    def __init__(self, address, port: int, proxy_type):
-        # TODO: check that proxy_types is one of 4,5,https
+    def __init__(
+        self, address, port: int, proxy_type, auth: Optional[Tuple[str, str]] = None
+    ):
         if proxy_type not in PROXY_TYPES:
             raise ValueError("Invalid proxy type: `%s`" % proxy_type)
         self.proxy_type = proxy_type
         self.address = address
         self.port = port
+        self.auth = auth
+        if proxy_type == "Socks4Proxy" and auth is not None:
+            raise ValueError("Socks4Proxy cannot have authentication")
 
     @classmethod
-    def from_obj(cls, obj):
-        proxy = cls(
+    def from_obj(cls, obj: dict) -> "TorConnectionProxy":
+        kwargs = dict(
             proxy_type=obj["proxy_type"], address=obj["address"], port=int(obj["port"])
         )
+        auth: Tuple[Optional[str], Optional[str]] = (obj.get("username"), obj.get("password"))
+        if all(x is None for x in auth):
+            kwargs["auth"] = None
+        elif any(x is None for x in auth):
+            raise ValueError(
+                "Proxy configuration object username and password must all be set, or none at all"
+            )
+        else:
+            kwargs["auth"] = auth
+        proxy = cls(**kwargs)
         return proxy
 
     def to_dict(self):
-        return {
-            "proxy_type": self.proxy_type,
-            "address": self.address,
-            "port": self.port,
-        }
+        r = {"proxy_type": self.proxy_type, "address": self.address, "port": self.port}
+        if self.auth is not None:
+            r["username"], r["password"] = self.auth
+        return r
 
     @classmethod
-    def from_tor_value(cls, proxy_type, val):
+    def from_tor_value(
+        cls, proxy_type: str, val: str, auth_values: Optional[List[str]] = None
+    ) -> "TorConnectionProxy":
         address, port = val.split(":")
-        return cls(address, int(port), proxy_type)
+        auth: Optional[Tuple[str, str]] = None
+        if auth_values is not None:
+            if len(auth_values) == 1:
+                auth = cast(Tuple[str, str], tuple(auth_values[0].split(":", 1)))
+            elif len(auth_values) == 2:
+                auth = cast(Tuple[str, str], tuple(auth_values))
+            else:
+                raise ValueError(
+                    "auth_values must either be ['user:password'] "
+                    " or ['user', 'password']"
+                )
 
-    def to_tor_value_str(self) -> str:
-        return "%s:%d" % (self.address, self.port)
+        obj = cls(address, int(port), proxy_type, auth=auth)
+        return obj
+
+    def to_tor_value_options(self) -> Dict[str, Optional[str]]:
+        r: Dict[str, Optional[str]] = {
+            self.proxy_type: "%s:%d" % (self.address, self.port)
+        }
+        for proxy_type in PROXY_TYPES:
+            if proxy_type == self.proxy_type:
+                continue
+            r[proxy_type] = None
+        if self.auth:
+            if self.proxy_type == "HTTPSProxy":
+                r["HTTPSProxyAuthenticator"] = "%s:%s" % self.auth
+            else:
+                r["Socks5ProxyUsername"], r["Socks5ProxyPassword"] = self.auth
+        return r
 
 
 class TorConnectionConfig:
@@ -107,7 +151,14 @@ class TorConnectionConfig:
         for proxy_type in PROXY_TYPES:
             val = stem_controller.get_conf(proxy_type)
             if val is not None:
-                proxy = TorConnectionProxy.from_tor_value(proxy_type, val)
+                auth = [
+                    stem_controller.get_conf(opt)
+                    for opt in PROXY_AUTH_OPTIONS[proxy_type]
+                ]
+
+                proxy = TorConnectionProxy.from_tor_value(
+                    proxy_type, val, auth_values=auth
+                )
                 break
 
         config = cls(bridges=bridges, proxy=proxy)
@@ -139,10 +190,8 @@ class TorConnectionConfig:
         r: Dict[str, Any] = {}
         r["UseBridges"] = "1" if self.bridges else "0"
         r["Bridge"] = self.bridges
-        for proxy_type in PROXY_TYPES:
-            r[proxy_type] = None
-            if self.proxy is not None and self.proxy.proxy_type == proxy_type:
-                r[proxy_type] = self.proxy.to_tor_value_str()
+        if self.proxy is not None:
+            r.update(self.proxy.to_tor_value_options().items())
         return r
 
 
@@ -217,22 +266,6 @@ class TorLauncherUtils:
         return True
 
 
-def test():
-    from pprint import pprint
-
-    controller = Controller.from_socket_file()
-    controller.authenticate()
-
-    if len(sys.argv) > 1:
-        conf = TorConnectionConfig.load_from_dict(json.load(open(sys.argv[1])))
-    else:
-        conf = TorConnectionConfig.load_from_tor_stem(controller)
-    conf = conf.to_tor_conf()
-    pprint(conf)
-    if len(sys.argv) > 1:
-        controller.set_options(conf)
-
-
 def main():
     conf, controller = recover_fd_from_parent()
     controller.authenticate(password=None)
@@ -242,8 +275,12 @@ def main():
     launcher.apply_conf()
 
     bootstrapped = False
-    for i in range(30):
-        time.sleep((i+1) * 0.5)
+    total_sleep = 0.5
+    sleep = 0.5
+    while total_sleep < 30:
+        time.sleep(sleep)
+        total_sleep += sleep
+        sleep += 0.5
         is_ok = launcher.tor_has_bootstrapped()
         if is_ok:
             bootstrapped = True
@@ -258,6 +295,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # test()
     logging.basicConfig(level=logging.DEBUG)
     main()
