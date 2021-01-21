@@ -530,6 +530,12 @@ Then /^all persistent filesystems have safe access rights$/ do
     fs_perms = $vm.execute("stat -c %a #{mountpoint}").stdout.chomp
     assert_equal('root', fs_owner)
     assert_equal('root', fs_group)
+    # This ensures the amnesia user cannot write to the root of the
+    # persistent storage, which in turns ensures this user cannot
+    # create a .Trash-1000 folder in there, which is our current best
+    # workaround for the lack of proper trash support in Persistent
+    # Storage: then the user is not offered to send files to the
+    # trash, and they can only delete files permanently (#18118).
     assert_equal('770', fs_perms)
   end
 end
