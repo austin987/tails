@@ -13,7 +13,7 @@ Feature: Networking
 
   Scenario: The Tails Greeter "disable all networking" option disables networking within Tails
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
-    And I disable all networking in the Tails Greeter
+    And I disable networking in Tails Greeter
     And I log in to a new session
     Then no network interfaces are enabled
     When I hotplug a network device

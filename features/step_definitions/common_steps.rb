@@ -376,10 +376,10 @@ Given /^I open Tails Greeter additional settings dialog$/ do
   open_greeter_additional_settings
 end
 
-Given /^I enable the specific Tor configuration option$/ do
+Given /^I disable networking in Tails Greeter$/ do
   open_greeter_additional_settings
   @screen.wait('TailsGreeterNetworkConnection.png', 30).click
-  @screen.wait('TailsGreeterSpecificTorConfiguration.png', 10).click
+  @screen.wait('TailsGreeterNetworkConnectionDisable.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
@@ -430,6 +430,19 @@ When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |titl
 end
 
 Given /^Tor is ready$/ do
+  # First we wait for tor to be running so its control port is open...
+  try_for(60) do
+    $vm.execute("systemctl -q is-active tor@default.service").success?
+  end
+  # ... so we can ask if the tor's networking is disabled, in which
+  # case Tor Launcher should autostart and we have to deal with it for
+  # tor to bootstrap.
+  if $vm.execute_successfully('tor_control_getconf DisableNetwork', libs: 'tor').stdout.chomp == '1'
+    step 'the Tor Launcher autostarts'
+    step 'I configure a direct connection in Tor Launcher'
+  end
+
+  # Here we actually check that Tor is ready
   step 'Tor has built a circuit'
   step 'the time has synced'
   # When we test for ASP upgrade failure the following tests would fail,

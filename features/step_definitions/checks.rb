@@ -213,13 +213,6 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
   end
 end
 
-When /^I disable all networking in the Tails Greeter$/ do
-  open_greeter_additional_settings
-  @screen.wait('TailsGreeterNetworkConnection.png', 30).click
-  @screen.wait('TailsGreeterDisableAllNetworking.png', 10).click
-  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
-end
-
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|
   picture = not_usable ? 'TorStatusNotUsable' : 'TorStatusUsable'
   @screen.find("#{picture}.png")

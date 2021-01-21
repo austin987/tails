@@ -331,7 +331,17 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
 end
 
 When /^the Tor Launcher autostarts$/ do
-  @screen.wait('TorLauncherWindow.png', 60)
+  try_for(60) { $vm.execute_successfully("xwininfo -name TorLauncher") }
+  # We sleep a tiny bit just in case the above check finishes before
+  # the window is showing and accepting keyboard events.
+  sleep 2
+end
+
+When /^I configure a direct connection in Tor Launcher$/ do
+  @screen.press('enter')
+  try_for(120) do
+    $vm.execute("pgrep --uid tor-launcher --full 'firefox-unconfined -app /usr/local/lib/tor-launcher-standalone/application.ini'").failure?
+  end
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
