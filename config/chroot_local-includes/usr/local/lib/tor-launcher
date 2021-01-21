@@ -66,23 +66,39 @@ class TorConnectionProxy:
     """configuration item for proxy configuration"""
 
     def __init__(
-        self, address, port: int, proxy_type, auth: Optional[Tuple[str, str]] = None
+        self,
+        address: str,
+        port: int,
+        proxy_type: str,
+        auth: Optional[Tuple[str, str]] = None,
+        enabled: bool = True,
     ):
-        if proxy_type not in PROXY_TYPES:
-            raise ValueError("Invalid proxy type: `%s`" % proxy_type)
+        self.enabled = enabled
         self.proxy_type = proxy_type
         self.address = address
         self.port = port
         self.auth = auth
+        if not enabled:
+            return
+        if proxy_type not in PROXY_TYPES:
+            raise ValueError("Invalid proxy type: `%s`" % proxy_type)
         if proxy_type == "Socks4Proxy" and auth is not None:
             raise ValueError("Socks4Proxy cannot have authentication")
+
+    @classmethod
+    def noproxy(cls) -> "TorConnectionProxy":
+        r = cls(address="", port=0, proxy_type="", enabled=False)
+        return r
 
     @classmethod
     def from_obj(cls, obj: dict) -> "TorConnectionProxy":
         kwargs = dict(
             proxy_type=obj["proxy_type"], address=obj["address"], port=int(obj["port"])
         )
-        auth: Tuple[Optional[str], Optional[str]] = (obj.get("username"), obj.get("password"))
+        auth: Tuple[Optional[str], Optional[str]] = (
+            obj.get("username"),
+            obj.get("password"),
+        )
         if all(x is None for x in auth):
             kwargs["auth"] = None
         elif any(x is None for x in auth):
@@ -95,6 +111,8 @@ class TorConnectionProxy:
         return proxy
 
     def to_dict(self):
+        if not self.enabled:
+            return None
         r = {"proxy_type": self.proxy_type, "address": self.address, "port": self.port}
         if self.auth is not None:
             r["username"], r["password"] = self.auth
@@ -121,25 +139,33 @@ class TorConnectionProxy:
         return obj
 
     def to_tor_value_options(self) -> Dict[str, Optional[str]]:
-        r: Dict[str, Optional[str]] = {
-            self.proxy_type: "%s:%d" % (self.address, self.port)
-        }
+        r: Dict[str, Optional[str]] = {}
+        if self.enabled:
+            r[self.proxy_type] = "%s:%d" % (self.address, self.port)
         for proxy_type in PROXY_TYPES:
-            if proxy_type == self.proxy_type:
+            if self.enabled and proxy_type == self.proxy_type:
                 continue
             r[proxy_type] = None
-        if self.auth:
+        for pt in PROXY_TYPES:
+            for option in PROXY_AUTH_OPTIONS.get(pt, []):
+                r[option] = None
+        if self.enabled and self.auth is not None:
             if self.proxy_type == "HTTPSProxy":
                 r["HTTPSProxyAuthenticator"] = "%s:%s" % self.auth
             else:
                 r["Socks5ProxyUsername"], r["Socks5ProxyPassword"] = self.auth
+        print("TorOpts", r)
         return r
 
 
 class TorConnectionConfig:
-    def __init__(self, bridges: list = [], proxy: TorConnectionProxy = None):
+    def __init__(
+        self,
+        bridges: list = [],
+        proxy: TorConnectionProxy = TorConnectionProxy.noproxy(),
+    ):
         self.bridges: List[str] = bridges
-        self.proxy: Optional[TorConnectionProxy] = proxy
+        self.proxy: TorConnectionProxy = proxy
 
     @classmethod
     def load_from_tor_stem(cls, stem_controller: Controller):
@@ -147,7 +173,6 @@ class TorConnectionConfig:
         if stem_controller.get_conf("UseBridges") != "0":
             bridges = stem_controller.get_conf("Bridge", multiple=True)
 
-        proxy = None
         for proxy_type in PROXY_TYPES:
             val = stem_controller.get_conf(proxy_type)
             if val is not None:
@@ -160,6 +185,8 @@ class TorConnectionConfig:
                     proxy_type, val, auth_values=auth
                 )
                 break
+        else:
+            proxy = TorConnectionProxy.noproxy()
 
         config = cls(bridges=bridges, proxy=proxy)
 
@@ -174,7 +201,7 @@ class TorConnectionConfig:
         if proxy is not None:
             config.proxy = TorConnectionProxy.from_obj(proxy)
         else:
-            config.proxy = None
+            config.proxy = TorConnectionProxy.noproxy()
         return config
 
     def to_dict(self) -> dict:
@@ -189,9 +216,8 @@ class TorConnectionConfig:
         """
         r: Dict[str, Any] = {}
         r["UseBridges"] = "1" if self.bridges else "0"
-        r["Bridge"] = self.bridges
-        if self.proxy is not None:
-            r.update(self.proxy.to_tor_value_options().items())
+        r["Bridge"] = self.bridges if self.bridges else None
+        r.update(self.proxy.to_tor_value_options().items())
         return r
 
 
