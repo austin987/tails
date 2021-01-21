@@ -292,6 +292,16 @@ class TorLauncherUtils:
         return True
 
 
+def backoff_wait(total_wait: float = 30., initial_sleep: float = 0.5, increment = lambda x: x + 0.5):
+    total_sleep = 0
+    sleep_time = initial_sleep
+    while total_sleep < total_wait:
+        time.sleep(sleep_time)
+        total_sleep += sleep_time
+        sleep_time = increment(sleep_time)
+        yield
+
+
 def main():
     conf, controller = recover_fd_from_parent()
     controller.authenticate(password=None)
@@ -301,12 +311,7 @@ def main():
     launcher.apply_conf()
 
     bootstrapped = False
-    total_sleep = 0.5
-    sleep = 0.5
-    while total_sleep < 30:
-        time.sleep(sleep)
-        total_sleep += sleep
-        sleep += 0.5
+    for _ in backoff_wait(30.):
         is_ok = launcher.tor_has_bootstrapped()
         if is_ok:
             bootstrapped = True
@@ -317,9 +322,10 @@ def main():
         return 1
 
     launcher.save_conf()
-    print(json.dumps(launcher.tor_connection_config.to_dict(), indent=4))
+
+    return 0
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    main()
+    sys.exit(main())
