@@ -164,6 +164,7 @@ method upgrade_modules_file () {
     system('sync');
 
     run_as_root('nocache', '/bin/cp', '--force', $temp_file, $self->modules_file);
+    system('sync', $self->modules_file);
 }
 
 method remount_liveos_rw () {
