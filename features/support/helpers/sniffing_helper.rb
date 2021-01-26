@@ -20,10 +20,15 @@ class Sniffer
     @pcap_file = "#{$config['TMPDIR']}/#{pcap_name}"
   end
 
+  def tcpdump
+    candidates = ['/usr/bin/tcpdump', '/usr/sbin/tcpdump']
+    candidates.select { |candidate| File.exist?(candidate) }.first
+  end
+
   def capture
     job = IO.popen(
       [
-        '/usr/sbin/tcpdump',
+        tcpdump,
         '-n',
         '-U',
         '--immediate-mode',
