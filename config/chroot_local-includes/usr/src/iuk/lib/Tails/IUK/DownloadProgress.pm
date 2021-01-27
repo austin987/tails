@@ -23,10 +23,9 @@ use Locale::TextDomain 'tails';
 use namespace::clean;
 
 has 'size' => (
-    is        => 'ro',
-    isa       => Num,
-    required  => 1,
-
+    is       => 'ro',
+    isa      => Num,
+    required => 1,
 );
 
 has 'size_left' => (
@@ -38,37 +37,36 @@ has 'size_left' => (
 
 foreach (qw{speed last_bytes_downloaded last_progress_time}) {
     has "$_" => (
-    is       => 'rw',
-    isa      => Num,
-    default  => 0,
-    init_arg => undef,
+        is       => 'rw',
+        isa      => Num,
+        default  => 0,
+        init_arg => undef,
     );
 }
 
 has 'update_interval_time' => (
-    is => 'ro',
-    isa => Num,
-    default => 0.4,
+    is            => 'ro',
+    isa           => Num,
+    default       => 0.4,
     documentation => q{Default update value, based on Doherty Threshold},
-
 );
 
 has 'estimated_end_time' => (
-    is => 'rw',
-    isa => Str,
-    lazy =>1 ,
+    is      => 'rw',
+    isa     => Str,
+    lazy    => 1,
     default => __(q{Unknow time}),
-
 );
 
 has 'time_units' => (
-    is          => 'lazy',
-    isa     => HashRef[Str],
+    is  => 'lazy',
+    isa => HashRef[Str],
 );
 
-has 'bytes_str' =>
-    is          =>  'lazy',
-    isa         =>  InstanceOf['Number::Format'];
+has 'bytes_str' => (
+    is  =>  'lazy',
+    isa =>  InstanceOf['Number::Format'],
+);
 
 has 'smoothing_factor' => (
     is      =>  'ro',
@@ -83,7 +81,7 @@ method _build_time_units () {
         hour   => __(q{h}),
         minute => __(q{m}),
         second => __(q{s}),
-        );
+    );
 
     return \%time_units;
 }
@@ -92,7 +90,8 @@ method _build_bytes_str () {
     Number::Format->new(
         kilo_suffix => 'KB',
         mega_suffix => 'MB',
-        giga_suffix => 'GB');
+        giga_suffix => 'GB',
+    );
 }
 
 # Based on the code in  DownloadCore.jsm in Tor Browser
@@ -101,12 +100,11 @@ method update (Num $downloaded_bytes) {
     my $elapsed_time = $current_time - $self->last_progress_time;
     return if ($elapsed_time < $self->update_interval_time);
 
-    $self->download_speed($downloaded_bytes,$elapsed_time);
+    $self->download_speed($downloaded_bytes, $elapsed_time);
     $self->size_left ($self->size - $downloaded_bytes);
     $self->set_estimated_end_time();
     $self->last_bytes_downloaded($downloaded_bytes);
     $self->last_progress_time($current_time);
-
 }
 
 method download_speed (Num $downloaded_bytes, Num $elapsed_time) {
@@ -120,7 +118,7 @@ method download_speed (Num $downloaded_bytes, Num $elapsed_time) {
             ($raw_speed * $self->smoothing_factor)
             +
             ($self->speed * (1 - $self->smoothing_factor))
-            );
+        );
     }
 }
 
@@ -138,16 +136,14 @@ method set_estimated_end_time () {
 }
 
 method info () {
-
     __x(
         "#{time} left — {downloaded} of {size} ({speed}/sec)\n",
-        time => $self->estimated_end_time,
-
-        downloaded => $self->bytes_str->format_bytes( $self->last_bytes_downloaded,
-                                                      precision => 0),
-        size =>       $self->bytes_str->format_bytes($self->size,
+        time       => $self->estimated_end_time,
+        downloaded => $self->bytes_str->format_bytes($self->last_bytes_downloaded,
                                                      precision => 0),
-        speed =>      $self->bytes_str->format_bytes($self->speed,
+        size       => $self->bytes_str->format_bytes($self->size,
+                                                     precision => 0),
+        speed      => $self->bytes_str->format_bytes($self->speed,
                                                      precision => 0),
         );
 }
