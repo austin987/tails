@@ -64,8 +64,8 @@ has 'time_units' => (
 );
 
 has 'bytes_str' => (
-    is  =>  'lazy',
-    isa =>  InstanceOf['Number::Format'],
+    is  => 'lazy',
+    isa => InstanceOf['Number::Format'],
 );
 
 has 'smoothing_factor' => (
