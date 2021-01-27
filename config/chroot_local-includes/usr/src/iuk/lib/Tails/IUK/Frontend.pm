@@ -229,21 +229,22 @@ method init_zenity_progress_dialog_text (Object $download_progress) {
     # into a new line.
 
     assert_isa($download_progress, 'Tails::IUK::DownloadProgress');
-    my $init_text         = $download_progress->info;
-    my $unknow_str        = $download_progress->estimated_end_time;
-    my $speed_str         = '0000KB';
-    my $size_str          = $self->bytes_str->format_bytes($download_progress->size,
-                                                           precision => 0);
-    my ($time_unit1,$time_unit2) =
-        sort{length ($b) <=> length($a)}values(%{$download_progress->time_units});
+    my $init_text  = $download_progress->info;
+    my $unknow_str = $download_progress->estimated_end_time;
+    my $speed_str  = '0000KB';
+    my $size_str   = $self->bytes_str->format_bytes($download_progress->size,
+                                                    precision => 0);
+    my ($time_unit1,$time_unit2) = sort {
+        length ($b) <=> length($a)
+    } values(%{$download_progress->time_units});
     my $time_str = '111' . $time_unit1 . ' ' . '111'. $time_unit2;
     $size_str  =~ s/\d+/0000/;
     $init_text =~ s/$unknow_str//;
     $init_text =~ s/0/$size_str/;
     $init_text =~ s/0\/sec/$speed_str/;
     $init_text = $time_str . ' '. $init_text;
-    $init_text =
-        $download_progress->info if length ($download_progress->info) > length($init_text);
+    $init_text = $download_progress->info
+        if length ($download_progress->info) > length($init_text);
 
     return $init_text;
 }
