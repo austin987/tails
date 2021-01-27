@@ -67,6 +67,7 @@ class Keymaps
     'alt' => [0x38], 'right_alt' => [0x64],
     'ctrl' => [0x1d], 'right_ctrl' => [0x61],
     'shift' => [0x2a], 'right_shift' => [0x36],
+    'super' => [0x7d],
   }.freeze
 
   DE_KEYMAP = COMMON_KEYMAP.merge(
