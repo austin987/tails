@@ -99,7 +99,7 @@ method update (Num $downloaded_bytes) {
     return if ($elapsed_time < $self->update_interval_time);
 
     $self->download_speed($downloaded_bytes, $elapsed_time);
-    $self->size_left ($self->size - $downloaded_bytes);
+    $self->size_left($self->size - $downloaded_bytes);
     $self->set_estimated_end_time();
     $self->last_bytes_downloaded($downloaded_bytes);
     $self->last_progress_time($current_time);
