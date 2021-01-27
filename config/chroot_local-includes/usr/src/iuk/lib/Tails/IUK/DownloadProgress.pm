@@ -75,15 +75,13 @@ has 'smoothing_factor' => (
 );
 
 method _build_time_units () {
-    my %time_units = (
+    {
         year   => __(q{y}),
         day    => __(q{d}),
         hour   => __(q{h}),
         minute => __(q{m}),
         second => __(q{s}),
-    );
-
-    return \%time_units;
+    };
 }
 
 method _build_bytes_str () {
