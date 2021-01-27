@@ -226,7 +226,7 @@ method init_zenity_progress_dialog_text (Object $download_progress) {
     # dialog if a text is bigger than the initial text.
     # So let's give to the progress dialog initial text
     # a value that avoids zenity break download_progress->info
-    # in to a new line.
+    # into a new line.
 
     assert_isa($download_progress, 'Tails::IUK::DownloadProgress');
     my $init_text         = $download_progress->info;
