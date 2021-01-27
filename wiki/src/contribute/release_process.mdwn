@@ -342,7 +342,16 @@ Update the Changelog entry for the release you're preparing:
 	./bin/update-changelog --version "${MILESTONE:?}"
 
 Then, gather other useful information from the diff between the previous
-version's `.packages` file and the one from the to-be-released images; look for:
+version's `.packages` file and the one from the to-be-released images:
+
+1. Generate the diff:
+
+        diff --color=never -u \
+           "wiki/src/torrents/files/tails-amd64-${PREVIOUS_STABLE_VERSION}.packages" \
+           <(curl --silent "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH}/lastSuccessful/archive/latest.packages") \
+        | wdiff --diff-input  --terminal
+
+2. In the diff, look for:
 
   - new upstream releases of applications mentioned in [[doc/about/features]]
   - new upstream releases of other important components such as the
@@ -574,7 +583,8 @@ suite should be ready, so it is time to:
    Our build system will apply the correct compression settings automatically
    so don't bother setting it yourself.
 
-1. Make sure the Jenkins build starts.
+1. Make sure the Jenkins build starts as soon as possible. If needed, remove
+   other builds from the _Build Queue_ or cancel other running builds.
 
 1. Compare the new build manifest with the one from the previous,
    almost-final build:
@@ -1374,7 +1384,7 @@ Wait for the HTTP mirrors to catch up
 
 Test downloading the ISO, USB image, and one of the new IUKs over HTTP.
 
-Make sure every active mirror in the pool has the new version:
+Check if every active mirror in the pool has the new version:
 
 	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
@@ -1442,7 +1452,7 @@ Skip this part if preparing a release candidate.
         sudo ./config/gitlab-triage/bin/ensure-up-to-date-Docker-image
 
 3. Postpone to the next scheduled release any remaining open issue and merge
-   request for the version you've just released:
+   request whose milestone is the version you've just released:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \

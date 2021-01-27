@@ -809,7 +809,7 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
     app_name = 'commandline'
   end
   @screen.wait("GnomeApplicationsMenu#{$language}.png", 10)
-  $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
+  @screen.press('super')
   # Only use this way of passing the app_name argument where it's
   # really needed, e.g. to avoid having to encode lots of keymaps
   # to be able to type the name correctly:
