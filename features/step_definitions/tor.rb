@@ -330,11 +330,17 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
   $vm.execute_successfully('tails-upgrade-frontend-wrapper', user: LIVE_USER)
 end
 
+# Note about the "basic" Tor Launcher steps: we have tests which will
+# start Tor Launcher (and connect directly to the Tor Network) in
+# other languages, so we need to make those steps
+# language-agnostic. Unfortunately this means interaction based on
+# images is not suitable, so we try more general approaches.
+
 When /^the Tor Launcher autostarts$/ do
   try_for(60) { $vm.execute_successfully("xwininfo -name TorLauncher") }
-  # We sleep a tiny bit just in case the above check finishes before
-  # the window is showing and accepting keyboard events.
-  sleep 2
+  # Here we assume that no other window is visible, so Tor Launcher
+  # will be the only one.
+  @screen.wait('AnyWindowTitleBar.png', 10, sensitivity: 0.99).click
 end
 
 When /^I configure a direct connection in Tor Launcher$/ do
