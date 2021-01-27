@@ -1,6 +1,6 @@
 =head1 NAME
 
-Tails::IUK::DownloadProgress - keeps tracks information of a download in progress 
+Tails::IUK::DownloadProgress - keeps tracks information of a download in progress
 
 =cut
 
