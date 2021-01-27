@@ -434,10 +434,14 @@ method run () {
                     "{space_needed} ".
                     "of free space on Tails system partition, ".
                     " but only {free_space} is available.",
-                                space_needed => $self->bytes_str->format_bytes($space_needed,
-                                                                               precision => 0),
-                                free_space   => $self->bytes_str->format_bytes($free_space,
-                                                                               precision => 0),
+                    space_needed => $self->bytes_str->format_bytes(
+                        $space_needed,
+                        precision => 0,
+                    ),
+                    free_space   => $self->bytes_str->format_bytes(
+                        $free_space,
+                        precision => 0,
+                    ),
                 ));
             }
         }
@@ -447,10 +451,14 @@ method run () {
                 "The available incremental upgrade requires ".
                 "{memory_needed} of free memory, but only ".
                 "{free_memory} is available.",
-                            memory_needed => $self->bytes_str->format_bytes($memory_needed,
-                                                                            precision => 0),
-                            free_memory   => $self->bytes_str->format_bytes($free_memory,
-                                                                            precision => 0),
+                memory_needed => $self->bytes_str->format_bytes(
+                    $memory_needed,
+                    precision => 0,
+                ),
+                free_memory   => $self->bytes_str->format_bytes(
+                    $free_memory,
+                    precision => 0,
+                ),
             ));
         }
     }
@@ -487,9 +495,11 @@ method run () {
                 details_url => $upgrade_path->{'details-url'},
                 name        => $upgrade_description->product_name,
                 version     => $upgrade_path->{version},
-                size        => $self->bytes_str->format_bytes($upgrade_path->{'total-size'},
-                                                              precision => 0),
+                size        => $self->bytes_str->format_bytes(
+                    $upgrade_path->{'total-size'},
+                    precision => 0,
                 ),
+            ),
             title        => __(q{Upgrade available}),
             ok_label     => __(q{Upgrade now}),
             cancel_label => __(q{Upgrade later}),
