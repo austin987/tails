@@ -340,10 +340,15 @@ When /^the Tor Launcher autostarts$/ do
   try_for(60) { $vm.execute_successfully("xwininfo -name TorLauncher") }
   # Here we assume that no other window is visible, so Tor Launcher
   # will be the only one.
-  @screen.wait('AnyWindowTitleBar.png', 10, sensitivity: 0.99).click
+  @screen.wait('AnyWindowTitleBar.png', 10, sensitivity: 0.99)
 end
 
 When /^I configure a direct connection in Tor Launcher$/ do
+  # Click window (again we assume Tor Launcher is the only one) ...
+  @screen.click('AnyWindowTitleBar.png', sensitivity: 0.99)
+  # ... and wait a bit until it's focused ...
+  sleep 3
+  # ... so this key press is not lost.
   @screen.press('enter')
   try_for(120) do
     $vm.execute("pgrep --uid tor-launcher --full 'firefox-unconfined -app /usr/local/lib/tor-launcher-standalone/application.ini'").failure?
