@@ -35,7 +35,7 @@ has 'size_left' => (
     init_arg => 'size',
 );
 
-foreach (qw{speed last_bytes_downloaded last_progress_time}) {
+foreach (qw{speed last_byte_downloaded last_progress_time}) {
     has "$_" => (
         is       => 'rw',
         isa      => Num,
@@ -101,12 +101,12 @@ method update (Num $downloaded_bytes) {
     $self->download_speed($downloaded_bytes, $elapsed_time);
     $self->size_left($self->size - $downloaded_bytes);
     $self->estimated_end_time($self->estimate_end_time);
-    $self->last_bytes_downloaded($downloaded_bytes);
+    $self->last_byte_downloaded($downloaded_bytes);
     $self->last_progress_time($current_time);
 }
 
 method download_speed (Num $downloaded_bytes, Num $elapsed_time) {
-    my $raw_speed = ($downloaded_bytes - $self->last_bytes_downloaded)/$elapsed_time;
+    my $raw_speed = ($downloaded_bytes - $self->last_byte_downloaded)/$elapsed_time;
     if ($self->speed == 0) {
         $self->speed($raw_speed);
     }
@@ -137,7 +137,7 @@ method info () {
     __x(
         "#{time} left — {downloaded} of {size} ({speed}/sec)\n",
         time       => $self->estimated_end_time,
-        downloaded => $self->bytes_str->format_bytes($self->last_bytes_downloaded,
+        downloaded => $self->bytes_str->format_bytes($self->last_byte_downloaded,
                                                      precision => 0),
         size       => $self->bytes_str->format_bytes($self->size,
                                                      precision => 0),
