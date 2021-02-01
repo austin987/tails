@@ -33,25 +33,10 @@ rm -f "${TOR_LOG}"
 # Tor. Details:
 # * https://trac.torproject.org/projects/tor/ticket/1247
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/
-# To work around this we restart Tor, in various ways, no matter the
-# case below.
-TOR_SYSTEMD_OVERRIDE_DIR="/lib/systemd/system/tor@default.service.d"
-TOR_RESOLV_CONF_OVERRIDE="${TOR_SYSTEMD_OVERRIDE_DIR}/50-resolv-conf-override.conf"
-# Override /etc/resolv.conf for tor only, so it can use a clearnet
-# DNS server to resolve hostnames used for pluggable transport and
-# proxies.
-if [ ! -e "${TOR_RESOLV_CONF_OVERRIDE}" ]; then
-    mkdir -p "${TOR_SYSTEMD_OVERRIDE_DIR}"
-    cat > "${TOR_RESOLV_CONF_OVERRIDE}" <<EOF
-[Service]
-BindReadOnlyPaths=/etc/resolv-over-clearnet.conf:/etc/resolv.conf
-EOF
-    systemctl daemon-reload
-fi
-
-# We do not use restart-tor since it validates that bootstraping
-# succeeds. That cannot happen until Tor Launcher has started
-# (below) and the user is done configuring it.
+# To work around this we restart Tor, but not using restart-tor since
+# it validates that bootstraping succeeds. That cannot happen until
+# Tor Launcher has started (below) and the user is done configuring
+# it.
 systemctl restart tor@default.service
 
 /usr/local/sbin/tails-tor-launcher &
