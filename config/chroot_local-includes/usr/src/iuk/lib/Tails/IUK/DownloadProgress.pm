@@ -93,20 +93,20 @@ method _build_bytes_str () {
 }
 
 # Based on the code in  DownloadCore.jsm in Tor Browser
-method update (Num $downloaded_bytes) {
+method update (Num $downloaded_byte) {
     my $current_time = Time::HiRes::gettimeofday();
     my $elapsed_time = $current_time - $self->last_progress_time;
     return if ($elapsed_time < $self->update_interval_time);
 
-    $self->download_speed($downloaded_bytes, $elapsed_time);
-    $self->size_left($self->size - $downloaded_bytes);
+    $self->download_speed($downloaded_byte, $elapsed_time);
+    $self->size_left($self->size - $downloaded_byte);
     $self->estimated_end_time($self->estimate_end_time);
-    $self->last_byte_downloaded($downloaded_bytes);
+    $self->last_byte_downloaded($downloaded_byte);
     $self->last_progress_time($current_time);
 }
 
-method download_speed (Num $downloaded_bytes, Num $elapsed_time) {
-    my $raw_speed = ($downloaded_bytes - $self->last_byte_downloaded)/$elapsed_time;
+method download_speed (Num $downloaded_byte, Num $elapsed_time) {
+    my $raw_speed = ($downloaded_byte - $self->last_byte_downloaded)/$elapsed_time;
     if ($self->speed == 0) {
         $self->speed($raw_speed);
     }
