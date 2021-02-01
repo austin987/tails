@@ -111,7 +111,7 @@ method download_speed (Num $downloaded_bytes, Num $elapsed_time) {
         $self->speed($raw_speed);
     }
     else {
-        # Apply exponential smoothing, with a smoothing factor of 0.1.
+        # Apply exponential smoothing.
         $self->speed(
             ($raw_speed * $self->smoothing_factor)
             +
