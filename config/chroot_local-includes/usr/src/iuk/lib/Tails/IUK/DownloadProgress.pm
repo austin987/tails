@@ -94,7 +94,7 @@ method _build_bytes_str () {
 
 # Based on the code in  DownloadCore.jsm in Tor Browser
 method update (Num $downloaded_bytes) {
-    my ($current_time) = Time::HiRes::gettimeofday();
+    my $current_time = Time::HiRes::gettimeofday();
     my $elapsed_time = $current_time - $self->last_progress_time;
     return if ($elapsed_time < $self->update_interval_time);
 
