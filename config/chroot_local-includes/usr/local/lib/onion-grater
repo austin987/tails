@@ -585,7 +585,16 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             # Make sure to revert the commit adding this comment once
             # the Tor bug is fixed and we want to revert back to using
             # the control socket.
-            controller = stem.control.Controller.from_port(port=9052)
+            # Also, we would like to use Controller.from_port() here
+            # since it does not attempt fallback on failure, but at
+            # least for Tor Launcher that makes its second connection
+            # that handles events not receive any events breaking e.g.
+            # the progress bar and tor error handling.
+            # It remains to see if Controller.from_socket() is also
+            # affected.
+            controller = stem.connection.connect(
+                control_port=('127.0.0.1', '9052'), control_socket=None
+            )
             tries += 1
         stem.connection.authenticate_cookie(controller, cookie_path=global_args.control_cookie_path)
         return controller
