@@ -33,10 +33,7 @@ rm -f "${TOR_LOG}"
 # Tor. Details:
 # * https://trac.torproject.org/projects/tor/ticket/1247
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/
-# To work around this we restart Tor, but not using restart-tor since
-# it validates that bootstraping succeeds. That cannot happen until
-# Tor Launcher has started (below) and the user is done configuring
-# it.
+# To work around this we restart Tor.
 systemctl restart tor@default.service
 
 /usr/local/sbin/tails-tor-launcher &
