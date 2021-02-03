@@ -65,7 +65,7 @@ maybe_restart_tor () {
     # wheels turning)
     if ! tor_has_bootstrapped; then
         echo "* Restarting Tor"
-        restart-tor
+        systemctl restart tor@default.service
         if ! systemctl --quiet is-active tor@default.service; then
             error "`gettext \"Failed to restart Tor.\"`"
         fi
