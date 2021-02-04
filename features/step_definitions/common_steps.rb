@@ -13,9 +13,12 @@ def post_snapshot_restore_hook(snapshot_name)
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
 
-  # When restoring from a snapshot while the Greeter is running it
-  # seems virt-viewer's auto-resolution feature moves the Greeter's
-  # window outside of the visible screen.
+  # When restoring from a snapshot while the Greeter is running, on
+  # X.Org we encounter a (SPICE? GTK? QXL?) bug that makes its window
+  # invisible until redrawn. So as a workaround we move this window,
+  # to force a full redraw.
+  # This problem does not happen on Wayland so we can remove this hack
+  # when we switch to Wayland: #18120, !322.
   if snapshot_name.end_with?('tails-greeter')
     unless @screen.exists('TailsGreeter.png')
       $vm.execute_successfully(
@@ -796,7 +799,7 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
     app_name = 'commandline'
   end
   @screen.wait("GnomeApplicationsMenu#{$language}.png", 10)
-  $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
+  @screen.press('super')
   # Only use this way of passing the app_name argument where it's
   # really needed, e.g. to avoid having to encode lots of keymaps
   # to be able to type the name correctly:
