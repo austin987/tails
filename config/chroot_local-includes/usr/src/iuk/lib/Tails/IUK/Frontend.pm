@@ -20,7 +20,6 @@ use IPC::Run;
 use Locale::Messages qw{bind_textdomain_codeset
                         bind_textdomain_filter
                         turn_utf_8_on};
-use Number::Format qw(:subs);
 use Path::Tiny;
 use POSIX;
 use String::Errf qw{errf};
@@ -44,6 +43,7 @@ use Moo;
 use MooX::HandlesVia;
 
 with 'Tails::Role::HasEncoding';
+with 'Tails::IUK::Role::FormatByte';
 
 use namespace::clean;
 
@@ -130,10 +130,6 @@ option 'override_free_space' =>
     predicate     => 1,
     documentation => q{Internal, for test suite only};
 
-has 'bytes_str' =>
-    is          =>  'lazy',
-    isa         =>  InstanceOf['Number::Format'];
-
 
 =head1 CONSTRUCTORS AND BUILDERS
 
@@ -165,13 +161,6 @@ method _build_free_space () {
     $self->has_override_free_space
         ? $self->override_free_space
         : space_available_in($self->running_system->liveos_mountpoint);
-}
-
-method _build_bytes_str () {
-    Number::Format->new(
-        kilo_suffix => 'KB',
-        mega_suffix => 'MB',
-        giga_suffix => 'GB');
 }
 
 =head1 METHODS
@@ -232,8 +221,7 @@ method init_zenity_progress_dialog_text (Object $download_progress) {
     my $init_text  = $download_progress->info;
     my $unknow_str = $download_progress->estimated_end_time;
     my $speed_str  = '0000KB';
-    my $size_str   = $self->bytes_str->format_bytes($download_progress->size,
-                                                    precision => 0);
+    my $size_str   = $self->format_bytes($download_progress->size);
     my ($time_unit1,$time_unit2) = sort {
         length ($b) <=> length($a)
     } values(%{$download_progress->time_units});
@@ -435,14 +423,10 @@ method run () {
                     "{space_needed} ".
                     "of free space on Tails system partition, ".
                     " but only {free_space} is available.",
-                    space_needed => $self->bytes_str->format_bytes(
-                        $space_needed,
-                        precision => 0,
-                    ),
-                    free_space   => $self->bytes_str->format_bytes(
-                        $free_space,
-                        precision => 0,
-                    ),
+                    space_needed => $self->format_bytes(
+                        $space_needed),
+                    free_space   => $self->format_bytes(
+                        $free_space),
                 ));
             }
         }
@@ -452,14 +436,10 @@ method run () {
                 "The available incremental upgrade requires ".
                 "{memory_needed} of free memory, but only ".
                 "{free_memory} is available.",
-                memory_needed => $self->bytes_str->format_bytes(
-                    $memory_needed,
-                    precision => 0,
-                ),
-                free_memory   => $self->bytes_str->format_bytes(
-                    $free_memory,
-                    precision => 0,
-                ),
+                memory_needed => $self->format_bytes(
+                    $memory_needed),
+                free_memory   => $self->format_bytes(
+                    $free_memory),
             ));
         }
     }
@@ -496,10 +476,8 @@ method run () {
                 details_url => $upgrade_path->{'details-url'},
                 name        => $upgrade_description->product_name,
                 version     => $upgrade_path->{version},
-                size        => $self->bytes_str->format_bytes(
-                    $upgrade_path->{'total-size'},
-                    precision => 0,
-                ),
+                size        => $self->format_bytes(
+                    $upgrade_path->{'total-size'}),
             ),
             title        => __(q{Upgrade available}),
             ok_label     => __(q{Upgrade now}),

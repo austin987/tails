@@ -13,11 +13,13 @@ use 5.10.1;
 use strictures 2;
 
 use autodie qw(:all);
-use Types::Standard qw{Num Str HashRef InstanceOf};
+use Types::Standard qw{Num Str HashRef};
 use Time::HiRes;
 use Time::Duration;
 use Function::Parameters;
-use Number::Format qw(:subs);
+
+with 'Tails::IUK::Role::FormatByte';
+
 use Locale::TextDomain 'tails';
 
 use namespace::clean;
@@ -63,11 +65,6 @@ has 'time_units' => (
     isa => HashRef[Str],
 );
 
-has 'bytes_str' => (
-    is  => 'lazy',
-    isa => InstanceOf['Number::Format'],
-);
-
 has 'smoothing_factor' => (
     is      =>  'ro',
     isa     =>  Num,
@@ -82,14 +79,6 @@ method _build_time_units () {
         minute => __(q{m}),
         second => __(q{s}),
     };
-}
-
-method _build_bytes_str () {
-    Number::Format->new(
-        kilo_suffix => 'KB',
-        mega_suffix => 'MB',
-        giga_suffix => 'GB',
-    );
 }
 
 # Based on the code in  DownloadCore.jsm in Tor Browser
@@ -137,12 +126,9 @@ method info () {
     __x(
         "#{time} left — {downloaded} of {size} ({speed}/sec)\n",
         time       => $self->estimated_end_time,
-        downloaded => $self->bytes_str->format_bytes($self->last_byte_downloaded,
-                                                     precision => 0),
-        size       => $self->bytes_str->format_bytes($self->size,
-                                                     precision => 0),
-        speed      => $self->bytes_str->format_bytes($self->speed,
-                                                     precision => 0),
+        downloaded => $self->format_bytes($self->last_byte_downloaded),
+        size       => $self->format_bytes($self->size),
+        speed      => $self->format_bytes($self->speed),
         );
 }
 
