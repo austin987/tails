@@ -227,7 +227,7 @@ method init_zenity_progress_dialog_text (Object $download_progress) {
     } values(%{$download_progress->time_units});
     my $time_str = '111' . $time_unit1 . ' ' . '111'. $time_unit2;
     $size_str  =~ s/\d+/0000/;
-    $init_text =~ s/$unknow_str//;
+    $init_text =~ s/\Q$unknow_str\E//;
     $init_text =~ s/0/$size_str/;
     $init_text =~ s/0\/sec/$speed_str/;
     $init_text = $time_str . ' '. $init_text;
