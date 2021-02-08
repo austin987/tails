@@ -42,6 +42,16 @@ expose() {
 
 }
 
+delete_netns() {
+    # $1 = netns basename
+    basename="$1"
+    shift 1
+    nsName="${basename}"
+    hostVeth="veth-${basename}"
+    ip link del "$hostVeth" || true
+    ip netns del "$nsName" || true
+}
+
 create_netns() {
     # $1 = netns basename
     # $2 = first address; implies /30
@@ -61,12 +71,10 @@ create_netns() {
         exit 2
     fi
     guestAddress="$(increment_ip_address "$hostAddress")"
-    ip netns del "$nsName" || true
     ip netns add "$nsName"
 
     # create veth
     ip netns exec "$nsName" ip link set dev lo up
-    ip link del "$hostVeth" || true
     ip link add "$hostVeth" type veth peer name "$guestVeth"
 
     # setup veth
@@ -91,17 +99,37 @@ create_netns() {
     sysctl "net.ipv4.conf.${hostVeth}.forwarding=0"
 }
 
+if [[ "$#" -ne 1 ]] 
+then
+    echo "Wrong usage: $0 start|stop" >&2
+    exit 2
+fi
 
-netBase='10.200.1'
-create_netns tbb "${netBase}.1"
-create_netns onioncircs "${netBase}.5"
-create_netns torlaunch "${netBase}.9"
-create_netns onionshare "${netBase}.13"
+if [[ "$1" = stop ]]
+then
+    delete_netns tbb
+    delete_netns onioncircs
+    delete_netns torlaunch
+    delete_netns onionshare
+    exit
+fi
 
-# letting some service available inside $tbbNs
-expose tbb 9050 9050
-expose tbb 9051 9051
-expose onioncircs 9051 9051
-expose torlaunch 9051 9051
-expose onionshare 9050 9050
-expose onionshare 9051 9051
+if [[ "$1" = start ]]
+then
+    modprobe veth
+    modprobe xt_MASQUERADE
+    modprobe xt_nat
+    netBase='10.200.1'
+    create_netns tbb "${netBase}.1"
+    create_netns onioncircs "${netBase}.5"
+    create_netns torlaunch "${netBase}.9"
+    create_netns onionshare "${netBase}.13"
+
+    # letting some service available inside $tbbNs
+    expose tbb 9050 9050
+    expose tbb 9051 9051
+    expose onioncircs 9051 9051
+    expose torlaunch 9051 9051
+    expose onionshare 9050 9050
+    expose onionshare 9051 9051
+fi
