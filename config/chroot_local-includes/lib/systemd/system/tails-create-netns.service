@@ -1,10 +1,13 @@
 [Unit]
 Description=Prepare network namespaces
 Documentation=https://gitlab.tails.boum.org/tails/tails/-/issues/18123
+Wants=network-pre.target
+Before=network-pre.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/local/lib/tails-create-netns
-Wants=network-pre.target
-Before=network-pre.target
+
+[Install]
+WantedBy=sysinit.target
