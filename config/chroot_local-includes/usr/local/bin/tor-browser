@@ -10,6 +10,16 @@ export PATH='/usr/local/bin:/usr/bin:/bin'
 set -e
 set -u
 
+# first gain privileges, then switch namespace and drop them again
+if [ "$(id -u)" -eq 0 ]
+then
+    exec ip netns exec tbb /sbin/runuser -u amnesia /usr/local/bin/tor-browser "$@"
+elif [ -z "$(ip netns identify)" ]
+then
+    exec sudo "$0" "$@"
+fi
+
+
 . gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
@@ -74,7 +84,7 @@ start_browser() {
 if tor_has_bootstrapped || ask_for_confirmation; then
     # Torbutton 1.5.1+ uses those environment variables
     export TOR_SOCKS_HOST='127.0.0.1'
-    export TOR_SOCKS_PORT='9150'
+    export TOR_SOCKS_PORT='9050'
 
     start_browser "${@}"
 fi
