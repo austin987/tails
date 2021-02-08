@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Patch Tor Launcher"
+
+# Note that since chroot_local-patches are applied before running
+# chroot_local-hooks, and Tor Launcher is extracted in such a hook
+# (10-tbb), we need to apply the patch with a (later) hook as well.
+
+# Import the TOR_LAUNCHER_INSTALL variable
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+cd "${TOR_LAUNCHER_INSTALL}"
+patch -p2 < /usr/share/tails/build/tor-launcher-sandbox-hook.patch

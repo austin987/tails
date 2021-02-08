@@ -19,12 +19,11 @@ AutomapHostsSuffixes .exit,.onion
 TransPort 9040
 TransListenAddress 127.0.0.1
 
-## Pluggable transports
-ClientTransportPlugin obfs2,obfs3,obfs4,meek_lite exec /usr/bin/obfs4proxy managed
-
-## The Tor syscall sandbox is not compatible with managed proxies,
-## like we use for pluggable transports.
-Sandbox 0
+## Enable the Seccomp sandbox. It will disabled later (by the
+## tor-sandox-helper script) if we configure any pluggable transport
+## in Tor Launcher; note that old-school "simple" bridges will still
+## have the sandbox enabled.
+Sandbox 1
 
 ## Misc
 AvoidDiskWrites 1
