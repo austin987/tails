@@ -40,7 +40,6 @@ expose() {
         -A OUTPUT -o lo -d 127.0.0.1 -p tcp --dport "$guestPort" \
         -j DNAT  --to-destination "$hostAddress:$hostPort"
 
-    iptables -A INPUT -i "${hostVeth}" -s "$guestAddress" -p tcp --dport "$hostPort" -j ACCEPT
 }
 
 create_netns() {
@@ -100,7 +99,7 @@ create_netns torlaunch "${netBase}.9"
 create_netns onionshare "${netBase}.13"
 
 # letting some service available inside $tbbNs
-expose tbb 9050 9050
+expose tbb 9050 9150
 expose tbb 9051 9051
 expose onioncircs 9051 9051
 expose torlaunch 9051 9051
