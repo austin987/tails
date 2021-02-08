@@ -10,5 +10,5 @@ Feature: Hardening features
     Given I have started Tails from DVD without network and logged in
     And the network is plugged
     And Tor is ready
-    Then the running process "tor" is confined with Seccomp in filter mode
+    Then Tor is confined with Seccomp
 
