@@ -438,13 +438,21 @@ Given /^Tor is ready$/ do
   # case Tor Launcher should autostart and we have to deal with it for
   # tor to bootstrap.
   if $vm.execute_successfully('tor_control_getconf DisableNetwork', libs: 'tor').stdout.chomp == '1'
+    direct_tor_connection = true
     step 'the Tor Launcher autostarts'
     step 'I configure a direct connection in Tor Launcher'
+  else
+    direct_tor_connection = false
   end
 
   # Here we actually check that Tor is ready
   step 'Tor has built a circuit'
   step 'the time has synced'
+  if direct_tor_connection
+    step 'Tor is confined with Seccomp'
+  else
+    step 'Tor is not confined with Seccomp'
+  end
   # When we test for ASP upgrade failure the following tests would fail,
   # so let's skip them in this case.
   unless $vm.file_exist?('/run/live-additional-software/doomed_to_fail')
