@@ -39,7 +39,7 @@ tor_control_getinfo() {
 
 tor_control_getconf() {
 	tor_control_send "GETCONF ${1}" | \
-            sed --regexp-extended -n "s|^250 ${1}=(.*)$|\1|p"
+            sed --regexp-extended -n "s|^250[ -]${1}=(.*)$|\1|p"
 }
 
 tor_control_setconf() {
