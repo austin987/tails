@@ -16,7 +16,7 @@ then
     exec ip netns exec tbb /sbin/runuser -u amnesia /usr/local/bin/tor-browser "$@"
 elif [ -z "$(ip netns identify)" ]
 then
-    exec sudo "$0" "$@"
+    exec sudo TOR_BROWSER_SKIP_OFFLINE_WARNING="${TOR_BROWSER_SKIP_OFFLINE_WARNING:-no}" "$0" "$@"
 fi
 
 
