@@ -34,34 +34,39 @@ deterministic: 1
 rcs: git
 # plugins to add to the default configuration
 add_plugins:
-  - editpage
   - favicon
+  - goto
   - html
+  - htmlbalance
+  - img
   - lockedit
   - map
-  - mirrorlist
+  - meta
+  - orphans
+  - pagestats
   - pagetemplate
-  - passwordauth
+  - pingee
   - po
   - prettydate
+  - recentchanges
+  - search
   - shortcut
   - sidebar
   - tag
   - toc
+  - toggle
   - trail
   - typography
-  - meta
-  - img
-  - pagestats
-  - recentchanges
-  - search
-  - toggle
   - underlay
 # plugins to disable
 disable_plugins:
   - anonok
-  - openid
+  - blogspam
+  - editpage
+  - htmlscrubber
   - httpauth
+  - openid
+  - passwordauth
   - remove
   - rename
   - signinedit
@@ -110,7 +115,7 @@ libdir: ''
 # environment variables
 ENV: {}
 # regexp of normally excluded files to include
-# include: '^\.htaccess$'
+#include: '^\.htaccess$'
 # regexp of files that should be skipped
 exclude: '(\/discussion\..*|\/Discussion\..*|\.(ar|ca|id|pl|ru|sr_Latn|tr|zh|zh_TW)\.po$)'
 # specifies the characters that are allowed in source filenames
@@ -145,7 +150,7 @@ gitmaster_branch: master
 
 # htmlscrubber plugin
 # PageSpec specifying pages not to scrub
-htmlscrubber_skip: '!blueprint/*'
+#htmlscrubber_skip: '!blueprint/*'
 
 # inline plugin
 # enable rss feeds by default?
@@ -169,14 +174,6 @@ pingurl: []
 # PageSpec to limit which pages anonymous users can edit
 #anonok_pagespec: '*/discussion'
 
-# blogspam plugin
-# PageSpec of pages to check for spam
-#blogspam_pagespec: postcomment(*)
-# options to send to blogspam server
-#blogspam_options: 'blacklist=1.2.3.4,blacklist=8.7.6.5,max-links=10'
-# blogspam server XML-RPC url
-#blogspam_server: ''
-
 # httpauth plugin
 # url to redirect to when authentication is needed
 #cgiauthurl: http://example.com/wiki/auth/ikiwiki.cgi
@@ -185,7 +182,7 @@ pingurl: []
 
 # lockedit plugin
 # PageSpec controlling which pages are locked
-locked_pages: '! blueprint/*'
+locked_pages: '*'
 
 # moderatedcomments plugin
 # PageSpec matching users or comment locations to moderate
@@ -196,12 +193,6 @@ locked_pages: '! blueprint/*'
 #openid_realm: ''
 # url to ikiwiki cgi to use for openid authentication (default is cgiurl)
 #openid_cgiurl: ''
-
-# passwordauth plugin
-# a password that must be entered when signing up for an account
-#account_creation_password: s3cr1t
-# cost of generating a password using Authen::Passphrase::BlowfishCrypt
-#password_cost: 8
 
 ######################################################################
 # format plugins
@@ -280,10 +271,10 @@ po_link_to: current
 
 # mirrorlist plugin
 # list of mirrors
-mirrorlist:
-  tails.boum.org: https://tails.boum.org/ikiwiki.cgi
+#mirrorlist:
+#  tails.boum.org: https://tails.boum.org/ikiwiki.cgi
 # generate links that point to the mirrors' ikiwiki CGI
-mirrorlist_use_cgi: 1
+#mirrorlist_use_cgi: 1
 
 # repolist plugin
 # URIs of repositories containing the wiki's source
@@ -292,7 +283,7 @@ mirrorlist_use_cgi: 1
 
 # search plugin
 # path to the omega cgi program
-omega_cgi: /usr/lib/cgi-bin/omega/omega
+#omega_cgi: /usr/lib/cgi-bin/omega/omega
 
 # theme plugin
 # name of theme to enable
@@ -393,13 +384,13 @@ omega_cgi: /usr/lib/cgi-bin/omega/omega
 
 # prettydate plugin
 # format to use to display date
-#prettydateformat: '%X, %B %o, %Y'
+prettydateformat: '%Y-%m-%d'
 
 # recentchanges plugin
 # name of the recentchanges page
-recentchangespage: recentchanges
+#recentchangespage: recentchanges
 # number of changes to track
-recentchangesnum: 100
+#recentchangesnum: 100
 
 # rsync plugin
 # command to run to sync updated pages
@@ -415,12 +406,9 @@ tagbase: tags
 # autocreate new tag pages?
 #tag_autocreate: 1
 # commit autocreated tag pages
-tag_autocreate_commit: 1
+#tag_autocreate_commit: 1
 
 # underlay plugin
 # extra underlay directories to add
 add_underlays:
   - /home/amnesia/Persistent/Tails/promotion-material
-
-# prettydate plugin
-prettydateformat: '%Y-%m-%d'

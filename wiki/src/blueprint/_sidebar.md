@@ -1,2 +1,0 @@
-- [Home](home)
-- [Monthly reports](monthly report)

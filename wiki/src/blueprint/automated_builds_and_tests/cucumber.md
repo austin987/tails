@@ -1,5 +1,0 @@
-[[!tag archived]]
-
-[[!meta title="Automated tests using cucumber"]]
-
-Merged in 0.17.2, see [[test/automated_tests]].

@@ -1,3 +1,0 @@
-[[!tag archived]]
-
-This is about [[!tails_ticket 10040]].
