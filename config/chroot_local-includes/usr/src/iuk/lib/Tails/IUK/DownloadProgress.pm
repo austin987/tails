@@ -13,7 +13,7 @@ use 5.10.1;
 use strictures 2;
 
 use autodie qw(:all);
-use Types::Standard qw{Num Str HashRef};
+use Types::Standard qw{Num Str HashRef CodeRef};
 use Time::HiRes;
 use Time::Duration;
 use Function::Parameters;
@@ -60,9 +60,9 @@ has 'estimated_end_time' => (
     default => __(q{Unknow time}),
 );
 
-has 'time_units' => (
+has 'time_duration' => (
     is  => 'lazy',
-    isa => HashRef[Str],
+    isa => HashRef[CodeRef],
 );
 
 has 'smoothing_factor' => (
@@ -71,13 +71,13 @@ has 'smoothing_factor' => (
     default =>  0.1,
 );
 
-method _build_time_units () {
+method _build_time_duration () {
     {
-        year   => __(q{y}),
-        day    => __(q{d}),
-        hour   => __(q{h}),
-        minute => __(q{m}),
-        second => __(q{s}),
+        year   => sub {__nx("1y","{count}y", $_[0], count => $_[0])},
+        day    => sub {__nx("1d","{count}d", $_[0], count => $_[0])},
+        hour   => sub {__nx("1h","{count}h", $_[0], count => $_[0])},
+        minute => sub {__nx("1m","{count}m", $_[0], count => $_[0])},
+        second => sub {__nx("1s","{count}s", $_[0], count => $_[0])},
     };
 }
 
@@ -116,8 +116,8 @@ method estimate_end_time () {
     return if $timeleft eq 'just now';
     $timeleft =~ s/\band\b//;
     $timeleft =~
-        s/\b(year|day|hour|minute|second)s?\b
-        /$self->time_units->{$1}/egx;
+        s/\b(\d+)\s+(year|day|hour|minute|second)s?\b
+        /$self->time_duration->{$2}->($1)/egx;
     $timeleft =~ s/(\d+)\s*/$1/g;
     return $timeleft;
 }
