@@ -1,12 +1,43 @@
 #!/bin/sh
 #
-# Remove all net drivers from the initramfs to make some room and try to
+# Remove useless drivers from the initramfs to make some room and try to
 # drop back below 32 MiB which might be a magic number (= hard limit) on
 # Mac hardware (#17320).
+
+# This script must support being run several times.
 
 set -e
 set -x
 
 . /usr/share/initramfs-tools/hook-functions
 
-find "$DESTDIR/usr$MODULESDIR/kernel/drivers/net" -name '*.ko' -print -delete >&2
+# net drivers
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/drivers/net"
+
+# drivers for storage and filesystems Tails cannot boot from
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/drivers/block/drbd/"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/block/rbd.ko"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/drivers/infiniband/"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/md/dm-raid.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/md/dm-snapshot.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/md/md-mod.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/md/raid456.ko"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/drivers/scsi/aacraid/"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/drivers/scsi/bfa/"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/drivers/scsi/megaraid/"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/scsi/mpt3sas/mpt3sas.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/scsi/myrs.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/scsi/myrb.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/drivers/scsi/qla2xxx/qla2xxx.ko"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/drivers/target/"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/btrfs/btrfs.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/fscache/fscache.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/hfs/hfs.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/hfsplus/hfsplus.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/jffs2/jffs2.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/jfs/jfs.ko"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/fs/nfs_common/"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/fs/nfs/"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/reiserfs/reiserfs.ko"
+rm -f  "$DESTDIR/usr$MODULESDIR/kernel/fs/xfs/xfs.ko"
+rm -rf "$DESTDIR/usr$MODULESDIR/kernel/net/ceph/"
