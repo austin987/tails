@@ -14,6 +14,12 @@ EOT
    # everything that is outputted by get_all_veth_nics
    # On bash, you might have used process substitution: for-loop | grep -Fxv -f <(get_all_veth_nics)
    # but we're in posix-compatible shell scripting!
+   ret=$?
+   if [ "$ret" -lt 2 ]; then
+       true
+   else
+       return $ret
+   fi
 }
 get_all_veth_nics() {
     ip -brief link show type veth|
