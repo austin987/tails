@@ -7,7 +7,18 @@ get_all_ethernet_nics() {
         if [ "$(cat "${i}"/type)" = 1 ]; then
             basename "${i}"
         fi
-    done
+    done | grep -Fxv -f /dev/fd/3  3<<EOT
+$(get_all_veth_nics)
+EOT
+   # the above command just "removes" from the output of the for loop
+   # everything that is outputted by get_all_veth_nics
+   # On bash, you might have used process substitution: for-loop | grep -Fxv -f <(get_all_veth_nics)
+   # but we're in posix-compatible shell scripting!
+}
+get_all_veth_nics() {
+    ip -brief link show type veth|
+        awk '{ print $1 }' |
+        cut -d '@' -f 1
 }
 
 nic_exists() {
