@@ -626,12 +626,17 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                     $download_h->pump_nb;
                     next unless $download_out;
                     $zenity_in = $download_out;
+                    # Update the progress dialog bar percentage
                     $zenity_h->pump_nb;
+
                     ($bytes_downloaded) = split /\n/, $download_out;
+                    # Convert percentage to total number of bytes downloaded
                     $bytes_downloaded = ($bytes_downloaded/100) * $download_progress->size;
+                    # Clear $download_out to avoid old output in the next iteration
                     $download_out = undef;
                     next unless $download_progress->update($bytes_downloaded);
                     $zenity_in = $download_progress->info;
+                    # Update the progress dialog text
                     $zenity_h->pump_nb;
                 }
             }
