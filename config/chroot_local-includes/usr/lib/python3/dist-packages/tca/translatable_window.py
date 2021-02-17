@@ -26,7 +26,12 @@ from gi.repository import Gtk
 
 
 class TranslatableWindow(object):
-    """Mixin providing functions to translate a window on the fly
+    """
+    Mixin providing functions to translate a window on the fly
+
+    To use this in your application, you need to implement this methods:
+     - get_translation_domain(self)
+     - get_locale_dir(self)
     """
     retain_focus = True
     registered_windows = []

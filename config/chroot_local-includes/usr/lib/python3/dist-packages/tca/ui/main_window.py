@@ -9,7 +9,39 @@ import tca.config
 
 MAIN_UI_FILE = 'main.ui'
 CSS_FILE = 'tca.css'
-class TCAMainWindow(Gtk.Window, TranslatableWindow):
+
+class StepChooseHideMixin:
+    '''
+    most utils related to the step in which the user can choose between an easier configuration and going
+    unnoticed
+    '''
+    def before_show(self):
+        if hasattr(super(), 'before_show'):
+            super().before_show()
+        self.builder.get_object('radio_unnoticed_none').set_active(True)
+        self.builder.get_object('radio_unnoticed_yes').set_active(False)
+        self.builder.get_object('radio_unnoticed_no').set_active(False)
+        self.builder.get_object('radio_unnoticed_none').hide()
+
+    def on_box_step_choose_hide_radio_changed(self, *args):
+        easy = self.builder.get_object('radio_unnoticed_no').get_active()
+        hide = self.builder.get_object('radio_unnoticed_yes').get_active()
+        active = easy or hide
+        self.builder.get_object('box_step_choose_hide_btn_connect_clicked').set_sensitive(active)
+
+    def on_box_step_choose_hide_btn_connect_clicked(self, user_data=None):
+        easy = self.builder.get_object('radio_unnoticed_no').get_active()
+        hide = self.builder.get_object('radio_unnoticed_yes').get_active()
+        if not easy and not hide:
+            return
+        # XXX: go to next step
+        if hide:
+            # XXX: nicer popup
+            raise NotImplementedError()
+
+
+
+class TCAMainWindow(Gtk.Window, TranslatableWindow, StepChooseHideMixin):
     # TranslatableWindow mixin {{{
     def get_translation_domain(self):
         return 'tails'
@@ -35,7 +67,7 @@ class TCAMainWindow(Gtk.Window, TranslatableWindow):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         # Load UI interface definition
-        builder = Gtk.Builder()
+        self.builder = builder = Gtk.Builder()
         builder.set_translation_domain(self.get_translation_domain())
         builder.add_from_file(tca.config.data_path + MAIN_UI_FILE)
         builder.connect_signals(self)
@@ -54,8 +86,12 @@ class TCAMainWindow(Gtk.Window, TranslatableWindow):
         self.add(box_main_container_image_step)
         box_main_container_image_step.add(builder.get_object('box_step_choose_hide'))
 
+        # builder.get_object('box_step_choose_hide')
+        self.before_show()
         self.show()
 
     def cb_window_delete_event(self, widget, event, user_data=None):
-        # don't close the toplevel window on user request
-        return True
+        # XXX: warn the user about leaving the wizard
+        Gtk.main_quit()
+        return False
+
