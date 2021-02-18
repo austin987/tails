@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
 from pathlib import Path
+import subprocess
 import time
 import logging
 import os
-import sys, json
+import sys
+import json
 import socket
 from stem.control import Controller
 import stem.socket
@@ -17,6 +19,7 @@ class StemFDSocket(stem.socket.ControlSocket):
     def __init__(self, fd: int):
         super().__init__()
         self.fd = fd
+        self._is_alive = True
 
     @property
     def path(self) -> str:
@@ -36,7 +39,7 @@ class StemFDSocket(stem.socket.ControlSocket):
 
 
 def recover_fd_from_parent() -> tuple:
-    fds = [int(fd) for fd in os.getenv("INHERIT_FD", "").split(",")]
+    fds = [int(fd) for fd in os.getenv("INHERIT_FD").split(",")]
     # fds[0] must be a socket to Tor Control Port
     # fds[1] must be a rw fd for settings file
 
@@ -288,7 +291,7 @@ class TorLauncherUtils:
         return True
 
 
-class TorLauncherUtils:
+class TorLauncherNetworkUtils:
     def __init__(self):
         pass
 

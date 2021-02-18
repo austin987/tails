@@ -23,6 +23,7 @@ import logging
 
 from gi.repository import Gtk
 
+log = logging.getLogger("translatable")
 
 class TranslatableWindow(object):
     """
@@ -71,13 +72,13 @@ class TranslatableWindow(object):
         gtk_translation = gettext.translation(
             "gtk30", languages=[str(lang)], fallback=True
         )
-        logging.debug("%s has GTK translation: %s", lang, gtk_translation)
+        log.debug("%s has GTK translation: %s", lang, gtk_translation)
         # Translators: please do not translate this string (it is read from
         # Gtk translation)
         default_dir = gtk_translation.gettext("default:LTR")
-        logging.debug("translation for direction is %s", default_dir)
+        log.debug("translation for direction is %s", default_dir)
         if default_dir == "default:RTL":
-            logging.debug("%s is RTL", lang)
+            log.debug("%s is RTL", lang)
             return Gtk.TextDirection.RTL
         else:
             return Gtk.TextDirection.LTR
@@ -91,11 +92,11 @@ class TranslatableWindow(object):
 
         This method should be called once the widgets are created"""
         if not isinstance(widget, Gtk.Widget):
-            logging.debug("%s is not a Gtk.Widget", widget)
+            log.debug("%s is not a Gtk.Widget", widget)
             return None
         if isinstance(widget, Gtk.Label) or isinstance(widget, Gtk.Button):
             if widget not in self.labels:
-                logging.debug(
+                log.debug(
                     "Storing translation for label/button '%s'", widget.get_label()
                 )
                 self.labels[widget] = widget.get_label()
@@ -109,12 +110,12 @@ class TranslatableWindow(object):
                 widget.set_label = wrapped_set_label
         elif isinstance(widget, Gtk.Entry):
             if widget not in self.placeholder_texts:
-                logging.debug(
+                log.debug(
                     "Storing translation for entry '%s'", widget.get_placeholder_text()
                 )
                 self.placeholder_texts[widget] = widget.get_placeholder_text()
         elif isinstance(widget, Gtk.Container):
-            logging.debug("Handling container '%s'", widget.get_name())
+            log.debug("Handling container '%s'", widget.get_name())
             self.containers.append(widget)
             if (
                 (isinstance(widget, Gtk.HeaderBar) or isinstance(widget, Gtk.Window))
@@ -125,7 +126,7 @@ class TranslatableWindow(object):
             for child in widget.get_children():
                 self.store_translations(child)
         else:
-            logging.debug("W: unhandled widget: %s", widget)
+            log.debug("W: unhandled widget: %s", widget)
         if widget.get_has_tooltip():
             if widget not in self.tooltips:
                 self.tooltips[widget] = widget.get_tooltip_text()
@@ -141,7 +142,7 @@ class TranslatableWindow(object):
 
         Loop through widgets registered with store_translations and translate
         them on the fly"""
-        logging.debug("translating %s to %s", self, lang)
+        log.debug("translating %s to %s", self, lang)
         try:
             self.translation = gettext.translation(
                 self.get_translation_domain(), self.get_locale_dir(), [str(lang)]
