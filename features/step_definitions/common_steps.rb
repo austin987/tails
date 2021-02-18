@@ -258,9 +258,7 @@ def start_up_spammer(domain_name)
     bus,
     "--unit=#{up_spammer_unit_name}",
     '--quiet',
-    # XXX: enable this once we require systemd v236 or newer
-    # for running our test suite
-    # '--collect',
+    '--collect',
     '/usr/bin/ruby',
     '-e', up_spammer_code(domain_name)
   )
