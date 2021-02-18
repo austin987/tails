@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
 #
 # Copyright 2012-2019 Tails developers <tails@boum.org>
@@ -33,23 +32,24 @@ class TranslatableWindow(object):
      - get_translation_domain(self)
      - get_locale_dir(self)
     """
+
     retain_focus = True
     registered_windows = []
 
     def get_translation_domain(self):
         raise NotImplementedError(
-                "You need to implement get_translation_domain to translate your window!")
+            "You need to implement get_translation_domain to translate your window!"
+        )
 
     def get_locale_dir(self):
         raise NotImplementedError(
-                "You need to implement get_locale_dir to translate your window!")
+            "You need to implement get_locale_dir to translate your window!"
+        )
 
     def __init__(self, window):
         self.window_ = window
         self.translation = gettext.translation(
-            self.get_translation_domain(),
-            self.get_locale_dir(),
-            fallback=True
+            self.get_translation_domain(), self.get_locale_dir(), fallback=True
         )
 
         self.containers = []
@@ -68,9 +68,9 @@ class TranslatableWindow(object):
         (gtk_get_locale_direction in gtk/gtkmain.c), but it accepts a lang
         parameter rather than using current locale.
         """
-        gtk_translation = gettext.translation("gtk30",
-                                              languages=[str(lang)],
-                                              fallback=True)
+        gtk_translation = gettext.translation(
+            "gtk30", languages=[str(lang)], fallback=True
+        )
         logging.debug("%s has GTK translation: %s", lang, gtk_translation)
         # Translators: please do not translate this string (it is read from
         # Gtk translation)
@@ -95,7 +95,9 @@ class TranslatableWindow(object):
             return None
         if isinstance(widget, Gtk.Label) or isinstance(widget, Gtk.Button):
             if widget not in self.labels:
-                logging.debug("Storing translation for label/button '%s'", widget.get_label())
+                logging.debug(
+                    "Storing translation for label/button '%s'", widget.get_label()
+                )
                 self.labels[widget] = widget.get_label()
                 # Wrap set_label to get notified about string changes
                 widget.original_set_label = widget.set_label
@@ -103,18 +105,22 @@ class TranslatableWindow(object):
                 def wrapped_set_label(text):
                     self.labels[widget] = text
                     widget.original_set_label(self.gettext(text))
+
                 widget.set_label = wrapped_set_label
         elif isinstance(widget, Gtk.Entry):
             if widget not in self.placeholder_texts:
-                logging.debug("Storing translation for entry '%s'", widget.get_placeholder_text())
+                logging.debug(
+                    "Storing translation for entry '%s'", widget.get_placeholder_text()
+                )
                 self.placeholder_texts[widget] = widget.get_placeholder_text()
         elif isinstance(widget, Gtk.Container):
             logging.debug("Handling container '%s'", widget.get_name())
             self.containers.append(widget)
-            if ((isinstance(widget, Gtk.HeaderBar) or
-                    isinstance(widget, Gtk.Window)) and
-                    widget not in self.titles and
-                    widget.get_title()):
+            if (
+                (isinstance(widget, Gtk.HeaderBar) or isinstance(widget, Gtk.Window))
+                and widget not in self.titles
+                and widget.get_title()
+            ):
                 self.titles[widget] = widget.get_title()
             for child in widget.get_children():
                 self.store_translations(child)
@@ -138,8 +144,8 @@ class TranslatableWindow(object):
         logging.debug("translating %s to %s", self, lang)
         try:
             self.translation = gettext.translation(
-                    self.get_translation_domain(),
-                    self.get_locale_dir(), [str(lang)])
+                self.get_translation_domain(), self.get_locale_dir(), [str(lang)]
+            )
         except IOError:
             self.translation = None
 
@@ -155,9 +161,11 @@ class TranslatableWindow(object):
             widget.set_title(self.gettext(self.titles[widget]))
         for widget in self.tooltips.keys():
             widget.set_tooltip_markup(self.gettext(self.tooltips[widget]))
-        if (self.window_.get_sensitive() and
-                self.window_.get_visible() and
-                self.retain_focus):
+        if (
+            self.window_.get_sensitive()
+            and self.window_.get_visible()
+            and self.retain_focus
+        ):
             self.window_.present()
 
     @staticmethod

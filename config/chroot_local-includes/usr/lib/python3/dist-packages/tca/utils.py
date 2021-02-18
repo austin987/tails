@@ -287,48 +287,52 @@ class TorLauncherUtils:
 
         return True
 
+
 class TorLauncherUtils:
     def __init__(self):
         pass
 
     def is_network_up(self):
-        '''
+        """
         This method checks whether we have an IP on some network interface.
 
         It does NOT care if we're really connected to the Internet
-        '''
+        """
 
         # XXX: does it do the right thing? we should check!
         try:
-            subprocess.check_call(['nm-online', '-xq'])
+            subprocess.check_call(["nm-online", "-xq"])
             return True
         except subprocess.CalledProcessError:
             return False
 
     def is_internet_up(self):
-        '''
+        """
         This is similar to is_network_up(), but also checks if we're really connected to the Internet
-        '''
+        """
         raise NotImplementedError()
 
     def open_wifi_screen(self):
-        '''
+        """
         Open NetworkManager wifi configuration screen
-        '''
+        """
         raise NotImplementedError()
 
     def tor_connect_easy(self):
-        '''
+        """
         tries to connect to Tor without hiding, and with no custom configuration
-        '''
+        """
         raise NotImplementedError()
 
     def is_tor_ready(self):
-        '''
+        """
         checks if tor is properly connected
-        '''
-        args = ['sh', '-c',
-                ". /usr/local/lib/tails-shell-library/tor.sh; tor_is_working"]
+        """
+        args = [
+            "sh",
+            "-c",
+            ". /usr/local/lib/tails-shell-library/tor.sh; tor_is_working",
+        ]
         try:
             subprocess.check_call(args)
             return True
@@ -336,8 +340,9 @@ class TorLauncherUtils:
             return False
 
 
-
-def backoff_wait(total_wait: float = 30., initial_sleep: float = 0.5, increment = lambda x: x + 0.5):
+def backoff_wait(
+    total_wait: float = 30.0, initial_sleep: float = 0.5, increment=lambda x: x + 0.5
+):
     total_sleep = 0
     sleep_time = initial_sleep
     while total_sleep < total_wait:
@@ -356,7 +361,7 @@ def main():
     launcher.apply_conf()
 
     bootstrapped = False
-    for _ in backoff_wait(30.):
+    for _ in backoff_wait(30.0):
         is_ok = launcher.tor_has_bootstrapped()
         if is_ok:
             bootstrapped = True
