@@ -37,6 +37,8 @@ method _build_number_formatter () {
 
 # Convert a number of bytes to human readable format
 method format_bytes (Num $number) {
+    return int($number) .  __(q{bytes})
+        if $number < 1024 && $number >= 0;
     $self->number_formatter->format_bytes($number,
                                           precision => 0);
 }
