@@ -55,6 +55,7 @@ Feature: Upgrading an old Tails USB installation
     Then Tails is running from USB drive "old"
     And all persistence presets are enabled
     When I write some files expected to persist
+    # Verify that our baseline for the next scenarios is sane
     And all persistent filesystems have safe access rights
     And all persistence configuration files have safe access rights
     And all persistent directories from the old Tails version have safe access rights
