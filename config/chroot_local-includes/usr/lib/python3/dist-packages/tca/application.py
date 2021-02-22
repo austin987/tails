@@ -6,7 +6,7 @@ import sys
 
 from tca.ui.main_window import TCAMainWindow
 import tca.config
-from tca.utils import recover_fd_from_parent, TorLauncherUtils
+from tca.utils import recover_fd_from_parent, TorLauncherUtils, TorLauncherNetworkUtils
 
 import gi
 
@@ -25,6 +25,7 @@ class TCAApplication:
         controller.authenticate(password=None)
         self.configurator = TorLauncherUtils(controller, conf)
         self.configurator.load_conf()
+        self.netutils = TorLauncherNetworkUtils()
         print(self.configurator.tor_connection_config.to_tor_conf())
         self.mainwindow = TCAMainWindow(self)
 

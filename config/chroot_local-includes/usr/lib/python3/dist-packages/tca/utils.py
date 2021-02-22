@@ -11,6 +11,7 @@ import socket
 from stem.control import Controller
 import stem.socket
 from typing import List, Optional, Dict, Any, Tuple, cast
+import tca.config
 
 log = logging.getLogger("tor-launcher")
 
@@ -166,6 +167,20 @@ class TorConnectionConfig:
         self.bridges: List[str] = bridges
         self.proxy: TorConnectionProxy = proxy
 
+    def disable_bridges(self):
+        self.bridges.clear()
+
+    def default_bridges(self, only_type=None):
+        """Set default bridges: useful for Tor blocking, not for unnoticed-mode"""
+        self.bridges.clear()
+        with open(os.path.join(tca.config.data_path, 'default_bridges.txt')) as buf:
+            for line in buf:
+                if not line.strip() or line.startswith('#'):
+                    continue
+                if only_type and line.split()[0] != only_type:
+                    continue
+                self.bridges.append(line.strip())
+
     @classmethod
     def load_from_tor_stem(cls, stem_controller: Controller):
         bridges: List[str] = []
@@ -256,7 +271,7 @@ class TorLauncherUtils:
         self.config_buf.seek(0)
         try:
             obj = json.load(self.config_buf)
-        except JSONDecodeError:
+        except json.JSONDecodeError:
             log.warning("Invalid config file")
             return
         finally:
@@ -279,8 +294,9 @@ class TorLauncherUtils:
 
         if int(parts[2].split("=")[1]) != 100:
             return False
+        return True
 
-        # shall we really do also those checks?
+    def tor_has_circuits(self) -> bool:
         resp = self.stem_controller.get_info("status/circuit-established")
         if resp is None:
             log.warn("No response from ControlPort")

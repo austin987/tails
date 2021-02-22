@@ -25,6 +25,7 @@ from gi.repository import Gtk
 
 log = logging.getLogger("translatable")
 
+
 class TranslatableWindow(object):
     """
     Mixin providing functions to translate a window on the fly

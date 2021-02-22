@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -u
+
 if [ "$(id -u)" -ne 0 ]
 then
     echo "$0 must be run with sudo" >&2
@@ -15,4 +17,4 @@ chown -R root:root "$confdir"
 exec /usr/local/lib/connect-drop \
          -c "FILE:$conffile:r+" \
          -c "TCP:127.0.0.1:9051" \
-         -- /sbin/runuser -u amnesia env DISPLAY="$DISPLAY" /usr/lib/python3/dist-packages/tca/application.py
+         -- /sbin/runuser -u amnesia env DISPLAY="${DISPLAY:-}" /usr/lib/python3/dist-packages/tca/application.py

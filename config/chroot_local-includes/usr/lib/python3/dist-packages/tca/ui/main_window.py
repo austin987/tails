@@ -1,14 +1,20 @@
+import logging
 import subprocess
+import time
 import gi
 import gettext
 
+from tca.translatable_window import TranslatableWindow
+from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
+import tca.config
+
+
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gdk, Gtk
+gi.require_version("GLib", "2.0")
 
-from tca.translatable_window import TranslatableWindow
-from tca.ui.asyncutils import GAsyncSpawn
-import tca.config
+
+from gi.repository import Gdk, Gtk, GLib  # noqa: E402
 
 MAIN_UI_FILE = "main.ui"
 CSS_FILE = "tca.css"
@@ -28,6 +34,7 @@ CSS_FILE = "tca.css"
 
 _ = gettext.gettext
 
+log = logging.getLogger(__name__)
 
 class StepChooseHideMixin:
     """
@@ -60,9 +67,7 @@ class StepChooseHideMixin:
             self.todo_dialog("Unnoticed connection wizard")
         else:
             if self.builder.get_object("radio_unnoticed_no_bridge").get_active():
-                self.todo_dialog(
-                    "Bridge configuration still needs to be implemented"
-                )
+                self.todo_dialog("Bridge configuration still needs to be implemented")
             else:
                 self.change_box("progress")
 
@@ -79,24 +84,74 @@ class StepConnectProgressMixin:
     def spawn_internet_test(self):
         test_spawn = GAsyncSpawn()
         test_spawn.connect("process-done", self.cb_internet_test)
-        test_spawn.run(["/bin/sh", "-c", "sleep 2; true"])
+        test_spawn.run(["/bin/sh", "-c", "sleep 0.5; true"])
 
     def spawn_tor_test(self):
         test_spawn = GAsyncSpawn()
         test_spawn.connect("process-done", self.cb_tor_test)
-        test_spawn.run(["/bin/sh", "-c", "sleep 2; true"])
+        test_spawn.run(["/bin/sh", "-c", "sleep 0.5; true"])
 
     def spawn_tor_connect(self):
-        test_spawn = GAsyncSpawn()
-        test_spawn.connect("process-done", self.cb_tor_connect_exit)
-        test_spawn.connect("stdout-data", self.cb_tor_connect_output)
-        test_spawn.run(
-            [
-                "/bin/sh",
-                "-c",
-                "for i in `seq 1 20`; do echo INFO=$i; sleep 0.1; done; true",
-            ]
-        )
+        progress = self.builder.get_object("step_progress_pbar_torconnect")
+
+        # this "chain" might be handled in a more explicit way. however, it does the job!
+        def do_tor_connect():
+            print("disabling bridges")
+            self.app.configurator.tor_connection_config.disable_bridges()
+            time.sleep(2)
+            progress.set_fraction(0.1)
+            progress.set_text("configuration prepared")
+            return True
+
+        def do_tor_connect_default_bridges():
+            print("disabling bridges")
+            self.app.configurator.tor_connection_config.default_bridges(only_type='obfs4')
+            time.sleep(2)
+            progress.set_fraction(0.1)
+            progress.set_text("configuration prepared")
+            return True
+
+
+        def do_tor_connect_apply():
+            print("applying conf")
+            self.app.configurator.apply_conf()
+            print("applied!")
+            time.sleep(2)
+            progress.set_fraction(0.20)
+            progress.set_text("applied")
+            GLib.timeout_add(1000, do_tor_connect_check, {"count": 30})
+            return False
+
+        def do_tor_connect_check(d: dict):
+            # this dictionary trick is a argument to circumvent the fact that integers are immutable in
+            # Python; the dictionary is just acting like a mutable reference, job that might be done with
+            # weakref or other methods, but dicts are easier to understand.
+            if d["count"] <= 0:
+                progress.set_fraction(0)
+                progress.set_text("Connection error")
+                if not self.app.configurator.tor_connection_config.bridges:
+                    log.info("Retrying with default bridges")
+                    self.app.configurator.tor_connection_config.default_bridges()
+                    idle_add_chain([do_tor_connect_default_bridges, do_tor_connect_apply])
+                else:
+                    log.info("Failed with bridges")
+                return False
+            d["count"] -= 1
+
+            ok = self.app.configurator.tor_has_bootstrapped()
+            if ok:
+                if not self.app.configurator.tor_connection_config.bridges:
+                    text = "Tor working!"
+                else:
+                    text = "Tor working (with bridges)!"
+                progress.set_fraction(1)
+                progress.set_text(text)
+                self.builder.get_object("step_progress_box_start").show()
+                return False
+            else:
+                return True
+
+        idle_add_chain([do_tor_connect, do_tor_connect_apply])
 
     def cb_internet_test(self, spawn, retval):
         if retval == 0:
@@ -118,24 +173,6 @@ class StepConnectProgressMixin:
             self.builder.get_object("step_progress_box_torok").show()
             self.builder.get_object("step_progress_img_torok").set_from_stock(
                 "gtk-dialog-error", Gtk.IconSize.BUTTON
-            )
-
-    def cb_tor_connect_output(self, spawn, text):
-        self.builder.get_object("step_progress_pbar_torconnect").pulse()
-        self.builder.get_object("step_progress_pbar_torconnect").set_text(text.strip())
-
-    def cb_tor_connect_exit(self, spawn, retval):
-        if retval == 0:
-            self.builder.get_object("step_progress_pbar_torconnect").set_fraction(1)
-            self.builder.get_object("step_progress_pbar_torconnect").set_text(
-                _("Connected")
-            )
-            self.builder.get_object("step_progress_box_start").show()
-            return
-        else:
-            self.builder.get_object("step_progress_pbar_torconnect").set_fraction(0)
-            self.builder.get_object("step_progress_pbar_torconnect").set_text(
-                "Error %d connecting" % retval
             )
 
     def cb_step_progress_btn_starttbb_clicked(self, *args):

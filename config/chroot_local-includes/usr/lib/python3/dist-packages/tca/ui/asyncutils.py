@@ -1,7 +1,13 @@
 import os
+from typing import List, Callable
 
-from gi.repository import GObject
-from gi.repository import GLib
+import gi
+
+gi.require_version("GLib", "2.0")
+
+from gi.repository import GObject  # noqa: E402
+from gi.repository import GLib  # noqa: E402
+
 
 
 class GAsyncSpawn(GObject.GObject):
@@ -64,3 +70,25 @@ class GAsyncSpawn(GObject.GObject):
     def _on_stderr(self, fobj, cond):
         self._emit_std("stderr", fobj.readline())
         return True
+
+
+def idle_add_chain(functions: List[Callable]):
+    """
+    this is a wrapper over GLib.idle_add
+
+    Use case: idle_add is very cool, but modifications to widgets aren't applied until the whole method add.
+    A simple solution to this shortcoming is split your function in many small ones, and call them in a chain.
+
+    Using idle_add_chain, you can write each step as a separate function, then call idle_add_chain with a list
+    of those functions. The chain will continue ONLY if you return True.
+    """
+    if not functions:
+        return
+    first = functions.pop(0)
+
+    def wrapped_fn():
+        ret = first()
+        if ret is True and functions:
+            idle_add_chain(functions)
+
+    GLib.idle_add(wrapped_fn)
