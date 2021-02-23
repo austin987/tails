@@ -1,5 +1,19 @@
 #!/bin/bash
-cd /usr/share/tails/greeter/
 export LANG="en_US.UTF-8"
-/usr/share/tails/greeter/set-cursor.py watch
-/usr/bin/python3 ./tails-greeter.py "$@"
+if grep -qw "debug=greeter" /proc/cmdline && [ -z "${DEBUG_GREETER:-}" ]; then
+  # Export DEBUG_GREETER=1 so that when this file is executed again
+  # from the gnome-terminal, we actually start the greeter and not
+  # another terminal.
+  export DEBUG_GREETER=1
+  # In order to make the gnome-terminal - and the Greeter we start from
+  # it - belong to the GDM session, we have to run it as a child process.
+  # By default, gnome-terminals are spawned by systemd. This is a
+  # workaround based on https://unix.stackexchange.com/a/201915.
+  /usr/lib/gnome-terminal/gnome-terminal-server --app-id greeter.debug.Terminal &
+  sleep 1
+  gnome-terminal --app-id greeter.debug.Terminal -- /bin/bash
+else
+  cd /usr/share/tails/greeter/
+  /usr/share/tails/greeter/set-cursor.py watch
+  /usr/bin/python3 ./tails-greeter.py "$@"
+fi
