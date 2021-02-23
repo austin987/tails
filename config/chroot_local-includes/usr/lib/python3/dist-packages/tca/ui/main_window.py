@@ -36,6 +36,7 @@ _ = gettext.gettext
 
 log = logging.getLogger(__name__)
 
+
 class StepChooseHideMixin:
     """
     most utils related to the step in which the user can choose between an easier configuration and going
@@ -52,7 +53,7 @@ class StepChooseHideMixin:
         easy = self.builder.get_object("radio_unnoticed_no").get_active()
         hide = self.builder.get_object("radio_unnoticed_yes").get_active()
         active = easy or hide
-        self.builder.get_object("step_hide_btn_connect").set_sensitive(active)
+        self.builder.get_object("step_hide_btn_submit").set_sensitive(active)
         if easy:
             self.builder.get_object("step_hide_box_bridge").show()
         else:
@@ -70,6 +71,21 @@ class StepChooseHideMixin:
                 self.todo_dialog("Bridge configuration still needs to be implemented")
             else:
                 self.change_box("progress")
+
+
+class StepChooseBridgeMixin:
+    def before_show_bridge(self):
+        self.builder.get_object("step_bridge_box").show()
+        self.builder.get_object("step_bridge_radio_none").set_active(True)
+        self.builder.get_object("step_bridge_radio_none").hide()
+
+    def cb_step_bridge_radio_changed(self, *args):
+        default = self.builder.get_object("step_bridge_radio_default").get_active()
+        manual = self.builder.get_object("step_bridge_radio_type").get_active()
+        self.builder.get_object("step_bridge_combo_default_type").set_sensitive(default)
+        self.builder.get_object("step_bridge_btn_submit").set_sensitive(
+            default or manual
+        )
 
 
 class StepConnectProgressMixin:
@@ -98,25 +114,23 @@ class StepConnectProgressMixin:
         def do_tor_connect():
             print("disabling bridges")
             self.app.configurator.tor_connection_config.disable_bridges()
-            time.sleep(2)
             progress.set_fraction(0.1)
             progress.set_text("configuration prepared")
             return True
 
         def do_tor_connect_default_bridges():
             print("disabling bridges")
-            self.app.configurator.tor_connection_config.default_bridges(only_type='obfs4')
-            time.sleep(2)
+            self.app.configurator.tor_connection_config.default_bridges(
+                only_type="obfs4"
+            )
             progress.set_fraction(0.1)
             progress.set_text("configuration prepared")
             return True
-
 
         def do_tor_connect_apply():
             print("applying conf")
             self.app.configurator.apply_conf()
             print("applied!")
-            time.sleep(2)
             progress.set_fraction(0.20)
             progress.set_text("applied")
             GLib.timeout_add(1000, do_tor_connect_check, {"count": 30})
@@ -132,9 +146,12 @@ class StepConnectProgressMixin:
                 if not self.app.configurator.tor_connection_config.bridges:
                     log.info("Retrying with default bridges")
                     self.app.configurator.tor_connection_config.default_bridges()
-                    idle_add_chain([do_tor_connect_default_bridges, do_tor_connect_apply])
+                    idle_add_chain(
+                        [do_tor_connect_default_bridges, do_tor_connect_apply]
+                    )
                 else:
                     log.info("Failed with bridges")
+                    self.change_box("bridge")
                 return False
             d["count"] -= 1
 
@@ -189,7 +206,11 @@ class StepConnectProgressMixin:
 
 
 class TCAMainWindow(
-    Gtk.Window, TranslatableWindow, StepChooseHideMixin, StepConnectProgressMixin
+    Gtk.Window,
+    TranslatableWindow,
+    StepChooseHideMixin,
+    StepConnectProgressMixin,
+    StepChooseBridgeMixin,
 ):
     # TranslatableWindow mixin {{{
     def get_translation_domain(self):
