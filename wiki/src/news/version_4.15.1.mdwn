@@ -19,7 +19,24 @@ You should upgrade as soon as possible.
 
 <h1 id="issues">Known issues</h1>
 
-None specific to this release.
+* Tails 4.14 and older cannot automatically upgrade to the latest version of Tails.
+
+  To upgrade from Tails 4.14 or older to the latest version of Tails:
+
+  1. Start Tails and set up an
+     [[administration password|doc/first_steps/welcome_screen/administration_password]].
+
+  1. In a terminal, execute the following command:
+
+           torsocks curl --silent https://gitlab.tails.boum.org/tails/tails/-/raw/master/config/chroot_local-includes/usr/share/tails/certs/lets-encrypt-r3.pem \
+           | sudo tee --append /usr/local/etc/ssl/certs/tails.boum.org-CA.pem \
+           && systemctl --user restart tails-upgrade-frontend`
+
+  1. About 30 seconds later, you should be prompted to upgrade to the latest
+     version of Tails.
+
+  As an alternative to following these instructions, you can perform a
+  [[manual upgrade|doc/upgrade#manual]].
 
 See the list of [[long-standing issues|support/known_issues]].
 
