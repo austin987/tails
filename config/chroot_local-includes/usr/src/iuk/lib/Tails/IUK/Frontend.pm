@@ -218,19 +218,33 @@ method init_zenity_progress_dialog_text (Object $download_progress) {
     # into a new line.
 
     assert_isa($download_progress, 'Tails::IUK::DownloadProgress');
-    my $init_text  = $download_progress->info;
-    my $unknow_str = $download_progress->estimated_end_time;
-    my $speed_str  = '0000KB';
-    my $size_str   = $self->format_bytes($download_progress->size);
-    my ($time_unit1,$time_unit2) = sort {
-        length ($b) <=> length($a)
-    } values(%{$download_progress->time_units});
-    my $time_str = '111' . $time_unit1 . ' ' . '111'. $time_unit2;
-    $size_str  =~ s/\d+/0000/;
-    $init_text =~ s/\Q$unknow_str\E//;
-    $init_text =~ s/0/$size_str/;
-    $init_text =~ s/0\/sec/$speed_str/;
-    $init_text = $time_str . ' '. $init_text;
+
+    my $time_left_str = '';
+    foreach my $time_key (qw{second minute hour day}) {
+        my $max_time_value = $time_key eq 'hour' ? 23 : 59;
+        foreach (1 .. $max_time_value) {
+            my $time_value =
+                $download_progress->time_duration->{$time_key}->($_);
+            $time_left_str = $time_value
+                if length($time_left_str) < length ($time_value);
+        }
+    }
+    $time_left_str =  $time_left_str . ' ' . $time_left_str;
+
+   my ($byte_unit) =   sort {
+        length($b) <=> length($a)
+    }map {$self->format_bytes(1024**$_)}0 .. 3;
+    $byte_unit =~ s/\d+//;
+
+    my $big_str       = '000000' . $byte_unit;
+    my $init_text     = $download_progress->info;
+    my $size_left_str = $self->format_bytes($download_progress->last_byte_downloaded);
+    my $unknow_str    = $download_progress->estimated_end_time;
+
+    $init_text =~ s/\Q$unknow_str\E/$time_left_str/;
+    $init_text =~ s/\Q$size_left_str\E/$big_str/;
+    $init_text =~ s/\(0.+\//($big_str\//;
+
     $init_text = $download_progress->info
         if length ($download_progress->info) > length($init_text);
 
