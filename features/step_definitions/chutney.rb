@@ -153,7 +153,6 @@ When /^I configure Tails to use a simulated Tor network$/ do
     'TestingTorNetwork 1',
     'AssumeReachable 1',
     'PathsNeededToBuildCircuits 0.25',
-    'TestingBridgeDownloadInitialDelay 0',
     'TestingDirAuthVoteExit *',
     'TestingDirAuthVoteGuard *',
     'TestingDirAuthVoteHSDir *',
