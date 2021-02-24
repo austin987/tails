@@ -411,3 +411,21 @@ could either:
 
 Each such commit *must* have an issue created, referencing the commit
 to revert.
+
+## Cucumber tags
+
+We use the following Cucumber tags on scenarios and features:
+
+- `@fragile`: this test lacks robustness and sometimes yields false
+  positive failures.
+- `@doc`: the copy of our website included in the system-under-test affects the
+  outcome of this test.
+- `@check_tor_leaks`: this instructs the test suite machinery to check
+  that all outgoing connections initiated during this test go through Tor.
+- `@slow`: this test takes a long time to run (rule of thumb: more than 10
+  minutes on lizard).
+- `@not_release_blocker`: we don't abort the release process if this test fails;
+  instead, we create a GitLab issue to fix it in the next release.
+
+Our Jenkins setup uses these tags to decide which tests to run:
+[[contribute/working_together/roles/sysadmins/automated_tests_in_Jenkins]].
