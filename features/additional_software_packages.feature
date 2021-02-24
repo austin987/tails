@@ -9,6 +9,7 @@ Feature: Additional software
   # other. When editing this feature, make sure you understand these
   # dependencies (which are documented below).
 
+  @not_release_blocker
   Scenario: I am warned I can not use Additional Software when I start Tails from a DVD and install a package
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
     And I update APT using apt

@@ -13,9 +13,12 @@ def post_snapshot_restore_hook(snapshot_name)
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
 
-  # When restoring from a snapshot while the Greeter is running it
-  # seems virt-viewer's auto-resolution feature moves the Greeter's
-  # window outside of the visible screen.
+  # When restoring from a snapshot while the Greeter is running, on
+  # X.Org we encounter a (SPICE? GTK? QXL?) bug that makes its window
+  # invisible until redrawn. So as a workaround we move this window,
+  # to force a full redraw.
+  # This problem does not happen on Wayland so we can remove this hack
+  # when we switch to Wayland: #18120, !322.
   if snapshot_name.end_with?('tails-greeter')
     unless @screen.exists('TailsGreeter.png')
       $vm.execute_successfully(
@@ -255,9 +258,7 @@ def start_up_spammer(domain_name)
     bus,
     "--unit=#{up_spammer_unit_name}",
     '--quiet',
-    # XXX: enable this once we require systemd v236 or newer
-    # for running our test suite
-    # '--collect',
+    '--collect',
     '/usr/bin/ruby',
     '-e', up_spammer_code(domain_name)
   )
@@ -512,7 +513,7 @@ end
 Given /^the Tor Browser loads the (startup page|Tails homepage|Tails GitLab)$/ do |page|
   case page
   when 'startup page'
-    titles = ['Tails', 'Tails - Trying a testing version of Tails']
+    titles = ['Tails', 'Tails - Trying a testing version of Tails', 'Tails - Welcome to Tails!']
   when 'Tails homepage'
     titles = ['Tails']
   when 'Tails GitLab'

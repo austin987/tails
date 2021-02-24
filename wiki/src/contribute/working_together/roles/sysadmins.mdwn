@@ -143,6 +143,8 @@ Below, importance level is evaluated based on:
   cannot work;
 * the release process' needs: we want to be able to do an emergency
   release at any time when critical security issues are published.
+  Note that in order to release Tails, one needs to first build Tails,
+  so any service that's needed to build Tails is also needed to release Tails.
 
 ## APT repositories
 
@@ -158,7 +160,7 @@ Below, importance level is evaluated based on:
   - [[!tails_gitweb_puppet_tails manifests/reprepro/custom.pp
     desc="`tails::reprepro::custom` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
-* importance: critical (needed by users, and to build & release a Tails ISO)
+* importance: critical (needed by users, and to build & release Tails)
 
 ### Time-based snapshots of APT repositories
 
@@ -172,7 +174,7 @@ Below, importance level is evaluated based on:
   - [[!tails_gitweb_puppet_tails manifests/reprepro/snapshots/time_based.pp
     desc="`tails::reprepro::snapshots::time_based` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
-* importance: critical (needed to build a Tails ISO)
+* importance: critical (needed to build Tails)
 
 ### Tagged snapshots of APT repositories
 
@@ -366,7 +368,8 @@ Below, importance level is evaluated based on:
     * [[!tails_gitweb_puppet_tails manifests/jenkins/reverse_proxy.pp
       desc="`tails::jenkins::reverse_proxy` class"]]
 * design documentation: [[sysadmins/Jenkins]]
-* importance: critical (as a key component of our development process)
+* importance: critical (as a key component of our development process,
+  needed to build IUKs during a Tails release)
 
 ## Mail
 
@@ -481,7 +484,8 @@ Below, importance level is evaluated based on:
 * configuration:
   - [[!tails_gitlab tails/puppet-nginx/-/blob/master/manifests/init.pp
     desc="`nginx` class"]]
-* importance: transitively critical (as a dependency of Jenkins)
+* importance: transitively critical (as a dependency of Jenkins
+  and APT repositories)
 
 <a id="weblate"></a>
 
