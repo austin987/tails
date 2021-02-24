@@ -29,8 +29,11 @@ has 'number_formatter' => (
 
 method _build_number_formatter () {
     Number::Format->new(
+        #Translators: KB is the short form for kilobyte
         kilo_suffix => __(q{KB}),
+        #Translators: MB is the short form for megabyte
         mega_suffix => __(q{MB}),
+        #Translators: GB is the short form for gigabyte
         giga_suffix => __(q{GB}),
     );
 }

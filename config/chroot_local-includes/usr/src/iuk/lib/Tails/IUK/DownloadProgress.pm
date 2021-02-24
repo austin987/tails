@@ -73,10 +73,25 @@ has 'smoothing_factor' => (
 
 method _build_time_duration () {
     {
+	# Translators: Don't translate {count}, it's a place holder and
+	# will be replaced.
+	# y is the short form for years.
         year   => sub {__nx("1y","{count}y", $_[0], count => $_[0])},
+	# Translators: Don't translate {count}, it's a place holder and
+	# will be replaced.
+	# d is the short form for days.
         day    => sub {__nx("1d","{count}d", $_[0], count => $_[0])},
+	# Translators: Don't translate {count}, it's a place holder and
+	# will be replaced.
+	# h is the short form for hours;
         hour   => sub {__nx("1h","{count}h", $_[0], count => $_[0])},
+	# Translators: Don't translate {count}, it's a place holder and
+	# will be replaced.
+	# m is the short form for minutes;
         minute => sub {__nx("1m","{count}m", $_[0], count => $_[0])},
+	# Translators: Don't translate {count}, it's a place holder and
+	# will be replaced.
+	# s is the short form for seconds;
         second => sub {__nx("1s","{count}s", $_[0], count => $_[0])},
     };
 }
@@ -124,6 +139,8 @@ method estimate_end_time () {
 
 method info () {
     __x(
+	# Translators: don't translate {time}, {downloaded}, {size}
+	# and {speed}, they are placeholders and will be replaced.
         "#{time} left — {downloaded} of {size} ({speed}/sec)\n",
         time       => $self->estimated_end_time,
         downloaded => $self->format_bytes($self->last_byte_downloaded),
