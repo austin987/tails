@@ -90,10 +90,18 @@ class StepChooseBridgeMixin:
         self.builder.get_object("step_bridge_text").get_property("buffer").connect(
             "changed", self.cb_step_bridge_text_changed
         )
-        if self.state["hide"]["hide"]:
-            self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
-            self.builder.get_object("step_bridge_radio_type").set_active(True)
+        hide = self.state["hide"]["hide"]
+        if hide:
             self.builder.get_object("step_bridge_text").grab_focus()
+        else:
+            self.builder.get_object("step_bridge_radio_default").grab_focus()
+
+        self.builder.get_object("step_bridge_radio_default").set_sensitive(
+            not hide
+        )
+        self.builder.get_object("step_bridge_radio_type").set_active(
+                hide
+        )
 
     def _step_bridge_is_text_valid(self):
         # XXX: do proper validation!
@@ -138,6 +146,9 @@ class StepChooseBridgeMixin:
                 line.strip() for line in text.split("\n")
             ]
         self.change_box("progress")
+
+    def cb_step_bridge_btn_back_clicked(self, *args):
+        self.change_box("hide")
 
 
 class StepConnectProgressMixin:
