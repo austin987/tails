@@ -1,8 +1,8 @@
 import logging
 import subprocess
-import time
 import gi
 import gettext
+from typing import Dict, Any
 
 from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
@@ -44,6 +44,7 @@ class StepChooseHideMixin:
     """
 
     def before_show_hide(self):
+        self.state["hide"]: Dict[str, Any] = {}
         self.builder.get_object("radio_unnoticed_none").set_active(True)
         self.builder.get_object("radio_unnoticed_yes").set_active(False)
         self.builder.get_object("radio_unnoticed_no").set_active(False)
@@ -65,37 +66,91 @@ class StepChooseHideMixin:
         if not easy and not hide:
             return
         if hide:
-            self.todo_dialog("Unnoticed connection wizard")
+            self.state["hide"]["hide"] = True
+            self.state["hide"]["bridge"] = True
+            self.change_box("bridge")
         else:
+            self.state["hide"]["hide"] = False
             if self.builder.get_object("radio_unnoticed_no_bridge").get_active():
-                self.todo_dialog("Bridge configuration still needs to be implemented")
+                self.state["hide"]["bridge"] = True
+                self.change_box("bridge")
             else:
+                self.state["hide"]["bridge"] = True
                 self.change_box("progress")
 
 
 class StepChooseBridgeMixin:
     def before_show_bridge(self):
+        self.state["bridge"]: Dict[str, Any] = {}
         self.builder.get_object("step_bridge_box").show()
         self.builder.get_object("step_bridge_radio_none").set_active(True)
         self.builder.get_object("step_bridge_radio_none").hide()
+        self.builder.get_object("step_bridge_text").get_property("buffer").connect(
+            "changed", self.cb_step_bridge_text_changed
+        )
+        if self.state["hide"]["hide"]:
+            self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
+            self.builder.get_object("step_bridge_radio_type").set_active(True)
 
-    def cb_step_bridge_radio_changed(self, *args):
+    def _step_bridge_is_text_valid(self):
+        # XXX: do proper validation!
+        text = (
+            self.builder.get_object("step_bridge_text")
+            .get_property("buffer")
+            .get_property("text")
+        )
+        return len(text) > 10
+
+    def _step_bridge_set_actives(self):
         default = self.builder.get_object("step_bridge_radio_default").get_active()
         manual = self.builder.get_object("step_bridge_radio_type").get_active()
-        self.builder.get_object("step_bridge_combo_default_type").set_sensitive(default)
+        self.builder.get_object("step_bridge_combo").set_sensitive(default)
+        self.builder.get_object("step_bridge_text").set_sensitive(manual)
         self.builder.get_object("step_bridge_btn_submit").set_sensitive(
-            default or manual
+            default or (manual and self._step_bridge_is_text_valid())
         )
+
+    def cb_step_bridge_radio_changed(self, *args):
+        self._step_bridge_set_actives()
+
+    def cb_step_bridge_text_changed(self, *args):
+        self._step_bridge_set_actives()
+
+    def cb_step_bridge_btn_submit_clicked(self, *args):
+        default = self.builder.get_object("step_bridge_radio_default").get_active()
+        manual = self.builder.get_object("step_bridge_radio_type").get_active()
+        if default:
+            self.state["bridge"]["kind"] = "default"
+            self.state["bridge"][
+                "default_method"
+            ] = "obfs4"  # pick right one from step_bridge_combo
+        elif manual:
+            self.state["bridge"]["kind"] = "manual"
+            text = (
+                self.builder.get_object("step_bridge_text")
+                .get_property("buffer")
+                .get_property("text")
+            )
+            self.state["bridge"]["bridges"] = [
+                line.strip() for line in text.split("\n")
+            ]
+        self.change_box('progress')
 
 
 class StepConnectProgressMixin:
+    # XXX: this was written taking into account only the plain-sight scenario
+    #      adapt it to get data from self.state['hide'] and self.state['bridge']
     def before_show_progress(self):
         self.builder.get_object("step_progress_box").show()
-        self.builder.get_object("step_progress_spinner_internet").start()
-        self.builder.get_object("step_progress_spinner_internet").set_property(
-            "active", True
-        )
-        self.spawn_internet_test()
+        if not self.state['hide']['hide']:
+            self.builder.get_object("step_progress_spinner_internet").start()
+            self.builder.get_object("step_progress_spinner_internet").set_property(
+                "active", True
+            )
+            self.spawn_internet_test()
+        else:
+            self.builder.get_object('step_progress_spinner_internet').get_parent().hide()
+            self.spawn_tor_connect()
 
     def spawn_internet_test(self):
         test_spawn = GAsyncSpawn()
@@ -108,6 +163,9 @@ class StepConnectProgressMixin:
         test_spawn.run(["/bin/sh", "-c", "sleep 0.5; true"])
 
     def spawn_tor_connect(self):
+        # XXX: get info from state['hide']['bridge'] and state['bridge']['bridges']
+        self.builder.get_object("step_progress_box_torconnect").show()
+        self.builder.get_object("step_progress_pbar_torconnect").show()
         progress = self.builder.get_object("step_progress_pbar_torconnect")
 
         # this "chain" might be handled in a more explicit way. however, it does the job!
@@ -181,8 +239,6 @@ class StepConnectProgressMixin:
         self.builder.get_object("step_progress_box_tortest").hide()
         self.builder.get_object("step_progress_box_torok").show()
         if retval == 0:
-            self.builder.get_object("step_progress_box_torconnect").show()
-            self.builder.get_object("step_progress_pbar_torconnect").show()
             self.spawn_tor_connect()
             return
         else:
@@ -225,6 +281,8 @@ class TCAMainWindow(
         Gtk.Window.__init__(self, title="Tor Connection Assistant")
         TranslatableWindow.__init__(self, self)
         self.app = app
+        # self.state collects data from user interactions. Its main key is the step name
+        self.state: Dict[str, Dict[str, Any]] = {}
         self.current_language = "en"
         self.connect("delete-event", self.cb_window_delete_event, None)
         self.set_position(Gtk.WindowPosition.CENTER)
