@@ -26,8 +26,16 @@ Then:
 
 * If you are using Debian Bullseye or newer:
 
-   - Add an extra APT source: `deb http://deb.tails.boum.org/ builder-bullseye main`
-   - Enable the Buster APT sources, to install `vmdebootstrap` and its dependencies.
+   1. Make APT trust `deb.tails.boum.org`'s signing key:
+
+        curl https://gitlab.tails.boum.org/tails/tails/-/raw/stable/config/chroot_sources/tails.chroot.gpg?inline=false | \
+           gpg --import && \
+        gpg --export '221F 9A3C 6FA3 E09E 182E  060B C798 8EA7 A358 D82E' | \
+           sudo tee /etc/apt/trusted.gpg.d/deb.tails.boum.org.gpg >/dev/null
+
+   2. Add an extra APT source: `deb http://deb.tails.boum.org/ builder-bullseye main`
+
+   3. Enable the Buster APT sources, to install `vmdebootstrap` and its dependencies.
 
 # Setup the build environment
 
