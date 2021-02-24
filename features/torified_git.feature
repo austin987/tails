@@ -8,14 +8,10 @@ Feature: Cloning a Git repository
     Given I have started Tails from DVD and logged in and the network is connected
 
   Scenario: Cloning a Git repository anonymously over HTTPS
-    When I clone the Git repository "https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
-    Then the Git repository "testing" has been cloned successfully
-
-  Scenario: Cloning a Git repository anonymously over the Git protocol
-    When I clone the Git repository "git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
-    Then the Git repository "testing" has been cloned successfully
+    When I clone the Git repository "https://github.com/intrigeri/Dist-Zilla-Plugin-LocaleMsgfmt.git" in GNOME Terminal
+    Then the Git repository "Dist-Zilla-Plugin-LocaleMsgfmt" has been cloned successfully
 
   Scenario: Cloning git repository over SSH
     Given I have the SSH key pair for a Git repository
-    When I clone the Git repository "tails@git.tails.boum.org:myprivatekeyispublic/testing" in GNOME Terminal
+    When I clone the Git repository "ssh://gitolite3@lizard.tails.boum.org:3004/myprivatekeyispublic/testing.git" in GNOME Terminal
     Then the Git repository "testing" has been cloned successfully
