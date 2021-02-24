@@ -170,16 +170,23 @@ class TorConnectionConfig:
     def disable_bridges(self):
         self.bridges.clear()
 
+    def enable_bridges(self, bridges: list):
+        if not bridges:
+            raise ValueError("Can't set empty bridge list")
+        self.bridges.clear()
+        self.bridges.extend(bridges)
+
     def default_bridges(self, only_type=None):
         """Set default bridges: useful for Tor blocking, not for unnoticed-mode"""
-        self.bridges.clear()
-        with open(os.path.join(tca.config.data_path, 'default_bridges.txt')) as buf:
+        l = []
+        with open(os.path.join(tca.config.data_path, "default_bridges.txt")) as buf:
             for line in buf:
-                if not line.strip() or line.startswith('#'):
+                if not line.strip() or line.startswith("#"):
                     continue
                 if only_type and line.split()[0] != only_type:
                     continue
-                self.bridges.append(line.strip())
+                l.append(line.strip())
+        self.enable_bridges(l)
 
     @classmethod
     def load_from_tor_stem(cls, stem_controller: Controller):
