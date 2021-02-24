@@ -1282,9 +1282,13 @@ Rename, copy, garbage collect and update various files:
 
 Then, build the website and commit this last set of changes:
 
-	./build-website && \
-	git add wiki/src/{inc,torrents} && \
-	git commit -m "Update various website source files for ${VERSION:?}"
+	if [ "$(./bin/po4a-version)" = 0.55 ]; then
+	    ./build-website && \
+	    git add wiki/src/{inc,torrents} && \
+	    git commit -m "Update various website source files for ${VERSION:?}"
+	else
+	    echo "Wrong po4a version"
+	fi
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
@@ -1356,10 +1360,14 @@ In any case
 Generate PO files for the pages added or updated earlier in this
 section, and publish them on the `$WEBSITE_RELEASE_BRANCH` branch:
 
-	./build-website && \
-	git add wiki/src && \
-	git commit -m "Releasing version ${VERSION:?}" && \
-	git push origin "${WEBSITE_RELEASE_BRANCH:?}"
+	if [ "$(./bin/po4a-version)" = 0.55 ]; then
+	    ./build-website && \
+	    git add wiki/src && \
+	    git commit -m "Releasing version ${VERSION:?}" && \
+	    git push origin "${WEBSITE_RELEASE_BRANCH:?}"
+	else
+        echo "Wrong po4a version"
+	fi
 
 Draft the Tor blog post
 -----------------------
