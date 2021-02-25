@@ -623,7 +623,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
         }
         else {
             my ($download_h, $zenity_h, $download_out, $zenity_in);
-            my $bytes_downloaded;
+            my ($bytes_downloaded, $percent_complete);
             my $download_progress =
                 Tails::IUK::DownloadProgress->new(size => $upgrade_path->{'total-size'});
             $info = $self->init_zenity_progress_dialog_text($download_progress);
@@ -643,9 +643,9 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                     # Update the progress dialog bar percentage
                     $zenity_h->pump_nb;
 
-                    ($bytes_downloaded) = split /\n/, $download_out;
+                    ($percent_complete) = split /\n/, $download_out;
                     # Convert percentage to total number of bytes downloaded
-                    $bytes_downloaded = ($bytes_downloaded/100) * $download_progress->size;
+                    $bytes_downloaded = ($percent_complete/100) * $download_progress->size;
                     # Clear $download_out to avoid old output in the next iteration
                     $download_out = undef;
                     next unless $download_progress->update($bytes_downloaded);
