@@ -82,7 +82,7 @@ class StepChooseHideMixin:
 
 
 class StepChooseBridgeMixin:
-    def before_show_bridge(self):
+    def before_show_bridge(self, no_default_bridges=False):
         self.state["bridge"]: Dict[str, Any] = {}
         self.builder.get_object("step_bridge_box").show()
         self.builder.get_object("step_bridge_radio_none").set_active(True)
@@ -91,17 +91,14 @@ class StepChooseBridgeMixin:
             "changed", self.cb_step_bridge_text_changed
         )
         hide = self.state["hide"]["hide"]
-        if hide:
+        if hide or no_default_bridges:
+            self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
             self.builder.get_object("step_bridge_text").grab_focus()
         else:
             self.builder.get_object("step_bridge_radio_default").grab_focus()
+            self.builder.get_object("step_bridge_radio_default").set_sensitive(True)
 
-        self.builder.get_object("step_bridge_radio_default").set_sensitive(
-            not hide
-        )
-        self.builder.get_object("step_bridge_radio_type").set_active(
-                hide
-        )
+        self.builder.get_object("step_bridge_radio_type").set_active(hide)
 
     def _step_bridge_is_text_valid(self):
         # XXX: do proper validation!
@@ -152,9 +149,8 @@ class StepChooseBridgeMixin:
 
 
 class StepConnectProgressMixin:
-    # XXX: this was written taking into account only the plain-sight scenario
-    #      adapt it to get data from self.state['hide'] and self.state['bridge']
     def before_show_progress(self):
+        self.state["progress"]["error"] = None
         self.builder.get_object("step_progress_box").show()
         if not self.state["hide"]["hide"]:
             self.builder.get_object("step_progress_spinner_internet").start()
@@ -268,6 +264,9 @@ class StepConnectProgressMixin:
             self.builder.get_object("step_progress_box_internetok").show()
             self.builder.get_object("step_progress_box_tortest").show()
             self.spawn_tor_test()
+        else:
+            self.state["progress"]["error"] = "internet"
+            self.change_box("error")
 
     def cb_tor_test(self, spawn, retval):
         self.builder.get_object("step_progress_box_tortest").hide()
@@ -295,12 +294,27 @@ class StepConnectProgressMixin:
         subprocess.Popen(["/usr/local/bin/onioncircuits"])
 
 
+class StepErrorMixin:
+    def before_show_error(self):
+        self.state["error"] = {}
+
+    def cb_step_error_btn_proxy_clicked(self, *args):
+        self.change_box('proxy')
+
+    def cb_step_error_btn_captive_clicked(self, *args):
+        self.todo_dialog("Open unsafe browser")
+
+    def cb_step_error_btn_bridge_clicked(self, *args):
+        self.change_box("bridge", no_default_bridges=True)
+
+
 class TCAMainWindow(
     Gtk.Window,
     TranslatableWindow,
     StepChooseHideMixin,
     StepConnectProgressMixin,
     StepChooseBridgeMixin,
+    StepErrorMixin,
 ):
     # TranslatableWindow mixin {{{
     def get_translation_domain(self):
@@ -316,7 +330,11 @@ class TCAMainWindow(
         TranslatableWindow.__init__(self, self)
         self.app = app
         # self.state collects data from user interactions. Its main key is the step name
-        self.state: Dict[str, Dict[str, Any]] = {"hide": {}, "bridge": {}}
+        self.state: Dict[str, Dict[str, Any]] = {
+            "hide": {},
+            "bridge": {},
+            "progress": {},
+        }
         self.current_language = "en"
         self.connect("delete-event", self.cb_window_delete_event, None)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -366,13 +384,13 @@ class TCAMainWindow(
         dialog.run()
         dialog.destroy()
 
-    def change_box(self, name: str):
+    def change_box(self, name: str, **kwargs):
         children = self.main_container.get_children()
         if len(children) > 1:
             self.main_container.remove(children[-1])
         self.main_container.add(self.builder.get_object("step_%s_box" % name))
         if hasattr(self, "before_show_%s" % name):
-            getattr(self, "before_show_%s" % name)()
+            getattr(self, "before_show_%s" % name)(**kwargs)
 
     def cb_window_delete_event(self, widget, event, user_data=None):
         # XXX: warn the user about leaving the wizard
