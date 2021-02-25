@@ -13,7 +13,7 @@ use 5.10.1;
 use strictures 2;
 
 use autodie qw(:all);
-use Types::Standard qw{Num Str HashRef CodeRef};
+use Types::Standard qw{Num Str HashRef CodeRef Int};
 use Time::HiRes;
 use Time::Duration;
 use Function::Parameters;
@@ -26,7 +26,7 @@ use namespace::clean;
 
 has 'size' => (
     is       => 'ro',
-    isa      => Num,
+    isa      => Int,
     required => 1,
 );
 
