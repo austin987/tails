@@ -49,8 +49,7 @@ foreach (qw{speed last_byte_downloaded last_progress_time}) {
 has 'update_interval_time' => (
     is            => 'ro',
     isa           => Num,
-    default       => 0.4,
-    documentation => q{Default update value, based on Doherty Threshold},
+    default       => 1,
 );
 
 has 'estimated_end_time' => (
