@@ -32,6 +32,35 @@ Configuration
   * [[!tails_gitweb_puppet_tails manifests/jenkins/reverse_proxy.pp
     desc="`tails::jenkins::reverse_proxy` class"]]
 
+<a id="upgrade-policy"></a>
+
+Upgrade policy
+==============
+
+Here are some guidelines to triage security vulnerabilities in Jenkins
+and the plugins we have installed:
+
+1. Protecting our infra from folks who have access to Jenkins
+
+   → Upgrading quarterly is sufficient.
+
+2. Protecting our infra from attacks against folks who have access to Jenkins
+
+   For example, XSS that could lead a legitimate user to perform unintended
+   actions with Jenkins credentials (i.e. root in practice).
+
+   → We should stay on top of security advisories and react more quickly than
+   "in less than 3 months".
+
+3. Protecting our infra from other 3rd-parties that affect Jenkins' security
+
+   For example, say some Jenkins plugin, that connects to remote services, has
+   a TLS certificate checking bug. This could potentially allow a MitM to run
+   arbitrary code with Jenkins orchestrator or workers permissions, i.e. root.
+
+   → We should stay on top of security advisories and react more quickly than
+   "in less than 3 months".
+
 Generating jobs
 ===============
 
