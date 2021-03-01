@@ -962,16 +962,17 @@ You can now browse the Internet anonymously and uncensored</property>
           </packing>
         </child>
         <child>
-          <object class="GtkComboBoxText">
+          <object class="GtkComboBoxText" id="step_proxy_combo">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="active_id">no</property>
             <items>
               <item id="no" translatable="yes">No proxy</item>
-              <item id="socks4" translatable="yes">SOCKS 4</item>
-              <item id="socks5" translatable="yes">SOCKS 5</item>
-              <item id="http" translatable="yes">HTTP / HTTPS</item>
+              <item id="Socks4" translatable="yes">SOCKS 4</item>
+              <item id="Socks5" translatable="yes">SOCKS 5</item>
+              <item id="HTTPS" translatable="yes">HTTP / HTTPS</item>
             </items>
+            <signal name="changed" handler="cb_step_proxy_combo_changed" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -1007,6 +1008,7 @@ You can now browse the Internet anonymously and uncensored</property>
             <property name="hexpand">True</property>
             <property name="max_length">15</property>
             <property name="placeholder_text" translatable="yes">IP address or hostname</property>
+            <property name="input_hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_LOWERCASE | GTK_INPUT_HINT_NONE</property>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -1040,6 +1042,7 @@ You can now browse the Internet anonymously and uncensored</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="hexpand">True</property>
+            <property name="input_hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NONE</property>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -1051,7 +1054,9 @@ You can now browse the Internet anonymously and uncensored</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="hexpand">True</property>
+            <property name="primary_icon_stock">gtk-apply</property>
             <property name="input_purpose">digits</property>
+            <property name="input_hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NONE</property>
           </object>
           <packing>
             <property name="left_attach">3</property>
@@ -1067,6 +1072,7 @@ You can now browse the Internet anonymously and uncensored</property>
             <property name="invisible_char">●</property>
             <property name="primary_icon_stock">gtk-dialog-authentication</property>
             <property name="input_purpose">password</property>
+            <property name="input_hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NONE</property>
           </object>
           <packing>
             <property name="left_attach">3</property>
@@ -1087,23 +1093,50 @@ You can now browse the Internet anonymously and uncensored</property>
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="step_proxy_btn_submit">
-        <property name="label" translatable="yes">Save proxy settings</property>
+      <object class="GtkButtonBox">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">end</property>
-        <property name="valign">end</property>
-        <signal name="activate" handler="cb_step_proxy_btn_submit_clicked" swapped="no"/>
-        <signal name="clicked" handler="cb_step_proxy_btn_submit_clicked" swapped="no"/>
-        <style>
-          <class name="suggested-action"/>
-        </style>
+        <property name="can_focus">False</property>
+        <property name="hexpand">True</property>
+        <child>
+          <object class="GtkButton">
+            <property name="label">gtk-go-back</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_stock">True</property>
+            <property name="always_show_image">True</property>
+            <signal name="clicked" handler="cb_step_proxy_btn_back_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="step_proxy_btn_submit">
+            <property name="label" translatable="yes">Save proxy settings</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="valign">end</property>
+            <signal name="activate" handler="cb_step_proxy_btn_submit_clicked" swapped="no"/>
+            <signal name="clicked" handler="cb_step_proxy_btn_submit_clicked" swapped="no"/>
+            <style>
+              <class name="suggested-action"/>
+            </style>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">2</property>
+        <property name="position">1</property>
       </packing>
     </child>
   </object>

@@ -9,6 +9,7 @@ import stem
 
 from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
+from tca.utils import TorConnectionProxy
 import tca.config
 
 
@@ -204,6 +205,19 @@ class StepConnectProgressMixin:
             self.app.configurator.tor_connection_config.default_bridges(
                 only_type="obfs4"
             )
+            if not self.state["proxy"] or self.state["proxy"]["proxy_type"] == "no":
+                self.app.configurator.tor_connection_config.proxy = (
+                    TorConnectionProxy.noproxy()
+                )
+            else:
+                proxy_conf = self.state["proxy"]
+                if proxy_conf["proxy_type"] != "Socks5":
+                    del proxy_conf["username"]
+                    del proxy_conf["password"]
+                proxy_conf["proxy_type"] += "Proxy"
+                self.app.configurator.tor_connection_config.proxy = TorConnectionProxy.from_obj(
+                    proxy_conf
+                )
             progress.set_fraction(0.1)
             progress.set_text("configuration prepared")
             return True
@@ -212,9 +226,12 @@ class StepConnectProgressMixin:
             print("applying conf")
             try:
                 self.app.configurator.apply_conf()
-            except stem.InvalidRequest:
+            except stem.InvalidRequest as exc:
                 progress.set_fraction(0)
                 progress.set_text("Error setting bridges!")
+                self.state["progress"]["error"] = "setconf"
+                self.state["progress"]["error_data"] = exc.message
+                self.change_box('error')
                 return False
             print("applied!")
             progress.set_fraction(0.20)
@@ -239,8 +256,9 @@ class StepConnectProgressMixin:
                         [do_tor_connect_default_bridges, do_tor_connect_apply]
                     )
                 else:
+                    self.state["progress"]["error"] = "tor"
                     log.info("Failed with bridges")
-                    self.change_box("bridge")
+                    self.change_box("error")
                 return False
             d["count"] -= 1
 
@@ -298,15 +316,100 @@ class StepConnectProgressMixin:
 class StepErrorMixin:
     def before_show_error(self):
         self.state["error"] = {}
+        # XXX: fetch data from self.state['progress']['error'] and self.state['progress']['error_data']
 
     def cb_step_error_btn_proxy_clicked(self, *args):
-        self.change_box('proxy')
+        self.change_box("proxy")
 
     def cb_step_error_btn_captive_clicked(self, *args):
         self.todo_dialog("Open unsafe browser")
 
     def cb_step_error_btn_bridge_clicked(self, *args):
         self.change_box("bridge", no_default_bridges=True)
+
+
+class StepProxyMixin:
+    def before_show_proxy(self):
+        self.state.setdefault("proxy", {"proxy_type": "no"})
+        self.builder.get_object("step_proxy_combo").set_active_id(
+            self.state["proxy"]["proxy_type"]
+        )
+
+        for entry in ("address", "port", "username", "password"):
+            buf = self.get_object("entry_" + entry).get_property("buffer")
+            buf.connect("deleted-text", self.cb_step_proxy_entry_changed)
+            buf.connect("inserted-text", self.cb_step_proxy_entry_changed)
+            if entry in self.state["proxy"]:
+                content = self.state["proxy"][entry]
+                buf.set_text(content, len(content))
+
+        self._step_proxy_set_actives()
+        self.get_object("combo").grab_focus()
+
+    def _step_proxy_is_valid(self) -> bool:
+        proxy_type = self.get_object("combo").get_active_id()
+
+        def get_text(name):
+            return self.get_object("entry_" + name).get_text()
+
+        if proxy_type == "no":
+            return True
+        if not get_text("address"):
+            return False
+        if not get_text("port"):
+            return False
+        if proxy_type == "Socks5":
+            if get_text("username") and not get_text("password"):
+                return False
+        return True
+
+    def _step_proxy_set_actives(self):
+        proxy_type = self.get_object("combo").get_active_id()
+        if proxy_type == "no":
+            for entry in ("address", "port", "username", "password"):
+                self.get_object("entry_%s" % entry).set_sensitive(False)
+        elif proxy_type in ("HTTPS", "Socks4"):
+            for entry in ("address", "port"):
+                self.get_object("entry_%s" % entry).set_sensitive(True)
+            for entry in ("username", "password"):
+                self.get_object("entry_%s" % entry).set_sensitive(False)
+        else:
+            for entry in ("address", "port", "username", "password"):
+                self.get_object("entry_%s" % entry).set_sensitive(True)
+
+        self.get_object("btn_submit").set_sensitive(self._step_proxy_is_valid())
+
+    def _step_proxy_is_port_valid(self):
+        entry = self.get_object("entry_port")
+        port = entry.get_text()
+        if not port:
+            return True
+        elif port.isdigit() and int(port) > 0 and int(port) < 65536:
+            return True
+        else:
+            return False
+
+    def cb_step_proxy_entry_changed(self, *args):
+        self._step_proxy_set_actives()
+        if self._step_proxy_is_port_valid():
+            icon_name = ""
+        else:
+            icon_name = "gtk-dialog-warning"
+        entry = self.get_object("entry_port")
+        entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, icon_name)
+
+    def cb_step_proxy_combo_changed(self, *args):
+        self._step_proxy_set_actives()
+
+    def cb_step_proxy_btn_back_clicked(self, *args):
+        self.change_box("error")
+
+    def cb_step_proxy_btn_submit_clicked(self, *args):
+        self.state["proxy"]["proxy_type"] = self.get_object("combo").get_active_id()
+        for entry in ("address", "port", "username", "password"):
+            self.state["proxy"][entry] = self.get_object("entry_%s" % entry).get_text()
+
+        self.change_box("progress")
 
 
 class TCAMainWindow(
@@ -316,6 +419,7 @@ class TCAMainWindow(
     StepConnectProgressMixin,
     StepChooseBridgeMixin,
     StepErrorMixin,
+    StepProxyMixin,
 ):
     # TranslatableWindow mixin {{{
     def get_translation_domain(self):
@@ -335,6 +439,7 @@ class TCAMainWindow(
             "hide": {},
             "bridge": {},
             "progress": {},
+            "step": "hide",
         }
         if self.app.args.debug_statefile is not None:
             log.debug("loading statefile")
@@ -399,6 +504,10 @@ class TCAMainWindow(
         self.main_container.add(self.builder.get_object("step_%s_box" % name))
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
+
+    def get_object(self, name: str):
+        """shortcut over self.builder.get_object"""
+        return self.builder.get_object("step_%s_%s" % (self.state["step"], name))
 
     def cb_window_delete_event(self, widget, event, user_data=None):
         # XXX: warn the user about leaving the wizard
