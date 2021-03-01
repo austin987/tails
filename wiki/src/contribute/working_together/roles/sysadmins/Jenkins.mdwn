@@ -2,6 +2,36 @@
 
 [[!toc levels=1]]
 
+Configuration
+=============
+
+- master:
+  * [[!tails_gitlab tails/puppet-jenkins/-/blob/master/manifests/init.pp
+    desc="`jenkins` class"]]
+  * [[!tails_gitweb_puppet_tails manifests/jenkins/master.pp
+    desc="`tails::jenkins::master` class"]]
+  * a few Jenkins plugins installed with `jenkins::plugin`
+  * YAML jobs configuration lives in a
+    [[!tails_gitweb_repo jenkins-jobs desc="dedicated Git repository"]];
+    [Jenkins Job Builder](http://ci.openstack.org/jenkins-job-builder/)
+    uses it to configure Jenkins
+- slaves:
+  * [[!tails_gitweb_puppet_tails manifests/iso_builder.pp
+    desc="`tails::iso_builder`"]],
+    [[!tails_gitweb_puppet_tails manifests/jenkins/slave.pp
+    desc="`tails::jenkins::slave`"]],
+    [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_builder.pp
+    desc="`tails::jenkins::slave::iso_builder`"]],
+    [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_tester.pp
+    desc="`tails::jenkins::slave::iso_tester`"]],
+    and [[!tails_gitweb_puppet_tails manifests/tester.pp
+    desc="`tails::tester`"]]
+    classes
+  * signing keys are managed with the `tails_secrets_jenkins` Puppet module
+- web server:
+  * [[!tails_gitweb_puppet_tails manifests/jenkins/reverse_proxy.pp
+    desc="`tails::jenkins::reverse_proxy` class"]]
+
 Generating jobs
 ===============
 
