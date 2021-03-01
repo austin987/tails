@@ -1,4 +1,5 @@
 import logging
+import os.path
 import json
 import subprocess
 import gettext
@@ -22,6 +23,7 @@ from gi.repository import Gdk, Gtk, GLib  # noqa: E402
 
 MAIN_UI_FILE = "main.ui"
 CSS_FILE = "tca.css"
+IMG_SIDE = '/usr/share/doc/tails/website/about/footprints.svg'
 
 # META {{{
 # Naming convention for widgets:
@@ -453,7 +455,7 @@ class TCAMainWindow(
 
         # Load custom CSS
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_path(tca.config.data_path + CSS_FILE)
+        css_provider.load_from_path(os.path.join(tca.config.data_path , CSS_FILE))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             css_provider,
@@ -477,6 +479,7 @@ class TCAMainWindow(
                 revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
 
         self.main_container = builder.get_object("box_main_container_image_step")
+        self.builder.get_object('main_img_side').set_from_file(IMG_SIDE)
         self.add(self.main_container)
         self.change_box(self.state["step"])
 
