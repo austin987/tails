@@ -17,4 +17,6 @@ chown -R root:root "$confdir"
 exec /usr/local/lib/connect-drop \
          -c "FILE:$conffile:r+" \
          -c "TCP:127.0.0.1:9051" \
-         -- /sbin/runuser -u amnesia env DISPLAY="${DISPLAY:-}" /usr/lib/python3/dist-packages/tca/application.py
+         -- /sbin/runuser -u amnesia -- \
+         env DISPLAY="${DISPLAY:-}" -- \
+         /usr/lib/python3/dist-packages/tca/application.py "$@"

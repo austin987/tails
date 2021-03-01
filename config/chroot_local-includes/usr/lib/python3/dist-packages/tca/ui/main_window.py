@@ -1,4 +1,5 @@
 import logging
+import json
 import subprocess
 import gettext
 from typing import Dict, Any
@@ -335,6 +336,12 @@ class TCAMainWindow(
             "bridge": {},
             "progress": {},
         }
+        if self.app.args.debug_statefile is not None:
+            log.debug("loading statefile")
+            with open(self.app.args.debug_statefile) as buf:
+                content = json.load(buf)
+                log.debug("content found %s", content)
+                self.state.update(content)
         self.current_language = "en"
         self.connect("delete-event", self.cb_window_delete_event, None)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -366,7 +373,7 @@ class TCAMainWindow(
 
         self.main_container = builder.get_object("box_main_container_image_step")
         self.add(self.main_container)
-        self.change_box("hide")
+        self.change_box(self.state["step"])
 
         # builder.get_object('box_step_choose_hide')
         self.show()
@@ -388,6 +395,7 @@ class TCAMainWindow(
         children = self.main_container.get_children()
         if len(children) > 1:
             self.main_container.remove(children[-1])
+        self.state["step"] = name
         self.main_container.add(self.builder.get_object("step_%s_box" % name))
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
