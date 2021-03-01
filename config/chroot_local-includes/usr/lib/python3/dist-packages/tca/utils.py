@@ -59,6 +59,7 @@ PROXY_TYPES = ("Socks4Proxy", "Socks5Proxy", "HTTPSProxy")
 PROXY_AUTH_OPTIONS = {
     "HTTPSProxy": ["HTTPSProxyAuthenticator"],
     "Socks5Proxy": ["Socks5ProxyUsername", "Socks5ProxyPassword"],
+    "Socks4Proxy": [],
 }
 
 
@@ -124,7 +125,7 @@ class TorConnectionProxy:
     ) -> "TorConnectionProxy":
         address, port = val.split(":")
         auth: Optional[Tuple[str, str]] = None
-        if auth_values is not None:
+        if auth_values  and any(auth_values):
             if len(auth_values) == 1:
                 auth = cast(Tuple[str, str], tuple(auth_values[0].split(":", 1)))
             elif len(auth_values) == 2:
@@ -132,7 +133,7 @@ class TorConnectionProxy:
             else:
                 raise ValueError(
                     "auth_values must either be ['user:password'] "
-                    " or ['user', 'password']"
+                    " or ['user', 'password'], not %s" % repr(auth_values)
                 )
 
         obj = cls(address, int(port), proxy_type, auth=auth)
