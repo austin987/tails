@@ -2,6 +2,65 @@
 
 [[!toc levels=1]]
 
+Configuration
+=============
+
+- master:
+  * [[!tails_gitlab tails/puppet-jenkins/-/blob/master/manifests/init.pp
+    desc="`jenkins` class"]]
+  * [[!tails_gitweb_puppet_tails manifests/jenkins/master.pp
+    desc="`tails::jenkins::master` class"]]
+  * a few Jenkins plugins installed with `jenkins::plugin`
+  * YAML jobs configuration lives in a
+    [[!tails_gitweb_repo jenkins-jobs desc="dedicated Git repository"]];
+    [Jenkins Job Builder](https://docs.openstack.org/infra/jenkins-job-builder/)
+    uses it to configure Jenkins
+- slaves:
+  * [[!tails_gitweb_puppet_tails manifests/iso_builder.pp
+    desc="`tails::iso_builder`"]],
+    [[!tails_gitweb_puppet_tails manifests/jenkins/slave.pp
+    desc="`tails::jenkins::slave`"]],
+    [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_builder.pp
+    desc="`tails::jenkins::slave::iso_builder`"]],
+    [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_tester.pp
+    desc="`tails::jenkins::slave::iso_tester`"]],
+    and [[!tails_gitweb_puppet_tails manifests/tester.pp
+    desc="`tails::tester`"]]
+    classes
+  * signing keys are managed with the `tails_secrets_jenkins` Puppet module
+- web server:
+  * [[!tails_gitweb_puppet_tails manifests/jenkins/reverse_proxy.pp
+    desc="`tails::jenkins::reverse_proxy` class"]]
+
+<a id="upgrade-policy"></a>
+
+Upgrade policy
+==============
+
+Here are some guidelines to triage security vulnerabilities in Jenkins
+and the plugins we have installed:
+
+1. Protecting our infra from folks who have access to Jenkins
+
+   → Upgrading quarterly is sufficient.
+
+2. Protecting our infra from attacks against folks who have access to Jenkins
+
+   For example, XSS that could lead a legitimate user to perform unintended
+   actions with Jenkins credentials (i.e. root in practice).
+
+   → We should stay on top of security advisories and react more quickly than
+   "in less than 3 months".
+
+3. Protecting our infra from other 3rd-parties that affect Jenkins' security
+
+   For example, say some Jenkins plugin, that connects to remote services, has
+   a TLS certificate checking bug. This could potentially allow a MitM to run
+   arbitrary code with Jenkins orchestrator or workers permissions, i.e. root.
+
+   → We should stay on top of security advisories and react more quickly than
+   "in less than 3 months".
+
 Generating jobs
 ===============
 
