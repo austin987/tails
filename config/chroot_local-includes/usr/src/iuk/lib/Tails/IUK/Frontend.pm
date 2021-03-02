@@ -437,10 +437,8 @@ method run () {
                     "{space_needed} ".
                     "of free space on Tails system partition, ".
                     " but only {free_space} is available.",
-                    space_needed => $self->format_bytes(
-                        $space_needed),
-                    free_space   => $self->format_bytes(
-                        $free_space),
+                    space_needed => $self->format_bytes($space_needed),
+                    free_space   => $self->format_bytes($free_space),
                 ));
             }
         }
@@ -450,10 +448,8 @@ method run () {
                 "The available incremental upgrade requires ".
                 "{memory_needed} of free memory, but only ".
                 "{free_memory} is available.",
-                memory_needed => $self->format_bytes(
-                    $memory_needed),
-                free_memory   => $self->format_bytes(
-                    $free_memory),
+                memory_needed => $self->format_bytes($memory_needed),
+                free_memory   => $self->format_bytes($free_memory),
             ));
         }
     }
@@ -491,7 +487,8 @@ method run () {
                 name        => $upgrade_description->product_name,
                 version     => $upgrade_path->{version},
                 size        => $self->format_bytes(
-                    $upgrade_path->{'total-size'}),
+                    $upgrade_path->{'total-size'}
+                ),
             ),
             title        => __(q{Upgrade available}),
             ok_label     => __(q{Upgrade now}),

@@ -22,9 +22,9 @@ use Locale::TextDomain 'tails';
 use namespace::clean;
 
 has 'number_formatter' => (
-    is          => 'ro',
-    is          =>  'lazy',
-    isa         =>  InstanceOf['Number::Format'],
+    is  => 'ro',
+    is  =>  'lazy',
+    isa =>  InstanceOf['Number::Format'],
 );
 
 method _build_number_formatter () {
@@ -42,8 +42,10 @@ method _build_number_formatter () {
 method format_bytes (Num $number) {
     return int($number) .  __(q{bytes})
         if $number < 1024 && $number >= 0;
-    $self->number_formatter->format_bytes($number,
-                                          precision => 0);
+    $self->number_formatter->format_bytes(
+        $number,
+        precision => 0,
+    );
 }
 
 no Moo::Role;
