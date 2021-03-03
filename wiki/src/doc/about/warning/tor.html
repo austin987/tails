@@ -1,115 +1,115 @@
-[[!meta title="⚠ Tor ⚠"]]
+[[!meta title="Limitations of Tor"]]
 
 <h1 id="exit_node">Tor exit nodes can eavesdrop on communications</h1>
 
-**Tor is about hiding your location, not about encrypting your communication.**
+<p>Tor is about hiding your location, not about encrypting your communication.</p>
 
-Instead of taking a direct route from source to destination, communications
+<p>Instead of taking a direct route from source to destination, communications
 using the Tor network take a random pathway through several Tor relays that
 cover your tracks. So no observer at any single point can tell where the data
-came from or where it's going.
+came from or where it's going.</p>
 
 [[!img htw2-tails.png link=no alt="A Tor connection usually goes through 3 relays with the last one establishing the actual connection to the final destination"]]
 
-The last relay on this circuit, called the exit node, is the one that
+<p>The last relay on this circuit, called the exit node, is the one that
 establishes the actual connection to the destination server. As Tor does not,
 and by design cannot, encrypt the traffic between an exit node and the
-destination server, **any exit node is in a position to capture any traffic
-passing through it**. See [Tor FAQ: Can exit nodes eavesdrop on
-communications?](https://support.torproject.org/https/https-1/).
+destination server, any exit node is in a position to capture any traffic
+passing through it. See <a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes eavesdrop on
+communications?</a>.</p>
 
-For example, in 2007, a security researcher intercepted thousands of private
+<p>For example, in 2007, a security researcher intercepted thousands of private
 email messages sent by foreign embassies and human rights groups around the
 world by spying on the connections coming out of an exit node he was running.
-See [Wired: Rogue Nodes Turn Tor Anonymizer Into Eavesdropper's
-Paradise](http://archive.wired.com/politics/security/news/2007/09/embassy_hacks).
+See <a href="http://archive.wired.com/politics/security/news/2007/09/embassy_hacks">Wired: Rogue Nodes Turn Tor Anonymizer Into Eavesdropper's
+Paradise</a>.</p>
 
-**To protect yourself from such attacks you should use end-to-end encryption.**
+<p>To protect yourself from such attacks you should use end-to-end encryption.</p>
 
-**Tails includes many tools to help you using strong encryption** while
+<p>Tails includes many tools to help you using strong encryption while
 browsing, sending email or chatting, as presented on our [[about
-page|/about#cryptography]].
+page|/about#cryptography]].</p>
 
 <h1 id="fingerprint">Tails makes it clear that you are using Tor and probably Tails</h1>
 
-**Your Internet Service Provider (ISP) or your local network administrator**
+<p>Your Internet Service Provider (ISP) or your local network administrator
 can see that you're connecting to a Tor relay, and not a normal web server for
 example. Using [[Tor bridges in certain
 conditions|first_steps/welcome_screen/bridge_mode]] can help you hide the fact
-that you are using Tor.
+that you are using Tor.</p>
 
-**The destination server that you are contacting through Tor** can know whether your
+<p>The destination server that you are contacting through Tor can know whether your
 communication comes from a Tor exit node by consulting the publicly
-available list of exit nodes that might contact it. For example using the [Tor
-Bulk Exit List tool](https://check.torproject.org/torbulkexitlist) from
-the Tor Project.
+available list of exit nodes that might contact it. For example using the <a href="https://check.torproject.org/torbulkexitlist">Tor
+Bulk Exit List tool</a> from
+the Tor Project.</p>
 
-**So using Tails doesn't make you look like any random Internet user.**
+<p>So using Tails doesn't make you look like any random Internet user.
 The anonymity provided by Tor and Tails works by trying to make all of their
-users look the same so it's not possible to identify who is who amongst them.
+users look the same so it's not possible to identify who is who amongst them.</p>
 
-See also [[Can I hide the fact that I am using Tails?|fingerprint]]
+<p>See also [[Can I hide the fact that I am using Tails?|fingerprint]]</p>
 
 <h1 id="man-in-the-middle">Man-in-the-middle attacks</h1>
 
-A man-in-the-middle attack (MitM) is a form of active eavesdropping in which the
+<p>A man-in-the-middle attack (MitM) is a form of active eavesdropping in which the
 attacker makes independent connections with the victims and relays messages
 between them, making them believe that they are talking directly to each other
 over a private connection, when in fact the entire conversation is controlled by
-the attacker.
+the attacker.</p>
 
 [[!img man-in-the-middle.png link=no alt=""]]
 <!-- Source: wiki/lib/man-in-the-middle.svg -->
 
-While using Tor, man-in-the-middle attacks can still happen between the exit
+<p>While using Tor, man-in-the-middle attacks can still happen between the exit
 node and the destination server. The exit node itself can also act as a
-man-in-the-middle. For an example of such an attack see [MW-Blog: TOR exit-node
+man-in-the-middle. For an example of such an attack see <a href="https://web.archive.org/web/20120113162841/http://www.teamfurry.com/wordpress/2007/11/20/tor-exit-node-doing-mitm-attacks">MW-Blog: TOR exit-node
 doing MITM
-attacks](https://web.archive.org/web/20120113162841/http://www.teamfurry.com/wordpress/2007/11/20/tor-exit-node-doing-mitm-attacks).
+attacks</a>.</p>
 
-**Again, to protect yourself from such attacks you should use end-to-end
-encryption** and while doing so taking extra care at verifying the server
-authenticity.
+<p>Again, to protect yourself from such attacks you should use end-to-end
+encryption and while doing so taking extra care at verifying the server
+authenticity.</p>
 
-Usually, this is automatically done through SSL certificates checked by your
+<p>Usually, this is automatically done through SSL certificates checked by your
 browser against a given set of recognized [[!wikipedia
 Certificate_authority desc="certificate authorities"]]).
 If you get a security exception message such as this one you might be the victim of
 a man-in-the-middle attack and should not bypass the warning unless you have another
 trusted way of checking the certificate's fingerprint with the people running
-the service.
+the service.</p>
 
 [[!img ssl_warning.png link=no alt="This Connection is Untrusted"]]
 
-But on top of that the certificate authorities model of trust on the Internet is
-susceptible to various methods of compromise.
+<p>But on top of that the certificate authorities model of trust on the Internet is
+susceptible to various methods of compromise.</p>
 
-For example, on March 15, 2011,
+<p>For example, on March 15, 2011,
 Comodo, one of the major SSL certificates authorities, reported that a user account
 with an affiliate registration authority had been compromised. It was then used
 to create a new user account that issued nine certificate signing requests for
 seven domains: mail.google.com, login.live.com, www.google.com, login.yahoo.com
 (three certificates), login.skype.com, addons.mozilla.org, and global trustee.
-See [Comodo: The Recent RA
-Compromise](https://blog.comodo.com/other/the-recent-ra-compromise/).
+See <a href="https://blog.comodo.com/other/the-recent-ra-compromise/">Comodo: The Recent RA
+Compromise</a>.</p>
 
-Later in 2011, DigiNotar, a Dutch SSL certificate company, incorrectly issued
+<p>Later in 2011, DigiNotar, a Dutch SSL certificate company, incorrectly issued
 certificates to a malicious party or parties. Later on, it came to light that
 they were apparently compromised months before, perhaps as far back as May of 2009,
 or even earlier. Rogue certificates were issued for domains such as google.com,
-mozilla.org, torproject.org, login.yahoo.com and many more. See [The Tor
+mozilla.org, torproject.org, login.yahoo.com and many more. See <a href="https://blog.torproject.org/blog/diginotar-debacle-and-what-you-should-do-about-it">The Tor
 Project: The DigiNotar Debacle, and what you should do about
-it](https://blog.torproject.org/blog/diginotar-debacle-and-what-you-should-do-about-it).
+it</a>.</p>
 
-**This still leaves open the possibility of a man-in-the-middle attack even when
-your browser is trusting an HTTPS connection.**
+<p>This still leaves open the possibility of a man-in-the-middle attack even when
+your browser is trusting an HTTPS connection.</p>
 
-On one hand, by providing anonymity, Tor makes it more difficult to perform a
-man-in-the-middle attack targeted at **one specific person** with the blessing
+<p>On one hand, by providing anonymity, Tor makes it more difficult to perform a
+man-in-the-middle attack targeted at one specific person with the blessing
 of a rogue SSL certificate. But on the other end, Tor makes it easier for people
 or organizations running exit nodes to perform large scale MitM attempts, or
-attacks targeted at **a specific server**, and especially those among its users
-who happen to use Tor.
+attacks targeted at a specific server, and especially those among its users
+who happen to use Tor.</p>
 
 <p class="quoted-from">Quoted from [[!wikipedia Man-in-the-middle_attack
 desc="Wikipedia: %s"]], [[!wikipedia
@@ -120,41 +120,43 @@ collusion</a>.</p>
 
 <h1 id="correlation">End-to-end correlation attacks</h1>
 
-Tor is designed for low-latency communications: the time for a request
+<p>Tor is designed for low-latency communications: the time for a request
 to go from your computer to the destination server and back is generally
 less than 1 second. Such a low latency makes it possible to use Tor for
-web browsing and instant messaging.
+web browsing and instant messaging.</p>
 
-As a consequence of Tor being designed for low-latency communications, an
+<p>As a consequence of Tor being designed for low-latency communications, an
 attacker could in theory correlate the timing and shape of the traffic
 entering and exiting the Tor network to
 deanonymize Tor users.
-Such attacks are called *end-to-end correlation attacks*, because they
-require observing both ends of a Tor circuit at the same time.
+Such attacks are called <i>end-to-end correlation attacks</i>, because they
+require observing both ends of a Tor circuit at the same time.</p>
 
-For example, an ISP and a website could potentially collaborate to
+<p>For example, an ISP and a website could potentially collaborate to
 deanonymize a Tor user by observing that the same particular network traffic
 pattern enters the Tor network at the ISP and then reaches the
-website shortly afterward.
+website shortly afterward.</p>
 
-End-to-end correlation attacks have been studied in many research papers
+<p>End-to-end correlation attacks have been studied in many research papers
 but we are not aware of any actual use to deanonymize Tor users.
 In the past, law enforcement agencies preferred exploiting
-vulnerabilities in *Tor Browser* and Tails to deanonymize users instead of
-performing end-to-end correlation attacks.
+vulnerabilities in <i>Tor Browser</i> and Tails to deanonymize users instead of
+performing end-to-end correlation attacks.</p>
 
-Tails protects better than *Tor Browser* from such software
+<p>Tails protects better than <i>Tor Browser</i> from such software
 vulnerabilities but does not protect better from end-to-end correlation
-attacks.
+attacks.</p>
 
-See also:
+<p>See also:</p>
 
-- [Tor Project: One cell is enough to break Tor's
-  anonymity](https://blog.torproject.org/one-cell-enough-break-tors-anonymity)
-  for an overview of the academic research on end-to-end correlation attacks.
-- [Ars Technica: Firefox 0-day in the wild is being used to attack Tor
-  users](https://arstechnica.com/information-technology/2016/11/firefox-0day-used-against-tor-users-almost-identical-to-one-fbi-used-in-2013/)
-  about a software vulnerability in *Tor Browser* being exploited in 2016.
-- [Vice: Facebook Helped the FBI Hack a Child
-  Predator](https://www.vice.com/en/article/v7gd9b/facebook-helped-fbi-hack-child-predator-buster-hernandez)
-  about a software vulnerability in Tails being exploited in 2017.
+<ul>
+<li><a href="https://blog.torproject.org/one-cell-enough-break-tors-anonymity">Tor Project: One cell is enough to break Tor's
+  anonymity</a>
+  for an overview of the academic research on end-to-end correlation attacks.</li>
+<li><a href="https://arstechnica.com/information-technology/2016/11/firefox-0day-used-against-tor-users-almost-identical-to-one-fbi-used-in-2013/">Ars
+  Technica: Firefox 0-day in the wild is being used to attack Tor users</a>
+  about a software vulnerability in <i>Tor Browser</i> being exploited in 2016.</li>
+<li><a href="https://www.vice.com/en/article/v7gd9b/facebook-helped-fbi-hack-child-predator-buster-hernandez">Vice:
+  Facebook Helped the FBI Hack a Child Predator</a>
+  about a software vulnerability in Tails being exploited in 2017.</li>
+</ul>
