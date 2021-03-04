@@ -31,6 +31,7 @@ def get_bus() -> str:
 def netns_exists(name: str) -> bool:
     return os.path.exists(os.path.join("/var/run/netns", name))
 
+
 def wait_netns(name: str, sleep_time=1):
     notified = False
     while not netns_exists(name):
@@ -39,17 +40,15 @@ def wait_netns(name: str, sleep_time=1):
         time.sleep(1)
 
 
-
 def systemd_ready():
     try:
         # XXX: discard stdout/stderr
         subprocess.Popen(["systemd-notify", "--ready"])
     except FileNotFoundError:
-        # systemd probably not installed
+        # systemd not installed
         pass
     else:
         log.info("systemd was notified")
-
 
 
 def main():
@@ -60,7 +59,9 @@ def main():
     at_bus_address = get_bus()
     log.debug("address got! %s", at_bus_address)
 
-    dest_bus_path = os.path.join("/tmp/", "at-%s.sock" % args.netns)
+    dirname = os.path.join("/tmp/netns-specific/", args.netns)
+    os.makedirs(dirname, exist_ok=True)
+    dest_bus_path = os.path.join(dirname, "at.sock")
     log.debug("Binding at %s", dest_bus_path)
     if os.path.exists(dest_bus_path):
         os.unlink(dest_bus_path)
