@@ -8,8 +8,22 @@ BUNDLE=/usr/local/etc/ssl/certs/tails.boum.org-CA.pem
 
 mkdir -p "$(dirname "${BUNDLE}")"
 
-cat /etc/ssl/certs/AddTrust_External_Root.pem \
-    /etc/ssl/certs/Lets-Encrypt-Authority-X3.pem \
+### Last updated: 2021-01-19
+# - R3: RSA 2048, active
+# - R4: RSA 2048, backup
+# - E1: ECDSA P-384, upcoming
+# - E2: ECDSA P-384, upcoming backup
+# References:
+#  - https://letsencrypt.org/certificates/
+#  - https://letsencrypt.org/2020/09/17/new-root-and-intermediates.html
+cat \
+   /usr/share/tails/certs/lets-encrypt-r3.pem \
+   /usr/share/tails/certs/lets-encrypt-r4.pem \
+   /usr/share/tails/certs/lets-encrypt-e1.pem \
+   /usr/share/tails/certs/lets-encrypt-e2.pem \
    > "$BUNDLE"
 
 chmod a+r "$BUNDLE"
+
+rm \
+   /usr/share/tails/certs/lets-encrypt-*.pem
