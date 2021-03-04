@@ -108,6 +108,12 @@ set_log_tag spoof-mac
 
 NIC="${1}"
 
+if get_all_veth_nics | grep -xF "${NIC}" -q
+then
+    log "NIC ${NIC} is actually a veth; no spoofing"
+    exit 0
+fi
+
 if ! mac_spoof_is_enabled; then
     exit 0
 fi
