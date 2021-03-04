@@ -101,7 +101,7 @@ method update (Num $downloaded_byte) {
     my $elapsed_time = $current_time - $self->last_progress_time;
     return if ($elapsed_time < $self->update_interval_time);
 
-    $self->download_speed($downloaded_byte, $elapsed_time);
+    $self->speed($self->download_speed($downloaded_byte, $elapsed_time));
     $self->size_left($self->size - $downloaded_byte);
     $self->estimated_end_time($self->estimate_end_time);
     $self->last_byte_downloaded($downloaded_byte);
@@ -110,17 +110,13 @@ method update (Num $downloaded_byte) {
 
 method download_speed (Num $downloaded_byte, Num $elapsed_time) {
     my $raw_speed = ($downloaded_byte - $self->last_byte_downloaded)/$elapsed_time;
-    if ($self->speed == 0) {
-        $self->speed($raw_speed);
-    }
-    else {
-        # Apply exponential smoothing.
-        $self->speed(
-            ($raw_speed * $self->smoothing_factor)
-            +
-            ($self->speed * (1 - $self->smoothing_factor))
-        );
-    }
+    return $raw_speed if $self->speed == 0;
+    # Apply exponential smoothing.
+    return
+        ($raw_speed * $self->smoothing_factor)
+        +
+        ($self->speed * (1 - $self->smoothing_factor));
+
 }
 
 method estimate_end_time () {
