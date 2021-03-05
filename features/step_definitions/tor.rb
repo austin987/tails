@@ -355,8 +355,11 @@ When /^I configure a direct connection in Tor Launcher$/ do
   end
 end
 
-When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
-  @tor_is_using_pluggable_transports = bridge_type != 'bridge'
+When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
+  @tor_is_using_pluggable_transports = bridge_type != 'normal'
+  # Internally a "normal" bridge is called just "bridge" which we have
+  # to respect below.
+  bridge_type = 'bridge' if bridge_type == 'normal'
   @screen.wait('TorLauncherConfigureButton.png', 10).click
   @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
   @screen.wait('TorLauncherBridgeList.png', 10).click
@@ -403,7 +406,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   @screen.wait_vanish('TorLauncherConnectingWindow.png', 120)
 end
 
-When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
+When /^all Internet traffic has only flowed through the configured bridges$/ do
   assert_not_nil(@bridge_hosts, 'No bridges has been configured via the ' \
                  "'I configure some ... bridges in Tor Launcher' step")
   assert_all_connections(@sniffer.pcap_file) do |c|
