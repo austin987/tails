@@ -356,6 +356,7 @@ When /^I configure a direct connection in Tor Launcher$/ do
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
+  @tor_is_using_pluggable_transports = bridge_type != 'bridge'
   @screen.wait('TorLauncherConfigureButton.png', 10).click
   @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
   @screen.wait('TorLauncherBridgeList.png', 10).click

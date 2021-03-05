@@ -440,20 +440,22 @@ Given /^Tor is ready$/ do
   # is enabled at this stage it means we already ran some steps
   # dealing with Tor Launcher, presumably to configure bridges.
   if $vm.execute_successfully('tor_control_getconf DisableNetwork', libs: 'tor').stdout.chomp == '1'
-    direct_tor_connection = true
+    # This variable is initialized to nil in each scenario, and only
+    # ever set to true in some previously run step that configures tor
+    # to use PTs.
+    assert(!@tor_is_using_pluggable_transports, 'This is a test suite bug!')
+    @tor_is_using_pluggable_transports = false
     step 'the Tor Launcher autostarts'
     step 'I configure a direct connection in Tor Launcher'
-  else
-    direct_tor_connection = false
   end
 
   # Here we actually check that Tor is ready
   step 'Tor has built a circuit'
   step 'the time has synced'
-  if direct_tor_connection
-    step 'Tor is confined with Seccomp'
-  else
+  if @tor_is_using_pluggable_transports
     step 'Tor is not confined with Seccomp'
+  else
+    step 'Tor is confined with Seccomp'
   end
   # When we test for ASP upgrade failure the following tests would fail,
   # so let's skip them in this case.
