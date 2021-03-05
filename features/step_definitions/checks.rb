@@ -200,7 +200,8 @@ Then /^Tor is (not )?confined with Seccomp$/ do |not_confined|
     'tor_control_getconf Sandbox', libs: 'tor'
   ).stdout.to_i
   assert_equal(expected_sandbox_status, sandbox_status,
-               'Tor says that the sandbox is disabled')
+               'Tor says that the sandbox is ' +
+               (sandbox_status == 1 ? 'enabled' : 'disabled'))
   # tor's Seccomp status will always be 2 (filter mode), even with
   # "Sandbox 0", but let's still make sure that is the case.
   seccomp_status = get_seccomp_status('tor')
