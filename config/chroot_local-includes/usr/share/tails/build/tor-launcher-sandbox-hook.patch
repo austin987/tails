@@ -44,7 +44,7 @@ index 81d7138..4dafb26 100644
  
 +// Returns true iff bridge is a normal bridge, not using any pluggable
 +// transport.
-+function isSimpleBridge(bridge)
++function isNormalBridge(bridge)
 +{
 +  return bridge.replace(/^bridge\s+/i, "").split(/\s+/)[0].match(/^[0-9.:]+$/) != null;
 +}
@@ -57,7 +57,7 @@ index 81d7138..4dafb26 100644
  
 +  let useBridges = settings[kTorConfKeyUseBridges];
 +  let bridgeList = settings[kTorConfKeyBridgeList];
-+  let onlyNormalBridges = bridgeList ? bridgeList.every(isSimpleBridge) : true;
++  let onlyNormalBridges = bridgeList ? bridgeList.every(isNormalBridge) : true;
 +  let enableSandbox = !useBridges || onlyNormalBridges;
 +  torSandboxSetter(enableSandbox);
    return setConfAndReportErrors(settings, "configureSettings");
