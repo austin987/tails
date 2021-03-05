@@ -17,6 +17,7 @@ use English qw{-no_match_vars};
 use Env;
 use Function::Parameters;
 use IPC::Run;
+use List::Util qw(reduce);
 use Locale::Messages qw{bind_textdomain_codeset
                         bind_textdomain_filter
                         turn_utf_8_on};
@@ -219,21 +220,17 @@ method init_zenity_progress_dialog_text (Object $download_progress) {
 
     assert_isa($download_progress, 'Tails::IUK::DownloadProgress');
 
-    my $time_left_str = '';
-    foreach my $time_key (qw{second minute hour day}) {
-        my $max_time_value = $time_key eq 'hour' ? 23 : 59;
-        foreach (1 .. $max_time_value) {
-            my $time_value =
-                $download_progress->time_duration->{$time_key}->($_);
-            $time_left_str = $time_value
-                if length($time_left_str) < length ($time_value);
-        }
-    }
+    my $time_left_str = reduce {length $a > length $b ? $a : $b} map {
+        my $time_key  = $_;
+        my $max_time  = $time_key eq 'hour' ? 23 : 59;
+        map {
+            $download_progress->time_duration->{$time_key}->($_)
+        }1 .. $max_time;
+    } qw{second minute hour day};
     $time_left_str =  $time_left_str . ' ' . $time_left_str;
 
-   my ($byte_unit) =   sort {
-        length($b) <=> length($a)
-    }map {$self->format_bytes(1024**$_)}0 .. 3;
+    my $byte_unit = reduce {length $a > length $b ? $a : $b} map {
+        $self->format_bytes(1024**$_)}0 .. 3;
     $byte_unit =~ s/\d+//;
 
     my $big_str       = '000000' . $byte_unit;
