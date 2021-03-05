@@ -158,6 +158,30 @@ first_boot_repartition() {
 	settle
 }
 
+repair_system_partition() {
+	set +e
+	fsck.fat -a -w -V -v "${SYSTEM_PARTITION}"
+	FSCK_EXIT_CODE=$?
+	set -e
+	case "${FSCK_EXIT_CODE}" in
+		0)
+			_log_msg "fsck has detected no recoverable errors"
+			;;
+		1)
+			_log_msg "fsck has fixed errors, deleting fsck recovery files"
+			MOUNTPOINT=$(mktemp -d)
+			mount -t vfat "${SYSTEM_PARTITION}" "${MOUNTPOINT}"
+			find "${MOUNTPOINT}" \
+			     -maxdepth 1 -type f -iname 'FSCK*.REC' \
+			     -exec rm '{}' \;
+			umount "${MOUNTPOINT}"
+			;;
+		*)
+			_log_msg "fsck usage error. Ignoring and booting anyway."
+			;;
+	esac
+}
+
 # Check if this is first boot
 GUID=$(sgdisk --print "${PARENT_DEVICE}" \
 	| sed -n '/^Disk identifier (GUID)/ s/^Disk identifier (GUID): // p')
@@ -166,6 +190,6 @@ if [ "${GUID}" = "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3" ]; then
 	_log_msg "This is the first boot, so repartitioning"
 	first_boot_repartition
 else
-	_log_msg "Skipping partitioning because this is not the first boot"
-	exit 0
+	_log_msg "This is not the first boot, so repairing filesystem"
+	repair_system_partition
 fi
