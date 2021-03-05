@@ -439,6 +439,9 @@ Given /^Tor is ready$/ do
   # case Tor Launcher has not been dealt with yet. If tor's networking
   # is enabled at this stage it means we already ran some steps
   # dealing with Tor Launcher, presumably to configure bridges.
+  # Otherwise we just treat this as the default case, where it is not
+  # important for the test scenario that we go through the extra
+  # hassle and use bridges, so we simply attempt a direct connection.
   if $vm.execute_successfully('tor_control_getconf DisableNetwork', libs: 'tor').stdout.chomp == '1'
     # This variable is initialized to nil in each scenario, and only
     # ever set to true in some previously run step that configures tor
