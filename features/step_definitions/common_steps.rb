@@ -436,8 +436,9 @@ Given /^Tor is ready$/ do
     $vm.execute("systemctl -q is-active tor@default.service").success?
   end
   # ... so we can ask if the tor's networking is disabled, in which
-  # case Tor Launcher should autostart and we have to deal with it for
-  # tor to bootstrap.
+  # case Tor Launcher has not been dealt with yet. If tor's networking
+  # is enabled at this stage it means we already ran some steps
+  # dealing with Tor Launcher, presumably to configure bridges.
   if $vm.execute_successfully('tor_control_getconf DisableNetwork', libs: 'tor').stdout.chomp == '1'
     direct_tor_connection = true
     step 'the Tor Launcher autostarts'
