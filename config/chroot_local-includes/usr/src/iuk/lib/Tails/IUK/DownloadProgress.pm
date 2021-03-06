@@ -14,7 +14,7 @@ use strictures 2;
 
 use autodie qw(:all);
 use Types::Standard qw{Num Str HashRef CodeRef Int};
-use Time::HiRes;
+use Time::HiRes qw(clock_gettime CLOCK_MONOTONIC);;
 use Time::Duration;
 use Function::Parameters;
 
@@ -97,7 +97,7 @@ method _build_time_duration () {
 
 # Based on the code in  DownloadCore.jsm in Tor Browser
 method update (Num $downloaded_byte) {
-    my $current_time = Time::HiRes::gettimeofday();
+    my $current_time = clock_gettime(CLOCK_MONOTONIC);
     my $elapsed_time = $current_time - $self->last_progress_time;
     return if ($elapsed_time < $self->update_interval_time);
 
