@@ -619,7 +619,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             my ($download_h, $zenity_h, $download_out, $zenity_in);
             my ($bytes_downloaded, $percent_complete);
             my $download_progress =
-                Tails::IUK::DownloadProgress->new(size => $upgrade_path->{'total-size'});
+                Tails::IUK::DownloadProgress->new(size => $target_file->{size});
             $info = $self->init_zenity_progress_dialog_text($download_progress);
             $download_h =  IPC::Run::start \@cmd,
                 \undef, \$download_out, '2>', \$stderr;
