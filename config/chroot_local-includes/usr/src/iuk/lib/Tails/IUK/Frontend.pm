@@ -631,6 +631,10 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                 \$zenity_in;
             try {
                 while ($zenity_h->pumpable && $download_h->pumpable ) {
+                    # Zenity reads data from standard input line by line.
+                    # If a line is prefixed with # the text is updated with the text on that line.
+                    # If a line contains only a number, the percentage is updated with that number.
+
                     ### Get download progress percentage
                     $download_h->pump_nb;
                     next unless $download_out;
