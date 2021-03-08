@@ -508,16 +508,19 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                     allowed_args[i] = {'pattern': allowed_args[i]}
             self.allowed_commands[cmd.upper()] = allowed_args
 
+    def case_insensitive_regex(self, s):
+        return ''.join(['[' + c.upper() + c.lower() + ']' for c in s])
+
     def add_allowed_confs_commands(self, confs):
         combined_getconf_rule = {'pattern': "(" + "|".join([
-            key for key in confs]) + ")"}
+            self.case_insensitive_regex(key) for key in confs]) + ")"}
         setconf_reset_part = "\s*|\s*".join([
-            key for key in confs
+            self.case_insensitive_regex(key) for key in confs
             if isinstance(confs[key], list) and '' in confs[key]]
         )
         setconf_assignment_part = "\s*|\s*".join([
             "{}=({})".format(
-                key, "|".join(confs[key])
+                self.case_insensitive_regex(key), "|".join(confs[key])
             )
             for key in confs
             if isinstance(confs[key], list) and len(confs[key]) > 0])
