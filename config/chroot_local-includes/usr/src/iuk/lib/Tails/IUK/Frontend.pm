@@ -211,14 +211,13 @@ method fatal_run_cmd (Str :$error_msg, ArrayRef :$cmd, Maybe[Str] :$as = undef, 
     return ($stdout, $stderr, $success, $exit_code);
 }
 
-method init_zenity_progress_dialog_text (Object $download_progress) {
+method init_zenity_progress_dialog_text ((InstanceOf['Tails::IUK::DownloadProgress']) $download_progress) {
     # Zenity doesn't resize the width of the progress
     # dialog if a text is bigger than the initial text.
     # So let's give to the progress dialog initial text
     # a value that avoids zenity break download_progress->info
     # into a new line.
 
-    assert_isa($download_progress, 'Tails::IUK::DownloadProgress');
 
     my $time_left_str = reduce {length $a > length $b ? $a : $b} map {
         my $time_key  = $_;
