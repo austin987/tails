@@ -457,8 +457,8 @@ Given /^Tor is ready$/ do
   step 'the time has synced'
   if @tor_is_using_pluggable_transports
     step 'Tor is not confined with Seccomp'
-  else
-    step 'Tor is confined with Seccomp'
+  #else
+  #  step 'Tor is confined with Seccomp'
   end
   # When we test for ASP upgrade failure the following tests would fail,
   # so let's skip them in this case.
