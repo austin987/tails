@@ -1,0 +1,140 @@
+#!/usr/bin/python3
+from argparse import ArgumentParser, ArgumentTypeError
+import logging
+import pwd
+import os
+import socket
+import sys
+
+try:
+    import prctl
+except ImportError:
+    print("WARNING: you don't have prctl package installed, this might be insecure!!!", file=sys.stderr)
+    PRCTL = False
+else:
+    PRCTL = True
+
+def get_parser():
+    p = ArgumentParser()
+    p.add_argument(
+        "--connect",
+        "-c",
+        action="append",
+        default=[],
+        dest="connections",
+        type=SocketSpec,
+        help="This can be something like TCP:example.com:80 or "
+        "UNIX:/path/to/my.sock or TCP6:example.org:25",
+    )
+    p.add_argument("-u", "--user")
+    p.add_argument("cmd")
+    p.add_argument("cmd_args", nargs="*")
+
+    return p
+
+
+class SocketSpec:
+    def __init__(self, spec: str):
+        self.fd = None
+        self.family = None
+        self.type = socket.SOCK_STREAM
+        self.address = None
+        self.mode = None
+
+        t = spec.split(":")
+
+        sock_type = t[0]
+        if sock_type == "TCP":
+            self.family = socket.AF_INET
+        elif sock_type == "TCP6":
+            self.family = socket.AF_INET6
+        elif sock_type == "UNIX":
+            self.family = socket.AF_UNIX
+        elif sock_type == "FILE":
+            self.family = "FILE"
+            self.type = "FILE"
+        else:
+            raise ArgumentTypeError("Invalid socket type `%s`" % sock_type)
+
+        if self.family == socket.AF_UNIX:
+            if len(t) != 2:
+                raise ArgumentTypeError(
+                    "Invalid socket form; UNIX type have exactly one addr part"
+                )
+            self.address = t[1]
+        elif self.family == "FILE":
+            if len(t) != 3:
+                raise ArgumentTypeError(
+                    "Invalid socket form; FILE type must have the form FILE:path:mode"
+                )
+            self.address = t[1]
+            self.mode = t[2]
+        else:
+            if len(t) != 3:
+                raise ArgumentTypeError(
+                    "Invalid socket form; TCP type must have the form TCP:host:port"
+                )
+            self.address = (t[1], int(t[2]))
+
+    def create(self):
+        if self.is_file():
+            self.buf = open(self.address, self.mode)
+            self.fd = self.buf.fileno()
+            return self.buf
+        else:
+            s = socket.socket(
+                family=self.family, type=self.type, proto=0, fileno=self.fd
+            )
+            self.socket = s
+            self.fd = s.fileno()
+            return s
+
+    def is_file(self):
+        return self.family == "FILE"
+
+
+def main():
+    args = get_parser().parse_args()
+
+    # this list is needed to avoid that GC will also call close() on sockets
+    sockets = []
+    for addr in args.connections:
+        s = addr.create()
+        if not addr.is_file():
+            s.connect(addr.address)
+        os.set_inheritable(s.fileno(), True)
+        logging.debug("fd=%d [%s]", s.fileno(), addr)
+        sockets.append(s)
+
+    if args.user:
+        user = pwd.getpwnam(args.user)
+
+        if PRCTL:
+            prctl.capbset.limit()
+        os.setgroups(os.getgrouplist(user.pw_name, user.pw_gid))
+        os.setgid(user.pw_gid)
+        os.setuid(user.pw_uid)
+        os.umask(0o077)
+        if PRCTL:
+            prctl.cap_inheritable.limit()
+            prctl.cap_permitted.limit()
+            prctl.cap_effective.limit()
+        home = user.pw_dir
+    else:
+        home = os.getenv('HOME')
+
+    os.execvpe(
+        args.cmd,
+        [args.cmd] + args.cmd_args,
+        env=dict(
+            # Yes, the child process could enumerate the open fd, but this is probably clearer
+            # especially, we don't want to rely on the fact that FD always start from 3 and are incremental
+            INHERIT_FD=",".join(str(s.fileno()) for s in sockets),
+            HOME=home,
+        ),
+    )
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()
