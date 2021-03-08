@@ -1,7 +1,40 @@
-#!/bin/bash
+#!/usr/bin/env python3
+import os
+import logging
 
-test "$(id -u)" -eq 0 && \
-    exec ip netns exec onioncircs \
-        runuser -u amnesia /usr/bin/onioncircuits
+from tailslib.gnome import gnome_env_vars
 
-exec sudo -n /usr/local/bin/onioncircuits
+
+def run_in_netns(*args, netns, user="amnesia"):
+    cmd = [
+        "/bin/ip",
+        "netns",
+        "exec",
+        netns,
+        "/sbin/runuser",
+        "-u",
+        user,
+        "--",
+        "/usr/bin/env",
+        *gnome_env_vars(),
+        "AT_SPI_BUS_ADDRESS=unix:path=/tmp/at-onioncircs.sock",
+        *args,
+    ]
+    logging.info("Running %s", cmd)
+    os.execvp(cmd[0], cmd)
+
+
+def drop_and_run():
+    run_in_netns("/usr/bin/onioncircuits", netns="onioncircs")
+
+
+def main():
+    if os.getuid() == 0:
+        drop_and_run()
+    else:
+        os.execlp("sudo", "sudo", "-n", "/usr/local/bin/onioncircuits")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()

@@ -36,6 +36,8 @@ systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 
+systemctl --global enable tails-a11y-proxy-netns@onioncircs.service
+
 # Use socket activation only, to delay the startup of cupsd.
 # In practice, this means that cupsd is started during
 # the initialization of the GNOME session, which is fine: by then,
