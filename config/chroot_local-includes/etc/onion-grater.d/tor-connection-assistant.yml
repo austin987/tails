@@ -1,0 +1,28 @@
+---
+# TODO: see #18123 for better solution to apparmor-profiles
+# since this is one of the most powerful profiles, it must be one of the first to be migrated
+- apparmor-profiles:
+    - '/usr/local/lib/connect-drop'
+  users:
+    - 'root'
+  commands:
+    SAVECONF:
+      - ''
+    GETINFO:
+      - 'status/bootstrap-phase'
+  confs:
+    UseBridges: ['', '.*']
+    Bridge: ['', '.*']
+    Socks4Proxy: ['', '.*']
+    Socks5Proxy: ['', '.*']
+    HTTPSProxy: ['', '.*']
+    Socks5ProxyUsername: ['', '.*']
+    Socks5ProxyPassword: ['', '.*']
+    HTTPSProxyAuthenticator: ['', '.*']
+    ReachableAddresses: ['', '.*']
+    DisableNetwork: ['0', '1']
+  events:
+    STATUS_CLIENT:
+    NOTICE:
+    WARN:
+    ERR:
