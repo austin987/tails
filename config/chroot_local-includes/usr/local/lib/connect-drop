@@ -5,6 +5,7 @@ import pwd
 import os
 import socket
 import sys
+import time
 
 try:
     import prctl
@@ -123,6 +124,9 @@ def main():
     else:
         home = os.getenv('HOME')
 
+    # XXX: #18123 tor-connection-assistant is racy getting informations about the connecting party. This means
+    # that we cannot be too fast, or it will detect wrong things
+    time.sleep(1)
     os.execvpe(
         args.cmd,
         [args.cmd] + args.cmd_args,
