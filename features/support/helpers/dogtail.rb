@@ -255,14 +255,6 @@ module Dogtail
       run("#{@var} = #{@find_code}")
     end
 
-    TREE_API_NODE_SEARCHES.each do |method|
-      define_method(method) do |*args|
-        args_str = self.class.args_to_s(args)
-        method_call = "#{method}(#{args_str})"
-        Node.new("#{@var}.#{method_call}", **@opts)
-      end
-    end
-
     TREE_API_NODE_ACTIONS.each do |method|
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
