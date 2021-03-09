@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Import try_for()
+. /usr/local/lib/tails-shell-library/common.sh
+# Import tor_control_getinfo(), tor_set_in_torrc()
+. /usr/local/lib/tails-shell-library/tor.sh
+
+systemctl stop tor@default.service
+
+#tor_set_in_torrc Sandbox "${1}"
+sed -i '/^ClientTransportPlugin /d' /etc/tor/torrc
+if [ "${1}" = 0 ]; then
+    tor_set_in_torrc ClientTransportPlugin 'obfs2,obfs3,obfs4,meek_lite exec /usr/bin/obfs4proxy managed'
+fi
+
+systemctl start tor@default.service
+
+# Block until controller is available, but with a timeout to no block
+# forever, although callers of this script will likely reach a bad
+# state if the controller is dead.
+TIMEOUT=10
+try_for ${TIMEOUT} '[ -n "$(tor_control_getinfo version)" ]' 0.1

@@ -4,7 +4,6 @@ from tailsgreeter import TRANSLATION_DOMAIN
 import tailsgreeter.config
 import tailsgreeter.utils
 from tailsgreeter.settings import SettingNotFoundError
-from tailsgreeter.settings.network import NETCONF_DIRECT, NETCONF_DISABLED, NETCONF_OBSTACLE
 from tailsgreeter.ui import _
 from tailsgreeter.ui.setting import GreeterSetting
 from tailsgreeter.ui.popover import Popover
@@ -255,68 +254,51 @@ class NetworkSettingUI(AdditionalSetting):
 
     @property
     def value_for_display(self) -> str:
-        if self.value == NETCONF_DIRECT:
-            return _("Direct (default)")
-        if self.value == NETCONF_OBSTACLE:
-            return _("Bridge & Proxy")
-        if self.value == NETCONF_DISABLED:
-            return _("Offline")
+        if self.network_enabled:
+            return _("Enabled (default)")
+        else:
+            return _("Disabled")
 
     def __init__(self, network_setting: "NetworkSetting"):
         self._network_setting = network_setting
-        self.value = NETCONF_DIRECT
+        self.network_enabled = True
         super().__init__()
         self.accel_key = Gdk.KEY_n
-        self.icon_network_clear_chosen = self.builder.get_object('image_network_clear')
-        self.icon_network_specific_chosen = self.builder.get_object('image_network_specific')
-        self.icon_network_off_chosen = self.builder.get_object('image_network_off')
+
+        self.image_network_on = self.builder.get_object('image_network_on')
+        self.image_network_off = self.builder.get_object('image_network_off')
         self.listbox_network_controls = self.builder.get_object('listbox_network_controls')
-        self.listbox_network_controls.connect('button-press-event', self.cb_listbox_button_press)
         self.listbox_network_controls.connect('row-activated', self.cb_listbox_network_row_activated)
-        self.listboxrow_netconf_direct = self.builder.get_object('listboxrow_netconf_direct')
-        self.listboxrow_netconf_obstacle = self.builder.get_object('listboxrow_netconf_obstacle')
-        self.listboxrow_netconf_disabled = self.builder.get_object('listboxrow_netconf_disabled')
+        self.listbox_network_controls.connect('button-press-event', self.cb_listbox_button_press)
+        self.listboxrow_network_on = self.builder.get_object('listboxrow_network_on')
+        self.listboxrow_network_off = self.builder.get_object('listboxrow_network_off')
 
     def apply(self):
-        self._network_setting.save(self.value)
-        is_bridge = self.value == NETCONF_OBSTACLE
-        self.main_window.set_bridge_infobar_visibility(is_bridge)
+        self._network_setting.save(self.network_enabled)
         super().apply()
 
-    def load(self):
+    def load(self) -> bool:
         try:
             value = self._network_setting.load()
         except SettingNotFoundError:
             raise
 
         # Select the correct listboxrow (used in the popover)
-        if value == NETCONF_DIRECT:
-            self.listbox_network_controls.select_row(self.listboxrow_netconf_direct)
-        elif value == NETCONF_OBSTACLE:
-            self.listbox_network_controls.select_row(self.listboxrow_netconf_obstacle)
-        elif value == NETCONF_DISABLED:
-            self.listbox_network_controls.select_row(self.listboxrow_netconf_disabled)
+        if value:
+            self.listbox_network_controls.select_row(self.listboxrow_network_on)
+        else:
+            self.listbox_network_controls.select_row(self.listboxrow_network_off)
 
-        if self.value == value:
+        if self.network_enabled == value:
             return False
 
-        self.value = value
+        self.network_enabled = value
         return True
 
     def cb_listbox_network_row_activated(self, listbox, row, user_data=None):
-        self.icon_network_clear_chosen.set_visible(False)
-        self.icon_network_specific_chosen.set_visible(False)
-        self.icon_network_off_chosen.set_visible(False)
-
-        if row == self.listboxrow_netconf_direct:
-            self.value = NETCONF_DIRECT
-            self.icon_network_clear_chosen.set_visible(True)
-        elif row == self.listboxrow_netconf_obstacle:
-            self.value = NETCONF_OBSTACLE
-            self.icon_network_specific_chosen.set_visible(True)
-        elif row == self.listboxrow_netconf_disabled:
-            self.value = NETCONF_DISABLED
-            self.icon_network_off_chosen.set_visible(True)
+        self.network_enabled = row == self.listboxrow_network_on
+        self.image_network_on.set_visible(self.network_enabled)
+        self.image_network_off.set_visible(not self.network_enabled)
 
         if self.has_popover() and self.popover.is_open():
             self.popover.close(Gtk.ResponseType.YES)

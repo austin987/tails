@@ -330,11 +330,36 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
   $vm.execute_successfully('tails-upgrade-frontend-wrapper', user: LIVE_USER)
 end
 
+# Note about the "basic" Tor Launcher steps: we have tests which will
+# start Tor Launcher (and connect directly to the Tor Network) in
+# other languages, so we need to make those steps
+# language-agnostic. Unfortunately this means interaction based on
+# images is not suitable, so we try more general approaches.
+
 When /^the Tor Launcher autostarts$/ do
-  @screen.wait('TorLauncherWindow.png', 60)
+  try_for(60) { $vm.execute_successfully("xwininfo -name TorLauncher") }
+  # Here we assume that no other window is visible, so Tor Launcher
+  # will be the only one.
+  @screen.wait('AnyWindowTitleBar.png', 10, sensitivity: 0.99)
 end
 
-When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
+When /^I configure a direct connection in Tor Launcher$/ do
+  # Click window (again we assume Tor Launcher is the only one) ...
+  @screen.click('AnyWindowTitleBar.png', sensitivity: 0.99)
+  # ... and wait a bit until it's focused ...
+  sleep 3
+  # ... so this key press is not lost.
+  @screen.press('enter')
+  try_for(120) do
+    $vm.execute("pgrep --uid tor-launcher --full 'firefox-unconfined -app /usr/local/lib/tor-launcher-standalone/application.ini'").failure?
+  end
+end
+
+When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
+  @tor_is_using_pluggable_transports = bridge_type != 'normal'
+  # Internally a "normal" bridge is called just "bridge" which we have
+  # to respect below.
+  bridge_type = 'bridge' if bridge_type == 'normal'
   @screen.wait('TorLauncherConfigureButton.png', 10).click
   @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
   @screen.wait('TorLauncherBridgeList.png', 10).click
@@ -381,7 +406,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   @screen.wait_vanish('TorLauncherConnectingWindow.png', 120)
 end
 
-When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
+When /^all Internet traffic has only flowed through the configured bridges$/ do
   assert_not_nil(@bridge_hosts, 'No bridges has been configured via the ' \
                  "'I configure some ... bridges in Tor Launcher' step")
   assert_all_connections(@sniffer.pcap_file) do |c|

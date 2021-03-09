@@ -23,6 +23,11 @@ until pgrep -u "${LIVE_USERNAME}" '^ibus-daemon' >/dev/null ; do
    sleep 5
 done
 
+# Kill any existing instance, since multiple instances would be very
+# confusing. This could easily happen if you have Tor Launcher open,
+# and reconnect the network, which then will try to start it again.
+pkill -u tor-launcher firefox || :
+
 export LANG
 export_gnome_env
 sudo -u ${LIVE_USERNAME} xhost +SI:localuser:tor-launcher

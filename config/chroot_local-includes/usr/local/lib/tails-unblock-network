@@ -4,11 +4,10 @@ set -e
 set -u
 set -x
 
-CONFIG_FILE=/var/lib/gdm3/settings/tails.network
 NET_MODULES_BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
 
-# Import the TAILS_NETCONF variable
-. "$CONFIG_FILE"
+# Import tails_network_enabled()
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
 
 systemctl start tails-unblock-network.service
 
@@ -18,7 +17,7 @@ systemctl start tails-unblock-network.service
 # This might have been caused by an aufs weirdness (#9012),
 # but this code is rather simple and it does not hurt to ensure
 # our assumptions are verified.
-if [ "${TAILS_NETCONF}" != "disabled" ]; then
+if tails_network_enabled; then
    echo "Waiting for ${NET_MODULES_BLACKLIST} to be gone..." >&2
    while [ -e "${NET_MODULES_BLACKLIST}" ]; do
       sleep 0.5

@@ -377,10 +377,10 @@ Given /^I open Tails Greeter additional settings dialog$/ do
   open_greeter_additional_settings
 end
 
-Given /^I enable the specific Tor configuration option$/ do
+Given /^I disable networking in Tails Greeter$/ do
   open_greeter_additional_settings
   @screen.wait('TailsGreeterNetworkConnection.png', 30).click
-  @screen.wait('TailsGreeterSpecificTorConfiguration.png', 10).click
+  @screen.wait('TailsGreeterNetworkConnectionDisable.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
@@ -431,8 +431,35 @@ When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |titl
 end
 
 Given /^Tor is ready$/ do
+  # First we wait for tor to be running so its control port is open...
+  try_for(60) do
+    $vm.execute("systemctl -q is-active tor@default.service").success?
+  end
+  # ... so we can ask if the tor's networking is disabled, in which
+  # case Tor Launcher has not been dealt with yet. If tor's networking
+  # is enabled at this stage it means we already ran some steps
+  # dealing with Tor Launcher, presumably to configure bridges.
+  # Otherwise we just treat this as the default case, where it is not
+  # important for the test scenario that we go through the extra
+  # hassle and use bridges, so we simply attempt a direct connection.
+  if $vm.execute_successfully('tor_control_getconf DisableNetwork', libs: 'tor').stdout.chomp == '1'
+    # This variable is initialized to nil in each scenario, and only
+    # ever set to true in some previously run step that configures tor
+    # to use PTs.
+    assert(!@tor_is_using_pluggable_transports, 'This is a test suite bug!')
+    @tor_is_using_pluggable_transports = false
+    step 'the Tor Launcher autostarts'
+    step 'I configure a direct connection in Tor Launcher'
+  end
+
+  # Here we actually check that Tor is ready
   step 'Tor has built a circuit'
   step 'the time has synced'
+  if @tor_is_using_pluggable_transports
+    step 'Tor is not confined with Seccomp'
+  #else
+  #  step 'Tor is confined with Seccomp'
+  end
   # When we test for ASP upgrade failure the following tests would fail,
   # so let's skip them in this case.
   unless $vm.file_exist?('/run/live-additional-software/doomed_to_fail')

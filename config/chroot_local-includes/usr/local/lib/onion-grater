@@ -144,8 +144,9 @@ import yaml
 DEFAULT_LISTEN_ADDRESS = 'localhost'
 DEFAULT_LISTEN_PORT = 9051
 DEFAULT_COOKIE_PATH = '/run/tor/control.authcookie'
-DEFAULT_CONTROL_SOCKET_PATH = '/run/tor/control'
-
+# How often (in seconds) we check whether we've lost the tor
+# controller connection.
+TOR_CONTROLLER_PING_INTERVAL = 1.0
 
 class NoRewriteMatch(RuntimeError):
     """
@@ -215,12 +216,14 @@ class FilteredControlPortProxySession:
         self.controller = handler.controller
         self.debug_log = handler.debug_log
         self.filter_name = handler.filter_name
+        self.reconnect_controller = handler.connect_to_real_control_port
         self.restrict_stream_events = handler.restrict_stream_events
-        self.rfile = handler.rfile
+        self.request = handler.request
         self.server_address = handler.server_address
         self.wfile = handler.wfile
         self.client_streams = set()
         self.subscribed_event_listeners = []
+
 
     def debug_log_send(self, line):
         if global_args.print_responses:
@@ -256,12 +259,20 @@ class FilteredControlPortProxySession:
         return next((rule for rule in allowed_args
                      if re.match(rule['pattern'] + "$", arg_str)), None)
 
-    def proxy_line(self, line, args_rewriter=None, response_rewriter=None):
+    def proxy_line(self, line, args_rewriter=None, response_rewriter=None, retry=False):
         if args_rewriter:
             new_line = args_rewriter(line)
             self.debug_log_rewrite('command', line, new_line)
             line = new_line
-        response = self.controller.msg(line.strip()).raw_content()
+        try:
+            response = self.controller.msg(line.strip()).raw_content()
+        except (stem.SocketClosed, stem.SocketError):
+            if retry:
+                raise
+            else:
+                self.recover_controller()
+                self.proxy_line(line, args_rewriter, response_rewriter, retry=True)
+            return
         if response_rewriter:
             new_response = response_rewriter(response)
             self.debug_log_rewrite('response', response, new_response)
@@ -331,10 +342,19 @@ class FilteredControlPortProxySession:
     def update_event_subscriptions(self, events):
         for listener, event in self.subscribed_event_listeners:
             if event not in events:
-                self.controller.remove_event_listener(listener)
                 self.subscribed_event_listeners.remove((listener, event))
                 if global_args.print_responses:
                     self.debug_log("unsubscribed from event '{}'".format(event))
+                try:
+                    self.controller.remove_event_listener(listener)
+                except (stem.SocketClosed, stem.SocketError):
+                    # When recovering the controller we'll also
+                    # recover the subscriptions recorded in
+                    # self.subscribed_event_listeners, so since we
+                    # already have dropped event from there, the
+                    # failed unsubscription we're dealing with will be
+                    # successfully unsubscribed.
+                    self.recover_controller()
         for event in events:
             if any(event == event_ for _, event_ in self.subscribed_event_listeners):
                 if global_args.print_responses:
@@ -352,21 +372,55 @@ class FilteredControlPortProxySession:
                     event_rewriter = _event_rewriter
                 def _event_cb(event):
                     self.event_cb(event, event_rewriter=event_rewriter)
-                self.controller.add_event_listener(
-                    _event_cb, getattr(stem.control.EventType, event)
-                )
                 self.subscribed_event_listeners.append((_event_cb, event))
                 if global_args.print_responses:
                     self.debug_log("subscribed to event '{}'".format(event))
+                try:
+                    self.controller.add_event_listener(
+                        _event_cb, getattr(stem.control.EventType, event)
+                    )
+                except (stem.SocketClosed, stem.SocketError):
+                    # See comment above for failed unsubscriptions.
+                    self.recover_controller()
             else:
                 if global_args.print_responses:
                     self.debug_log("suppressed subscription to event '{}'"
                                    .format(event))
-        self.respond("250 OK")
+
+    def recover_controller(self):
+        self.debug_log('lost connection to tor, reconnecting...')
+        self.controller = self.reconnect_controller()
+        self.debug_log('successfully recovered a tor connection!')
+        # The only state we carry is about event subscriptions, so we
+        # have to set them up again for the new controller
+        event_subs = [e for _, e in self.subscribed_event_listeners]
+        self.subscribed_event_listeners = []
+        self.client_streams = set()
+        self.update_event_subscriptions(event_subs)
+
+    def get_client_request(self):
+        while True:
+            try:
+                # Some clients (e.g. Tor Browser) write their requests
+                # byte-by-byte, so we peek ahead and make sure we only
+                # read a single, full request.
+                peek_ahead = self.request.recv(self.MAX_LINESIZE,
+                                               socket.MSG_PEEK)
+                if peek_ahead == b'':
+                    # The client disconnected
+                    return peek_ahead
+                request_length = peek_ahead.find(b"\n")
+                if request_length == -1:
+                    continue
+                return self.request.recv(request_length + 1)
+            except socket.timeout:
+                if not self.controller.is_alive():
+                    self.recover_controller()
+                continue
 
     def handle(self):
         while True:
-            binary_line = self.rfile.readline(self.MAX_LINESIZE)
+            binary_line = self.get_client_request()
             if binary_line == b'':
                 # Deal with clients that close the socket without a QUIT.
                 break
@@ -418,6 +472,7 @@ class FilteredControlPortProxySession:
                     self.filter_line(line)
                 else:
                     self.update_event_subscriptions(events)
+                    self.respond("250 OK")
 
             else:
                 rule = self.get_rule(cmd, arg_str)
@@ -471,6 +526,12 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 
     def setup(self):
         super(type(self), self).setup()
+        # We don't want to block forever when waiting for client
+        # requests, because the tor controller connection might have
+        # broken (e.g. if tor restarted) which we need to monitor in
+        # between socket timeouts.
+        self.request.settimeout(TOR_CONTROLLER_PING_INTERVAL)
+
         self.allowed_commands = {}
         self.allowed_events = {}
         self.client_desc = None
@@ -578,7 +639,27 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         while not controller:
             if tries >= 3:
                 time.sleep(1)
-            controller = stem.connection.connect(control_socket=global_args.control_socket_path)
+            # We would prefer to use the control socket but use the
+            # TCP control port as a workaround for this Tor bug:
+            # https://gitlab.torproject.org/tpo/core/tor/-/issues/25173
+            # This workaround was added while working on the "Always
+            # start Tor Launcher" feature. It remains a mystery why we
+            # don't hit this bug when running a Tails without this
+            # feature but enabling "bridge mode", which should reach
+            # the same state as this feature.
+            # Make sure to revert the commit adding this comment once
+            # the Tor bug is fixed and we want to revert back to using
+            # the control socket.
+            # Also, we would like to use Controller.from_port() here
+            # since it does not attempt fallback on failure, but at
+            # least for Tor Launcher that makes its second connection
+            # that handles events not receive any events breaking e.g.
+            # the progress bar and tor error handling.
+            # It remains to see if Controller.from_socket() is also
+            # affected.
+            controller = stem.connection.connect(
+                control_port=('127.0.0.1', '9052'), control_socket=None
+            )
             tries += 1
         stem.connection.authenticate_cookie(controller, cookie_path=global_args.control_cookie_path)
         return controller
@@ -645,12 +726,6 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         except (ConnectionResetError, BrokenPipeError) as err:
             # Handle clients disconnecting abruptly
             disconnect_reason = str(err)
-        except stem.SocketError:
-            # Handle client closing its socket abruptly
-            disconnect_reason = "Client closed its socket"
-        except stem.SocketClosed:
-            # Handle Tor closing its socket abruptly
-            disconnect_reason = "Tor closed its socket"
         finally:
             if self.controller:
                 self.controller.close()
@@ -696,12 +771,6 @@ def main():
         type=str, metavar='PATH', default=DEFAULT_COOKIE_PATH,
         help="specifies the path to Tor's control authentication cookie " +
              "(default: {})".format(DEFAULT_COOKIE_PATH)
-    )
-    parser.add_argument(
-        "--control-socket-path",
-        type=str, metavar='PATH', default=DEFAULT_CONTROL_SOCKET_PATH,
-        help="specifies the path to Tor's control socket " +
-             "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH)
     )
     parser.add_argument(
         "--complain",
