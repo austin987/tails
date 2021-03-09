@@ -13,9 +13,7 @@ end
 def thunderbird_inbox
   folder_view = thunderbird_main.child($config['Thunderbird']['address'],
                                        roleName: 'table row').parent
-  folder_view.children(roleName: 'table row', recursive: false).find do |e|
-    e.name.match(/^Inbox( .*)?$/)
-  end
+  folder_view.child(/^Inbox( .*)?$/, roleName: 'table row', recursive: false)
 end
 
 def thunderbird_install_host_snakeoil_ssl_cert
