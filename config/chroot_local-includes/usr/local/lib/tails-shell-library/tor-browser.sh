@@ -3,8 +3,6 @@
 TBB_INSTALL=/usr/local/lib/tor-browser
 TBB_PROFILE=/etc/tor-browser/profile
 TBB_EXT=/usr/local/share/tor-browser-extensions
-TOR_LAUNCHER_INSTALL=/usr/local/lib/tor-launcher-standalone
-TOR_LAUNCHER_LOCALES_DIR="${TOR_LAUNCHER_INSTALL}/chrome/locale"
 
 # For strings it's up to the caller to add double-quotes ("") around
 # the value.
@@ -80,20 +78,6 @@ guess_best_tor_browser_locale() {
     echo 'en-US'
 }
 
-guess_best_tor_launcher_locale() {
-    local long_locale short_locale
-    long_locale="$(echo ${LANG} | sed -e 's/\..*$//' -e 's/_/-/')"
-    short_locale="$(echo ${long_locale} | cut -d"-" -f1)"
-    if [ -e "${TOR_LAUNCHER_LOCALES_DIR}/${long_locale}" ]; then
-        echo ${long_locale}
-    elif ls -1 "${TOR_LAUNCHER_LOCALES_DIR}" | grep -q "^${short_locale}\(-[A-Z]\+\)\?$"; then
-        # See comment in guess_best_firefox_locale()
-        echo ${short_locale}
-    else
-        echo en-US
-    fi
-}
-
 configure_xulrunner_app_locale() {
     local profile locale
     profile="${1}"
@@ -111,10 +95,6 @@ configure_best_tor_browser_locale() {
     configure_xulrunner_app_locale "${profile}" "${best_locale}"
     cat "/etc/tor-browser/locale-profiles/${best_locale}.js" \
         >> "${profile}/prefs.js"
-}
-
-configure_best_tor_launcher_locale() {
-    configure_xulrunner_app_locale "${1}" "$(guess_best_tor_launcher_locale)"
 }
 
 supported_tor_browser_locales() {

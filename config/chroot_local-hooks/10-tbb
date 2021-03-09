@@ -5,8 +5,8 @@ set -u
 
 echo "Install the Tor Browser"
 
-# Import the TBB_INSTALL, TBB_PROFILE, TBB_EXT and
-# TOR_LAUNCHER_INSTALL variables, which contains the paths we will
+# Import the TBB_INSTALL, TBB_PROFILE, and TBB_EXT variables,
+# which contains the paths we will
 # split TBB's actual browser (binaries etc), user data and extension
 # into. While this differs from how the TBB organizes the files, the
 # end result will be the same, and it's practical since when creating
@@ -94,52 +94,6 @@ install_tor_browser() {
     rm -r "${tmp}"
 }
 
-# Install Tor Launcher as a standalone XUL application.
-install_tor_launcher() {
-    local tbb_install destination tmp
-    tbb_install="${1}"
-    destination="${2}"
-
-    tmp="$(mktemp -d)"
-    7z x -o"${tmp}" "${tbb_install}/browser/omni.ja"
-    mv "${tmp}/chrome/torlauncher/" "${destination}"
-    # Tor Launcher is a system add-on but can be converted to
-    # something that works as a XUL standalone application by just
-    # moving things around:
-    mkdir "${destination}/chrome"
-    for x in content locale skin; do
-        mv "${destination}/${x}" "${destination}/chrome/"
-    done
-    mkdir -p "${destination}"/defaults/preferences
-    cp "${tmp}/defaults/preferences/torlauncher-prefs.js" \
-       "${destination}/defaults/preferences/prefs.js"
-    # ... and then we extract only the Tor Launcher parts from the
-    # manifest, and adapt to how we moved files around above:
-    grep torlauncher "${tmp}/chrome//chrome.manifest" \
-        | sed --regexp-extended \
-              -e 's@^(content|locale|skin) (torlauncher.*) torlauncher/(.*)$@\1 \2 chrome/\3@' \
-              -e 's@^(component) (\S+) torlauncher/(.+)$@\1 \2 \3@' \
-              -e 's@^(resource torlauncher) .*$@\1 ./@' \
-        > "${destination}/chrome.manifest"
-    cp "${destination}/chrome/skin/default48.png" "${destination}/icon.png"
-    cat > "${destination}/application.ini" << EOF
-[App]
-Vendor=TorProject
-Name=TorLauncher
-Version=$(get_firefox_version "${tbb_install}/application.ini")
-BuildID=$(date --utc --date="@$SOURCE_DATE_EPOCH" '+%Y%m%d')
-ID=tor-launcher@torproject.org
-
-[Gecko]
-MinVersion=$(get_firefox_version "${tbb_install}/application.ini")
-MaxVersion=*.*.*
-
-[Shell]
-Icon=icon.png
-EOF
-    chmod -R a+rX "${destination}"
-    rm -r "${tmp}"
-}
 
 embed_extensions_in_omni_ja () {
     local tbb_install tbb_timestamp tmp
@@ -354,7 +308,6 @@ apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 install_debian_extensions "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 disable_update_checks "${TBB_INSTALL}"
 strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
-install_tor_launcher "${TBB_INSTALL}" "${TOR_LAUNCHER_INSTALL}"
 
 mkdir -p "${TBB_EXT}"
 if [ "${NIGHTLY_BUILD}" != yes ]; then
@@ -372,7 +325,7 @@ rmdir "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"
 
-# Create a copy of the Firefox binary, for use e.g. by Tor Launcher.
+# Create a copy of the Firefox binary, for use e.g. by the Unsafe Browser.
 # It won't be subject to AppArmor confinement.
 cp -a "${TBB_INSTALL}/firefox.real" "${TBB_INSTALL}/firefox-unconfined"
 
