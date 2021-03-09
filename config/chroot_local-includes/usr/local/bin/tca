@@ -7,15 +7,25 @@ then
     exec sudo -n "$0" "$@"
 fi
 
+PYTHON_BIN="$(which python3)"
+PROGRAM='/usr/lib/python3/dist-packages/tca/application.py'
+
+if [ "$(pgrep -u amnesia -c -f -x "$PYTHON_BIN $PROGRAM")" -gt 0 ]
+then
+    echo "tca is already running" >&2
+    exit 0
+fi
+
+# XXX: is this position safe enough? can we trust that amnesia can do nothing bad to that directory?
 confdir="/home/amnesia/.config/tca/"
 conffile="$confdir/tca.conf"
-mkdir -p "$confdir"
+mkdir -m 700 -p "$confdir"
 touch "$conffile"
 chown -R root:root "$confdir"
-         #-c 'UNIX:/run/tor/control' \
+chmod -R go-rwx "$confdir"
 exec /usr/local/lib/connect-drop \
          -c "FILE:$conffile:r+" \
          -c "TCP:127.0.0.1:9051" \
          -- /sbin/runuser -u amnesia -- \
          env DISPLAY="${DISPLAY:-}" -- \
-         /usr/lib/python3/dist-packages/tca/application.py "$@"
+         "$PYTHON_BIN" "$PROGRAM" "$@"
