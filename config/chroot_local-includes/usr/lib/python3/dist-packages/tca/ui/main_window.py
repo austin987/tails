@@ -267,9 +267,9 @@ class StepConnectProgressMixin:
             ok = self.app.configurator.tor_has_bootstrapped()
             if ok:
                 if not self.app.configurator.tor_connection_config.bridges:
-                    text = "Tor working!"
+                    text = "Tor is working!"
                 else:
-                    text = "Tor working (with bridges)!"
+                    text = "Tor is working (with bridges)!"
                 progress.set_fraction(1)
                 progress.set_text(text)
                 self.builder.get_object("step_progress_box_start").show()
