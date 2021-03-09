@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
+import os
 import logging
 import gettext
-import sys
+import json
 from argparse import ArgumentParser
 
 from tca.ui.main_window import TCAMainWindow
@@ -22,12 +23,12 @@ class TCAApplication:
     """
 
     def __init__(self, args):
-        conf, controller = recover_fd_from_parent()
+        self.log = logging.getLogger(self.__class__.__name__)
+        self.config_buf, controller = recover_fd_from_parent()
         controller.authenticate(password=None)
-        self.configurator = TorLauncherUtils(controller, conf)
+        self.configurator = TorLauncherUtils(controller, self.config_buf)
         self.configurator.load_conf()
         self.netutils = TorLauncherNetworkUtils()
-        print(self.configurator.tor_connection_config.to_tor_conf())
         self.args = args
         self.debug = args.debug
 

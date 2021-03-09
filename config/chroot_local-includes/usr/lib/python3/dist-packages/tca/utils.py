@@ -214,6 +214,7 @@ class TorConnectionConfig:
 
         return config
 
+
     @classmethod
     def load_from_dict(cls, obj):
         """this method is suitable to retrieve configuration from a JSON object"""
@@ -255,20 +256,22 @@ class TorLauncherUtils:
         self.tor_connection_config = None
 
     def load_conf(self):
-        self.read_conf()
         if self.tor_connection_config is None:
             self.tor_connection_config = TorConnectionConfig.load_from_tor_stem(
                 self.stem_controller
             )
 
-    def save_conf(self):
+    def save_conf(self, extra={}):
         if self.tor_connection_config is None:
             return
+        data = {'tor': self.tor_connection_config.to_dict()}
+        data.update(extra)
         self.config_buf.seek(0, os.SEEK_SET)
-        self.config_buf.write(
-            json.dumps(self.tor_connection_config.to_dict(), indent=2)
-        )
         self.config_buf.truncate()
+        self.config_buf.write(
+            json.dumps(data, indent=2)
+        )
+        self.config_buf.flush()
 
     def read_conf(self):
         self.config_buf.seek(0, os.SEEK_END)
@@ -284,7 +287,7 @@ class TorLauncherUtils:
             return
         finally:
             self.config_buf.seek(0)
-        self.tor_connection_config = TorConnectionConfig.load_from_dict(obj)
+        return obj
 
     def apply_conf(self):
         self.stem_controller.set_conf("DisableNetwork", "1")

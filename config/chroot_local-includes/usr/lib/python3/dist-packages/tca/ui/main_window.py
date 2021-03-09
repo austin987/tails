@@ -50,11 +50,26 @@ class StepChooseHideMixin:
     """
 
     def before_show_hide(self):
-        self.state["hide"]: Dict[str, Any] = {}
+        self.state.setdefault("hide", {})
         self.builder.get_object("radio_unnoticed_none").set_active(True)
         self.builder.get_object("radio_unnoticed_yes").set_active(False)
         self.builder.get_object("radio_unnoticed_no").set_active(False)
         self.builder.get_object("radio_unnoticed_none").hide()
+        if 'hide' in self.state['hide']:
+            if self.state['hide']['hide']:
+                self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
+                self.builder.get_object("radio_unnoticed_yes").set_active(True)
+            else:
+                self.builder.get_object("radio_unnoticed_yes").set_sensitive(False)
+                self.builder.get_object("radio_unnoticed_no").set_active(True)
+                if self.state['hide']['bridge']:
+                    self.builder.get_object("radio_unnoticed_no_bridge").set_active(True)
+
+    def _step_hide_next(self):
+        if self.state['hide']['bridge']:
+            self.change_box('bridge')
+        else:
+            self.change_box('progress')
 
     def cb_step_hide_radio_changed(self, *args):
         easy = self.builder.get_object("radio_unnoticed_no").get_active()
@@ -74,15 +89,13 @@ class StepChooseHideMixin:
         if hide:
             self.state["hide"]["hide"] = True
             self.state["hide"]["bridge"] = True
-            self.change_box("bridge")
         else:
             self.state["hide"]["hide"] = False
             if self.builder.get_object("radio_unnoticed_no_bridge").get_active():
                 self.state["hide"]["bridge"] = True
-                self.change_box("bridge")
             else:
                 self.state["hide"]["bridge"] = False
-                self.change_box("progress")
+        self._step_hide_next()
 
 
 class StepChooseBridgeMixin:
@@ -154,6 +167,7 @@ class StepChooseBridgeMixin:
 
 class StepConnectProgressMixin:
     def before_show_progress(self):
+        self.save_conf()
         self.state["progress"]["error"] = None
         self.builder.get_object("step_progress_box").show()
         if not self.state["hide"]["hide"]:
@@ -266,6 +280,7 @@ class StepConnectProgressMixin:
 
             ok = self.app.configurator.tor_has_bootstrapped()
             if ok:
+                self.save_conf(successful_connect=True)
                 if not self.app.configurator.tor_connection_config.bridges:
                     text = "Tor is working!"
                 else:
@@ -440,6 +455,7 @@ class TCAMainWindow(
         self.state: Dict[str, Dict[str, Any]] = {
             "hide": {},
             "bridge": {},
+            "proxy": {},
             "progress": {},
             "step": "hide",
         }
@@ -449,6 +465,10 @@ class TCAMainWindow(
                 content = json.load(buf)
                 log.debug("content found %s", content)
                 self.state.update(content)
+        else:
+            data = self.app.configurator.read_conf()
+            if data and data.get('ui'):
+                self.state['hide'].update(data['ui'].get('hide', {}))
         self.current_language = "en"
         self.connect("delete-event", self.cb_window_delete_event, None)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -499,6 +519,12 @@ class TCAMainWindow(
         dialog.run()
         dialog.destroy()
 
+    def save_conf(self, successful_connect=False):
+        if not successful_connect:
+            self.app.configurator.save_conf({'ui': {'hide': self.state['hide']}})
+        else:
+            self.app.configurator.save_conf({'ui': self.state})
+
     def change_box(self, name: str, **kwargs):
         children = self.main_container.get_children()
         if len(children) > 1:
@@ -507,6 +533,7 @@ class TCAMainWindow(
         self.main_container.add(self.builder.get_object("step_%s_box" % name))
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
+        log.error("State is to be saved (just to see if it works)")
 
     def get_object(self, name: str):
         """shortcut over self.builder.get_object"""
