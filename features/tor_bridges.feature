@@ -9,17 +9,16 @@ Feature: Using Tails with Tor bridges and pluggable transports
     Given I have started Tails from DVD without network and logged in
     And I capture all network traffic
     When the network is plugged
-    Then the Tor Launcher autostarts
-    And the Tor Launcher uses all expected TBB shared libraries
+    Then the Tor Connection Assistant autostarts
 
   Scenario: Using normal bridges
-    When I configure some normal bridges in Tor Launcher
+    When I configure some normal bridges in the Tor Connection Assistant
     Then Tor is ready
     And available upgrades have been checked
     And all Internet traffic has only flowed through the configured bridges
 
   Scenario: Using obfs4 pluggable transports
-    When I configure some obfs4 bridges in Tor Launcher
+    When I configure some obfs4 bridges in the Tor Connection Assistant
     Then Tor is ready
     And available upgrades have been checked
     And all Internet traffic has only flowed through the configured bridges

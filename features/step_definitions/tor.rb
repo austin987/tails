@@ -330,39 +330,62 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
   $vm.execute_successfully('tails-upgrade-frontend-wrapper', user: LIVE_USER)
 end
 
-# Note about the "basic" Tor Launcher steps: we have tests which will
-# start Tor Launcher (and connect directly to the Tor Network) in
+# Note about the "basic" Tor Connection Assistant steps: we have tests which will
+# start Tor Connection Assistant (and connect directly to the Tor Network) in
 # other languages, so we need to make those steps
 # language-agnostic. Unfortunately this means interaction based on
 # images is not suitable, so we try more general approaches.
 
-When /^the Tor Launcher autostarts$/ do
-  try_for(60) { $vm.execute_successfully("xwininfo -name TorLauncher") }
-  # Here we assume that no other window is visible, so Tor Launcher
-  # will be the only one.
-  @screen.wait('AnyWindowTitleBar.png', 10, sensitivity: 0.99)
-end
-
-When /^I configure a direct connection in Tor Launcher$/ do
-  # Click window (again we assume Tor Launcher is the only one) ...
-  @screen.click('AnyWindowTitleBar.png', sensitivity: 0.99)
-  # ... and wait a bit until it's focused ...
-  sleep 3
-  # ... so this key press is not lost.
-  @screen.press('enter')
-  try_for(120) do
-    $vm.execute("pgrep --uid tor-launcher --full 'firefox-unconfined -app /usr/local/lib/tor-launcher-standalone/application.ini'").failure?
+When /^the Tor Connection Assistant autostarts$/ do
+  try_for(60) do
+    @tor_connection_assistant = Dogtail::Application.new('TorConnectionAssistant')
   end
 end
 
-When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
+def tor_connection_assistant
+  assert_not_nil(@tor_connection_assistant,
+                 "you must run the 'the Tor Connection Assistant autostarts' step first")
+  @tor_connection_assistant
+end
+
+When /^I configure a direct connection in the Tor Connection Assistant$/ do
+  tor_connection_assistant.child(/^Configure tor automatically/,
+                                 roleName: 'radio button')
+                          .click
+  tor_connection_assistant.child('Connect to Tor',
+                                 roleName: 'push button')
+                          .click
+  try_for(120) do
+    tor_connection_assistant.child(roleName: 'progress bar').get_field('value') == '1.0'
+  end
+  @screen.press('alt', 'F4')
+
+  # XXX: TCA does not yet SAVECONF the working configuration, so it
+  # will be lost if tor is restarted, which we do after restoring a
+  # snapshot. In other words: let's avoid breaking most of the test
+  # suite.
+  $vm.execute_successfully('tor_control_send SAVECONF', libs: 'tor')
+end
+
+When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |bridge_type|
   @tor_is_using_pluggable_transports = bridge_type != 'normal'
   # Internally a "normal" bridge is called just "bridge" which we have
   # to respect below.
   bridge_type = 'bridge' if bridge_type == 'normal'
-  @screen.wait('TorLauncherConfigureButton.png', 10).click
-  @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
-  @screen.wait('TorLauncherBridgeList.png', 10).click
+
+  tor_connection_assistant.child(/^Configure tor automatically/,
+                                 roleName: 'radio button')
+                          .click
+  tor_connection_assistant.child('Configure a Tor bridge',
+                                 roleName: 'check box')
+                          .click
+  tor_connection_assistant.child('Connect to Tor',
+                                 roleName: 'push button')
+                          .click
+  tor_connection_assistant.child('Type in a bridge that I already know',
+                                 roleName: 'radio button')
+                          .click
+  tor_connection_assistant.child(roleName: 'scroll pane').click
   @bridge_hosts = []
   bridge_dirs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
@@ -400,15 +423,23 @@ When /^I configure some (\w+) bridges in Tor Launcher$/ do |bridge_type|
     [fingerprint, extra].each { |e| bridge_line += ' ' + e.to_s if e }
     @screen.type(bridge_line, ['Return'])
   end
-  @screen.hide_cursor
-  @screen.wait('TorLauncherFinishButton.png', 10).click
-  @screen.wait('TorLauncherConnectingWindow.png', 10)
-  @screen.wait_vanish('TorLauncherConnectingWindow.png', 120)
+
+  tor_connection_assistant.child('Connect to Tor',
+                                 roleName: 'push button')
+    .click
+  try_for(120) do
+    tor_connection_assistant.child(roleName: 'progress bar').get_field('value') == '1.0'
+  end
+  @screen.press('alt', 'F4')
+
+  # XXX: see comment for the 'I configure a direct connection in Tor
+  # Launcher' step.
+  $vm.execute_successfully('tor_control_send SAVECONF', libs: 'tor')
 end
 
 When /^all Internet traffic has only flowed through the configured bridges$/ do
   assert_not_nil(@bridge_hosts, 'No bridges has been configured via the ' \
-                 "'I configure some ... bridges in Tor Launcher' step")
+                 "'I configure some ... bridges in the Tor Connection Assistant' step")
   assert_all_connections(@sniffer.pcap_file) do |c|
     @bridge_hosts.include?({ address: c.daddr, port: c.dport })
   end

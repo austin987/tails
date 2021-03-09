@@ -436,20 +436,21 @@ Given /^Tor is ready$/ do
     $vm.execute("systemctl -q is-active tor@default.service").success?
   end
   # ... so we can ask if the tor's networking is disabled, in which
-  # case Tor Launcher has not been dealt with yet. If tor's networking
-  # is enabled at this stage it means we already ran some steps
-  # dealing with Tor Launcher, presumably to configure bridges.
-  # Otherwise we just treat this as the default case, where it is not
-  # important for the test scenario that we go through the extra
-  # hassle and use bridges, so we simply attempt a direct connection.
+  # case Tor Connection Assistant has not been dealt with yet. If
+  # tor's networking is enabled at this stage it means we already ran
+  # some steps dealing with Tor Connection Assistant, presumably to
+  # configure bridges.  Otherwise we just treat this as the default
+  # case, where it is not important for the test scenario that we go
+  # through the extra hassle and use bridges, so we simply attempt a
+  # direct connection.
   if $vm.execute_successfully('tor_control_getconf DisableNetwork', libs: 'tor').stdout.chomp == '1'
     # This variable is initialized to nil in each scenario, and only
     # ever set to true in some previously run step that configures tor
     # to use PTs.
     assert(!@tor_is_using_pluggable_transports, 'This is a test suite bug!')
     @tor_is_using_pluggable_transports = false
-    step 'the Tor Launcher autostarts'
-    step 'I configure a direct connection in Tor Launcher'
+    step 'the Tor Connection Assistant autostarts'
+    step 'I configure a direct connection in the Tor Connection Assistant'
   end
 
   # Here we actually check that Tor is ready

@@ -15,8 +15,8 @@ Feature: Time syncing
   Scenario: Clock with host's time while using bridges
     Given I have started Tails from DVD without network and logged in
     When the network is plugged
-    And the Tor Launcher autostarts
-    And I configure some normal bridges in Tor Launcher
+    And the Tor Connection Assistant autostarts
+    And I configure some normal bridges in the Tor Connection Assistant
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
@@ -26,8 +26,8 @@ Feature: Time syncing
     Given I have started Tails from DVD without network and logged in
     When I bump the system time with "+1 day"
     And the network is plugged
-    And the Tor Launcher autostarts
-    And I configure some normal bridges in Tor Launcher
+    And the Tor Connection Assistant autostarts
+    And I configure some normal bridges in the Tor Connection Assistant
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
