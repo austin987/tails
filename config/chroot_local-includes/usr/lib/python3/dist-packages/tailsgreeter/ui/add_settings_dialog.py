@@ -99,9 +99,10 @@ class AddSettingsDialog(Gtk.Dialog, TranslatableWindow):
         setting = self.settings.additional_settings[id_]
         self.stack.add_named(setting.box, 'setting-details')
         self.stack.set_visible_child_name('setting-details')
-        self.button_add.set_sensitive(True)
         self.button_back.set_visible(True)
-        self.button_add.set_visible(True)
+        if not setting.hide_button_add:
+            self.button_add.set_sensitive(True)
+            self.button_add.set_visible(True)
         setting.on_opened_in_dialog()
 
     def run(self, id_=None) -> int:
