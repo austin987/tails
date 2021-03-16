@@ -50,7 +50,6 @@ expose() {
 delete_netns() {
     # $1 = netns basename
     basename="$1"
-    shift 1
     nsName="${basename}"
     hostVeth="veth-${basename}"
     ip link del "$hostVeth" || true
@@ -60,13 +59,12 @@ delete_netns() {
 create_netns() {
     # $1 = netns basename
     # $2 = first address; implies /30
-    basename="$1"
-    hostAddress="$2"
-    shift 2
-    if ! [ $# -eq 0 ]; then
+    if ! [ $# -eq 2 ]; then
         echo "Wrong usage for create_netns" >&2
         exit 2
     fi
+    basename="$1"
+    hostAddress="$2"
     netmask=30
     nsName="${basename}"
     hostVeth="veth-${basename}"
@@ -130,7 +128,7 @@ then
     create_netns torlaunch "${netBase}.9"
     create_netns onionshare "${netBase}.13"
 
-    # letting some service available inside $tbbNs
+    # Exposing specific services to applications confined in netns
     expose tbb 9050 9050
     expose tbb 9051 9051
     expose onioncircs 9051 9051
