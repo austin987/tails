@@ -16,7 +16,7 @@ EOT
    # but we're in posix-compatible shell scripting!
    ret=$?
    if [ "$ret" -lt 2 ]; then
-       true
+       return 0
    else
        return $ret
    fi
