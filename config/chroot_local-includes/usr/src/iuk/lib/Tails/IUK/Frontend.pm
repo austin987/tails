@@ -17,21 +17,22 @@ use English qw{-no_match_vars};
 use Env;
 use Function::Parameters;
 use IPC::Run;
+use List::Util qw(reduce);
 use Locale::Messages qw{bind_textdomain_codeset
                         bind_textdomain_filter
                         turn_utf_8_on};
-use Number::Format qw(:subs);
 use Path::Tiny;
 use POSIX;
 use String::Errf qw{errf};
 use Tails::Download::HTTPS;
 use Tails::RunningSystem;
+use Tails::IUK::DownloadProgress;
 use Tails::IUK::UpgradeDescriptionFile;
 use Tails::IUK::Utils qw{space_available_in};
 use Tails::MirrorPool;
 use Try::Tiny;
 use Types::Path::Tiny qw{AbsDir AbsFile};
-use Types::Standard qw(ArrayRef Bool CodeRef Defined HashRef InstanceOf Int Maybe Str);
+use Types::Standard qw(ArrayRef Bool CodeRef Defined HashRef InstanceOf Int Maybe Str Object);
 
 BEGIN {
     bind_textdomain_filter 'tails', \&turn_utf_8_on;
@@ -43,6 +44,7 @@ use Moo;
 use MooX::HandlesVia;
 
 with 'Tails::Role::HasEncoding';
+with 'Tails::IUK::Role::FormatByte';
 
 use namespace::clean;
 
@@ -162,7 +164,6 @@ method _build_free_space () {
         : space_available_in($self->running_system->liveos_mountpoint);
 }
 
-
 =head1 METHODS
 
 =cut
@@ -208,6 +209,42 @@ method fatal_run_cmd (Str :$error_msg, ArrayRef :$cmd, Maybe[Str] :$as = undef, 
     );
 
     return ($stdout, $stderr, $success, $exit_code);
+}
+
+method init_zenity_progress_dialog_text ((InstanceOf['Tails::IUK::DownloadProgress']) $download_progress) {
+    # Zenity doesn't resize the width of the progress
+    # dialog if a text is bigger than the initial text.
+    # So let's give to the progress dialog initial text
+    # a value that avoids zenity break download_progress->info
+    # into a new line.
+
+
+    my $time_left_str = reduce {length $a > length $b ? $a : $b} map {
+        my $time_key  = $_;
+        my $max_time  = $time_key eq 'hour' ? 23 : 59;
+        map {
+            $download_progress->time_duration->{$time_key}->($_)
+        }1 .. $max_time;
+    } qw{second minute hour day};
+    $time_left_str =  $time_left_str . ' ' . $time_left_str;
+
+    my $byte_unit = reduce {length $a > length $b ? $a : $b} map {
+        $self->format_bytes(1024**$_)}0 .. 3;
+    $byte_unit =~ s/\d+//;
+
+    my $big_str       = '000000' . $byte_unit;
+    my $init_text     = $download_progress->info;
+    my $size_left_str = $self->format_bytes($download_progress->last_byte_downloaded);
+    my $unknow_str    = $download_progress->estimated_end_time;
+
+    $init_text =~ s/\Q$unknow_str\E/$time_left_str/;
+    $init_text =~ s/\Q$size_left_str\E/$big_str/;
+    $init_text =~ s/\(0.+\//($big_str\//;
+
+    $init_text = $download_progress->info
+        if length ($download_progress->info) > length($init_text);
+
+    return $init_text;
 }
 
 method dialog (Str $question, Str :$type = 'question', Str :$title,
@@ -396,8 +433,8 @@ method run () {
                     "{space_needed} ".
                     "of free space on Tails system partition, ".
                     " but only {free_space} is available.",
-                    space_needed => format_bytes($space_needed, mode => "iec", precision => 0),
-                    free_space   => format_bytes($free_space,   mode => "iec", precision => 0),
+                    space_needed => $self->format_bytes($space_needed),
+                    free_space   => $self->format_bytes($free_space),
                 ));
             }
         }
@@ -407,8 +444,8 @@ method run () {
                 "The available incremental upgrade requires ".
                 "{memory_needed} of free memory, but only ".
                 "{free_memory} is available.",
-                memory_needed => format_bytes($memory_needed, mode => "iec", precision => 0),
-                free_memory   => format_bytes($free_memory,   mode => "iec", precision => 0),
+                memory_needed => $self->format_bytes($memory_needed),
+                free_memory   => $self->format_bytes($free_memory),
             ));
         }
     }
@@ -445,9 +482,10 @@ method run () {
                 details_url => $upgrade_path->{'details-url'},
                 name        => $upgrade_description->product_name,
                 version     => $upgrade_path->{version},
-                size        => format_bytes($upgrade_path->{'total-size'},
-                                            mode => "iec", precision => 0),
+                size        => $self->format_bytes(
+                    $upgrade_path->{'total-size'}
                 ),
+            ),
             title        => __(q{Upgrade available}),
             ok_label     => __(q{Upgrade now}),
             cancel_label => __(q{Upgrade later}),
@@ -577,7 +615,11 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             $exit_code = $?;
         }
         else {
-            my ($download_h, $zenity_h, $download_out);
+            my ($download_h, $zenity_h, $download_out, $zenity_in);
+            my ($bytes_downloaded, $percent_complete);
+            my $download_progress =
+                Tails::IUK::DownloadProgress->new(size => $target_file->{size});
+            $info = $self->init_zenity_progress_dialog_text($download_progress);
             $download_h =  IPC::Run::start \@cmd,
                 \undef, \$download_out, '2>', \$stderr;
             $zenity_h = IPC::Run::start
@@ -585,10 +627,34 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                     qw{zenity --progress --percentage=0 --auto-close},
                     '--title', $title, '--text', $info
                 ],
-                \$download_out;
+                \$zenity_in;
             try {
                 while ($zenity_h->pumpable && $download_h->pumpable ) {
+                    # Zenity reads data from standard input line by line.
+                    # If a line is prefixed with # the text is updated with the text on that line.
+                    # If a line contains only a number, the percentage is updated with that number.
+
+                    ### Get download progress percentage
                     $download_h->pump_nb;
+                    next unless $download_out;
+
+                    ### Update the progress dialog bar percentage
+                    $zenity_in = $download_out;
+                    $zenity_h->pump_nb;
+
+                    ### Update the progress dialog text
+
+                    ($percent_complete) = split /\n/, $download_out;
+
+                    # Convert percentage to total number of bytes downloaded
+                    $bytes_downloaded = ($percent_complete/100) * $download_progress->size;
+                    # Clear $download_out to avoid old output in the next iteration
+                    $download_out = undef;
+
+                    next unless $download_progress->update($bytes_downloaded);
+
+                    # Send up-to-date progress dialog text to zenity
+                    $zenity_in = $download_progress->info;
                     $zenity_h->pump_nb;
                 }
             }

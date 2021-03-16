@@ -540,6 +540,13 @@ Note that your Persistent Storage will be safely preserved.
 
 <h2 id="persistence-disappears"><em>Persistent</em> folder disappears and data of the Persistent Storage is unavailable</h2>
 
+<!--
+Last updated: 2019-07-31
+
+We should remove this section after the new Persistent Storage is
+released unless this issue is still reported to help desk in #17116.
+-->
+
 Sometimes, the *Persistent* folder is missing and
 all the data of the Persistent Storage is unavailable.
 
@@ -548,34 +555,46 @@ file has disappeared. However, the files in the
 *Persistent* folder and all the other data in the Persistent Storage
 should still exist.
 
-If you encounter this problem:
+If you encounter this problem, you can either:
 
-1. Unlock the Persistent Storage in
-   the Welcome Screen when starting Tails.
+- Turn on again the feature of the Persistent Storage that you need:
 
-1. Choose
-   <span class="menuchoice">
-     <span class="guimenu">Applications</span>&nbsp;▸
-     <span class="guisubmenu">Tails</span>&nbsp;▸
-     <span class="guimenuitem">Configure persistent volume</span></span>.
+  1. Unlock the Persistent Storage in
+     the Welcome Screen when starting Tails.
 
-1. If you are asked to enter a passphrase, enter the same passphrase that you
-   use to unlock your Persistent Storage.
+  1. Choose
+     <span class="menuchoice">
+       <span class="guimenu">Applications</span>&nbsp;▸
+       <span class="guisubmenu">Tails</span>&nbsp;▸
+       <span class="guimenuitem">Configure persistent volume</span></span>.
 
-1. Turn on the features of the Persistent Storage that you had turned on previously.
+  1. If you are asked to enter a passphrase, enter the same passphrase that you
+     use to unlock your Persistent Storage.
 
-1. Click <span class="button">Save</span>, then restart Tails.
+  1. Turn on the features of the Persistent Storage that you had turned on previously.
 
-Your *Persistent* folder and all the data of the Persistent Storage
-should be restored.
+  1. Click <span class="button">Save</span>, then restart Tails.
 
-If the above instructions do not fix the problem, you might need to fix the
+  Your *Persistent* folder and all the data of the Persistent Storage
+  should be restored.
+
+- Restore the *persistence.conf* file from its backup:
+
+  1. Unlock the Persistent Storage and [[set up an administration password
+     |doc/first_steps/welcome_screen/administration_password]] when
+     starting Tails.
+
+  1. Execute the following command in a *Terminal*:
+
+         sudo cp -a /live/persistence/TailsData_unlocked/persistence.conf{.bak,}
+
+If neither of the above instructions fixes the problem, you might need to fix the
 ownership of `TailsData_unlocked`.
 
 To fix the ownership of TailsData_unlocked, set an administration password and
 execute the following command in a terminal:
 
-`sudo chown root:root /live/persistence/TailsData_unlocked`
+    sudo chown root:root /live/persistence/TailsData_unlocked
 
 <h2 id="languages-incorrect-keyboard-layout">Some languages do not have the correct keyboard layout set by default</h2>
 
