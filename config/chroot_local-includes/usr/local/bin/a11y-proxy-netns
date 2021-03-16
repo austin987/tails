@@ -68,8 +68,10 @@ def main():
 
     args = ["xdg-dbus-proxy", at_bus_address, dest_bus_path]
     log.debug("Running %r", args)
+    # we fork-exec to handle systemd notifications. though not strictly needed, they are nice!
     p = subprocess.Popen(args)
     log.debug("Started!")
+    # XXX: we could wait for dest_bus_path to appear, before signaling us ready.
     systemd_ready()
     try:
         p.communicate()
