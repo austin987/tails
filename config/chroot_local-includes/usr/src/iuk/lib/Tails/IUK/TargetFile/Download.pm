@@ -126,10 +126,18 @@ method _build_ua () {
         $ua = Test::LWP::UserAgent->new;
         $self->patch_response_handler($ua);
     } else {
-        $ua = Tails::IUK::LWP::UserAgent::WithProgress->new(ssl_opts => {
-            verify_hostname => 0,
-            SSL_verify_mode => 0,
-        });
+        $ua = Tails::IUK::LWP::UserAgent::WithProgress->new(
+            # Arguments specific to Tails::IUK::LWP::UserAgent::WithProgress
+            {
+                size      => $self->size,
+                temp_file => $self->temp_file,
+            },
+            # Arguments passed to the LWP::UserAgent constructor
+            ssl_opts => {
+                verify_hostname => 0,
+                SSL_verify_mode => 0,
+            }
+        );
     }
     unless ($ENV{HARNESS_ACTIVE} or $ENV{DISABLE_PROXY}) {
         $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9062');

@@ -9,8 +9,21 @@ package Tails::IUK::LWP::UserAgent::WithProgress;
 use 5.10.1;
 use strictures 2;
 use autodie qw(:all);
+use Carp::Assert;
 
 use parent 'LWP::UserAgent';
+
+sub new {
+    my $class = shift;
+    my $args  = shift;
+    assert('HASH' eq ref $args);
+
+    my $self = $class->SUPER::new(@_);
+    while (my ($k, $v) = each(%{$args})) { $self->{$k} = $v; }
+    bless($self, $class);
+
+    return $self;
+}
 
 sub progress {
     # When $status is "begin", $request_or_response is the
