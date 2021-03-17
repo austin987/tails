@@ -89,7 +89,7 @@ option 'exponential_backoff' => (
     is      => 'ro',
     isa     => Bool,
     format  => 's',
-    default => sub { 1 },
+    default => sub { $ENV{HARNESS_ACTIVE} ? 0 : 1 },
 );
 
 # Test suite only!

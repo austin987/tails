@@ -233,9 +233,7 @@ When qr{^I download "([^"]+)" \(of expected size (\d+)\) from "([^"]+)", (?:fail
         ' --hash_type "'    . 'sha256'         . '"' .
         ' --hash_value "'   . $expected_hash   . '"' .
         ' --output_file "'  . $output_filename . '"' .
-        ' --size "'         . $expected_size   . '"' .
-        # Speed things up
-        ' --exponential_backoff 0'
+        ' --size "'         . $expected_size   . '"'
     ;
 
     if ($failures > 0) {
