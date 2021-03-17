@@ -40,7 +40,7 @@ sub progress {
         1; # the fraction can't be calculated
     }
     else {
-        say $status * 100;
+        say(100 * (-s $self->{temp_file}) / $self->{size});
     }
     STDOUT->flush;
 }
