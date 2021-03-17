@@ -57,6 +57,12 @@ option 'output_file' => (
     format   => 's',
 );
 
+has 'temp_file' => (
+    is      => 'ro',
+    isa     => AbsPath,
+    default => sub { Path::Tiny->tempfile },
+);
+
 option 'size' => (
     required => 1,
     is       => 'ro',
@@ -183,8 +189,7 @@ method run () {
 
     my $req = HTTP::Request->new('GET', $self->uri);
 
-    my $temp_file = Path::Tiny->tempfile;
-    my $temp_fh = $temp_file->opena_raw;
+    my $temp_fh = $self->temp_file->opena_raw;
     $temp_fh->autoflush(1);
 
     sub clean_fatal {
@@ -220,7 +225,7 @@ method run () {
         unless (defined $res) {
             warn(sprintf(
                 "Could not download '%s' to '%s': undefined result",
-                $self->uri, $temp_file,
+                $self->uri, $self->temp_file,
             ));
             next;
         }
@@ -230,7 +235,7 @@ method run () {
             if (defined $header) {
                 warn(sprintf(
                     "Could not download '%s' to '%s' (%s): %s",
-                    $self->uri, $temp_file, $lwp_failure_header, $header,
+                    $self->uri, $self->temp_file, $lwp_failure_header, $header,
                 ));
                 next;
             }
@@ -239,15 +244,15 @@ method run () {
         unless ($res->is_success) {
             warn(sprintf(
                 "Could not download '%s' to '%s', request failed:\n%s\n",
-                $self->uri, $temp_file, $res->status_line,
+                $self->uri, $self->temp_file, $res->status_line,
             ));
             next;
         }
 
-        if (-s $temp_file != $self->size) {
+        if (-s $self->temp_file != $self->size) {
             warn(sprintf(
                 "The file '%s' was downloaded but its size (%d) should be %d",
-                $self->uri, -s $temp_file, $self->size,
+                $self->uri, -s $self->temp_file, $self->size,
             ));
             next;
         }
@@ -257,16 +262,16 @@ method run () {
         last;
     }
 
-    $success or clean_fatal($self, $temp_file, sprintf(
+    $success or clean_fatal($self, $self->temp_file, sprintf(
         "Could not download '%s' to '%s'",
-        $self->uri, $temp_file,
+        $self->uri, $self->temp_file,
     ));
 
     my $sha = Digest::SHA->new(256);
-    $sha->addfile($temp_file->stringify);
+    $sha->addfile($self->temp_file->stringify);
     my $actual_hash = $sha->hexdigest;
     $actual_hash eq $self->hash_value or clean_fatal(
-        $self, $temp_file, sprintf(
+        $self, $self->temp_file, sprintf(
             "The file '%s' was downloaded but its hash is not correct:\n"
                 . "  - expected: %s\n"
                 . "  - actual:   %s",
@@ -275,7 +280,7 @@ method run () {
             $actual_hash,
     ));
 
-    $temp_file->move($self->output_file);
+    $self->temp_file->move($self->output_file);
     # autodie is supposed to throw an exception on rename error,
     # but one can't be too careful.
     assert(-e $self->output_file);
