@@ -13,7 +13,9 @@ use autodie qw(:all);
 use parent 'LWP::UserAgent';
 
 sub progress {
-    my($self, $status, $m) = @_;
+    # When $status is "begin", $request_or_response is the
+    # HTTP::Request object, otherwise it is the HTTP::Response object.
+    my($self, $status, $request_or_response) = @_;
 
     if ($status eq "begin") {
         say "0";
