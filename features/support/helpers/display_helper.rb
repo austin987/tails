@@ -19,6 +19,7 @@ class Display
                             '--direct',
                             '--kiosk',
                             '--kiosk-quit=on-disconnect',
+                            '--spice-disable-audio',
                             '--connect', 'qemu:///system',
                             '--display', @x_display,
                             @domain,
