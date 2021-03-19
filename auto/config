@@ -28,7 +28,9 @@ GIT_BRANCH="$(git_current_branch)"
 if [ -n "${GIT_BRANCH}" ]; then
     CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
     GIT_SHORT_ID="$(git_current_commit --short)"
-    BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}${BUILD_BASENAME_SUFFIX}"
+    CLEAN_GIT_BASE_BRANCH=$(base_branch | sed 's,/,_,g')
+    GIT_BASE_BRANCH_SHORT_ID="$(git rev-parse --verify --short $(git_base_branch_head))"
+    BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}+${CLEAN_GIT_BASE_BRANCH}@${GIT_BASE_BRANCH_SHORT_ID}"
 else
     if git_on_a_tag; then
         CLEAN_GIT_TAG=$(git_current_tag | tr '/-' '_~')
