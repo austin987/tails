@@ -301,6 +301,13 @@ task :parse_build_options do
     when 'nomergebasebranch'
       $skip_mergebasebranch = true
     else
+      # Handle jenkins passing the now obsolete mergebasebranch.
+      # XXX: the commit adding this comment should be reverted
+      # once jenkins stops passing the mergebasebranch option.
+      if opt == 'mergebasebranch' && on_jenkins?
+        warn "The 'mergebasebranch' option is obsolete!"
+        next
+      end
       raise "Unknown Tails build option '#{opt}'"
     end
   end
