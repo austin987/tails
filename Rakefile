@@ -423,6 +423,7 @@ task merge_base_branch: ['parse_build_options', 'setup_environment'] do
   base_branch = git_helper('base_branch')
   source_date_faketime = `date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%Y-%m-%d %H:%M:%S'`.chomp
   next if releasing? || branch == base_branch
+  commit_before_merge = git_helper('git_current_commit')
   warn "Merging base branch '#{base_branch}' (at commit " \
        "#{ENV['BASE_BRANCH_GIT_COMMIT']}) ..."
   begin
@@ -443,6 +444,13 @@ task merge_base_branch: ['parse_build_options', 'setup_environment'] do
   git_base_branch_short_id = `git rev-parse --verify --short #{ENV['BASE_BRANCH_GIT_COMMIT']}`.chomp
   ENV['BUILD_BASENAME_SUFFIX'] = \
     "+#{clean_git_base_branch}@#{git_base_branch_short_id}"
+
+  # If we actually merged anything we'll re-run rake in the new Git
+  # state in order to avoid subtle build errors due to mixed state.
+  next if commit_before_merge == git_helper('git_current_commit')
+  ENV['TAILS_BUILD_OPTIONS'] = (ENV['TAILS_BUILD_OPTIONS'] || '') + \
+                               ' nomergebasebranch'
+  Kernel.exec('rake', *ARGV)
 end
 
 task :maybe_clean_up_builder_vms do
