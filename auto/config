@@ -21,16 +21,14 @@ else
     fatal "SOURCE_DATE_EPOCH is not set. Exiting."
 fi
 
-# get git branch or tag so we can set the basename appropriately, i.e.:
-# * if we build from a tag: tails-$ARCH-$TAG.iso
-# * otherwise:              tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
+# get git branch or tag so we can set the basename appropriately.
 GIT_BRANCH="$(git_current_branch)"
 if [ -n "${GIT_BRANCH}" ]; then
     CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
     GIT_SHORT_ID="$(git_current_commit --short)"
     CLEAN_GIT_BASE_BRANCH=$(base_branch | sed 's,/,_,g')
     GIT_BASE_BRANCH_SHORT_ID="$(git rev-parse --verify --short $(git_base_branch_head))"
-    BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}+${CLEAN_GIT_BASE_BRANCH}@${GIT_BASE_BRANCH_SHORT_ID}"
+    BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}@${GIT_SHORT_ID}+${CLEAN_GIT_BASE_BRANCH}@${GIT_BASE_BRANCH_SHORT_ID}-${AMNESIA_VERSION}-${AMNESIA_NOW}"
 else
     if git_on_a_tag; then
         CLEAN_GIT_TAG=$(git_current_tag | tr '/-' '_~')
