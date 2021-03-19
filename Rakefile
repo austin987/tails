@@ -38,7 +38,6 @@ EXPORTED_VARIABLES = [
   'TAILS_ACNG_PROXY',
   'TAILS_BUILD_FAILURE_RESCUE',
   'TAILS_DATE_OFFSET',
-  'TAILS_MERGE_BASE_BRANCH',
   'TAILS_OFFLINE_MODE',
   'TAILS_PROXY',
   'TAILS_PROXY_TYPE',
@@ -47,6 +46,7 @@ EXPORTED_VARIABLES = [
   'GIT_COMMIT',
   'GIT_REF',
   'BASE_BRANCH_GIT_COMMIT',
+  'BUILD_BASENAME_SUFFIX',
 ].freeze
 ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
@@ -298,8 +298,8 @@ task :parse_build_options do
       $keep_running = true
       ENV['TAILS_BUILD_FAILURE_RESCUE'] = '1'
     # Jenkins
-    when 'mergebasebranch'
-      ENV['TAILS_MERGE_BASE_BRANCH'] = '1'
+    when 'nomergebasebranch'
+      $skip_mergebasebranch = true
     else
       raise "Unknown Tails build option '#{opt}'"
     end
@@ -409,6 +409,35 @@ task setup_environment: ['validate_git_state'] do
   end
 end
 
+task merge_base_branch: ['parse_build_options', 'setup_environment'] do
+  ENV['BUILD_BASENAME_SUFFIX'] ||= ''
+  next if $skip_mergebasebranch
+  branch = git_helper('git_current_branch')
+  base_branch = git_helper('base_branch')
+  source_date_faketime = `date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%Y-%m-%d %H:%M:%S'`.chomp
+  next if releasing? || branch == base_branch
+  warn "Merging base branch '#{base_branch}' (at commit " \
+       "#{ENV['BASE_BRANCH_GIT_COMMIT']}) ..."
+  begin
+    run_command('faketime', '-f', source_date_faketime, \
+                'git', 'merge', '--no-edit', ENV['BASE_BRANCH_GIT_COMMIT'])
+  rescue CommandError
+    run_command('git', 'merge', '--abort')
+    raise <<-END_OF_MESSAGE.gsub(/^        /, '')
+
+          There were conflicts when merging the base branch; either
+          merge it yourself and resolve conflicts, or skip this merge
+          by rebuilding with the 'nomergebasebranch' option.
+
+    END_OF_MESSAGE
+  end
+  run_command('git', 'submodule', 'update', '--init')
+  clean_git_base_branch = base_branch.gsub('/', '_')
+  git_base_branch_short_id = `git rev-parse --verify --short #{ENV['BASE_BRANCH_GIT_COMMIT']}`.chomp
+  ENV['BUILD_BASENAME_SUFFIX'] = \
+    "+#{clean_git_base_branch}@#{git_base_branch_short_id}"
+end
+
 task :maybe_clean_up_builder_vms do
   clean_up_builder_vms if $force_cleanup
 end
@@ -447,6 +476,7 @@ task build: [
   'maybe_clean_up_builder_vms',
   'validate_git_state',
   'setup_environment',
+  'merge_base_branch',
   'validate_http_proxy',
   'ensure_correct_permissions',
   'vm:up',
