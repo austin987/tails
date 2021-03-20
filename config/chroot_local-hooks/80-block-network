@@ -4,6 +4,15 @@ set -e
 
 echo "Generating blocklist for all network devices"
 
+is_allowed() {
+    mod="$(basename "$1" .ko)"
+    shift
+    # the heredoc is the allowlist
+    grep -qwF "$mod" <<END
+veth
+END
+}
+
 is_net_module() {
     # Here we assume that if any of the patterns below are matched, it
     # is a network driver. This is not comprehensive, but should be
@@ -14,11 +23,18 @@ is_net_module() {
              -e "^depends:\s*(cfg|lib|mac)80211" \
              -e "^parm:\s*ifname:"
 }
-
 net_module_filter() {
     local path
     while read -r path; do
-        if is_net_module "${path}"; then
+        if ! is_allowed "${path}" && is_net_module "${path}"; then
+            echo "${path}"
+        fi
+    done
+}
+remove_allowlist_filter() {
+    local path
+    while read -r path; do
+        if ! is_allowed "${path}"; then
             echo "${path}"
         fi
     done
@@ -37,6 +53,7 @@ BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
 
 (
     find /lib/modules/*/kernel/drivers/net -name "*.ko" | \
+        remove_allowlist_filter | \
         generate_blocking_line && \
 
     # Let's try to find the network drivers in the staging directory as well
