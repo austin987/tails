@@ -45,8 +45,14 @@ def run_in_netns(*args, netns, user="amnesia"):
     os.execvp(cmd[0], cmd)
 
 
-def run(real_executable: str, netns: str, wrapper_executable: str):
+def run(real_executable: str, netns: str, wrapper_executable: str, extra_env={}):
     if os.getuid() == 0:
         run_in_netns("/usr/bin/onioncircuits", netns="onioncircs")
     else:
-        os.execlp("sudo", "sudo", "--non-interactive", "/usr/local/bin/onioncircuits")
+        env_args = ["%s=%s" % (k, v) for k, v in extra_env.items()]
+        args = (
+            ["sudo", "sudo", "--non-interactive"]
+            + env_args
+            + ["/usr/local/bin/onioncircuits"]
+        )
+        os.execlp(*args)
