@@ -1,54 +1,53 @@
-[[!meta title="Limitations of Tor"]]
+[[!meta title="Tails relies on Tor"]]
 
-<h1 id="exit_node">Tor exit nodes can eavesdrop on communications</h1>
-
-<p>Tor is about hiding your location, not about encrypting your communication.</p>
-
-<p>Instead of taking a direct route from source to destination, communications
-using the Tor network take a random pathway through several Tor relays that
-cover your tracks. So no observer at any single point can tell where the data
-came from or where it's going.</p>
-
-[[!img htw2-tails.png link=no alt="A Tor connection usually goes through 3 relays with the last one establishing the actual connection to the final destination"]]
-
-<p>The last relay on this circuit, called the exit node, is the one that
-establishes the actual connection to the destination server. As Tor does not,
-and by design cannot, encrypt the traffic between an exit node and the
-destination server, any exit node is in a position to capture any traffic
-passing through it. See <a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes eavesdrop on
-communications?</a>.</p>
-
-<p>For example, in 2007, a security researcher intercepted thousands of private
-email messages sent by foreign embassies and human rights groups around the
-world by spying on the connections coming out of an exit node he was running.
-See <a href="http://archive.wired.com/politics/security/news/2007/09/embassy_hacks">Wired: Rogue Nodes Turn Tor Anonymizer Into Eavesdropper's
-Paradise</a>.</p>
-
-<p>To protect yourself from such attacks you should use end-to-end encryption.</p>
-
-<p>Tails includes many tools to help you using strong encryption while
-browsing, sending email or chatting, as presented on our [[about
-page|/about#cryptography]].</p>
+<p class="standalone">Tails uses the Tor network because it is the strongest and most popular
+network to protect from surveillance and censorship. But Tor has some limitations if you are concerned about:
+<ul>
+<li>Hiding the fact that you are using Tor and Tails.</li>
+<li>The confidentiality of your online communications.</li>
+</ul>
+</p>
 
 <h1 id="fingerprint">Tails makes it clear that you are using Tor and probably Tails</h1>
 
-<p>Your Internet Service Provider (ISP) or your local network administrator
-can see that you're connecting to a Tor relay, and not a normal web server for
-example. Using [[Tor bridges in certain
-conditions|first_steps/welcome_screen/bridge_mode]] can help you hide the fact
-that you are using Tor.</p>
+<p>Using Tails doesn't make you look like any random Internet user.
+Tor and Tails provide anonymity by making all of their users look the same
+so it's not possible to identify who is who amongst them.</p>
 
-<p>The destination server that you are contacting through Tor can know whether your
-communication comes from a Tor exit node by consulting the publicly
-available list of exit nodes that might contact it. For example using the <a href="https://check.torproject.org/torbulkexitlist">Tor
-Bulk Exit List tool</a> from
-the Tor Project.</p>
+<p>When you use Tails, your internet service provider (ISP) or your local network administrator
+will be able to see that you're connecting to a Tor relay, and not a normal web server;
+Tor network connections look different to them. You can use [[Tor bridges|first_steps/welcome_screen/bridge_mode]]
+to hide the fact that you are using Tor.</p>
 
-<p>So using Tails doesn't make you look like any random Internet user.
-The anonymity provided by Tor and Tails works by trying to make all of their
-users look the same so it's not possible to identify who is who amongst them.</p>
+<p>The destination server you are contacting through Tor can also know whether your
+communication comes from a Tor exit node by consulting publicly
+available lists of exit nodes, such as the Tor Project's
+<a href="https://check.torproject.org/torbulkexitlist">Bulk Exit List tool</a>
+</p>
 
 <p>See also [[Can I hide the fact that I am using Tails?|fingerprint]]</p>
+
+<h1 id="exit_node">Tor exit nodes can eavesdrop on communications</h1>
+
+<p>Tor hides your location from destination servers, but it does not encrypt
+all your communication.</p>
+
+<p>Instead of taking a direct route from source to destination, Tor network connections
+take a random pathway through several Tor relays to cover your tracks.
+No observer at any single point can tell where the data came from or where it's going.</p>
+
+[[!img htw2-tails.png link=no alt="A Tor connection usually goes through 3 relays with the last one establishing the actual connection to the final destination"]]
+
+<p>The last relay on this circuit, called the exit node, establishes the actual
+connection to the destination server. Tor does not and cannot encrypt your connection
+from the exit node to the destination server, so any exit node could capture the traffic
+passing through it. See <a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes eavesdrop on
+communications?</a>.</p>
+
+<p>To protect yourself from such attacks you should use end-to-end encryption.
+Tails includes tools so you can use strong encryption while
+browsing, sending email or chatting, as presented on our [[about
+page|/about#cryptography]].</p>
 
 <h1 id="man-in-the-middle">Man-in-the-middle attacks</h1>
 
