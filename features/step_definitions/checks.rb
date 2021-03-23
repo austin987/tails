@@ -1,4 +1,4 @@
-Then /^the included OpenPGP keys are valid for the next (\d+) months$/ do |months|
+Then /^the included OpenPGP keys are valid for the next (\d+) months?$/ do |months|
   assert_all_keys_are_valid_for_n_months(:OpenPGP, Integer(months))
 end
 

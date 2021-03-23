@@ -152,10 +152,7 @@ When /^I configure Tails to use a simulated Tor network$/ do
   client_torrc_lines = [
     'TestingTorNetwork 1',
     'AssumeReachable 1',
-    'PathsNeededToBuildCircuits 0.25',
-    'TestingBridgeDownloadSchedule 0, 5',
-    'TestingClientConsensusDownloadSchedule 0, 5',
-    'TestingClientDownloadSchedule 0, 5',
+    'PathsNeededToBuildCircuits 0.67',
     'TestingDirAuthVoteExit *',
     'TestingDirAuthVoteGuard *',
     'TestingDirAuthVoteHSDir *',

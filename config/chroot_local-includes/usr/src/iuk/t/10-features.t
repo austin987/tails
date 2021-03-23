@@ -16,7 +16,6 @@ use Test::BDD::Cucumber::Harness::TestBuilder;
 
 my @gitlab_ci_compatible_features = (
     'download_upgrade-description_file',
-    'download_target_file',
 );
 
 for my $feature_dir (path('features')->children) {
