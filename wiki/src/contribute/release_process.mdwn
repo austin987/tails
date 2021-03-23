@@ -136,7 +136,7 @@ found in the Debian [security tracker][web]'s [Git repository][git].
 [git]: https://salsa.debian.org/security-tracker-team/security-tracker
 [DSA needed]: https://salsa.debian.org/security-tracker-team/security-tracker/blob/master/data/dsa-needed.txt
 
-Rationale: we don't want to release Tails ISO's and learn 2 days later about
+Rationale: we don't want to release Tails and learn 2 days later about
 important security issues fixed by Debian security updates. In some cases, it
 may be worth delaying a Tails release a bit, while waiting for a DSA to happen.
 
@@ -767,7 +767,7 @@ Verify there's enough free disk space in `$IUKS_DIR`:
        echo "ERROR! Not enough free space in ${IUKS_DIR:?}"
     fi
 
-If you can build the IUKs on your host system, run this command:
+To build the IUKS, run this command:
 
     (
        set -eu
@@ -789,36 +789,7 @@ If you can build the IUKs on your host system, run this command:
            --new-version "${VERSION?:}"                                       \
            --verbose                                                          \
            --jobs "$(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
-    )
-
-Else, if you need to build them in a VM (assuming you can SSH into it, as a user
-with passwordless sudo access, with `ssh buster-rm`; and [[!tails_gitlab
-tails/puppet-tails]] is cloned in the `$HOME` of that user in the VM), run:
-
-    (
-       set -eu
-       WORK_DIR=$(mktemp -d)
-       ssh buster-rm <<EOF
-       mkdir -p "${WORK_DIR:?}" && \
-       cd "${WORK_DIR?:}" && \
-       time \
-       sudo \
-       ~/puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
-           --tails-git-remote "file://${RELEASE_CHECKOUT?:}/.git"             \
-           --tails-git-commit "${TAG?:}"                                      \
-           --source-date-epoch "${SOURCE_DATE_EPOCH?:}"                       \
-           --local-isos-dir "${ISOS?:}"                                       \
-           --tmp-dir "${TMPDIR:-/tmp}"                                        \
-           --output-dir "${IUKS_DIR?:}"                                       \
-           --source-versions "${IUK_SOURCE_VERSIONS?:}"                       \
-           --new-version "${VERSION?:}"                                       \
-           --verbose                                                          \
-           --jobs "$(grep '^core id' /proc/cpuinfo | sort -u | wc -l)"
-       EOF
-    )
-
-In any case, run:
-
+    ) && \
      cd "${IUKS_DIR?:}" && \
      sha256sum Tails_amd64_*_to_${VERSION?:}.iuk > "${IUKS_HASHES?:}"
 
@@ -1282,15 +1253,19 @@ Rename, copy, garbage collect and update various files:
 
 Then, build the website and commit this last set of changes:
 
-	./build-website && \
-	git add wiki/src/{inc,torrents} && \
-	git commit -m "Update various website source files for ${VERSION:?}"
+	if [ "$(./bin/po4a-version)" = 0.55 ]; then
+	    ./build-website && \
+	    git add wiki/src/{inc,torrents} && \
+	    git commit -m "Update various website source files for ${VERSION:?}"
+	else
+	    echo "Wrong po4a version"
+	fi
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
 announcement for the release in `wiki/src/news/version_${TAG:?}.mdwn`.
 
-Generate an announcement listing the security bugs affecting the previous version
+Generate an announcement mentioning the security vulnerabilities affecting the previous version
 in `wiki/src/security/known_security_vulnerabilities_in_${PREVIOUS_STABLE_VERSION:?}.mdwn`, in
 order to let the users of the old versions know that they have to upgrade:
 
@@ -1356,10 +1331,14 @@ In any case
 Generate PO files for the pages added or updated earlier in this
 section, and publish them on the `$WEBSITE_RELEASE_BRANCH` branch:
 
-	./build-website && \
-	git add wiki/src && \
-	git commit -m "Releasing version ${VERSION:?}" && \
-	git push origin "${WEBSITE_RELEASE_BRANCH:?}"
+	if [ "$(./bin/po4a-version)" = 0.55 ]; then
+	    ./build-website && \
+	    git add wiki/src && \
+	    git commit -m "Releasing version ${VERSION:?}" && \
+	    git push origin "${WEBSITE_RELEASE_BRANCH:?}"
+	else
+        echo "Wrong po4a version"
+	fi
 
 Draft the Tor blog post
 -----------------------
@@ -1660,7 +1639,7 @@ If you just released a final release
    When there's a merge conflict, the script aborts to let you resolve
    the conflict. Then:
 
-   1. Resolve the conflict, `git add` and `git merge --continue`).
+   1. Resolve the conflict, `git add` and `git merge --continue`.
    2. Re-run the exact same `merge-main-branch` command.
 
 1. Check if the version number of the last entry in `devel`'s `debian/changelog` matches
