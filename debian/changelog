@@ -1,122 +1,188 @@
-tails (4.17) UNRELEASED; urgency=medium
+tails (4.17) unstable; urgency=medium
 
-  * Dummy entry for the next major release
+  * Upgrade Thunderbird to 78.8.0-1~deb10u1
+  
+  * Upgrade Tor Browser to 10.0.14-build1 (tails/tails!382)
 
- -- intrigeri <intrigeri@boum.org>  Tue, 15 Dec 2020 06:19:36 +0000
+    Commits:
+      - Upgrade Tor Browser to 10.0.14-build1.
 
-tails (4.16) unstable; urgency=medium
-
-  * Upgrade Thunderbird to 1:78.7.0-1~deb10u1.
-
-  * Upgrade Tor Browser to 10.0.12-build2 (tails/tails!359)
+  * Upgrade tor to 0.4.5.7 (tails/tails!380)
 
     Closes issues:
-      - Upgrade Tor Browser to 10.0.12 based on Firefox 78.8esr (tails/tails#18200)
+      - Upgrade tor to 0.4.5.7 (tails/tails#18244)
 
     Commits:
-      - Upgrade Tor Browser to 10.0.12-build2 (refs: #18200).
+      - Upgrade tor to 0.4.5.7
 
-  * Introduce debug=greeter kernel command line option (tails/tails!353)
+  * Retry failed upgrade downloads, reusing the previously downloaded data, and
+    fallback to the DNS mirror pool (tails/tails!379)
 
     Closes issues:
-      - Make it easier to debug the Greeter (tails/tails#17084)
+      - Make it possible to resume an automatic upgrade download (tails/tails#15875)
+      - Make Tails Upgrader resilient to broken mirrors (tails/tails#17615)
 
     Commits:
-      - Introduce debug=greeter kernel command line option
+      - Tails::IUK::TargetFile::Download: always disable exponential backoff when
+        running tests
+      - Tails::IUK::LWP::UserAgent::WithProgress: display correct progress status when
+        resuming a previously failed download
+      - Give Tails::IUK::LWP::UserAgent::WithProgress information that it'll need
+      - Refactoring: make temp_file an attribute
+      - Refactoring: use more meaningful variable name and document what value it holds
+      - GitLab CI: disable test that now requires systemd
+      - Retry failed upgrade downloads, reusing the previously downloaded data, and
+        fallback to the DNS mirror pool
+      - Upgrader hardening: comment out sudo env_keep settings that are not needed in
+        production
+      - Tails::Download::HTTPS hardening: drop support for SSL_NO_VERIFY
+      - Upgrader test suite: remove useless Win32 support code
 
-  * Upgrade to Linux 5.10.13 (stable branch) (tails/tails!352)
+  * Repair the filesystem on the system partition and avoid breaking it in the
+    first place (tails/tails!374)
 
     Closes issues:
-      - Update Linux to 5.10.12+, to mitigate CVE-2021-3347 (tails/tails#18188)
+      - Deleted obsolete automatic upgrades still occupy disk space ⇒ no automatic
+        upgrade possible after a while (tails/tails#17902)
 
     Commits:
-      - Test suite: give the Linux kernel's memory poisoning feature time to do its job
-      - Bump snapshots of the Debian APT archive to 2021021502
-      - Ensure our initramfs hook runs last before zz-busybox
-      - Disable fuse, ntfs-3g, and resume initramfs hooks and scripts
-      - Disable lvm2 initramfs hook and scripts
-      - Remove more useless drivers & software from the initramfs
-      - List contents of the initramfs when it grows too large
-      - Temporarily install the kernel from Bullseye
-      - Upgrade to linux-image-5.10.0-3-amd64, version 5.10.13-1
+      - On boot, repair the filesystem on the system partition
+      - Refactoring: move repartitioning code to a function
+      - Unmount the system partition on shutdown
 
-  * Upgrade to Linux 5.10.13 (devel branch) (tails/tails!351)
-
-    Commits:
-      - Test suite: give the Linux kernel's memory poisoning feature time to do its job
-      - Ensure our initramfs hook runs last before zz-busybox
-      - Disable fuse, ntfs-3g, and resume initramfs hooks and scripts
-      - Disable lvm2 initramfs hook and scripts
-      - Remove more useless drivers & software from the initramfs
-      - List contents of the initramfs when it grows too large
-      - Temporarily install the kernel from Bullseye
-      - Upgrade to linux-image-5.10.0-3-amd64, version 5.10.13-1
-
-  * Remove Lets-Encrypt-Authority-X3.pem from our website CA bundle
-    (tails/tails!350)
+  * Upgrade GRUB2 to 2.04-16+ (tails/tails!372)
 
     Closes issues:
-      - Remove Lets-Encrypt-Authority-X3.pem from our website CA bundle
-        (tails/tails#18139)
+      - Upgrade GRUB2 to 2.04-16+ (tails/tails#18227)
+      - devel branch FTBFS with uBlock 1.33.0+dfsg-1 (tails/tails#18191)
 
     Commits:
-      - Remove Lets-Encrypt-Authority-X3.pem from our website CA bundle
+      - Bump snapshots of the Debian APT archive to 2021030401
 
-  * Update the deb.tails.boum.org archive signing key (tails/tails!349)
-
-    Commits:
-      - Update the deb.tails.boum.org archive signing key
-
-  * Test suite: add and document Cucumber tags (tails/tails!348)
-
-    Commits:
-      - Test suite doc: document the Cucumber tags we use
-      - Test suite: add tags & comments as decided
-
-  * Upgrade tor to 0.4.5.5-rc-1 (tails/tails!347)
+  * Upgrade non-free Linux firmware to 20210208-3 (tails/tails!371)
 
     Closes issues:
-      - Upgrade to tor 0.4.5 (tails/tails#18176)
+      - Upgrade non-free Linux firmware to 20210208-3+ (tails/tails#18226)
+      - devel branch FTBFS with uBlock 1.33.0+dfsg-1 (tails/tails#18191)
 
     Commits:
-      - Upgrade tor to 0.4.5.5-rc-1
+      - Revert "Temporarily install the kernel from Bullseye"
+      - Refresh uBlock patch
+      - Bump snapshots of the Debian APT archive to 2021030101
 
-  * Test suite: adjust to new test Git repository location (tails/tails!344)
+  * Test suite: relax delay for OpenPGP future expiration date (tails/tails!370)
 
     Commits:
-      - Test suite: stop relying on immerda for Git tests
+      - Test suite: relax delay for OpenPGP future expiration date
 
-  * Upgrade to Buster 10.8 (tails/tails!343)
+  * Improve security advisory since they don't list vulnerabilities anymore
+    (tails/tails!369)
+
+    Commits:
+      - Help people find the information on their own (#18221)
+      - Remove not-so-helpful TOC
+      - Simplify and reuse the same wording
+      - Don't make people click for nothing (#18221)
+
+  * Clarify error message when starting the Unsafe Browser while offline
+    (tails/tails!367)
 
     Closes issues:
-      - Upgrade to Buster 10.8 (tails/tails#18140)
+      - Clarify error message when the Unsafe Browser was launched without network
+        connection (tails/tails#12251)
 
     Commits:
-      - Bump snapshot of the Tor project APT archive to 2021020701
-      - Bump snapshot of the Debian APT archive to 2021020701
+      - Test suite: update to match UI change
+      - Clarify error message when starting offline (#12251)
 
-  * Test suite: enable garbage collection of failed transient units created by
-    systemd-run (tails/tails!342)
-
-    Commits:
-      - Test suite: enable garbage collection of failed transient units created by
-        systemd-run
-
-  * Test suite: workaround occasionally disabled JavaScript when testing releases
-    as well (tails/tails!334)
+  * Release process: add po4a version sanity checks (tails/tails!364)
 
     Commits:
-      - Test suite: workaround #17007 when testing releases as well
+      - Release process: ensure the RM has the correct version of po4a
 
-  * Don't focus on [Cancel] when downloading upgrades (tails/tails!330)
+  * Upgrade our production and test-only tor configuration (tails/tails!363)
 
     Closes issues:
-      - Don't focus on [Cancel] when downloading upgrades (tails/tails#18072)
+      - Upgrade our production and test-only tor configuration (tails/tails#18216)
 
     Commits:
-      - Don't focus on [Cancel] when downloading upgrades
+      - Test suite: bump PathsNeededToBuildCircuits to 0.67, like Chutney
+      - Test suite: drop "TestingBridgeDownloadInitialDelay" customization
+      - Test suite: drop "DownloadInitialDelay" testing options that we set to their
+        default value
+      - Test suite: drop unused second argument for the "DownloadInitialDelay" tor
+        testing options
+      - Test suite: use the new "DownloadInitialDelay" names for the "DownloadSchedule"
+        tor testing options
+      - torrc: drop obsolete WarnUnsafeSocks setting
+      - torrc: migrate from deprecated {Control,Trans}ListenAddress to
+        {Control,Trans}Port address syntax
 
- -- Tails developers <tails@boum.org>  Mon, 22 Feb 2021 11:52:29 +0100
+  * Upgrade tor to 0.4.5.6 (tails/tails!361)
+
+    Commits:
+      - run_test_suite: abort if the host system's tor is too old
+      - Test suite setup doc: ensure we have a recent enough tor
+      - Test suite setup doc: update APT pinning to support current QEMU backport
+      - Upgrade tor to 0.4.5.6 final
+
+  * Update uBlock Origin patch (tails/tails!354)
+
+    Commits:
+      - Refresh uBlock patch
+
+  * Resolve "onion-grater race condition" (tails/tails!345)
+
+    Closes issues:
+      - onion-grater race condition (tails/tails#18123)
+
+    Commits:
+      - whitespace
+      - onioncircuits: longer options are more readable
+      - tails-create-netns: more consistent style
+      - tails-create-netns: avoid bashisms
+      - a11y-proxy-netns: explain behavior with comments
+      - review tips: is_veth_nic is more readable
+      - review tips: clearer behaviour
+      - Remove another remain from the reverted TBB experiment.
+      - veth exclusion: log to debug
+      - don't spoof veth interfaces
+      - a11y proxy now can be passed to the right netns
+      - onioncircuits is accessible!
+      - small cleanup to tailslib.gnome
+      - really: let's forget about TBB and its netns
+      - Let's forget about TBB in its netns
+      - get_all_ethernet_nics behave even if no real eth
+      - update design doc for netns improvements
+      - test: tor can bind a non-127.0.0.1 port
+      - FIX helper lib to recognize veth appropriately
+      - better wording
+      - tails-documentation: fixed when Tor is not ready
+      - sudo tor-browser allowed
+      - FIX service: run before network.target
+      - we need veth: don't blacklist it, it's harmless
+      - /stop tails-create-netns service can stop
+      - FIX tails-create-netns.service
+      - TBB: changed onion-grater
+      - TBB works + port 9150 drop
+      - netns: firewall configuration moved to ferm
+      - configure tor and ferm for TBB netns address
+      - tails-create-netns is a systemd.service
+      - onion-grater whitelisted in sane_defaults
+      - onioncircuits profile adapted to netns
+      - onioncircuits wrapper to use netns
+      - still a draft, but at least tidier
+      - DRAFT of network namespace support
+
+  * Test suite: disable sound forwarding to host (tails/tails!333)
+
+    Closes issues:
+      - Test suite: consider disabling SPICE audio (tails/tails#18122)
+
+    Commits:
+      - Test suite: disable sound forwarding to host (Closes: #18122)
+
+ -- Tails developers <tails@boum.org>  Mon, 22 Mar 2021 08:11:53 +0000
 
 tails (4.15.1) unstable; urgency=medium
 
