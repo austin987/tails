@@ -243,6 +243,23 @@ module Dogtail
         Node.new("#{@var}.#{field}", **@opts)
       end
     end
+
+    # Override the `child` method to add support for regex matching of
+    # node names, which offers much greater flexibility.
+    def override_child(pattern, **opts)
+      if pattern.instance_of?(Regexp)
+        child = self.children(**opts).find do |c|
+          pattern.match(c.name)
+        end
+        raise Failure, "Found no child matching /#{c.name.source}/" if child.nil?
+        child
+      else
+        self.original_child_method(pattern, **opts)
+      end
+    end
+
+    alias original_child_method child
+    alias child override_child
   end
 
   class Node < Application
@@ -253,14 +270,6 @@ module Dogtail
       @find_code = expr
       @var = "node#{@@node_counter += 1}"
       run("#{@var} = #{@find_code}")
-    end
-
-    TREE_API_NODE_SEARCHES.each do |method|
-      define_method(method) do |*args|
-        args_str = self.class.args_to_s(args)
-        method_call = "#{method}(#{args_str})"
-        Node.new("#{@var}.#{method_call}", **@opts)
-      end
     end
 
     TREE_API_NODE_ACTIONS.each do |method|

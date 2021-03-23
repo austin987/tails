@@ -5,18 +5,12 @@ Documentation=https://tails.boum.org/contribute/design/MAC_address/
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-EnvironmentFile=/var/lib/gdm3/settings/tails.network
-
-ExecStartPre=/bin/sh -c \
-    'if [ "${TAILS_NETCONF}" = "obstacle" ] ; then \
-         . /usr/local/lib/tails-shell-library/tor.sh ; \
-         tor_set_in_torrc "DisableNetwork" "1"       ; \
-     fi'
 
 # We sync to make sure the blacklist has disappeared from the
 # filesystem
 ExecStart=/bin/sh -c \
-    'if [ "${TAILS_NETCONF}" != "disabled" ] ; then \
+    '. /usr/local/lib/tails-shell-library/tails-greeter.sh ; \
+     if tails_network_enabled ; then \
          /bin/rm -f /etc/modprobe.d/all-net-blacklist.conf ; \
          /bin/touch /etc/modprobe.d ; \
          /bin/sync ; \

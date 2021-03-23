@@ -63,34 +63,6 @@ def unsafe_browser_application_info(defaults)
   )
 end
 
-def tor_launcher_application_info(defaults)
-  user = 'tor-launcher'
-  # We do not enable AppArmor confinement for the Tor Launcher.
-  binary = $vm.execute_successfully(
-    'echo ${TBB_INSTALL}/firefox-unconfined', libs: 'tor-browser'
-  ).stdout.chomp
-  tor_launcher_install = $vm.execute_successfully(
-    'echo ${TOR_LAUNCHER_INSTALL}', libs: 'tor-browser'
-  ).stdout.chomp
-  cmd_regex = "#{binary}\s+-app #{tor_launcher_install}/application\.ini.*"
-  defaults.merge(
-    {
-      user:                        user,
-      cmd_regex:                   cmd_regex,
-      chroot:                      '',
-      new_tab_button_image:        nil,
-      browser_reload_button_image: nil,
-      browser_stop_button_image:   nil,
-      address_bar_images:          [],
-      # The standalone Tor Launcher uses fewer libs than the full
-      # browser.
-      unused_tbb_libs:             defaults[:unused_tbb_libs]
-        .concat(['libfreebl3.so', 'libfreeblpriv3.so',
-                 'libnssckbi.so', 'libsoftokn3.so',]),
-    }
-  )
-end
-
 def xul_application_info(application)
   defaults = {
     address_bar_images: ["BrowserAddressBar#{$language}.png",
@@ -102,8 +74,6 @@ def xul_application_info(application)
     tor_browser_application_info(defaults)
   when 'Unsafe Browser'
     unsafe_browser_application_info(defaults)
-  when 'Tor Launcher'
-    tor_launcher_application_info(defaults)
   else
     raise "Invalid browser or XUL application: #{application}"
   end

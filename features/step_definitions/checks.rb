@@ -194,30 +194,25 @@ def get_apparmor_status(pid)
   end
 end
 
+Then /^Tor is (not )?confined with Seccomp$/ do |not_confined|
+  expected_sandbox_status = not_confined.nil? ? 1 : 0
+  sandbox_status = $vm.execute_successfully(
+    'tor_control_getconf Sandbox', libs: 'tor'
+  ).stdout.to_i
+  assert_equal(expected_sandbox_status, sandbox_status,
+               'Tor says that the sandbox is ' +
+               (sandbox_status == 1 ? 'enabled' : 'disabled'))
+  # tor's Seccomp status will always be 2 (filter mode), even with
+  # "Sandbox 0", but let's still make sure that is the case.
+  seccomp_status = get_seccomp_status('tor')
+  assert_equal(2, seccomp_status,
+               "Tor is not confined with Seccomp in filter mode")
+end
+
 Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
   assert($vm.process_running?(process), "Process #{process} not running.")
   pid = $vm.pidof(process)[0]
   assert_equal(mode, get_apparmor_status(pid))
-end
-
-Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process, mode|
-  status = get_seccomp_status(process)
-  if mode == 'strict'
-    assert_equal(1, status,
-                 "#{process} not confined with Seccomp in strict mode")
-  elsif mode == 'filter'
-    assert_equal(2, status,
-                 "#{process} not confined with Seccomp in filter mode")
-  else
-    raise "Unsupported mode #{mode} passed"
-  end
-end
-
-When /^I disable all networking in the Tails Greeter$/ do
-  open_greeter_additional_settings
-  @screen.wait('TailsGreeterNetworkConnection.png', 30).click
-  @screen.wait('TailsGreeterDisableAllNetworking.png', 10).click
-  @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|
