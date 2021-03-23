@@ -832,15 +832,16 @@ cookie authentication) which is non-standard (see about the "control
 port filter" below), as a transparent proxy on port 9040 (only used
 for remapped onion services) and as a DNS server on port 8853.
 
-The client listens on a few SOCKS ports (the rationale being detailed
-on the [[Tor stream isolation design
-page|contribute/design/stream_isolation]]): 9050, 9062 and 9150.
+The client listens on a few SOCKS address/ports (the rationale being
+detailed on the [[Tor stream isolation design
+page|contribute/design/stream_isolation]]): 9050 (both for localhost and
+for the TorBrowser netns) and and 9062.
 
-Only connections from localhost are accepted. It can be argued
-that running a Tor server (onion router) would increase one's
-anonymity for a number for reasons but we still feel that most users
-probably would not want this due to the added consumption of
-bandwidth.
+Only connections from localhost or from specific network namespaces are
+accepted. It can be argued that running a Tor server (onion router)
+would increase one's anonymity for a number for reasons but we still
+feel that most users probably would not want this due to the added
+consumption of bandwidth.
 
 If a compromised software had access to the Tor control port,
 an attacker who controls it could simply ask Tor the public
@@ -851,12 +852,13 @@ members of the `debian-tor` group (via the control socket).
 A filtering proxy to the control port runs on port 9051 (i.e. the default
 Tor ControlPort), so for instance
 Torbutton still can perform safe commands like `SIGNAL NEWNYM`. It
-allows defining fine-grained access whitelists of commands (and their
+allows defining fine-grained lists of allowed commands (and their
 argunents) and events on a per-application basis, which can enforce
 rules like "this `$user` (e.g. `amnesia`) when running this
-`$application` (e.g. `/usr/bin/onionshare`) can only run these commands
-(`ADD_ONION` etc.) and listen to these events (e.g. `HS_DESC`, which is
-expected after a successfull use of `ADD_ONION`)".
+`$application` (e.g. `/usr/bin/onionshare`) from this network namespace,
+can only run these commands (`ADD_ONION` etc.) and listen to these
+events (e.g. `HS_DESC`, which is expected after a successfull use of
+`ADD_ONION`)".
 
 We disabled the default warning messages of Tor (`WarnPlaintextPorts`)
 when connecting to ports 110 (POP3) and 143 (IMAP). These ports are used

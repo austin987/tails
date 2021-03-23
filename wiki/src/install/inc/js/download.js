@@ -228,17 +228,9 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("download-iso-retry").onclick = function(e) { download(e, this); }
 
   function download(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-image");
-      toggleJavaScriptBitTorrent("javascript");
-      resetVerificationResult();
-      showAnotherMirror();
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
+    toggleJavaScriptBitTorrent("javascript");
+    resetVerificationResult();
+    showAnotherMirror();
   }
 
   // BitTorrent download
@@ -246,16 +238,8 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("download-iso-torrent").onclick = function(e) { downloadTorrent(e, this); }
 
   function downloadTorrent(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-torrent");
-      toggleJavaScriptBitTorrent("bittorrent");
-      toggleContinueLink("next");
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
+    toggleJavaScriptBitTorrent("bittorrent");
+    toggleContinueLink("next");
   }
 
   // Download again after failure
@@ -263,17 +247,9 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("download-iso-again").onclick = function(e) { downloadAgain(e, this); }
 
   function downloadAgain(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-image-again");
-      toggleJavaScriptBitTorrent("javascript");
-      resetVerificationResult();
-      showVerifyButton();
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
+    toggleJavaScriptBitTorrent("javascript");
+    resetVerificationResult();
+    showVerifyButton();
   }
 
   // Trigger verification when file is chosen
