@@ -133,6 +133,22 @@ If you have AppArmor enabled:
   If you use a custom `TMPDIR` to run the test suite,
   replace `/tmp/TailsToaster` with the value of that `$TMPDIR`.
 
+Firewall
+----------
+
+If you have a firewall enabled, please check that you can receive connections from VMs back to your host
+system. A typical rule to accomplish this might be:
+
+```
+iptables -I INPUT 1 -i virbr+ -j ACCEPT
+```
+
+but of course this depends on the specific firewall you have.
+
+The rule posted above will accept any connections from any VM you have on your system. If you have other VMs
+running on your system and don't want to accept their connection, please take care before running this
+command.
+
 Special use cases
 =================
 
