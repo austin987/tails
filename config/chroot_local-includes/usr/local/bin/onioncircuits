@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+import os
+import logging
+
+from tailslib.gnome import gnome_env_vars
+
+
+def run_in_netns(*args, netns, user="amnesia"):
+    # base bwrap sharing most of the system
+    bwrap = ["bwrap", "--bind", "/", "/", "--proc", "/proc", "--dev", "/dev"]
+    # passes data to us
+    bwrap += [
+        "--bind",
+        os.path.join("/tmp/netns-specific/", netns),
+        "/tmp/shared-with-me/",
+    ]
+    # hide data not for us
+    bwrap += ["--tmpfs", "/tmp/netns-specific/"]
+    cmd = [
+        "/bin/ip",
+        "netns",
+        "exec",
+        netns,
+        "/sbin/runuser",
+        "-u",
+        user,
+        "--",
+        *bwrap,
+        "/usr/bin/env",
+        *gnome_env_vars(),
+        "AT_SPI_BUS_ADDRESS=unix:path=/tmp/shared-with-me/at.sock",
+        *args,
+    ]
+    logging.info("Running %s", cmd)
+    os.execvp(cmd[0], cmd)
+
+
+def drop_and_run():
+    run_in_netns("/usr/bin/onioncircuits", netns="onioncircs")
+
+
+def main():
+    if os.getuid() == 0:
+        drop_and_run()
+    else:
+        os.execlp("sudo", "sudo", "--non-interactive", "/usr/local/bin/onioncircuits")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()
