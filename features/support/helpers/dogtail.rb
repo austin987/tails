@@ -111,7 +111,9 @@ module Dogtail
     end
 
     def self.value_to_s(value)
-      if value == true
+      if value.nil?
+        'None'
+      elsif value == true
         'True'
       elsif value == false
         'False'
@@ -247,6 +249,15 @@ module Dogtail
     # Override the `child` method to add support for regex matching of
     # node names, which offers much greater flexibility.
     def override_child(pattern, **opts)
+      # Ruby < 2.7 handles arguments vs option hash differently, so we
+      # need a workaround.
+      # XXX:Bullseye: drop this workaround once we run on Ruby >=2.7.
+      if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.7")
+        if pattern.class == Hash
+          opts.merge!(pattern)
+          pattern = nil
+        end
+      end
       if pattern.instance_of?(Regexp)
         child = self.children(**opts).find do |c|
           pattern.match(c.name)
