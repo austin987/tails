@@ -217,5 +217,5 @@ end
 
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|
   picture = not_usable ? 'TorStatusNotUsable' : 'TorStatusUsable'
-  @screen.find("#{picture}.png")
+  @screen.wait("#{picture}.png", 10)
 end
