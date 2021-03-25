@@ -340,6 +340,8 @@ When /^the Tor Connection Assistant autostarts$/ do
   try_for(60) do
     @tor_connection_assistant = Dogtail::Application.new('TorConnectionAssistant')
   end
+  # Wait for the GUI to be showing before proceeding
+  tor_connection_assistant.child('Connect to Tor', roleName: 'push button')
 end
 
 def tor_connection_assistant
