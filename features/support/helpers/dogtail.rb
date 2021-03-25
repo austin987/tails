@@ -120,7 +120,7 @@ module Dogtail
       elsif [Integer, Float].include?(value.class)
         v.to_s
       else
-        raise "#{self.class.name} does not know how to handle argument type " \
+        raise "#{self.name} does not know how to handle argument type " \
               "'#{value.class}'"
       end
     end
