@@ -351,9 +351,15 @@ def tor_connection_assistant
 end
 
 def tor_auto_config(&block)
-  tor_connection_assistant.child(/^Configure tor automatically/,
-                                 roleName: 'radio button')
-                          .click
+  # XXX: We generally run this right after TCA has started, apparently
+  # so early that clicking the radio button doesn't always work, so we
+  # retry. Can this be fixed in TCA instead some how?
+  auto_config = tor_connection_assistant.child(
+    /^Configure tor automatically/, roleName: 'radio button'
+  )
+  until auto_config.checked
+    auto_config.click
+  end
   block.call if block_given?
   tor_connection_assistant.child('Connect to Tor',
                                  roleName: 'push button')
