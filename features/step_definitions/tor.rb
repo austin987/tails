@@ -421,7 +421,12 @@ When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |brid
       fingerprint = f.read.chomp.split.last
     end
     @bridge_hosts << { address: address, port: port.to_i }
-    bridge_line = bridge_type + ' ' + address + ':' + port
+    bridge_line = ''
+    # XXX: we should not drop the 'bridge' part in the test suite, TCA
+    # should sanitize its input better, but let's do this for now to
+    # allow more testing.
+    bridge_line += bridge_type + ' ' if bridge_type != 'bridge'
+    bridge_line += address + ':' + port
     [fingerprint, extra].each { |e| bridge_line += ' ' + e.to_s if e }
     @screen.type(bridge_line, ['Return'])
   end
