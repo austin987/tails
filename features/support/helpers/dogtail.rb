@@ -197,6 +197,10 @@ module Dogtail
       run("#{@var}.#{key} = #{self.class.value_to_s(value)}")
     end
 
+    def checked
+      get_field('checked') == 'True'
+    end
+
     def text
       get_field('text')
     end

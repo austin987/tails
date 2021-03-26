@@ -350,10 +350,11 @@ def tor_connection_assistant
   @tor_connection_assistant
 end
 
-When /^I configure a direct connection in the Tor Connection Assistant$/ do
+def tor_auto_config(&block)
   tor_connection_assistant.child(/^Configure tor automatically/,
                                  roleName: 'radio button')
                           .click
+  block.call if block_given?
   tor_connection_assistant.child('Connect to Tor',
                                  roleName: 'push button')
                           .click
@@ -369,25 +370,17 @@ When /^I configure a direct connection in the Tor Connection Assistant$/ do
   $vm.execute_successfully('tor_control_send SAVECONF', libs: 'tor')
 end
 
+When /^I configure a direct connection in the Tor Connection Assistant$/ do
+  tor_auto_config
+end
+
 When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |bridge_type|
   @tor_is_using_pluggable_transports = bridge_type != 'normal'
   # Internally a "normal" bridge is called just "bridge" which we have
   # to respect below.
   bridge_type = 'bridge' if bridge_type == 'normal'
 
-  tor_connection_assistant.child(/^Configure tor automatically/,
-                                 roleName: 'radio button')
-                          .click
-  tor_connection_assistant.child('Configure a Tor bridge',
-                                 roleName: 'check box')
-                          .click
-  tor_connection_assistant.child('Connect to Tor',
-                                 roleName: 'push button')
-                          .click
-  tor_connection_assistant.child('Type in a bridge that I already know',
-                                 roleName: 'radio button')
-                          .click
-  tor_connection_assistant.child(roleName: 'scroll pane').click
+  bridge_lines = []
   @bridge_hosts = []
   bridge_dirs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
@@ -428,20 +421,25 @@ When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |brid
     bridge_line += bridge_type + ' ' if bridge_type != 'bridge'
     bridge_line += address + ':' + port
     [fingerprint, extra].each { |e| bridge_line += ' ' + e.to_s if e }
-    @screen.type(bridge_line, ['Return'])
+    bridge_lines << bridge_line
   end
 
-  tor_connection_assistant.child('Connect to Tor',
-                                 roleName: 'push button')
-    .click
-  try_for(120) do
-    tor_connection_assistant.child(roleName: 'progress bar').get_field('value') == '1.0'
-  end
-  @screen.press('alt', 'F4')
+  tor_auto_config do
+    tor_connection_assistant.child('Configure a Tor bridge',
+                                   roleName: 'check box')
+                            .click
+    tor_connection_assistant.child('Connect to Tor',
+                                   roleName: 'push button')
+                            .click
+    tor_connection_assistant.child('Type in a bridge that I already know',
+                                 roleName: 'radio button')
+                            .click
+    tor_connection_assistant.child(roleName: 'scroll pane').click
 
-  # XXX: see comment for the 'I configure a direct connection in Tor
-  # Launcher' step.
-  $vm.execute_successfully('tor_control_send SAVECONF', libs: 'tor')
+    bridge_lines.each do |bridge_line|
+      @screen.type(bridge_line, ['Return'])
+    end
+  end
 end
 
 When /^all Internet traffic has only flowed through the configured bridges$/ do
