@@ -49,8 +49,10 @@ To install the dependencies on our test suite:
         if [ "${dist}" = buster ]; then
             echo 'deb http://ftp.us.debian.org/debian/ buster-backports main' \
                 | sudo tee /etc/apt/sources.list.d/buster-backports.list
-            echo -e "Package: qemu*\nPin: release n=buster-backports, o=Debian Backports\nPin-Priority: 990" \
+            echo -e "Package: qemu* libfdt1\nPin: release n=buster-backports, o=Debian Backports\nPin-Priority: 990" \
                 | sudo tee /etc/apt/preferences.d/qemu
+            echo -e "Package: tor tor-geoipdb\nPin: release n=buster-backports, o=Debian Backports\nPin-Priority: 990" \
+                | sudo tee /etc/apt/preferences.d/tor
         fi
         sudo apt update && \
         sudo apt install \
@@ -130,6 +132,22 @@ If you have AppArmor enabled:
   `/etc/apparmor.d/libvirt/libvirt-*` and restart the test suite.
   If you use a custom `TMPDIR` to run the test suite,
   replace `/tmp/TailsToaster` with the value of that `$TMPDIR`.
+
+Firewall
+----------
+
+If you have a firewall enabled, please check that you can receive connections from VMs back to your host
+system. A typical rule to accomplish this might be:
+
+```
+iptables -I INPUT 1 -i virbr+ -j ACCEPT
+```
+
+but of course this depends on the specific firewall you have.
+
+The rule posted above will accept any connections from any VM you have on your system. If you have other VMs
+running on your system and don't want to accept their connection, please take care before running this
+command.
 
 Special use cases
 =================
