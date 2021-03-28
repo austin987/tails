@@ -11,21 +11,7 @@ Read this document from the branch used to prepare the release.
 Keeping an eye on the changes between released versions is one of the
 many safeguards against releasing crap.
 
-## Source
-
-
-Compare the to-be-released source code with previous version's one e.g.:
-
-Boot the candidate image and find the commit it was build from with the
-`tails-version` command.
-
-Then, from the source tree, see the diff:
-
-	git diff --find-renames <old image commit>..<candidate image commit>
-
-e.g. `git diff --find-renames 334e1c485a3a79be9fff899d4dc9d2db89cdc9e1..cfbde80925fdd0af008f10bc90c8a91a578c58e3`
-
-## Result
+## Packages
 
 Compare the list of bundled packages and versions with the one shipped last
 time. `.packages` are usually attached to the email announcing the image is ready.
@@ -59,6 +45,11 @@ In a directory with many Tails ISO and USB images:
 
 This section can **not** be done by the RM.
 
+0. Check that the <https://tails.boum.org/contribute/calendar/>
+   documents who is the _Trusted Reproducer_ for this release.
+   If this is not the case, ask the RM (this is the only exception
+   to "do not trust anything said by the RM about this process").
+
 1. Download the ISO and USB images.
 
 2. Clear-sign the hashes of all products using your OpenPGP key
@@ -77,8 +68,7 @@ This section can **not** be done by the RM.
         echo "$DEST_DIR/TR-bits.gz"
 
 4. Send the aforementioned generated file as an attachment
-   to the _Trusted Reproducer_, whose name is on the
-   [release calendar](https://tails.boum.org/contribute/calendar/).
+   to the _Trusted Reproducer_.
 
 5. If the _Trusted Reproducer_ is around, ask them:
 
@@ -89,10 +79,7 @@ This section can **not** be done by the RM.
 
 # Automated test suite
 
-Our long term goal is to eliminate the manual test suite (except the
-parts which require real hardware) and have the automated test suite
-run all our tests. Its design, and how to write new tests, are
-documented on a [[dedicated page|test/automated_tests]].
+See the [[automated test suite documentation|test/automated_tests]].
 
 ## Running the automated test suite
 
@@ -106,7 +93,7 @@ The manual test suite below either contains tests that cannot be
 automated, has no automated test implemented yet, or has a test
 implemented, but it either hasn't been reviewed, had a confirmed pass
 by someone other than the test author, or has issues. The latter is
-tracked by tickets prefixed with `todo/test_suite:`.
+tracked by subtasks of [[!tails_ticket 10250]].
 
 # Tor Browser
 
@@ -121,17 +108,10 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 ## Security and fingerprinting
 
-* Run the [tests the Tor Browser folks
-  use](https://trac.torproject.org/projects/tor/wiki/doc/build/BuildSignoff#TestPagestoUse)
-  and compare to the last released version of Tails. Results should
-  not be worse.
-  (automate: [[!tails_ticket 10260]])
-  - For the "evercookie" test to work, you may have to disable
-    _uBlock_ on its web page.
 * [Download](https://torbrowser-archive.tails.boum.org/) the same version of Tor
   Browser and compare its fingerprint (running on Linux outside of Tails) with
-  Tor Browser in Tails, using at least <https://panopticlick.eff.org/>
-  (automate: [[!tails_ticket 10262]]). Click "Show full results for
+  Tor Browser in Tails, using at least <https://coveryourtracks.eff.org/>.
+  Click "Show full results for
   fingerprinting" to see the details we're interested in.
   - The exposed User-Agent should match the latest Tor Browser's one.
   - Ignore the result of the "blocking tracking ads" and "blocking
@@ -139,36 +119,21 @@ tracked by tickets prefixed with `todo/test_suite:`.
     different results for the very same version of Tor Browser).
   - Update the *Browser fingerprint* section of the
     [[known issues|support/known_issues]] if needed.
-* WebRTC should be disabled: (automate: [[!tails_ticket 10264]])
-  - In `about:config` check that `media.peerconnection.enabled` is set to
-    `false`.
-  - <http://mozilla.github.io/webrtc-landing/>, especially the `getUserMedia`
-    test. It's expected that the audio test works if you agree to share a
-    microphone with the remote website; anything else should fail.
-  - <http://net.ipcalf.com/> should display _literally_
-    `ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1`
+* In `about:config` check that `media.peerconnection.enabled` is set to
+  `false`.
 
 <a id="Thunderbird"></a>
 
 # Thunderbird
 
-## Onion services
-
-To test that Onion service support works:
-
-1. Configure an IMAP email account using auto-discovered (non-Onion) server settings
-   using a provide that also provides onion services for IMAP, POP, and SMTP:
-   for example, riseup.net
-2. In Preferences → Account Settings → Server Settings, switch the Server Name
-   to the email provider's onion service (e.g. Riseup, 5gdvpfoh6kb2iqbizb37lzk2ddzrwa47m6rpdueg2m656fovmbhoptqd.onion on port 993 with SSL).
-3. In Preferences → Account Settings → Outgoing Server (SMTP), switch
-   the Server Name
-   to the email provider's onion service (see above, on port 465 with SSL).
-4. Check email over IMAP.
-5. Send an email and verify it's received.
-6. Repeat the process with POP (see above, on port 995 with SSL) instead of IMAP.
-
 ## EHLO/HELO
+
+Only perform this test if one of these conditions is met:
+
+ - We're testing a release candidate, such as Tails 7.42~rc1.
+ - The release under testing upgrades to a major Thunderbird version.
+   For example, the last Tails release shipped Thunderbird 87.9, and the one
+   you're testing includes Thunderbird 88.1.
 
 To check that the EHLO/HELO SMTP message is not leaking anything
 at the application level:
@@ -188,41 +153,21 @@ at the application level:
    verify that it only contains `127.0.0.1`:
    `sudo tcpdump -A -r dump | grep EHLO`
 
-# Tor
-
-* The version of Tor should be the latest stable one, which is the highest version number
-  before alpha releases on <https://deb.torproject.org/torproject.org/pool/main/t/tor/>. (automate:
-  [[!tails_ticket 10259]])
-
 # WhisperBack
 
 * I should be able to send a bug report with WhisperBack.
 * When we receive this bug report on the tails-bugs mailing list,
   Schleuder tells us that it was sent encrypted.
 
-# Root access control
-
-1. Start the candidate Tails image.
-2. Do *not* set an administration password.
-3. Check you cannot login as root with `/bin/su` neither with the `amnesia` password nor
-  with the `live` one. (automate: [[!tails_ticket 10274]])
-
 # Virtualization support
 
 * Test that Tails starts and the browser launches in VirtualBox.
 
-# APT (automate: [[!tails_ticket 17017 desc="#17017"]])
-
-     grep -r jenw7xbd6tf7vfhp.onion /etc/apt/sources.list*
-
-* Make sure the Tails repository suite in matching the release tag (for example
-  the release version number) is in APT sources.
-* Make sure the Tails repository unversioned suites (e.g. `testing`,
-  `stable` and `devel`) are *not* in APT sources.
-
 <a id="incremental-upgrades"></a>
 
 # Incremental upgrades
+
+(automate: [[!tails_ticket 18004]])
 
 1. Install _from scratch_ on a USB stick the previous Tails stable release
    (that is, at this time, the current published one).
@@ -241,42 +186,15 @@ at the application level:
 5. Once the upgrade has been applied and you're suggested to restart Tails,
    do that.
 
-6. Verify that the resulting, upgraded system "works fine":
+6. In the Welcome Screen, enable the Unsafe Browser.
+
+7. Verify that the resulting, upgraded system "works fine":
 
    * it boots
    * it pretends to be the correct version
    * Tor works fine
    * Tor Browser works fine
    * the Unsafe Browser starts
-
-# Tails Verification
-
-* The goal is to check that *Tails Verification* works in *Tor
-  Browser* in the version of Tails we are testing here. *Tails
-  Verification* only supports verifying the current release so for
-  example, when doing tests for the Tails 3.13 release, we use it in
-  the tentative Tails 3.13 to verify the Tails 3.12 ISO and USB images.
-
-  1. Start the Tails that you are testing.
-
-  2. Start *Tor Browser*.
-
-  3. Visit <https://tails.boum.org/install/download-iso/>.
-
-  4. If you already have the ISO image for the last, already released
-     version of Tails, i.e. the one that's advertised in the sidebar
-     of our production website, then click "*I already downloaded Tails $N*".
-     Otherwise follow the instructions on that web page to download
-     the ISO image.
-
-  5. Install *Tails Verification*.
-
-  6. Click the **Verify Tails $N** button.
-
-  7. The verification should be successful.
-
-  8. Repeat for the USB image, except the URL for step (3) is:
-     <https://tails.boum.org/install/download/>
 
 # Torrents
 
@@ -314,65 +232,8 @@ On a computer configured to prefer legacy BIOS boot:
 3. Boot this USB stick a second time.
 4. You should see the Welcome Screen appear.
 
-# Documentation
-
-* The "Tails documentation" desktop launcher should open the
-  [[doc]] page (automate: [[!tails_ticket 8788]]):
-  - in one language to which the website is translated
-  - in one language to which the website is not translated: this
-    should open the page in English
-* Browse around in the documentation shipped in the image and check
-  that internal links work fine (automate: [[!tails_ticket 10254]]):
-
-        file:///usr/share/doc/tails/website/index.en.html
-
-# Internationalization
-
-## Tier-1 languages
-
-Boot and check basic functionality is working for our [[best supported
-(Tier-1) languages|contribute/how/translate#tier-1-languages]].
-
-You *really* have to reboot between each language.
-
-* The chosen keyboard layout must be applied. (automate: [[!tails_ticket 10261]])
-  This is known to be broken in some languages, such as Arabic:
-  [[!tails_ticket 12638]].
-* The screen keyboard must (automate: [[!tails_ticket 10263]]):
-  - work in Tor Browser when activated after the browser has started;
-  - work in Thunderbird when activated after Thunderbird has started;
-  - be auto-configured to use the same keyboard layout as the
-    X session (known exceptions: Chinese, Persian, Português,
-    Russian, Tiếng Việt).
-* In the Tor Browser:
-  - DuckDuckGo must be the default, pre-selected search plugin. (automate: [[!tails_ticket 10265]])
-
-## Spellchecking
-
-To see which among the supported locales there should be a
-spellchecker, run this in a Tails Git checkout of the commit the
-release under testing was built from:
-
-    git grep -E '^hunspell' config/chroot_local-packageslists/tails-common.list
-
-Then do the follow in the same Tor Browser session running in the
-`en_US.UTF-8` locale (or whatever locale you are most comfortable
-identifying other language names in):
-
-* Check that the expected languages are listed in the list of languages for
-  spell checking. (automate: [[!tails_ticket 10269]])
-  - Visit <https://translate.google.com/>.
-  - Right-click and choose "Check spelling".
-  - Right-click and check the list of available languages.
-* For a few languages, check the spell checking:
-  - Type something in the textarea.
-  - Right-click and select a language.
-  - Verify that the spelling suggestion are from that language. (automate: [[!tails_ticket 10271]])
-
 # Misc
 
-* Check that all seems well during init: (automate: [[!tails_ticket 10277]])
-  - `systemctl --failed --all` should either say `0 loaded units listed`,
-    or list `rng-tools.service` as the only unit in `failed` state.
-  - the output of `sudo journalctl` should seem OK. For a quick overview,
-    something like `sudo journalctl -p 0..3` can be helpful.
+* Check that the output of `sudo journalctl` looks OK.
+  For a quick overview, something like `sudo journalctl -p 0..3` can be helpful.
+  `[can't-automate]`

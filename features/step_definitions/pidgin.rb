@@ -113,9 +113,7 @@ Given /^my XMPP friend goes online( and joins the multi-user chat)?$/ do |join_c
     account['username'] + '@' + account['domain'],
     account['password'],
     account['otr_key'],
-    # XXX:Buster: once we stop supporting running our test suite on Stretch,
-    # replace this with: **(bot_opts.transform_keys(&:to_sym))
-    **(bot_opts.each_with_object({}) { |(k, v), a| a[k.to_sym] = v })
+    **(bot_opts.transform_keys(&:to_sym))
   )
   @chatbot.start
   add_after_scenario_hook { @chatbot.stop }
@@ -213,7 +211,7 @@ When /^I join some empty multi-user chat$/ do
   # Room" prompt that Pidgin shows for some server configurations.
   images = ['PidginCreateNewRoomPrompt.png',
             'PidginChat1UserInRoom.png',]
-  image_found, = @screen.wait_any(images, 30)
+  image_found = @screen.wait_any(images, 30)[:found_pattern]
   if image_found == 'PidginCreateNewRoomPrompt.png'
     @screen.click('PidginCreateNewRoomAcceptDefaultsButton.png')
   end
@@ -347,8 +345,8 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       # conversation window. At worst, the test will still fail...
       close_pidgin_conversation_window(account)
     end
-    on_screen, = @screen.wait_any([expected_channel_entry, reconnect_button],
-                                  60)
+    on_screen = @screen.wait_any([expected_channel_entry, reconnect_button],
+                                 60)[:found_pattern]
     unless on_screen == expected_channel_entry
       raise "Connecting to account #{account} failed."
     end

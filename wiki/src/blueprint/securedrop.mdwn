@@ -1,5 +1,0 @@
-[[!tag archived]]
-
-[[!meta title="SecureDrop"]]
-
-This is about [[!tails_ticket 10853]].

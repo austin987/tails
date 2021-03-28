@@ -9,11 +9,11 @@ Feature: Thunderbird email client
     When I start Thunderbird
     Then I am prompted to setup an email account
 
-  Scenario: Only the expected add-ons are installed
+  Scenario: No add-ons are installed
     Given I cancel setting up an email account
     When I open Thunderbird's Add-ons Manager
     And I open the Extensions tab
-    Then I see that only the Enigmail add-on is enabled in Thunderbird
+    Then I see that no add-ons are enabled in Thunderbird
 
   Scenario: I can send emails, and receive emails over IMAP
     When I enter my email credentials into the autoconfiguration wizard

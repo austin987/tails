@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -eu
+set -x
+
+# For git_current_branch
+. "$(dirname "$0")"/../auto/scripts/utils.sh
+
+### Sanity checks
+
+[ "$(git_current_branch)" = "${RELEASE_BRANCH:?}" ] \
+    || error "Not on branch '$RELEASE_BRANCH'"
+
+### Merge `master` into the branch used for the release
+
+git fetch origin && git merge origin/master
+
+if [ "$DIST" = stable ]; then  # preparing a final release
+   echo "${VERSION:?}"         > wiki/src/inc/stable_amd64_version.html
+   echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html
+   for type in img iso ; do
+       basename="tails-amd64-${VERSION:?}"
+       filename="${basename:?}.${type:?}"
+       echo "TZ=UTC gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
+	    > wiki/src/inc/stable_amd64_${type:?}_gpg_verify.html
+       echo "http://dl.amnesia.boum.org/tails/stable/${basename:?}/${filename:?}" \
+	    > wiki/src/inc/stable_amd64_${type:?}_url.html
+       echo "https://tails.boum.org/torrents/files/${filename:?}.sig" \
+	    > wiki/src/inc/stable_amd64_${type:?}_sig_url.html
+       echo "https://tails.boum.org/torrents/files/${filename:?}.torrent" \
+	    > wiki/src/inc/stable_amd64_${type:?}_torrent_url.html
+   done
+   git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
+fi
+
+### Signing key downloaded by the Upgrader
+
+TMP_GNUPG_HOME=$(mktemp -d)
+gpg --homedir "${TMP_GNUPG_HOME:?}" --import wiki/src/tails-signing.key
+gpg --homedir "${TMP_GNUPG_HOME:?}" \
+    --export-filter drop-subkey="revoked == 1" \
+    --export-options export-minimal \
+    --armor --export "${TAILS_SIGNATURE_KEY:?}" \
+    > wiki/src/tails-signing-minimal.key
+git commit wiki/src/tails-signing-minimal.key \
+    -m "Update signing key used by the Upgrader" || :
+rm -rf "${TMP_GNUPG_HOME:?}"
+
+### Translations
+
+./build-website --rebuild
+git add wiki/src
+git commit -m 'Update website PO files.'
+
+### Push
+
+git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"

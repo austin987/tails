@@ -109,10 +109,6 @@ Given /^I unplug USB drive "([^"]+)"$/ do |name|
   $vm.unplug_drive(name)
 end
 
-Given /^the computer is set to boot from the old Tails DVD$/ do
-  $vm.set_cdrom_boot(OLD_TAILS_ISO)
-end
-
 Given /^the computer is set to boot in UEFI mode$/ do
   $vm.set_os_loader('UEFI')
   @os_loader = 'UEFI'
@@ -134,7 +130,7 @@ end
 
 When /^I start Tails Installer$/ do
   @installer_log_path = '/tmp/tails-installer.log'
-  command = "/usr/bin/tails-installer --verbose > #{@installer_log_path} 2>&1"
+  command = "/usr/local/bin/tails-installer --verbose > #{@installer_log_path} 2>&1"
   step "I run \"#{command}\" in GNOME Terminal"
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
@@ -144,7 +140,7 @@ When /^I start Tails Installer$/ do
   # lost *and* the installer does not go to the foreground. So let's
   # wait a bit extra.
   sleep 3
-  $vm.focus_window('Tails Installer')
+  @screen.wait("TailsInstallerWindow.png", 10).click
 end
 
 When /^I am told by Tails Installer that.*"([^"]+)".*$/ do |status|
@@ -534,7 +530,13 @@ Then /^all persistent filesystems have safe access rights$/ do
     fs_perms = $vm.execute("stat -c %a #{mountpoint}").stdout.chomp
     assert_equal('root', fs_owner)
     assert_equal('root', fs_group)
-    assert_equal('775', fs_perms)
+    # This ensures the amnesia user cannot write to the root of the
+    # persistent storage, which in turns ensures this user cannot
+    # create a .Trash-1000 folder in there, which is our current best
+    # workaround for the lack of proper trash support in Persistent
+    # Storage: then the user is not offered to send files to the
+    # trash, and they can only delete files permanently (#18118).
+    assert_equal('770', fs_perms)
   end
 end
 
@@ -864,8 +866,8 @@ Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |ver
   failure_pic = 'TailsUpgraderFailure.png'
   success_pic = "TailsUpgraderUpgradeTo#{version}.png"
   retry_tor(recovery_proc) do
-    match, = @screen.wait_any([success_pic, failure_pic], 2 * 60)
-    assert_equal(success_pic, match)
+    found_pic = @screen.wait_any([success_pic, failure_pic], 2 * 60)[:found_pattern]
+    assert_equal(success_pic, found_pic)
   end
 end
 
@@ -886,8 +888,8 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
   failure_pic = 'TailsUpgraderFailure.png'
   success_pic = 'TailsUpgraderDownloadComplete.png'
   retry_tor(recovery_proc) do
-    match, = @screen.wait_any([success_pic, failure_pic], 2 * 60)
-    assert_equal(success_pic, match)
+    found_pic = @screen.wait_any([success_pic, failure_pic], 2 * 60)[:found_pattern]
+    assert_equal(success_pic, found_pic)
   end
   @screen.click('TailsUpgraderApplyUpgradeButton.png')
   @screen.wait('TailsUpgraderDone.png', 60)

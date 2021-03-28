@@ -104,14 +104,7 @@ end
 
 When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wait|
   initial_nr_nics = wait ? all_ethernet_nics.size : nil
-  # XXX:Buster: when we stop supporting the test suite on Stretch
-  # hosts, let's remove this workaround related to #14819 and just
-  # settle on a device that works on all supported platforms.
-  device = if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
-             'virtio'
-           else
-             'pcnet'
-           end
+  device = 'pcnet'
   debug_log("Hotplugging a '#{device}' network device")
   xml = <<-XML
     <interface type='network'>

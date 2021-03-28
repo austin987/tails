@@ -67,6 +67,7 @@ class Keymaps
     'alt' => [0x38], 'right_alt' => [0x64],
     'ctrl' => [0x1d], 'right_ctrl' => [0x61],
     'shift' => [0x2a], 'right_shift' => [0x36],
+    'super' => [0x7d],
   }.freeze
 
   DE_KEYMAP = COMMON_KEYMAP.merge(
@@ -146,7 +147,7 @@ class Screen
 
   def find(pattern, **opts)
     debug_log("Screen: trying to find #{pattern}") if opts[:log]
-    wait(pattern, 2, **opts.clone.update(log: false))
+    wait(pattern, 5, **opts.clone.update(log: false))
   end
 
   def exists(pattern, **opts)
@@ -161,7 +162,13 @@ class Screen
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for #{pattern} to vanish") if opts[:log]
     try_for(timeout, delay: 0, log: false) do
-      !exists(pattern, **opts.clone.update(log: false))
+      # Call Screen#wait directly to bypass the timeout passed by
+      # Screen#find to Screen#wait, which would mess with our own
+      # timeout: it can prevent our try_for loop from iterating
+      # enough times, effectively bypassing our retrying logic.
+      wait(pattern, 0.5, **opts.clone.update(log: false)).nil?
+    rescue FindFailed
+      true
     end
     debug_log("Screen: #{pattern} has vanished") if opts[:log]
     nil
@@ -176,7 +183,10 @@ class Screen
     end
     patterns.each do |pattern|
       begin
-        return [pattern, find(pattern, **opts.clone.update(log: false))]
+        return {
+          found_pattern: pattern,
+          match:         real_find(pattern, **opts.clone.update(log: false)),
+        }
       rescue FindFailed
         # Ignore. We'll throw an appropriate exception after having
         # looped through all patterns and found none of them.

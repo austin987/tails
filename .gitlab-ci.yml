@@ -1,0 +1,200 @@
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_TAG
+    - if: '$CI_COMMIT_BRANCH =~ /^master|stable|testing|devel$/'
+
+image: debian:buster
+
+before_script:
+  - export DEBIAN_FRONTEND=noninteractive
+  - apt-get update -qq
+
+.prepare-lint-po: &prepare-lint-po
+  - apt-get -qy install git i18nspector
+  - git clone https://gitlab.tails.boum.org/tails/jenkins-tools.git /tmp/jenkins-tools
+
+lint-po:
+  image: debian:testing
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^master|stable|testing|devel$/'
+    - changes:
+        - ./**.po
+  script:
+    - *prepare-lint-po
+    - /tmp/jenkins-tools/slaves/lint_po
+
+lint-latest-po:
+  image: debian:testing
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "stable"'
+  script:
+    - *prepare-lint-po
+    - apt-get -qy install intltool
+    - ./import-translations
+    - /tmp/jenkins-tools/slaves/lint_po po/*.po
+
+check-po-msgfmt:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^master|stable|testing|devel$/'
+    - changes:
+        - ./**.po
+  script:
+    - apt-get -qy install python3 gettext
+    - ./bin/check-po-msgfmt
+
+check-po-meta-date:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^master|stable|testing|devel$/'
+    - changes:
+        - ./**.po
+  script:
+    - apt-get -qy install git ruby
+    - ./bin/sanity-check-website
+
+check-translatable-live-website-urls:
+  script:
+    - apt-get -qy install python3-polib
+    - ./bin/check-translatable-live-website-urls po/tails.pot
+
+test-iuk:
+  script:
+  - 'cat config/chroot_local-packageslists/tails-perl5lib.list
+         config/chroot_local-packageslists/tails-iuk.list
+       | grep -E -v "^#"
+       | xargs apt-get -qy install'
+  - 'apt-get -qy install
+       apt-file
+       libdist-zilla-plugin-test-notabs-perl
+       libdist-zilla-plugin-test-perl-critic-perl
+       libdist-zilla-app-command-authordebs-perl
+       libmodule-build-perl
+       sudo
+       attr
+       bsdtar
+       libdevice-cdio-perl
+       faketime
+       genisoimage
+       gnutls-bin
+       libdata-dumper-concise-perl
+       libdatetime-perl
+       libfile-copy-recursive-perl'
+  - apt-get update -qq # Take into account APT configuration added by apt-file
+  # Otherwise, apt-get called by "dzil authordebs --install" asks confirmation
+  - echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/yes
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/iuk
+  - dzil authordebs --install
+  - export SOURCE_DATE_EPOCH=$(date --utc +%s)
+  - 'TAILS_GIT_CHECKOUT=$CI_PROJECT_DIR
+     NODE_PATH=$CI_PROJECT_DIR/submodules/mirror-pool-dispatcher/lib/js
+     PATH=$CI_PROJECT_DIR/submodules/mirror-pool-dispatcher/bin:$PATH
+     PERL5LIB=$CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib/lib
+     LC_ALL=C.UTF-8
+     dzil test --all'
+
+test-perl5lib:
+  script:
+  - 'cat config/chroot_local-packageslists/tails-perl5lib.list
+       | grep -E -v "^#"
+       | xargs apt-get -qy install'
+  - 'apt-get -qy install
+       apt-file
+       libdist-zilla-plugin-test-notabs-perl
+       libdist-zilla-plugin-test-perl-critic-perl
+       libdist-zilla-app-command-authordebs-perl
+       libmodule-build-perl
+       sudo'
+  - apt-get update -qq # Take into account APT configuration added by apt-file
+  # Otherwise, apt-get called by "dzil authordebs --install" asks confirmation
+  - echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/yes
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib
+  - dzil authordebs --install
+  - dzil test --all
+
+test-persistence-setup:
+  script:
+  - apt-get -qy install apt-file
+  - 'echo "deb http://deb.debian.org/debian buster-backports main"
+       > /etc/apt/sources.list.d/buster-backports.list'
+  - 'echo "deb http://deb.debian.org/debian bullseye main"
+       > /etc/apt/sources.list.d/bullseye.list'
+  # Needs to be kept in sync' with config/chroot_apt/preferences
+  - |
+    cat > /etc/apt/preferences.d/electrum.pref <<-'EOF'
+    Explanation: unavailable in Buster
+    Package: electrum python3-electrum python3-aiohttp-socks python3-aiorpcx python3-ecdsa
+    Pin: release o=Debian,n=bullseye
+    Pin-Priority: 999
+
+    Explanation: Electrum needs a version newer than the one in Buster
+    Package: python3-attr python3-protobuf libprotobuf23
+    Pin: release o=Debian Backports,n=buster-backports
+    Pin-Priority: 990
+
+    Explanation: Electrum 4.0.2 and recent TREZOR firmware need 0.12
+    Package: python3-trezor trezor
+    Pin: release o=Debian Backports,n=buster-backports
+    Pin-Priority: 999
+
+    Package: *
+    Pin: release o=Debian,n=bullseye
+    Pin-Priority: -10
+    EOF
+  - apt-get update -qq
+  - 'cat config/chroot_local-packageslists/tails-perl5lib.list
+         config/chroot_local-packageslists/tails-persistence-setup.list
+       | grep -E -v "^#"
+       | xargs apt-get -qy install'
+  - 'apt-get -qy install
+       libdist-zilla-plugin-test-notabs-perl
+       libdist-zilla-plugin-test-perl-critic-perl
+       libdist-zilla-app-command-authordebs-perl
+       libmodule-build-perl
+       libtest-most-perl
+       libtest-spec-perl
+       libtest-bdd-cucumber-perl
+       liblwp-online-perl
+       libdata-dumper-concise-perl
+       libtest-fatal-perl
+       libsys-statistics-linux-perl
+       sudo
+       xvfb'
+  # Otherwise, apt-get called by "dzil authordebs --install" asks confirmation
+  - echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/yes
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib
+  - dzil authordebs --install
+  - cd $CI_PROJECT_DIR/config/chroot_local-includes/usr/src/persistence-setup
+  - dzil authordebs --install
+  - >
+    PERL5LIB=$CI_PROJECT_DIR/config/chroot_local-includes/usr/src/perl5lib/lib
+    TAILS_GIT_CHECKOUT=$CI_PROJECT_DIR
+    LC_ALL=C.UTF-8
+    xvfb-run --auto-servernum dzil test --all
+
+test-python-doctest:
+  script:
+    - apt-get -qy install python3
+    - config/chroot_local-includes/usr/local/lib/tails-gdm-error-message doctest --verbose
+
+test-whisperback:
+  script:
+    - 'cat config/chroot_local-packageslists/whisperback.list | grep -E -v "^#"
+         | xargs apt-get -qy install'
+    - apt-get -qy install python3-pytest
+    - 'PYTHONPATH=config/chroot_local-includes/usr/lib/python3/dist-packages
+         pytest-3 --verbose --junit-xml=report.xml
+         config/chroot_local-includes/usr/lib/python3/dist-packages/whisperBack/test.py'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+
+apt-snapshots-expiry:
+  script:
+    - apt-get -qy install curl git
+    - ./bin/apt-snapshots-expiry
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^stable|testing|devel$/'
+    - changes:
+        - config/APT_snapshots.d/*/serial
+        - vagrant/definitions/tails-builder/config/APT_snapshots.d/*/serial

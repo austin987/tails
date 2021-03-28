@@ -1,71 +1,21 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-  window.addEventListener("message", receiveMessage);
+  /* Deprecation of the extension */
 
+  window.addEventListener("message", receiveMessage);
   function receiveMessage(event) {
     if (event.source !== window || event.origin !== "https://tails.boum.org" || !event.data) {
       return;
     }
-    if (event.data.action === "verifying") {
-      showVerifyingDownload(event.data.fileName);
-    }
-    else if (event.data.action === "verification-failed") {
-      showVerificationResult("failed");
-    }
-    else if (event.data.action === "verification-failed-again") {
-      showVerificationResult("failed-again");
-    }
-    else if (event.data.action === "verification-success") {
-      showVerificationResult("successful");
-    }
-    else if (event.data.action === "progress") {
-      showVerificationProgress(event.data.percentage);
-    }
-    else if (event.data.action === "extension-installed") {
-      if (document.documentElement.dataset.extension === "up-to-date") {
-        showVerifyDownload();
-      }
-      else if (document.documentElement.dataset.extension === "outdated") {
-        showUpdateExtension();
-      }
+    if (event.data.action === "extension-installed") {
+      show(document.getElementById("extension"));
     }
   }
 
-  // Display floating-toggleable-links to prevent people without JS to
-  // either always see the toggles or have broken toggle links.
-  function showFloatingToggleableLinks() {
-    var links = document.getElementsByClassName("floating-toggleable-link");
-    for (let i = 0; i < links.length; i++) {
-      show(links[i]);
-    }
-  }
-  showFloatingToggleableLinks();
+  var URLofJsonFileContainingChecksums="https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json";
+  var sha256;
 
-  function opaque(elm) {
-    elm.classList.remove('transparent');
-    var siblings = elm.querySelectorAll("a");
-    for (let i = 0; i < siblings.length; i++) {
-      siblings[i].style.pointerEvents = "auto";
-    }
-  }
-
-  function transparent(elm) {
-    elm.classList.add('transparent');
-    var siblings = elm.querySelectorAll("a");
-    for (let i = 0; i < siblings.length; i++) {
-      siblings[i].style.pointerEvents = "none";
-    }
-  }
-
-  function toggleOpacity(elm, mode) {
-    for (let i = 0; i < elm.length; i++) {
-      if (mode == "opaque") {
-        opaque(elm[i]);
-      } else {
-        transparent(elm[i]);
-      }
-    }
-  }
+  /* Generic functions */
 
   function hide(elm) {
     elm.style.display = "none";
@@ -91,92 +41,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  function detectBrowser() {
-    /* To list the APIs that our extension is using, execute: git grep "chrome."
-       Browser compatibility:
-
-         - https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs
-         - https://developer.chrome.com/extensions/api_index
-    */
-    minVersion = {
-      "firefox": 52,  // Tor Browser when releasing Tails Verification 1.0
-      "chrome": 57,   // Version from Debian Jessie, the oldest I could test
-      "torbrowser": 7 // First release based on Firefox 52
-    };
-    document.getElementById("min-version-firefox").textContent = minVersion.firefox.toString();
-    document.getElementById("min-version-chrome").textContent = minVersion.chrome.toString();
-    document.getElementById("min-version-tor-browser").textContent = minVersion.torbrowser.toString();
-
-    version = navigator.userAgent.match(/\b(Chrome|Firefox)\/(\d+)/);
-    version = version && parseInt(version[2]) || 0;
-    overrideVersion = location.search.match(/\bversion=(\w+)/);
-    if (overrideVersion) {
-      version = overrideVersion[1];
-    }
-
-    overrideBrowser = location.search.match(/\bbrowser=(\w+)/);
-    if (overrideBrowser) {
-      browser = overrideBrowser[1];
-    } else if (window.InstallTrigger) {
-      browser = "Firefox";
-    } else if ((/\bChrom/).test(navigator.userAgent) && (/\bGoogle Inc\./).test(navigator.vendor)) {
-      browser = "Chrome";
-    }
-
-    if (browser === "Firefox" || browser === "Chrome") {
-      document.getElementById("detected-browser").textContent = browser + " " + version.toString();
-    } else {
-      // Don't bother displaying version number for unsupported browsers as it's probably more error prone.
-      document.getElementById("detected-browser").textContent = browser;
-    }
-
-    toggleDisplay(document.getElementsByClassName("no-js"), "hide");
-    if (browser === "Firefox") {
-      if (version >= minVersion.firefox) {
-        // Supported Firefox
-        toggleDisplay(document.getElementsByClassName("supported-browser"), "show");
-        toggleDisplay(document.getElementsByClassName("chrome"), "hide");
-        toggleDisplay(document.getElementsByClassName("firefox"), "show");
-      } else {
-        // Outdated Firefox
-        toggleDisplay(document.getElementsByClassName("outdated-browser"), "show");
-      }
-    } else if (browser === "Chrome") {
-      if (version >= minVersion.chrome) {
-        // Supported Chrome
-        toggleDisplay(document.getElementsByClassName("supported-browser"), "show");
-        toggleDisplay(document.getElementsByClassName("firefox"), "hide");
-        toggleDisplay(document.getElementsByClassName("chrome"), "show");
-      } else {
-        // Outdated Chrome
-        toggleDisplay(document.getElementsByClassName("outdated-browser"), "show");
-      }
-    } else {
-      toggleDisplay(document.getElementsByClassName("unsupported-browser"), "show");
-    }
-  }
-
-  function toggleContinueLink(method, state) {
-    if (method == "direct") {
-      hide(document.getElementById("skip-download-direct"));
-      hide(document.getElementById("skip-verification-direct"));
-      hide(document.getElementById("next-direct"));
-      show(document.getElementById(state));
-    }
-    if(method == "bittorrent") {
-      hide(document.getElementById("skip-download-bittorrent"));
-      hide(document.getElementById("next-bittorrent"));
-      show(document.getElementById(state));
-    }
-  }
-
   function hitCounter(status) {
     try {
       var counter_url, url, scenario, version, cachebust;
       counter_url = "/install/download/counter";
       url = window.location.href.split("/");
       if (window.location.href.match(/\/upgrade\//)) {
-        scenario = 'upgrade';
+        scenario = "upgrade";
       } else {
         scenario = url[url.lastIndexOf("install") + 1];
       }
@@ -186,55 +57,54 @@ document.addEventListener("DOMContentLoaded", function() {
     } catch (e) { } // Ignore if we fail to hit the download counter
   }
 
+  /* Display logic functions */
+
+  function toggleJavaScriptBitTorrent(method) {
+    if (method === "javascript") {
+      hide(document.getElementById("bittorrent-verification-tip"));
+      show(document.getElementById("javascript-verification-tip"));
+    }
+    else if (method === "bittorrent") {
+      hide(document.getElementById("javascript-verification-tip"));
+      show(document.getElementById("bittorrent-verification-tip"));
+    }
+  }
+
   function showAnotherMirror() {
-    hide(document.getElementById("already-downloaded"));
+    hide(document.getElementById("bittorrent"));
     show(document.getElementById("try-another-mirror"));
   }
 
-  function resetVerificationResult(result) {
+  function showVerifyButton() {
     hide(document.getElementById("verifying-download"));
-    hide(document.getElementById("verification-successful"));
-    hide(document.getElementById("verification-failed"));
-    hide(document.getElementById("verification-failed-again"));
-    toggleContinueLink("direct", "skip-verification-direct");
-  }
-
-  function showUpdateExtension() {
-    hide(document.getElementById("verification"));
-    hide(document.getElementById("install-extension"));
-    show(document.getElementById("update-extension"));
-  }
-
-  function showVerifyDownload() {
-    hide(document.getElementById("install-extension"));
-    hide(document.getElementById("update-extension"));
-    show(document.getElementById("verification"));
+    show(document.getElementById("verify-button"));
   }
 
   function showVerifyingDownload(filename) {
-    hide(document.getElementById("verify-download-wrapper"));
+    resetVerificationResult();
+    hide(document.getElementById("verify-button"));
     if (filename) {
-      document.getElementById("filename").textContent = filename;
+      var filenames = document.getElementsByClassName("verify-filename");
+      for (let i = 0; i < filenames.length; i++) {
+        filenames[i].textContent = filename;
+      }
     }
     show(document.getElementById("verifying-download"));
+    toggleContinueLink("skip-verification");
   }
 
   function showVerificationProgress(percentage) {
-    showVerifyingDownload();
     document.getElementById("progress-bar").style.width = percentage + "%";
     document.getElementById("progress-bar").setAttribute("aria-valuenow", percentage.toString());
   }
 
   function showVerificationResult(result) {
-    toggleDirectBitTorrent("direct");
-    showVerifyDownload();
-    hide(document.getElementById("verify-download-wrapper"));
+    hide(document.getElementById("verify-button"));
     resetVerificationResult();
     hitCounter(result);
     if (result === "successful") {
       show(document.getElementById("verification-successful"));
-      opaque(document.getElementById("step-continue-direct"));
-      toggleContinueLink("direct", "next-direct");
+      toggleContinueLink("next");
     }
     else if (result === "failed") {
       show(document.getElementById("verification-failed"));
@@ -243,108 +113,180 @@ document.addEventListener("DOMContentLoaded", function() {
       toggleDisplay(document.getElementsByClassName("use-mirror-pool-on-retry"), "show");
       replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool-on-retry"));
     }
-    else if (result === "failed-again") {
-      show(document.getElementById("verification-failed-again"));
+    else if (result === "error-file") {
+      show(document.getElementById("verification-error-file"));
+    }
+    else if (result === "error-json") {
+      show(document.getElementById("verification-error-json"));
+      document.getElementById("checksum-file").setAttribute("href", URLofJsonFileContainingChecksums);
+    }
+    else if (result === "error-image") {
+      show(document.getElementById("verification-error-image"));
     }
   }
 
-  function toggleDirectBitTorrent(method) {
-    transparent(document.getElementById("step-verify-direct"));
-    transparent(document.getElementById("step-continue-direct"));
-    transparent(document.getElementById("continue-link-direct"));
-    transparent(document.getElementById("step-verify-bittorrent"));
-    transparent(document.getElementById("step-continue-bittorrent"));
-    transparent(document.getElementById("continue-link-bittorrent"));
-    if (method == "direct") {
-      opaque(document.getElementById("step-verify-direct"));
-      opaque(document.getElementById("continue-link-direct"));
-      show(document.getElementById("verify-download-wrapper"));
-    }
-    if (method == "bittorrent") {
-      opaque(document.getElementById("step-verify-bittorrent"));
-      opaque(document.getElementById("step-continue-bittorrent"));
-      opaque(document.getElementById("continue-link-bittorrent"));
-      toggleContinueLink("bittorrent", "next-bittorrent");
-    }
+  function resetVerificationResult(result) {
+    showVerificationProgress(0);
+    hide(document.getElementById("verifying-download"));
+    hide(document.getElementById("verification-successful"));
+    hide(document.getElementById("verification-failed"));
+    hide(document.getElementById("verification-error-file"));
+    hide(document.getElementById("verification-error-json"));
+    hide(document.getElementById("verification-error-image"));
+    show(document.getElementById("verification"));
+    toggleContinueLink("skip-verification");
   }
 
-  // Reset the page to its initial state:
-  // - Detect the browser version and display the relevant variant
-  detectBrowser();
-  // - Show the download steps of both direct and BitTorrent downloads
-  toggleDirectBitTorrent("none");
-  // - Display 'Skip download' as continue link
-  toggleContinueLink("direct", "skip-download-direct");
-  toggleContinueLink("bittorrent", "skip-download-bittorrent");
-  opaque(document.getElementById("continue-link-direct"));
-  opaque(document.getElementById("continue-link-bittorrent"));
+  function toggleContinueLink(state) {
+    hide(document.getElementById("skip-download"));
+    hide(document.getElementById("skip-verification"));
+    hide(document.getElementById("next"));
+    show(document.getElementById(state));
+  }
 
-  // Display "Verify with your browser" when image is clicked
-  document.getElementById("download-img").onclick = function(e) { displayVerificationExtension(e, this); }
-  document.getElementById("download-iso").onclick = function(e) { displayVerificationExtension(e, this); }
+  /* Verification logic functions */
 
-  function displayVerificationExtension(e, elm) {
+  async function verifyFile(e, elm) {
+
     try {
-      e.preventDefault();
-      hitCounter("download-image");
-      toggleDirectBitTorrent("direct");
-      showAnotherMirror();
-      resetVerificationResult();
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
+      file = elm.files[0];
+      showVerifyingDownload(file.name);
+    } catch(err) {
+      showVerificationResult("error-file");
+      return;
+    }
+
+    try {
+      var response=await fetch(URLofJsonFileContainingChecksums);
+      var checksumjson=await response.text();
+    } catch(err) {
+      showVerificationResult("error-json");
+      return;
+    }
+
+    try {
+      sha256=forge.md.sha256.create();
+      await readFile(file);
+      var fileactualchecksum = sha256.digest().toHex();
+    } catch(err) {
+      showVerificationResult("error-image");
+      return;
+    }
+
+    //If downloaded file is valid, then fileactualchecksum should be 64 hex characters in length, and should be contained within checksumjson.  Otherwise, consider downloaded file to be invalid.
+    if(fileactualchecksum.length==64 && (checksumjson.includes(fileactualchecksum.toUpperCase()) || checksumjson.includes(fileactualchecksum.toLowerCase()))) {
+      showVerificationResult("successful");
+    } else {
+      showVerificationResult("failed");
     }
   }
 
-  // Display "Verify with your browser" when "I already" is clicked
-  document.getElementById("already-downloaded").onclick = function() {
-    hitCounter("already-downloaded");
-    toggleDirectBitTorrent("direct");
+  async function readFile(file) {
+    var CHUNK_SIZE = 2 * 1024 *1024;
+    var offset = 0;
+    lastCalculatedPercentage=0;
+    while(true) {
+      var chunk = await readChunk(file, offset, CHUNK_SIZE);
+      sha256.update(chunk);
+      offset+=chunk.length;
+
+      var progressPercent = parseInt(offset * 100.0 / file.size);
+      if (progressPercent!=lastCalculatedPercentage) {
+        lastCalculatedPercentage = progressPercent;
+        showVerificationProgress(progressPercent);
+      }
+
+      if (chunk.length < CHUNK_SIZE) { return; }
+    }
+  }
+
+  function readChunk(file, chunk_offset, chunk_size) {
+    return new Promise(function(resolve, reject) {
+      let fr = new FileReader();
+      fr.onload = e => {
+        resolve(e.target.result);
+      };
+
+      // on error, reject the promise
+      fr.onerror = (e) => {
+        reject(e);
+      };
+      let slice = file.slice(chunk_offset, chunk_offset + chunk_size);
+
+      // This API is non-standard: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsBinaryString
+      // We use it for performance reasons, see #15059.
+      fr.readAsBinaryString(slice);
+    });
+  }
+
+  /* Initialize event handlers */
+
+  // Direct download
+  document.getElementById("download-img").onclick = function(e) { download(e, this); }
+  document.getElementById("download-img-retry").onclick = function(e) { download(e, this); }
+  document.getElementById("download-iso").onclick = function(e) { download(e, this); }
+  document.getElementById("download-iso-retry").onclick = function(e) { download(e, this); }
+
+  function download(e, elm) {
+    toggleJavaScriptBitTorrent("javascript");
     resetVerificationResult();
+    showAnotherMirror();
   }
 
-  // Reset verification when downloading again after failure
-  document.getElementById("download-img-again").onclick = function(e) { resetVerification(e, this); }
-  document.getElementById("download-iso-again").onclick = function(e) { resetVerification(e, this); }
+  // BitTorrent download
+  document.getElementById("download-img-torrent").onclick = function(e) { downloadTorrent(e, this); }
+  document.getElementById("download-iso-torrent").onclick = function(e) { downloadTorrent(e, this); }
 
-  function resetVerification(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-image-again");
-      toggleDirectBitTorrent("direct");
-      resetVerificationResult();
-    } finally {
-      // Setting window.location.href will abort AJAX requests resulting
-      // in a NetworkError depending on the timing and browser.
-      window.open(elm.getAttribute("href"), "_blank");
-    }
+  function downloadTorrent(e, elm) {
+    toggleJavaScriptBitTorrent("bittorrent");
+    toggleContinueLink("next");
   }
 
-  // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-img-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
-  document.getElementById("download-iso-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
+  // Download again after failure
+  document.getElementById("download-img-again").onclick = function(e) { downloadAgain(e, this); }
+  document.getElementById("download-iso-again").onclick = function(e) { downloadAgain(e, this); }
 
-  function displayBitTorrentVerification(e, elm) {
-    try {
-      e.preventDefault();
-      hitCounter("download-torrent");
-      toggleDirectBitTorrent("bittorrent");
-    } finally {
-      window.location = elm.getAttribute("href");
-    }
+  function downloadAgain(e, elm) {
+    toggleJavaScriptBitTorrent("javascript");
+    resetVerificationResult();
+    showVerifyButton();
   }
 
-  // Right-after installing on Chrome, display the "Verify Tails..."
-  if (window.location.hash === "#chrome-installation") {
-    toggleDirectBitTorrent("direct");
-    showVerifyDownload();
+  // Trigger verification when file is chosen
+  document.getElementById("verify-file").onchange = function(e) { verifyFile(e, this); }
+
+  // Retry after error during verification
+  document.getElementById("retry-json").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
+  document.getElementById("retry-image").onclick = function(e) { resetVerificationResult(); showVerifyButton(); }
+
+  /* No JavaScript */
+
+  hide(document.getElementById("no-js"));
+
+  // Display floating-toggleable-links to prevent people without JS to
+  // either always see the toggles or have broken toggle links.
+  var links = document.getElementsByClassName("floating-toggleable-link");
+  for (let i = 0; i < links.length; i++) {
+    show(links[i]);
+  }
+
+  toggleContinueLink("skip-download");
+
+  /* Internet Explorer */
+
+  if ( navigator.userAgent.indexOf("MSIE") > -1 || navigator.userAgent.indexOf("Trident") > -1 ) {
+    show(document.getElementById("ie"));
+  } else {
+    showVerifyButton();
   }
 
   // To debug the display of the different states:
+  // showVerifyingDownload("test.img");
+  // showVerificationProgress("50");
   // showVerificationResult("successful");
   // showVerificationResult("failed");
-  // showVerificationResult("failed-again");
-  // showVerificationProgress('50');
+  // showVerificationResult("error-json");
+  // showVerificationResult("error-image");
+  // verifyFile(null, null);
 
 });

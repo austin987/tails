@@ -2,9 +2,6 @@
 
 [[!toc levels=1]]
 
-Everything on this page happens in the
-`config/chroot_local-includes/usr/src/iuk` directory.
-
 Pre-requisites
 =============
 
@@ -23,7 +20,9 @@ Install dependencies needed to generate IUKs, UDFs, and to run the test suite
     sudo apt install \
        libdist-zilla-plugin-test-notabs-perl \
        libdist-zilla-plugin-test-perl-critic-perl \
-       libdist-zilla-app-command-authordebs-perl && \
+       libdist-zilla-app-command-authordebs-perl \
+       libtest-lwp-useragent-perl && \
+    cd "$(git rev-parse --show-toplevel)/config/chroot_local-includes/usr/src/iuk" && \
     dzil authordebs --install && \
     sudo apt install \
        attr \
@@ -38,8 +37,13 @@ Install dependencies needed to generate IUKs, UDFs, and to run the test suite
        libdata-dumper-concise-perl \
        libdatetime-perl \
        libfile-copy-recursive-perl \
+       nginx \
        squashfs-tools \
        syslinux
+
+<div class="note">
+You need <code>squashfs-tools</code> 4.4 or newer.
+</div>
 
 Run the test suite
 ==================
@@ -59,9 +63,8 @@ Run the full test suite:
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
     PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
-       RELEASE_TESTING=1 \
-       LC_ALL=C \
-       dzil test
+       LC_ALL=C.UTF-8 \
+       dzil test --all
 
 To run only BDD tests (ala Cucumber) defined under
 `config/chroot_local-includes/usr/src/iuk/features`, use `pherkin`.
@@ -72,6 +75,39 @@ For example:
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
     PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
-       RELEASE_TESTING=1 \
-       LC_ALL=C \
+       LC_ALL=C.UTF-8 \
        pherkin features/download_upgrade-description_file
+
+Test manually
+=============
+
+To test automatic upgrades on an image that includes changes to our _Upgrader_,
+typically you need to make the running Tails under test system believe
+it's running an older version of Tails, that can be upgraded.
+
+To do so:
+
+1. Install the Tails image you want to test on a USB drive.
+
+2. Start Tails from that USB drive.
+
+3. Set an Administration Password.
+
+4. Create a copy of the file that the _Upgrader_ uses to tell which
+   version of Tails was initially installed on this USB stick:
+
+        install -m 644 /lib/live/mount/rootfs/filesystem.squashfs/etc/os-release /tmp/
+
+5. Modify `/tmp/os-release`
+
+   Typically, you would set `TAILS_VERSION_ID` to the version of the
+   last-but-one Tails release.
+
+6. Mask the 2 real `os-release` files with your own:
+
+        sudo cp /tmp/os-release /etc/os-release && \
+        sudo mount -o bind /tmp/os-release /lib/live/mount/rootfs/filesystem.squashfs/etc/os-release
+
+7. Restart the _Upgrader_ service:
+
+        systemctl --user restart tails-upgrade-frontend.service

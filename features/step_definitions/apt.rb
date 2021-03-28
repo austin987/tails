@@ -6,7 +6,7 @@ def apt_sources
   ).stdout
 end
 
-Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
+Then /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
   apt_sources.chomp.each_line do |line|
     next unless line.start_with? 'deb'
@@ -16,13 +16,31 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   end
 end
 
-Given /^no proposed-updates APT suite is enabled$/ do
+Then /^no proposed-updates APT suite is enabled$/ do
   assert_no_match(/\s\S+-proposed-updates\s/, apt_sources)
 end
 
-Given /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
+Then /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
   # sdscoq7snqtznauu.onion == deb.torproject.org
   assert_no_match(/sdscoq7snqtznauu[.]onion.*experimental/, apt_sources)
+end
+
+Then /^if releasing, the tagged Tails APT source is enabled$/ do
+  unless git_on_a_tag
+    puts 'Not on a tag ⇒ skipping this step'
+    next
+  end
+  assert_match(/umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion\/?\s+#{Regexp.quote(git_current_tag)}\s/,
+               apt_sources)
+end
+
+Then /^if releasing, no unversioned Tails APT source is enabled$/ do
+  unless git_on_a_tag
+    puts 'Not on a tag ⇒ skipping this step'
+    next
+  end
+  assert_no_match(/umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion\/?\s+(stable|testing|devel)\s/,
+                  apt_sources)
 end
 
 When /^I configure APT to use non-onion sources$/ do
@@ -32,7 +50,7 @@ When /^I configure APT to use non-onion sources$/ do
   s{vwakviie2ienjx6t[.]onion}{ftp.us.debian.org};
   s{sgvtcaew4bxjd7ln[.]onion}{security.debian.org};
   s{sdscoq7snqtznauu[.]onion}{deb.torproject.org};
-  s{jenw7xbd6tf7vfhp[.]onion}{deb.tails.boum.org};
+  s{umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion}{deb.tails.boum.org};
   SCRIPT
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way

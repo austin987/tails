@@ -6,11 +6,13 @@ achieve this goal contributors and teams need to be made aware of the existence
 of issues that need their input so they can self-organize and prioritize their
 work. Issues that are not relevant anymore should be closed.
 
-This work should be done twice per year.
+This work should be done every quarter.
 
 [[!toc levels=3]]
 
 # Tasks
+
+<a id="manual"></a>
 
 ## Manual tasks
 
@@ -33,17 +35,22 @@ This work should be done twice per year.
 
 ### Identify and fix inadequate milestone
 
-XXX: the `missed:$VERSION` GitLab label, added by the RM when
-postponing issues and MRs, would allow us to automate this.
-
 Some issues are missed by our automated
 setup. These issues are those whose milestone has been
 postponed after the N last releases by the Release Manager: every such
 milestone bump counts as an update so there's no chance the issue will
-ever be identified as stalled. Hence we need to do a manual session of ~2 hours
-twice a year to drop the milestone on some issues. To select the
-corresponding issues, we will thus select those that have
-the next release as their milestone, and triage them using the following criteria:
+ever be identified as stalled. Hence we need to manually
+identify these issues and remove their milestone.
+
+To select the corresponding issues:
+
+1. List [[!tails_gitlab groups/tails/-/issues desc="issues in the `tails` group"]]
+2. Filter the list to only include issues whose milestone is set to the next
+   Tails release.
+3. Filter the list to only include issues that were postponed at least twice
+   in a row by the RM: they have `missed:$version` labels.
+
+#### Criteria
 
 Situations when dropping the milestone would be inadequate:
 
@@ -63,7 +70,7 @@ Whether it's appropriate to drop the milestone depends on:
 * Whether there's an assignee. If there's none but the issue was postponed a few times, then:
   - Either it's important and it should be put on the plate of a core team.
   - Or it's unimportant and the milestone should be dropped: keeping it
-    has little value but forces the RMs to do extra work. If someone wants to track
+    has little value. If someone wants to track
     those issues, there surely are better ways.
 * Whether the issue is blocked by anything (other issues or what not) that's
   out of the hands of the assignee.
@@ -71,8 +78,12 @@ Whether it's appropriate to drop the milestone depends on:
   that hold more power than average we can assume they know how to revert our
   changes.
 
-We have a [[template message|ticket_gardener/inadequate_target_version.textile]]
+#### Template comment
+
+We have a [[template message|ticket_gardener/inadequate_milestone]]
 that we can use as a basis to explain why we're removing the milestone.
+
+<a id="automated"></a>
 
 ## Automated tasks
 

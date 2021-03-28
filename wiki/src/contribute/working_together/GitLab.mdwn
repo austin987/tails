@@ -56,6 +56,7 @@ smoother.
 The title should be a short but clear description of what this is about.
 Some people are case sensitive, please try to consider that.
 
+<a id="status"></a>
 ## Status
 
 ### Open issues
@@ -404,6 +405,42 @@ you can:
    See [[!tails_gitlab help/user/project/issues/managing_issues.html#new-issue-via-email desc="New issue via email"]]
    in the GitLab documentation.
 
+<a id="api"></a>
+
+# Scripts that use the GitLab API
+
+We have several scripts that query or manipulate data using the GitLab API:
+for example, [[!tails_gitweb bin/generate-changelog]] and [[!tails_gitweb
+bin/generate-report]].
+
+To use them:
+
+* Install a recent enough `python3-gitlab` Debian package:
+
+        if [ "$(lsb_release --short --codename)" = buster ]; then
+           sudo apt install python3-gitlab/bullseye
+        else
+           sudo apt install python3-gitlab
+        fi
+
+* Configure your `~/.python-gitlab.cfg`.
+
+  You need at least this content:
+
+        [global]
+        ssl_verify = true
+
+        [Tails]
+        url = https://gitlab.tails.boum.org
+        per_page = 100
+        private_token = XXX
+
+  In the `Tails` section, set the value of the `private_token` option to a
+  GitLab API token for your own user. To generate such a token,
+  visit [[!tails_gitlab profile/personal_access_tokens]].
+
+* If you are working from Tails, run the scripts using `torsocks`.
+
 <a id="core-work"></a>
 
 # Core teams' work
@@ -432,128 +469,66 @@ first, to ensure you're not asking them to do something that's outside
 of the scope of their job. And please justify your suggestions.
 Please check these views once in a while and talk to us! :)
 
-<a id="operations"></a>
+<a id="ci"></a>
 
-# Operations
+# GitLab CI
 
-## Administration of GitLab
+Tails system administrators are currently experimenting with [[!tails_gitlab
+help/ci/README.md desc="GitLab CI"]] for some quality assurance checks that
+don't require building or booting Tails images: [[!tails_gitlab
+tails/sysadmin/-/issues/17740]].
 
-Our friends at <https://www.immerda.ch/> host [[!tails_gitlab desc="our GitLab
-instance"]].
+## Experimental
 
-The Tails [[system administrators|working_together/roles/sysadmins]]
-administrate this GitLab instance.
+Please consider this work as experimental and don't rely on it for making
+decisions. In particular:
 
-## Configuration of GitLab
+ - Don't trust the CI runners. As a consequence, don't trust the results of
+   CI pipelines.
 
-The configuration of our GitLab instance lives in the private [[!tails_gitlab
-tails/gitlab-config]] GitLab project.
+ - Don't rely on the CI runners being in working shape.
 
-If you have access to this project, you can propose configuration changes:
-push a topic branch and submit a merge request.
+*Why?* Because the CI runner we are using at the moment is running on a test
+infrastructure, that's not managed in the same way as our production
+infrastructure. For example, it is not automatically monitored, and security
+updates are not consistently applied in a timely manner.
 
-This can be useful, for example:
+We will let you know once our GitLab CI setup is in production.
 
- - to modify group membership when someone joins or leaves a team
- - to propose new [[!tails_gitlab groups/tails/-/labels desc="group labels"]]
-   shared by all our GitLab projects
- - to propose a new project under the `tails/` namespace, ensuring our common
-   project settings & permission model are applied
+## Feedback and patches are welcome
+
+Please [[give feedback and
+input|contribute/working_together/roles/sysadmins/#communication]] about this
+topic to Tails sysadmins.
+
+For example, you can propose new tests that we could run on GitLab CI.
+Please explain what the expected benefit would be for your work or for Tails
+users: this will help us prioritize our work.
+
+Finally, you can send merge requests that improve the existing jobs
+or add new ones: [[!tails_gitweb .gitlab-ci.yml]].
 
 <a id="access-control"></a>
 
-## Access control
-
-### Objects
-
- - _Canonical Git repo_: the authoritative [[!tails_gitlab tails/tails]]
-   repository, hosted on GitLab
-
- - _Major branches_: `master`, `stable`, `testing`, `devel`,
-   and possibly `feature/bullseye`
-
- - _Release tags_: a signed Git tag that identifies the source code
-   used to build a specific Tails release; currently all tags
-   in the authoritative `tails.git` repository are release tags;
-   the tag name is a version number, with '~' replaced by '-'.
-
- - _Particularly sensitive data_: confidential data that specific teams
-   like Fundraising and Accounting need to handle, but that other
-   contributors generally don't need direct access to. This definitely
-   include issues; this might include Git repositories at some point.
-
-   Note that as of 2020-03-29, it is undefined:
-
-    - What subset of this data can go to a web-based issue tracker or not.<br/>
-      This was already a problem with Redmine.<br/>
-      Fixing this will require discussions between various stakeholders.
-
-    - What subset of this data could live in a cleartext Git
-      repository hosted here or there, as opposed to requiring
-      end-to-end encryption between members of these teams.
-      This is a hypothetical problem for now.
-
-### Subjects
-
- - An _admin_:
-   - can configure GitLab
-     - As a consequence, an admin can grant themselves
-       any permission they want if an emergency requires it;
-       in other situations, better follow due process to request
-       such status or permissions :)
-   - MUST comply with our "Level 3" security policy
-
- - A _committer_:
-   - can push and force-push to any ref in the canonical Git repo,
-     including major branches and release tags;<br/>
-     incidentally, this ensures the following requirement is met:
-   - their branches are picked up by Jenkins; it follows that they
-     MUST comply with our "Infrastructure" security policy
-   - can merge MRs into major branches
-   - can modify issues metadata
-   - is allowed to view confidential issues in the [[!tails_gitlab tails/tails]]
-     GitLab project; that's OK, because particularly sensitive data
-     lives somewhere else, with stricter access control
-   - can edit other users' comments
-   - MUST comply with our "Level 3" security policy
-
- - A _regular, particularly trusted contributor_:
-   - can push and force-push to a subset of refs in the canonical Git repo;
-     this subset MUST NOT include any major branch nor release tag;<br/>
-     this is required to ensure the following requirement is met:
-   - their branches are picked up by Jenkins; it follows that they
-     MUST comply with our "Infrastructure" security policy
-   - can modify issues metadata
-   - is allowed to view confidential issues in the [[!tails_gitlab tails/tails]]
-     GitLab project; that's OK, because particularly sensitive data
-     lives somewhere else, with stricter access control
-
- - A _regular contributor_:
-   - can fork the Git repositories and push changes to their own fork
-   - can modify issues metadata
-   - is allowed to view confidential issues in the [[!tails_gitlab tails/tails]]
-     GitLab project; that's OK, because particularly sensitive data
-     lives somewhere else, with stricter access control
-
- - _Anybody with a GitLab account_ on the instance we use:
-   - can view and submit issues in public projects
-   - can submit MRs in public projects
-
-### Implementation
+# Access control
 
 <a id="request-access"></a>
 
-#### Requesting access
+## Requesting access
 
 If you need to do something in GitLab and you appear to lack the
 needed credentials, please ask the Tails
 [[system administrators|working_together/roles/sysadmins#communication]]
-to grant you more power.
+to grant you more power. Except if you're asking "Maintainer"
+or "Developer" access, in which case please ask <tails@boum.org> first.
 
 For example, you will need "Reporter" access on the [[!tails_gitlab
 tails/tails]] project in order to add labels or assign issues.
 
-#### Adding/removing access
+If your collaboration with a new contributor would benefit from them having such
+credentials, please help them request access.
+
+## Adding/removing access
 
 Do not grant access via the web interface:
 
@@ -565,14 +540,14 @@ Instead, after following the relevant process (if any),
 request the access modification from the Tails
 [[system administrators|working_together/roles/sysadmins#communication]].
 
-#### Relevant GitLab doc
+## Relevant GitLab doc
 
  - [[!tails_gitlab help/user/permissions.html desc="Permissions"]]
  - [[!tails_gitlab help/user/project/merge_requests/authorization_for_merge_requests.html desc="Authorization for Merge requests"]]
  - [[!tails_gitlab help/user/project/protected_branches.html desc="Protected Branches"]]
  - [[!tails_gitlab help/user/group/index.md desc="Groups"]]
 
-#### Access levels
+## Access levels
 
 We use the [[!tails_gitlab
 help/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow
@@ -580,11 +555,28 @@ desc="Protected branch flow"]]:
 
  - Our major branches and release tags are marked as "Protected".
  - Committers get "Maintainer" access.
+
+   This is done via the `.committers` variable in our gitlabracadabra
+   configuration. This is subject to approval by <tails@boum.org>.
+
  - Regular, particularly trusted contributors, who are not granted full commit
    access but have access to our CI, get "Developer" access. They can push
    a topic branch to the canonical Git repository and our CI will pick it up.
    They can also modify any non-protected topic branch.
+
+
+   This is done via the `.developers` variable in our gitlabracadabra
+   configuration. This is subject to approval by <tails@boum.org>.
+
  - Other contributors get access strictly lower than "Developer".
    They push topic branches to their own fork of the repository and
    create merge requests.
+
  - Our Jenkins CI jobs generation process is the same as in pre-GitLab days.
+
+<a id="operations"></a>
+
+# Operations
+
+See our documentation about [[GitLab for Tails
+sysadmins|contribute/working_together/roles/sysadmins/GitLab]].

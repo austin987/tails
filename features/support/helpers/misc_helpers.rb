@@ -35,14 +35,7 @@ end
 
 def time_delta(start_time, now)
   elapsed = now - start_time
-  # XXX: Drop this version check when we drop support for running the test suite
-  # on Debian Stretch.
-  if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.4')
-    format('%<elapsed>.2f', elapsed: elapsed)
-      .chomp('.00').chomp('.0').chomp('0')
-  else
-    elapsed.ceil(2)
-  end
+  elapsed.ceil(2)
 end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with
@@ -86,12 +79,19 @@ def try_for(timeout, **options)
         # (never?) a good idea, so we rethrow them. See below why we
         # also rethrow *all* the unique exceptions.
         raise e
-      rescue Exception => e # rubocop:disable Lint/RescueException
-        # All other exceptions are ignored while trying the block.
-        # We save the last exception so we can print it in case of a timeout.
+      rescue StandardError => e
+        # Most other exceptions, that inherit from StandardError, are ignored
+        # while trying the block. We save the last exception so we can
+        # print it in case of a timeout.
         last_exception = e
         debug_log('try_for: failed with exception: ' \
                   "#{last_exception.class}: #{last_exception}") if options[:log]
+      rescue Exception => e # rubocop:disable Lint/RescueException
+        # Any other exception is rethrown as-is: it is probably not
+        # the kind of failure that try_for is supposed to mask.
+        # For example, try_for should not prevent a SignalException
+        # from being handled by Ruby.
+        raise e
       end
       sleep options[:delay]
     end
@@ -387,8 +387,6 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   opts ||= {}
   ruby_type_to_dbus_type = {
     String  => 'string',
-    # XXX:Buster: drop the Fixnum line once we stop supporting Stretch
-    Fixnum  => 'int32', # rubocop:disable Lint/UnifiedInteger
     Integer => 'int32',
   }
   typed_args = args.map do |arg|
@@ -417,14 +415,6 @@ def dbus_send(*args, **opts)
   ret_lines.shift
   ret = ret_lines.join("\n")
   dbus_send_ret_conv(ret)
-end
-
-def ffmpeg
-  if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
-    'avconv'
-  else
-    'ffmpeg'
-  end
 end
 
 # This is IO.popen() that ensures that we wait() for the subprocess to

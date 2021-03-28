@@ -63,8 +63,6 @@ Options affecting the 'list' action:
   --media=VALUE         override 'persistent-media'
 
 Options affecting the 'activate' action:
-  --read-only           enable 'persistent-read-only'
-  --read-write          disable 'persistent-read-only'
   --union=VALUE         override 'union'
 "
 }
@@ -82,15 +80,9 @@ add_persistence_preset()
 	local PRESET="${1}"
 	local PRESET_SOURCE="${2}"
 	local CONFIG="${3}"
-	if [ "${PERSISTENCE_READONLY}" = true ]
-	then
-		warning "We are trying to add a persistence preset while" \
-		        "persistence is in read-only mode"
-	else
-		echo "${PRESET}	source=${PRESET_SOURCE}" \
-		    >> "${CONFIG}" || error "Failed to make ${PRESET}: $?"
-		warning "Successfully made ${PRESET} persistent"
-	fi
+	echo "${PRESET}	source=${PRESET_SOURCE}" \
+	    >> "${CONFIG}" || error "Failed to make ${PRESET}: $?"
+	warning "Successfully made ${PRESET} persistent"
 }
 
 remove_persistence_preset()
@@ -125,6 +117,22 @@ migrate_persistence_preset()
 		warning "Need to make ${NEW} persistent"
 		add_persistence_preset "${NEW}" "${NEW_SOURCE}" \
 		                       "${CONFIG}"
+	fi
+}
+
+maybe_restore_gnupg_pubring()
+{
+	local KEYRING="/home/amnesia/.gnupg/pubring.kbx"
+	local KEYRING_BAK="${KEYRING}~"
+	local KEYRING_SIZE="$(stat -c %s ${KEYRING} || echo 0)"
+
+	if [ ! -f "${KEYRING}" ] || [ "${KEYRING_SIZE}" -le 32 ]; then
+		warning "It seems the GnuPG keyring is corrupt"
+		if [ -f "${KEYRING_BAK}" ]; then
+			warning "Restoring backup of GnuPG keyring"
+			cp "${KEYRING_BAK}" "${KEYRING}"
+			chmod u=rw,go= "${KEYRING}"
+		fi
 	fi
 }
 
@@ -192,12 +200,13 @@ mountpoint_has_correct_access_rights ()
 	local mountpoint="$1"
 	local expected_user=root
 	local expected_group=root
-	local expected_perms=775
+	local expected_perms=770
 	local expected_acl="user::rwx
 user:tails-persistence-setup:rwx
+user:amnesia:--x
 group::rwx
 mask::rwx
-other::r-x"
+other::---"
 
 	if [ $(stat -c %U "$mountpoint") != "$expected_user" ]
 	then
@@ -338,6 +347,13 @@ activate_volumes ()
 		mount -o remount,acl "$mountpoint"
 	done
 
+	# Migrate permissions to stricter setup (#7465)
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		chmod 0770 "$mountpoint"
+		setfacl -m user:amnesia:x "$mountpoint"
+	done
+
 	# Detect if we have incorrect ownership, permissions and ACL.
 	ACCESS_RIGHTS_ARE_CORRECT=true
 	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
@@ -416,13 +432,15 @@ activate_volumes ()
 			# persistent directories.
 			[ $(stat -c '%U' "$subdir") = 'amnesia' ] || continue
 			[ $(stat -c '%G' "$subdir") = 'amnesia' ] || continue
-			if [ "$PERSISTENCE_READONLY" = true ]
-			then
-				warning "Permissions of '$subdir' may need to be fixed, but read only was selected; please retry in read-write mode"
-			else
-				chmod go= "$subdir"
-			fi
+			chmod go= "$subdir"
 		done
+	done
+
+	# Enable support for "Don't ask again" (#10553)
+	for persistent_fs in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		mkdir -p "${persistent_fs}/dont-ask-again"
+		chown amnesia:amnesia "${persistent_fs}/dont-ask-again"
 	done
 
 	# Load the new persistence.conf.
@@ -439,14 +457,6 @@ activate_volumes ()
 		umask "$OLD_UMASK"
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
-
-	# Get rid of any Enigmail configuredVersion that we previously used
-	# to set in a way that would persistently override the value maintained
-	# by Enigmail itself (#12680, #15693). We stopped writing this pref
-	# there a long time ago but recently instructed users to reintroduce
-	# this problem as a workaround (#15692).
-	tb_profile="$(dirname "${conf}")/thunderbird/profile.default"
-	rm -f "${tb_profile}/preferences/0000tails.js"
 
 	for vol in ${open_volumes}
 	do
@@ -476,6 +486,11 @@ activate_volumes ()
 			echo "  - ${vol}"
 		done
 	fi
+
+	if mountpoint -q /home/amnesia/.gnupg; then
+		maybe_restore_gnupg_pubring
+	fi
+
 	exit ${ret}
 }
 
@@ -537,12 +552,6 @@ main ()
 				;;
 			--media=*)
 				export PERSISTENCE_MEDIA="${1#*=}"
-				;;
-			--read-only)
-				export PERSISTENCE_READONLY="true"
-				;;
-			--read-write)
-				export PERSISTENCE_READONLY=""
 				;;
 			--union=*)
 				export UNIONTYPE="${1#*=}"

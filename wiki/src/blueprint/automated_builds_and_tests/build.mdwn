@@ -1,8 +1,0 @@
-[[!tag archived]]
-
-# Tools
-
-## live-autobuild
-
-<http://live.debian.net/gitweb/?p=live-autobuild.git> is currently
-used to build "official" daily Debian Live images

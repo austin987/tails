@@ -1,13 +1,24 @@
 #! /usr/bin/python3
 
+# Documentation: https://tails.boum.org/contribute/working_together/GitLab/#api
+
 import functools
-import gitlab
+import sys
 import logging
 import os
-
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+
+try:
+    import gitlab  # type: ignore
+except ImportError:
+    sys.exit("You need to install python3-gitlab to use this program.")
+
+try:
+    from dateutil.relativedelta import relativedelta
+except ImportError:
+    sys.exit("You need to install python3-dateutil to use this program.")
 from pathlib import Path
+
 
 PYTHON_GITLAB_CONFIG_FILE = os.getenv('PYTHON_GITLAB_CONFIG_FILE',
                                       default=Path.home() /
@@ -22,6 +33,7 @@ PROJECTS = [
     GROUP_NAME + '/' + project for project in [
         'chutney',
         'installer',
+        'sysadmin',
         'tails',
         'whisperback',
         'workarounds',
@@ -33,11 +45,11 @@ log = logging.getLogger()
 
 
 class GitLabWrapper(gitlab.Gitlab):
-    @functools.lru_cache
+    @functools.lru_cache(maxsize=None)
     def project(self, project_id):
         return self.projects.get(project_id)
 
-    @functools.lru_cache
+    @functools.lru_cache(maxsize=None)
     def project_from_name(self, project_name):
         project = [
             p for p in self.projects.list(all=True)
@@ -67,10 +79,14 @@ class ReportGenerator(object):
                                                    after=self.after,
                                                    before=self.before)
 
-        gl_closed_issues = [{
+        gl_closed_issues_with_duplicates = [{
             "project_id": event.project_id,
             "iid": event.target_iid
         } for event in closed_issues_events]
+        gl_closed_issues = []
+        for issue in gl_closed_issues_with_duplicates:
+            if issue not in gl_closed_issues:
+                gl_closed_issues.append(issue)
 
         for issue in gl_closed_issues:
             project = self.gl.project(issue["project_id"])

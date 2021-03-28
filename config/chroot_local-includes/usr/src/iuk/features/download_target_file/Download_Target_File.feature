@@ -29,6 +29,42 @@ Feature: download and verify a target file
       | whatever1.file | /        | abc     |    3 | ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad |
       | whatever2.file | /sub/dir | 123     |    3 | a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3 |
 
+  @retry
+  Scenario: Successfully resuming an interrupted download, from the same mirror
+    Given a HTTP server that supports Range requests and serves "<file>" in "<webdir>" with content "<content>" and hash "<sha256>"
+    When I download "<file>" (of expected size <size>) from "<webdir>", failing 1 time, and check its hash is "<sha256>"
+    Then it should succeed
+    And I should be told "Sending HTTP request: attempt no. 1"
+    And I should be told "Resuming download after 1 bytes"
+    And I should be told "Sending HTTP request: attempt no. 2"
+    And I should not be told "Falling back to DNS mirror pool"
+    And I should see the downloaded file in the temporary directory
+    And the SHA-256 of the downloaded file should be "<sha256>"
+    And the downloaded file should be world-readable
+    Examples:
+      | file           | webdir   | content | size | sha256                                                           |
+      | whatever1.file | /        | abc     |    3 | ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad |
+      | whatever2.file | /sub/dir | 123     |    3 | a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3 |
+
+  @retry
+  # Keep in sync with Tails::IUK::TargetFile::Download: here we must
+  # simulate (max_attempts - 1) failures
+  Scenario: Successfully resuming an interrupted download, using the fallback mirror pool
+    Given a HTTP server that supports Range requests and serves "<file>" in "<webdir>" with content "<content>" and hash "<sha256>"
+    When I download "<file>" (of expected size <size>) from "<webdir>", failing 5 times, and check its hash is "<sha256>"
+    Then it should succeed
+    And I should be told "Sending HTTP request: attempt no. 1"
+    And I should be told "Resuming download after 1 bytes"
+    And I should be told "Sending HTTP request: attempt no. 2"
+    And I should be told "Falling back to DNS mirror pool"
+    And I should see the downloaded file in the temporary directory
+    And the SHA-256 of the downloaded file should be "<sha256>"
+    And the downloaded file should be world-readable
+    Examples:
+      | file           | webdir   | content | size | sha256                                                           |
+      | whatever1.file | /        | abc     |    3 | ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad |
+      | whatever2.file | /sub/dir | 123     |    3 | a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3 |
+
   Scenario: Successful download and verification with redirect to another hostname over HTTPS
     Given a HTTP server that redirects to 127.0.0.2 over HTTPS
     And a HTTPS server on 127.0.0.2 that serves "<file>" in "<webdir>" with content "<content>" and hash "<sha256>"

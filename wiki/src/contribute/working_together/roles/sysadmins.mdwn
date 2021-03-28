@@ -63,15 +63,8 @@ for example:
 * update access control lists to resources we manage, as requested by
   the corresponding teams
 * keep systems up-to-date, reboot them as needed
-* keep Jenkins plugins up-to-date, by upgrading any plugin that satisfies
-  at least one of these conditions:
-   - brings security fixes
-   - fixes bugs we're affected by
-   - brings new feature we are interested in, without breaking the ones we rely on
-   - is needed to upgrade another plugin that we want to upgrade
-   - is required by a system upgrade (e.g. of the Jenkins packages)
-* report bugs identified in Jenkins plugins after they have been upgraded (both
-  on the upstream bug tracker and on our own one)
+* keep Jenkins plugins up-to-date:
+  [[upgrade policy|sysadmins/Jenkins#upgrade-policy]]
 * act as the de facto interface between Tails and the people hosting
   our services (boum.org, immerda.ch) for non-trivial requests
 * when a sysadmin shift includes the beginning of a yearly quarter, ensure that
@@ -81,6 +74,7 @@ for example:
   below) has passed, the sysadmin on duty must make it clear s·he's
   handling the problem before starting to work on it, in order to
   avoid work duplication.
+* Process GitLab abuse reports.
 
 ## Outside of sysadmin shifts
 
@@ -143,6 +137,8 @@ Below, importance level is evaluated based on:
   cannot work;
 * the release process' needs: we want to be able to do an emergency
   release at any time when critical security issues are published.
+  Note that in order to release Tails, one needs to first build Tails,
+  so any service that's needed to build Tails is also needed to release Tails.
 
 ## APT repositories
 
@@ -158,7 +154,7 @@ Below, importance level is evaluated based on:
   - [[!tails_gitweb_puppet_tails manifests/reprepro/custom.pp
     desc="`tails::reprepro::custom` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
-* importance: critical (needed by users, and to build & release a Tails ISO)
+* importance: critical (needed by users, and to build & release Tails)
 
 ### Time-based snapshots of APT repositories
 
@@ -172,7 +168,7 @@ Below, importance level is evaluated based on:
   - [[!tails_gitweb_puppet_tails manifests/reprepro/snapshots/time_based.pp
     desc="`tails::reprepro::snapshots::time_based` class"]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
-* importance: critical (needed to build a Tails ISO)
+* importance: critical (needed to build Tails)
 
 ### Tagged snapshots of APT repositories
 
@@ -239,7 +235,7 @@ Below, importance level is evaluated based on:
   - host Tails issues
   - host most Tails [[Git repositories|contribute/git]]
 * access: public + some data with more restricted access
-* operations documentation: [[contribute/working_together/GitLab#operations]]
+* operations documentation: [[contribute/working_together/roles/sysadmins/GitLab]]
 * end-user documentation: [[contribute/working_together/GitLab]]
 * configuration:
   - immerda hosts our GitLab instance using [this Puppet
@@ -251,6 +247,7 @@ Below, importance level is evaluated based on:
      - configuration: [[!tails_gitlab tails/gitlab-config]]
 * importance: critical (needed to release Tails)
 * Tails system administrators administrate this GitLab instance.
+* See our [[documentation about GitLab for Tails sysadmins|contribute/working_together/roles/sysadmins/GitLab]].
 
 ## Gitolite
 
@@ -329,6 +326,8 @@ Below, importance level is evaluated based on:
     desc="`tails::prosody` class"]]
 * importance: low
 
+<a id="Jenkins"></a>
+
 ## Jenkins
 
 * purpose: continuous integration, e.g. build Tails ISO images from
@@ -337,35 +336,9 @@ Below, importance level is evaluated based on:
   ([[!tails_ticket 6270]]); anyone can [[download the built
   products|contribute/how/testing]]
 * tools: [[!debpts jenkins desc="Jenkins"]], [[!debpts jenkins-job-builder]]
-* configuration:
-  - master:
-    * [[!tails_gitlab tails/puppet-jenkins/-/blob/master/manifests/init.pp
-      desc="`jenkins` class"]]
-    * [[!tails_gitweb_puppet_tails manifests/jenkins/master.pp
-      desc="`tails::jenkins::master` class"]]
-    * a few Jenkins plugins installed with `jenkins::plugin`
-    * YAML jobs configuration lives in a
-      [[!tails_gitweb_repo jenkins-jobs desc="dedicated Git repository"]];
-      [Jenkins Job Builder](http://ci.openstack.org/jenkins-job-builder/)
-      uses it to configure Jenkins
-  - slaves:
-    * [[!tails_gitweb_puppet_tails manifests/iso_builder.pp
-      desc="`tails::iso_builder`"]],
-      [[!tails_gitweb_puppet_tails manifests/jenkins/slave.pp
-      desc="`tails::jenkins::slave`"]],
-      [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_builder.pp
-      desc="`tails::jenkins::slave::iso_builder`"]],
-      [[!tails_gitweb_puppet_tails manifests/jenkins/slave/iso_tester.pp
-      desc="`tails::jenkins::slave::iso_tester`"]],
-      and [[!tails_gitweb_puppet_tails manifests/tester.pp
-      desc="`tails::tester`"]]
-      classes
-    * signing keys are managed with the `tails_secrets_jenkins` Puppet module
-  - web server:
-    * [[!tails_gitweb_puppet_tails manifests/jenkins/reverse_proxy.pp
-      desc="`tails::jenkins::reverse_proxy` class"]]
-* design documentation: [[sysadmins/Jenkins]]
-* importance: critical (as a key component of our development process)
+* design and implementation documentation: [[sysadmins/Jenkins]]
+* importance: critical (as a key component of our development process,
+  needed to build IUKs during a Tails release)
 
 ## Mail
 
@@ -480,7 +453,8 @@ Below, importance level is evaluated based on:
 * configuration:
   - [[!tails_gitlab tails/puppet-nginx/-/blob/master/manifests/init.pp
     desc="`nginx` class"]]
-* importance: transitively critical (as a dependency of Jenkins)
+* importance: transitively critical (as a dependency of Jenkins
+  and APT repositories)
 
 <a id="weblate"></a>
 

@@ -1,69 +1,37 @@
-h1 {
-  margin-left: 0em !important;
-}
+/* Deprecation of the extension */
 
-/* Display No JS version by default */
-
-.supported-browser,
-.outdated-browser,
-.unsupported-browser {
+#extension,
+#extension-version {
   display: none;
 }
 
-.no-js {
+/* Display no JS version by default */
+
+#no-js {
   display: initial;
 }
 
-#skip-verification-direct,
-#verification,
-#update-extension,
+#skip-verification,
+#ie,
+#verify-button,
 #verifying-download,
 #verification-successful,
 #verification-failed,
-#verification-failed-again,
-#skip-download-direct,
-#skip-download-bittorrent,
-#extension-version,
+#verification-error-file,
+#verification-error-json,
+#verification-error-image,
+#skip-download,
 #tails-version,
-.use-mirror-pool-on-retry {
+#try-another-mirror,
+#download-img-retry,
+#download-iso-retry {
   display: none;
-}
-
-#verify-download-wrapper input {
-  display: none;
-}
-
-.transparent {
-  opacity: 0.3;
-}
-
-/* Display logic in case the extension is installed or outdated */
-
-html[data-extension="up-to-date"] #install-extension,
-html[data-extension="outdated"] #install-extension {
-  display: none;
-}
-
-html[data-extension="outdated"] #update-extension,
-html[data-extension="up-to-date"] #verification {
-  display: block;
 }
 
 /* Layout */
 
 #content {
   padding-left: 0 !important;
-}
-
-#direct-download {
-  border-right: 1px solid #ccc;
-}
-
-.btn {
-  color: black !important;
-  background: #53b351 !important;
-  border: none;
-  padding: 6px 12px !important;
 }
 
 span.step-number {
@@ -75,16 +43,35 @@ span.step-number {
   margin-left: 35px !important;
 }
 
-#step-download-direct,  #step-download-torrent {
+#step-download {
   min-height: 7em;
 }
 
-#step-verify-direct, #step-verify-bittorrent, #step-continue-direct {
+#step-verify, #step-continue {
   margin-top: 4em;
 }
 
-#step-continue-bittorrent {
-  margin-top: 5em;
+/* Buttons */
+
+.button {
+  color: black !important;
+  background: #53b351 !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  border-radius: 5px;
+  box-shadow: 1px 1px 5px #ccc;
+  display: inline-block;
+  cursor: pointer;
+}
+
+#verify-button input {
+  display: none;
+}
+
+/* Download */
+
+#download-minor {
+  margin-top: 1.5em;
 }
 
 /* FLOATING TOGGLEABLE FOR 'WHY?' CONTEXTUAL HELP */
@@ -119,50 +106,23 @@ span.step-number {
   top: 5px;
 }
 
-.caution, #bittorrent-download, #verification-failed, #verification-failed-again {
+#javascript-verification-tip, #verification-failed {
   position: relative;
 }
 
-.why-verify-link {
-  position: absolute;
-  top: 1.2em;
-  right: 1em;
-}
-
-.why-failed-link, .why-failed-again-link {
+.why-verify-link, .why-failed-link {
   position: absolute;
   top: 0;
-  right: 1em;
+  left: 35em;
 }
 
-.what-is-bittorrent-link {
-  position: absolute;
-  top: 2.4em;
-  right: 1em;
-}
-html[dir="rtl"] .what-is-bittorrent-link { left: 1em; }
-
-#direct-download-minor {
-  margin-top: 0.5em;
-}
-
-#already-downloaded {
-  cursor: pointer;
-}
-
-#try-another-mirror {
+#bittorrent-verification-tip {
   display: none;
 }
 
 /* Skip verification */
 
-#skip-verification-direct div {
-  background: url(../icons/dialog-warning-small.png) no-repeat;
-  height: 2em;
-  padding-left: 30px;
-}
-
-#skip-verification-direct a {
+#skip-verification a {
   color: #e8112d;
   border-color: #e8112f;
   border-size: 2px;
@@ -172,25 +132,30 @@ html[dir="rtl"] .what-is-bittorrent-link { left: 1em; }
 
 .progress {
   max-width: 100%;
+  border-radius: 3px;
 }
 
 .progress-bar {
   background: #53b351;
+  height: 15px;
 }
 
 /* Verification results */
 
-#extension-installed, #verification-successful {
-  background: url(../../../lib/check.png) no-repeat;
-  padding-left: 35px;
+img.icon {
+  margin-right: 15px;
+  vertical-align: bottom;
 }
 
-#verification-failed, #verification-failed-again {
-  background: url(../../../lib/cross.png) no-repeat;
-  padding-left: 35px;
+#verification-error-file, #verification-error-json, #verification-error-image {
+  margin-top: 1.5em;
 }
 
-#continue-link-direct li, #continue-link-bittorrent li {
+#retry-json, #retry-image {
+  cursor: pointer;
+}
+
+#continue-link li {
   margin-left: 1em;
 }
 
@@ -207,4 +172,10 @@ html[dir="rtl"] .what-is-bittorrent-link { left: 1em; }
 #openpgp pre, #openpgp p.pre {
   min-width: 60em;
   width: 60em;
+}
+
+/* Override steps.css */
+
+h1 {
+  margin-left: 0 !important;
 }

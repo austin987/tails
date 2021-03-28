@@ -5,6 +5,8 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
+  puts("Cucumber tags: #{config.tag_expressions}")
+
   # Reorder the execution of some features. As we progress through a
   # run we accumulate more and more snapshots and hence use more and
   # more disk space, but some features will leave nothing behind
@@ -170,6 +172,10 @@ BeforeFeature('@product') do
       raise "The specified Tails #{type} image '#{path}' does not exist"
     end
 
+    if File.directory?(path)
+      raise "The specified Tails #{type} image '#{path}' is a directory"
+    end
+
     # Workaround: when libvirt takes ownership of the ISO/IMG image it may
     # become unreadable for the live user inside the guest in the
     # host-to-guest share used for some tests.
@@ -222,7 +228,7 @@ Before('@product') do |scenario|
   if $config['CAPTURE']
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
-    capture = IO.popen([ffmpeg,
+    capture = IO.popen(['ffmpeg',
                         '-f', 'x11grab',
                         '-s', '1024x768',
                         '-r', '15',
@@ -301,7 +307,7 @@ After('@product') do |scenario|
         'Chutney logs',
         "#{ARTIFACTS_DIR}/#{chutney_logs}"
       )
-    when 'TimeSyncingError'
+    when 'HtpdateError'
       save_failure_artifact('Htpdate logs', "#{$config['TMPDIR']}/log.htpdate")
     end
     # Note that the remote shell isn't necessarily running at all

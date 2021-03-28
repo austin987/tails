@@ -1,11 +1,16 @@
 use Test::Spec;
 
 use 5.10.1;
+use strictures 2;
 use Data::Dumper;
 use File::Temp qw{tempdir tempfile};
 use Path::Tiny;
 use Tails::IUK;
 use Test::Fatal qw{dies_ok};
+
+BEGIN {
+    plan skip_all => 'detected GitLab CI' if defined $ENV{GITLAB_CI};
+}
 
 my @genisoimage_opts = qw{--quiet -J -l -cache-inodes -allow-multidot};
 my @genisoimage = ('genisoimage', @genisoimage_opts);

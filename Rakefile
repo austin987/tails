@@ -523,6 +523,8 @@ def retrieve_artifacts(missing_ok: false)
   fetch_command = [
     'scp',
     '-i', key_file,
+    # We don't want to use any identity saved in ssh agent'
+    '-o', 'IdentityAgent=none',
     # We need this since the user will not necessarily have a
     # known_hosts entry. It is safe since an attacker must
     # compromise libvirt's network config or the user running the
@@ -642,20 +644,6 @@ end
 
 def on_jenkins?
   !ENV['JENKINS_URL'].nil?
-end
-
-desc 'Test Tails'
-task :test do
-  args = ARGV.drop_while { |x| ['test', '--'].include?(x) }
-  if on_jenkins?
-    args += ['--'] unless args.include? '--'
-    args += ['--tag', '~@fragile'] unless releasing?
-    base_branch = git_helper('base_branch')
-    if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}")
-      args += ['--tag', '@doc']
-    end
-  end
-  run_command('./run_test_suite', *args)
 end
 
 desc 'Clean up all build related files'

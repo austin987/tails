@@ -1,0 +1,42 @@
+From 2242be5b93fdf0634a6918dec07bcd406426753f Mon Sep 17 00:00:00 2001
+From: anonym <anonym@riseup.net>
+Date: Tue, 3 Nov 2020 12:13:10 +0100
+Subject: [PATCH] Don't reset encryption choice when disabling encryption
+ controls.
+
+Without this, the mail.identity.default.encryptionpolicy pref does not
+work: adding a key to an account always set its encryptionpolicy to 0
+no matter the desired default.
+
+While we're at it, also kill two lines of code before a call to
+enableEncryptionControl() that exactly replicates it.
+---
+ comm/mail/extensions/am-e2e/am-e2e.js | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/comm/mail/extensions/am-e2e/am-e2e.js b/comm/mail/extensions/am-e2e/am-e2e.js
+index 397864f8e23..3d73a959a13 100644
+--- a/comm/mail/extensions/am-e2e/am-e2e.js
++++ b/comm/mail/extensions/am-e2e/am-e2e.js
+@@ -182,8 +182,6 @@ function e2eInitializeFields() {
+       enableEnc = enableEnc || !!gKeyId;
+     }
+ 
+-    gRequireEncrypt.disabled = !enableEnc;
+-    gDoNotEncrypt.disabled = !enableEnc;
+     enableEncryptionControls(enableEnc);
+ 
+     gSignCertName.value = gIdentity.getUnicharAttribute("signing_cert_name");
+@@ -474,9 +472,6 @@ function smimeSelectCert(smime_cert) {
+ function enableEncryptionControls(do_enable) {
+   gRequireEncrypt.disabled = !do_enable;
+   gDoNotEncrypt.disabled = !do_enable;
+-  if (!do_enable) {
+-    gEncryptionChoices.value = 0;
+-  }
+ }
+ 
+ function enableSigningControls(do_enable) {
+-- 
+2.28.0
+

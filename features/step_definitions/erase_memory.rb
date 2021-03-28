@@ -199,6 +199,8 @@ When(/^I umount "([^"]*)"$/) do |mount_arg|
 end
 
 Then /^I find very few patterns in the guest's memory$/ do
+  # Give the Linux kernel's memory poisoning feature time to do its job
+  sleep 1
   coverage = pattern_coverage_in_guest_ram(@free_mem_before_fill_b)
   max_coverage = 0.008
   assert(
@@ -226,10 +228,8 @@ When /^I fill a (\d+) MiB file with a known pattern on the (persistent|root) fil
   end
   # Note that `yes` prints its own newline, so we have to skip it in
   # `pattern` below.
-  # XXX:Stretch: once we drop support < Buster we can improve the
-  # expression below to `pattern[..-2]`.
   $vm.execute_successfully(
-    "yes #{pattern[0, pattern.length - 1]} | " \
+    "yes #{pattern[0..-2]} | " \
     "dd of=#{dest_file} bs=#{pattern.size} count=#{pattern_nb}"
   )
 end

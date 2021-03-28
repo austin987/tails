@@ -10,6 +10,7 @@ GENERAL_DEPENDENCIES="
 cucumber
 devscripts
 dnsmasq-base
+ffmpeg
 gawk
 git
 i18nspector
@@ -23,8 +24,10 @@ obfs4proxy
 openssh-server
 ovmf
 pry
-python-jabberbot
-python-potr
+python3-opencv
+python3-pil
+python3-potr
+python3-slixmpp
 qemu-system-x86
 redir
 ruby-guestfs
@@ -44,19 +47,8 @@ xdotool
 xvfb
 "
 
-if [ "$(lsb_release --short --codename)" = "stretch" ]; then
-    GENERAL_DEPENDENCIES="${GENERAL_DEPENDENCIES}
-libav-tools
-python-opencv
-python-pil
-"
-else
-    GENERAL_DEPENDENCIES="${GENERAL_DEPENDENCIES}
-ffmpeg
-python3-opencv
-python3-pil
-"
-fi
+# Recent tor client require a Chutney network with tor >= 0.4.4.6 (#18190)
+MINIMUM_TOR_VERSION=0.4.4.6
 
 usage() {
     echo "Usage: $NAME [OPTION]... [--] [CUCUMBER_ARGS]...
@@ -137,12 +129,17 @@ package_installed() {
 }
 
 check_dependencies() {
+    local tor_version
     while [ -n "${1:-}" ]; do
         if ! which "${1}" >/dev/null && ! package_installed "${1}" ; then
             error "'${1}' is missing, please install it and run again."
         fi
         shift
     done
+    tor_version=$(tor --version | awk '{print $3}' | sed --regexp-extended 's,[.]$,,')
+    if dpkg --compare-versions "$tor_version" lt "$MINIMUM_TOR_VERSION"; then
+	error "Please upgrade to tor ${MINIMUM_TOR_VERSION} or newer."
+    fi
 }
 
 display_in_use() {
@@ -301,7 +298,29 @@ if [ -n "${VNC_VIEWER:-}" ]; then
     start_vnc_viewer
 fi
 
+TAGS_ARGS=""
+if [ -n "${JENKINS_URL:-}" ]; then
+    # The current Git state may not reflect the state at the time the
+    # upstream job was started (e.g. since then we git fetch + git
+    # reset --hard) so we trust the Git state described in Jenkins'
+    # environment variables instead.
+    . auto/scripts/utils.sh
+    if echo "${GIT_BRANCH}" | grep -q -E '[+-]force-all-tests$' \
+       || git_on_a_tag \
+       || [ "${GIT_BRANCH#origin/}" = testing ] \
+       || [ "${GIT_BRANCH#origin/}" = feature/tor-nightly-master ] \
+       || [ "${GIT_BRANCH#origin/}" = devel ] ; then
+        TAGS_ARGS=""
+    else
+        TAGS_ARGS="--tag ~@fragile"
+    fi
+    if [ "${UPSTREAMJOB_GIT_COMMIT}" != "${UPSTREAMJOB_GIT_BASE_BRANCH_HEAD}" ] && \
+           git_only_doc_changes_since "${UPSTREAMJOB_GIT_BASE_BRANCH_HEAD}"; then
+        TAGS_ARGS="${TAGS_ARGS} --tag @doc"
+    fi
+fi
+
 export USER_DISPLAY="${DISPLAY:-}"
 export DISPLAY=${TARGET_DISPLAY}
 
-cucumber "${@}"
+cucumber --expand ${TAGS_ARGS} "${@}"

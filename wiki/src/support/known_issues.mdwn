@@ -40,24 +40,16 @@ still be loud on help desk. Is it?
 When installing Tails, PNY USB sticks have problems with the constant write load
 and are prone to failure.
 
-<h3 id="aegis">Aegis Secure Key</h3>
+<h3 id="aegis">Aegis Secure Key 3.0</h3>
 
 <!--
-Last updated: 2015-04-10
-
-wb://bf7230b2d53d28cfb7f063d897221b60 is from someone who was able to boot
-from an Aegis Secure Key USB 3.0 and proposes to help us document it.
-
-I asked the reported about it.
+Last updated: 2020-03-27 (wb://561831720a7ca31f4c07700a12b80d1d)
 -->
 
-* Aegis Secure Key USB 2.0
-
-During the boot process, USB is briefly powered off, that causes Aegis hardware-encrypted USB sticks to lock down, and the PIN must be entered again (fast) in order to complete the boot.
-
-* Aegis Secure Key USB 3.0
-
-This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working for that hardware.
+To start Tails, remove the
+<span class="command">live-media=removable</span> boot option.
+See our instructions on [[modifying the boot options using
+the Boot Loader|doc/advanced_topics/boot_options]].
 
 <h3 id="datatraveler-2000">Kingston DataTraveler 2000, Kingston DataTraveler 100 G3</h3>
 
@@ -95,8 +87,11 @@ Last updated:
   Still, the trackpad and keyboard may not work. You may use an external
   mouse and keyboard.
 
-* MacBook Pro 2016 and 2017: the keyboard, trackpad and Touch Bar may
-  not work. If they do, please let us know so we can update this page.
+* MacBook Pro (recent models): the keyboard, trackpad, and Touch Bar might
+  not work. But, you can use an external keyboard and mouse.
+
+  If the keyboard, trackpad, and Touch Bar do work on your recent MacBook Pro
+  model, please let us know so that we can update this page accordingly.
 
 * MacBook Pro 8,3 17" (AMD Radeon HD6770M and Intel HD Graphics 3000)
 
@@ -153,6 +148,10 @@ Last updated: 2015-04-10
 -->
 
 Does not start on USB sticks.
+
+<h3 id="acer-chromebook-c720p">Acer Chromebook C720P</h3>
+
+Does not start Tails 4.13.
 
 <h3 id="amd-ryzen-vega-graphics">AMD Ryzen with Vega graphics cards</h3>
 
@@ -250,6 +249,14 @@ Specs: https://www.cnet.com/products/hp-compaq-presario-cq60-615dx/specs/
 -->
 
 Tails 3.3 does not start.
+
+<h3 id="hp-notebook-BCM943142HM">HP Notebook BCM943142HM</h3>
+
+<!--
+Last updated: 2020-12-18
+-->
+
+Does not start Tails 4.13.
 
 <h3 id="hp-pavilion-15-ab277ca">HP Pavilion 15-ab277ca</h3>
 
@@ -377,7 +384,7 @@ On some computers with a RTL8723be Wi-Fi adapter, Tails might fail to discover
 Wi-Fi networks, provide unreliable Wi-Fi connections, or have poor Wi-Fi
 performance.
 
-You can to [[add the following boot options when starting
+You can try to [[add the following boot options when starting
 Tails|doc/advanced_topics/boot_options]] until you find a
 combination that works for you. The exact combination of options that works
 depends on the computer:
@@ -404,7 +411,7 @@ Some Broadcom Wi-Fi interfaces require the
 
 The `wl` driver is not included in Tails because it is proprietary.
 
-You device requires the `wl` driver if it is in the list of devices
+Your device requires the `wl` driver if it is in the list of devices
 supported by the `broadcom-sta-dkms` package on the corresponding
 [Debian wiki page](https://wiki.debian.org/wl). If you find your device
 in the list of supported devices, then it is impossible to use your
@@ -507,6 +514,18 @@ Last updated: 2016-08-20
     synclient FingerLow=5;
     synclient FingerHigh=5;
 
+<h3 id="lenovo-ideapad-3-touchpad">Lenovo IdeaPad 3 Touchpad</h3>
+
+<!--
+Last updated: 2021-03-26
+-->
+
+This touchpad does not work by default. To fix this problem, [[add the
+following boot option when starting
+Tails|doc/advanced_topics/boot_options]]:
+
+    pci=nocrs
+
 <h2 id="bluetooth-devices-dont-work">Bluetooth devices don't work</h2>
 
 Bluetooth is not enabled in Tails for security reasons.
@@ -533,6 +552,13 @@ Note that your Persistent Storage will be safely preserved.
 
 <h2 id="persistence-disappears"><em>Persistent</em> folder disappears and data of the Persistent Storage is unavailable</h2>
 
+<!--
+Last updated: 2019-07-31
+
+We should remove this section after the new Persistent Storage is
+released unless this issue is still reported to help desk in #17116.
+-->
+
 Sometimes, the *Persistent* folder is missing and
 all the data of the Persistent Storage is unavailable.
 
@@ -541,34 +567,46 @@ file has disappeared. However, the files in the
 *Persistent* folder and all the other data in the Persistent Storage
 should still exist.
 
-If you encounter this problem:
+If you encounter this problem, you can either:
 
-1. Unlock the Persistent Storage in
-   the Welcome Screen when starting Tails.
+- Turn on again the feature of the Persistent Storage that you need:
 
-1. Choose
-   <span class="menuchoice">
-     <span class="guimenu">Applications</span>&nbsp;▸
-     <span class="guisubmenu">Tails</span>&nbsp;▸
-     <span class="guimenuitem">Configure persistent volume</span></span>.
+  1. Unlock the Persistent Storage in
+     the Welcome Screen when starting Tails.
 
-1. If you are asked to enter a passphrase, enter the same passphrase that you
-   use to unlock your Persistent Storage.
+  1. Choose
+     <span class="menuchoice">
+       <span class="guimenu">Applications</span>&nbsp;▸
+       <span class="guisubmenu">Tails</span>&nbsp;▸
+       <span class="guimenuitem">Configure persistent volume</span></span>.
 
-1. Turn on the features of the Persistent Storage that you had turned on previously.
+  1. If you are asked to enter a passphrase, enter the same passphrase that you
+     use to unlock your Persistent Storage.
 
-1. Click <span class="button">Save</span>, then restart Tails.
+  1. Turn on the features of the Persistent Storage that you had turned on previously.
 
-Your *Persistent* folder and all the data of the Persistent Storage
-should be restored.
+  1. Click <span class="button">Save</span>, then restart Tails.
 
-If the above instructions do not fix the problem, you might need to fix the
-ownership of TailsData_unlocked.
+  Your *Persistent* folder and all the data of the Persistent Storage
+  should be restored.
+
+- Restore the *persistence.conf* file from its backup:
+
+  1. Unlock the Persistent Storage and [[set up an administration password
+     |doc/first_steps/welcome_screen/administration_password]] when
+     starting Tails.
+
+  1. Execute the following command in a *Terminal*:
+
+         sudo cp -a /live/persistence/TailsData_unlocked/persistence.conf{.bak,}
+
+If neither of the above instructions fixes the problem, you might need to fix the
+ownership of `TailsData_unlocked`.
 
 To fix the ownership of TailsData_unlocked, set an administration password and
 execute the following command in a terminal:
 
-`sudo chown root:root /live/persistence/TailsData_unlocked`
+    sudo chown root:root /live/persistence/TailsData_unlocked
 
 <h2 id="languages-incorrect-keyboard-layout">Some languages do not have the correct keyboard layout set by default</h2>
 

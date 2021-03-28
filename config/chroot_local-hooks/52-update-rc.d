@@ -11,9 +11,11 @@ systemctl enable memlockd.service
 # Enable our own systemd unit files
 systemctl enable initramfs-shutdown.service
 systemctl enable onion-grater.service
+systemctl enable tails-allow-external-TailsData-access.service
 systemctl enable tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
 systemctl enable tails-autotest-broken-Xorg.service
 systemctl enable tails-autotest-remote-shell.service
+systemctl enable tails-create-netns.service
 systemctl enable tails-remove-overlayfs-dirs.service
 systemctl enable tails-set-wireless-devices-state.service
 systemctl enable tails-shutdown-on-media-removal.service
@@ -33,6 +35,7 @@ systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
+systemctl --global enable tails-a11y-proxy-netns@onioncircs.service
 
 # Use socket activation only, to delay the startup of cupsd.
 # In practice, this means that cupsd is started during

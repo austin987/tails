@@ -18,7 +18,7 @@ Operating system
 </p>
 </div>
 
-If you usually run another operating system than Debian Stretch,
+If you usually run another operating system than Debian
 Buster, Bullseye or Sid, then you need to:
 
 1. Enable nested virtualization on your host system.
@@ -46,19 +46,13 @@ To install the dependencies on our test suite:
 2. Install the following packages:
 
         dist=$(lsb_release --short --codename)
-        if [ "${dist}" != stretch -o "${dist}" != buster ]; then
-            # For python-jabberbot and python-potr, that were removed after Buster
-            echo 'deb http://ftp.us.debian.org/debian/ buster main' \
-                | sudo tee /etc/apt/sources.list.d/buster.list
-            # For unversioned python packages, needed by the above
-            echo 'deb http://deb.tails.boum.org/ isotester-bullseye main' \
-                | sudo tee /etc/apt/sources.list.d/isotester-bullseye.list
-        fi
         if [ "${dist}" = buster ]; then
-            echo 'deb http://ftp.us.debian.org/ buster-backports main' \
+            echo 'deb http://ftp.us.debian.org/debian/ buster-backports main' \
                 | sudo tee /etc/apt/sources.list.d/buster-backports.list
-            echo -e "Package: qemu*\nPin: release n=buster-backports, o=Debian Backports\nPin-Priority: 990" \
+            echo -e "Package: qemu* libfdt1\nPin: release n=buster-backports, o=Debian Backports\nPin-Priority: 990" \
                 | sudo tee /etc/apt/preferences.d/qemu
+            echo -e "Package: tor tor-geoipdb\nPin: release n=buster-backports, o=Debian Backports\nPin-Priority: 990" \
+                | sudo tee /etc/apt/preferences.d/tor
         fi
         sudo apt update && \
         sudo apt install \
@@ -78,9 +72,8 @@ To install the dependencies on our test suite:
             openssh-server \
             ovmf \
             pry \
-            python-jabberbot \
-            python-potr \
-            qemu-kvm \
+            python3-potr \
+            python3-slixmpp \
             qemu-system-common \
             qemu-system-x86 \
             qemu-utils \
@@ -103,17 +96,9 @@ To install the dependencies on our test suite:
             x264 \
             xdotool \
             xvfb \
-            $(
-                if [ "${dist}" = stretch ]; then
-                    echo "libav-tools
-                          python-opencv
-                          python-pil"
-                else
-                    echo "ffmpeg
-                          python3-opencv
-                          python3-pil"
-                fi
-            ) \
+            ffmpeg \
+            python3-opencv \
+            python3-pil \
             && \
         sudo service libvirtd restart
 
@@ -145,22 +130,24 @@ If you have AppArmor enabled:
   to `/etc/apparmor.d/libvirt/TEMPLATE.qemu`, in the
   `profile LIBVIRT_TEMPLATE` section; then delete
   `/etc/apparmor.d/libvirt/libvirt-*` and restart the test suite.
-  On Debian Stretch, if you use a custom `TMPDIR` to run the test suite,
+  If you use a custom `TMPDIR` to run the test suite,
   replace `/tmp/TailsToaster` with the value of that `$TMPDIR`.
 
-Patched QEMU
-------------
+Firewall
+----------
 
-Due to [[!tails_ticket 12142]]
-aka. [[!debbug 851694]], any test scenario that creates a persistent
-volume will fail. To work around this problem, rebuild [[!debpts
-qemu]] locally with the upstream fix applied. For example, the `qemu`
-source package in this APT suite has the fix:
+If you have a firewall enabled, please check that you can receive connections from VMs back to your host
+system. A typical rule to accomplish this might be:
 
-        deb-src http://deb.tails.boum.org/ isotester-stretch main
+```
+iptables -I INPUT 1 -i virbr+ -j ACCEPT
+```
 
-This problem does not affect host systems that run Debian Buster
-or newer.
+but of course this depends on the specific firewall you have.
+
+The rule posted above will accept any connections from any VM you have on your system. If you have other VMs
+running on your system and don't want to accept their connection, please take care before running this
+command.
 
 Special use cases
 =================

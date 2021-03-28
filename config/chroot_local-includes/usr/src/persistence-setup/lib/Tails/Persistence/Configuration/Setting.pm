@@ -13,6 +13,7 @@ use Function::Parameters;
 use Glib qw{TRUE FALSE};
 use List::MoreUtils qw{all};
 use Pango;
+use POSIX;
 use UUID::Tiny ':std';
 
 use Glib::Object::Introspection;
@@ -22,10 +23,7 @@ Glib::Object::Introspection->setup(
     package  => 'Gio'
 );
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
+use Locale::TextDomain 'tails';
 
 use Moo;
 use MooX::late;
@@ -110,7 +108,7 @@ has 'configuration_app_desktop_id' => (
 =cut
 
 method _build_name () {
-    $self->encoding->decode(gettext('Custom'));
+    __('Custom');
 }
 
 method _build_id () {
@@ -231,9 +229,7 @@ method toggled_cb () {
 
 method configuration_cb () {
     my $configuration_desktop_app_info = Gio::DesktopAppInfo->new(
-        $ENV{DEV_MODE}
-            ? 'yelp.desktop'
-            : $self->configuration_app_desktop_id,
+        $self->configuration_app_desktop_id,
     );
     $configuration_desktop_app_info->launch();
 }

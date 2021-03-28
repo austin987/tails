@@ -26,10 +26,15 @@ add_gtk_bookmark_for "${HOME}/Tor Browser"
 if persistence_is_enabled_for "${HOME}/Persistent" ; then
     add_gtk_bookmark_for "${HOME}/Persistent"
 
-    if persistence_is_enabled_read_write ; then
+    if persistence_is_enabled ; then
 	add_gtk_bookmark_for "${HOME}/Persistent/Tor Browser" \
                              "Tor Browser (persistent)"
     fi
+fi
+
+DOTFILES_SOURCE_DIR='/live/persistence/TailsData_unlocked/dotfiles'
+if [ -e "$DOTFILES_SOURCE_DIR" ]; then
+    add_gtk_bookmark_for "$DOTFILES_SOURCE_DIR" "Dotfiles"
 fi
 
 for launcher in Report_an_error tails-documentation ; do

@@ -27,45 +27,6 @@ mislead you.
 
 # Gather input data
 
-## Inputs from the release process
-
-Look at the "Environment" section at the beginning of [[the release
-process instructions|contribute/release_process]] and set the
-following variables as instructed:
-
-* `ARTIFACTS`
-* `DIST`
-* `ISOS`
-* `RELEASE_BRANCH`
-* `VERSION`
-
-<!-- Now for the only tricky part, setting `IUK_SOURCE_VERSIONS`. It should -->
-<!-- simply list the old Tails versions that will get an automatic upgrade -->
-<!-- to the current release, and should be set correctly by this command -->
-<!-- most of the time: -->
-
-<!--     IUK_SOURCE_VERSIONS="$( -->
-<!--         curl "http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/" \ -->
-<!--         | grep --extended-regexp --only-matching \ -->
-<!--                "Tails_amd64_[^_]+_to_${VERSION:?}.iuk" \ -->
-<!--         | sort -u \ -->
-<!--         | tr '_' ' ' \ -->
-<!--         | cut -d' ' -f3 -->
-<!--     )" -->
-<!--     echo -e "Got these IUK source versions:\n${IUK_SOURCE_VERSIONS}" -->
-
-<!-- Now sanity check the contents of `IUK_SOURCE_VERSIONS`: -->
-
-<!-- * If empty, the RM has probably not uploaded them yet so you may have -->
-<!--   to wait. -->
-<!-- * Make sure each listed version actually has been released! :) -->
-<!-- * [[Figure out the rules for how to set this -->
-<!--   variable|contribute/release_process#prepare-iuk]] and double-check -->
-<!--   that it makes sense! Note that exceptions happen (e.g. there could -->
-<!--   be a bug in some old versions upgrader so we skip it). -->
-<!-- * If the release notes have already been written (generally there is an -->
-<!--   issue about it) it should list which versions have automatic upgrades. -->
-
 ## Inputs from manual testers
 
 A manual tester should have sent you
@@ -76,10 +37,19 @@ clear-signed hashes for all products of this release. Then:
 2. Put the hashes, excluding the OpenPGP signature data, into a file
    called `SHA512SUMS.txt`.
 
+<!--     IUK_SOURCE_VERSIONS="$(bin/iuk-source-versions "$VERSION")" -->
+<!--     echo -e "Got these IUK source versions:\n${IUK_SOURCE_VERSIONS}" -->
+
 ## Your inputs
 
 Set these environment variables accordingly:
 
+* `ARTIFACTS`: the directory where build artifacts (e.g. the `.packages` file) land
+* `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
+* `ISOS`: the directory where one stores `tails-amd64-*` sub-directories,
+  like the ones downloaded with BitTorrent.
+* `RELEASE_BRANCH`: `testing` if this is a major release, else `stable`
+* `VERSION`: the version you're trying to reproduce
 <!-- * `ISOS_CHECKOUT`: path to your Tails ISO history repo checkout. -->
 <!-- * `PACKAGES_FILE="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.packages"` -->
 * `PUBLISHED_ARTIFACTS`: some _new_ directory where you can download
@@ -90,16 +60,13 @@ Set these environment variables accordingly:
 
 ## Derived environment variables
 
-    cd "${TAILS_CHECKOUT:?}" && \
-    TAG="$(echo $VERSION | tr '~' '-')" && \
-    TAG_COMMIT="$(git rev-parse --verify ${TAG:?})" && \
-    git fetch && \
-    git checkout "${RELEASE_BRANCH:?}" && \
-    git merge "origin/${RELEASE_BRANCH:?}"
+    TAG="$(echo $VERSION | tr '~' '-')"
 
 # Build your own products
 
 ## Build your own images
+
+0. Ensure your [[build setup|contribute/build]] is up-to-date.
 
 1. Fetch and verify the Git tag:
 
@@ -120,7 +87,7 @@ Set these environment variables accordingly:
         git submodule update --init && \
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
         rake build && \
-        mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
+        mkdir -p "${ISOS:?}/tails-amd64-${VERSION:?}" && \
         mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}".* \
            "${ISOS:?}/tails-amd64-${VERSION:?}/"
 
@@ -136,15 +103,7 @@ Set these environment variables accordingly:
 <!--             cp --dereference --recursive "${tails_dir}" "${ISOS:?}" -->
 <!--         done -->
 
-<!-- 2. Set your `iuk` Git checkout to the desired state: -->
-
-<!--            IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \ -->
-<!--            if [ -z "${IUK_VERSION}" ]; then -->
-<!--                echo 'Failed to determine IUK_VERSION, aborting' && \ -->
-<!--                false -->
-<!--            fi -->
-
-<!-- 3. Follow the [[Build the Incremental Upgrade -->
+<!-- 2. Follow the [[Build the Incremental Upgrade -->
 <!--    Kits|contribute/release_process#prepare-iuk]] instructions. Note that -->
 <!--    the value of `SOURCE_DATE_EPOCH` set above is needed! -->
 
