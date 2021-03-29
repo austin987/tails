@@ -47,8 +47,6 @@ When /^I configure APT to use non-onion sources$/ do
   script = <<-SCRIPT
   use strict;
   use warnings FATAL => "all";
-  s{vwakviie2ienjx6t[.]onion}{ftp.us.debian.org};
-  s{sgvtcaew4bxjd7ln[.]onion}{security.debian.org};
   s{sdscoq7snqtznauu[.]onion}{deb.torproject.org};
   s{umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion}{deb.tails.boum.org};
   SCRIPT
