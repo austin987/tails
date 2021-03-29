@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-This module is useful for all those scripts that are meant to run a specific application inside a network
-namespace.
+This module is useful for all those scripts that are meant to run a specific application inside a network namespace.
 
 This functions make many assumptions about the working of it; that's in the hope that those scripts will keep
 a somewhat similar structure. This is:
@@ -45,13 +44,18 @@ def run_in_netns(*args, netns, user="amnesia"):
     os.execvp(cmd[0], cmd)
 
 
-def run(real_executable: str, netns: str, wrapper_executable: str, keep_env = True, extra_env={}):
+def run(
+    real_executable: str,
+    netns: str,
+    wrapper_executable: str,
+    keep_env=True,
+    extra_env={},
+    extra_args=[],
+):
     if os.getuid() == 0:
         run_in_netns(real_executable, netns=netns)
     else:
         env = os.environ.copy() if keep_env else {}
         env.update(extra_env)
-        args = (
-            ["sudo", "--non-interactive", wrapper_executable]
-        )
+        args = ["sudo", "--non-interactive", wrapper_executable] + extra_args
         os.execvpe(args[0], args, env=env)
