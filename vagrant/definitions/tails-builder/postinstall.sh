@@ -84,7 +84,6 @@ apt-get -y install \
         debootstrap \
         dosfstools \
         dpkg-dev \
-        faketime \
         gdisk \
         gettext \
         gir1.2-udisks-2.0 \
