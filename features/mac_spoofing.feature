@@ -8,9 +8,9 @@ Feature: Spoofing MAC addresses
   Scenario: MAC address spoofing is disabled
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I capture all network traffic
-    And the network is plugged
     When I disable MAC spoofing in Tails Greeter
     And I log in to a new session
+    And the network is plugged
     And Tor is ready
     Then 1 network interface is enabled
     And the 1st network device has its real MAC address configured
@@ -22,8 +22,8 @@ Feature: Spoofing MAC addresses
   Scenario: MAC address spoofing is successful
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I capture all network traffic
-    And the network is plugged
     When I log in to a new session
+    And the network is plugged
     And Tor is ready
     Then 1 network interface is enabled
     And the 1st network device has a spoofed MAC address configured
