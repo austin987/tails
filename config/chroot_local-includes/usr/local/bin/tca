@@ -1,31 +1,68 @@
-#!/bin/sh
+#!/usr/bin/python3
+"""
+wrapper over TCA.
 
-set -u
+elevates to sudo, then connect to whatever is needed and drop privileges again.
+"""
+import os
+import sys
+import shutil
+from pathlib import Path
+from subprocess import check_output, CalledProcessError
 
-if [ "$(id -u)" -ne 0 ]
-then
-    exec sudo -n "$0" "$@"
-fi
+from tailslib.gnome import gnome_env_vars
 
-PYTHON_BIN="$(which python3)"
-PROGRAM='/usr/lib/python3/dist-packages/tca/application.py'
 
-if [ "$(pgrep -u amnesia -c -f -x "$PYTHON_BIN $PROGRAM")" -gt 0 ]
-then
-    echo "tca is already running" >&2
-    exit 0
-fi
+def main():
+    if os.getuid() != 0:
+        os.execvpe("sudo", ["sudo", "-n", __file__] + sys.argv[1:], env=os.environ)
+        return
+    python_bin = "/usr/bin/python3"
+    program = "/usr/lib/python3/dist-packages/tca/application.py"
 
-# XXX: is this position safe enough? can we trust that amnesia can do nothing bad to that directory?
-confdir="/home/amnesia/.config/tca/"
-conffile="$confdir/tca.conf"
-mkdir -m 700 -p "$confdir"
-touch "$conffile"
-chown -R root:root "$confdir"
-chmod -R go-rwx "$confdir"
-exec /usr/local/lib/connect-drop \
-         -c "FILE:$conffile:r+" \
-         -c "TCP:127.0.0.1:9051" \
-         -- /sbin/runuser -u amnesia -- \
-         env DISPLAY="${DISPLAY:-}" -- \
-         "$PYTHON_BIN" "$PROGRAM" "$@"
+    try:
+        running_processes = int(
+            check_output(
+                [
+                    "pgrep",
+                    "--count",
+                    "--uid",
+                    "amnesia",
+                    "--full",
+                    "--exact",
+                    "%s %s" % (python_bin, program),
+                ]
+            )
+        )
+    except CalledProcessError as exc:
+        if exc.returncode == 1:
+            running_processes = 0
+        else:
+            raise
+    if running_processes:
+        print("TCA is already running", file=sys.stderr)
+        return
+
+    confdir = Path("~amnesia/.config/tca/").expanduser()
+    conffile = confdir / "tca.conf"
+    confdir.mkdir(mode=0o700, exist_ok=True)
+    shutil.chown(str(confdir), user=0, group=0)
+    confdir.chmod(0o700)
+    conffile.touch(mode=0o600)
+
+    connect_drop = [
+        "/usr/local/lib/connect-drop",
+        "-c",
+        "FILE:%s:r+" % conffile,
+        "-c" "TCP:127.0.0.1:9051",
+    ]
+    runuser = ["/sbin/runuser", "-u", "amnesia"]
+    envcmd = ["env", *gnome_env_vars()]
+    tcacmd = [python_bin, program]  # + sys.argv[1:]
+    args = [*connect_drop, "--", *runuser, "--", *envcmd, "--", *tcacmd]
+
+    os.execv(args[0], args)
+
+
+if __name__ == "__main__":
+    main()
