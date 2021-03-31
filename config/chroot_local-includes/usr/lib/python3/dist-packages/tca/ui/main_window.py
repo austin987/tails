@@ -23,7 +23,7 @@ from gi.repository import Gdk, Gtk, GLib  # noqa: E402
 
 MAIN_UI_FILE = "main.ui"
 CSS_FILE = "tca.css"
-IMG_SIDE = '/usr/share/doc/tails/website/about/footprints.svg'
+IMG_SIDE = "/usr/share/doc/tails/website/about/footprints.svg"
 
 # META {{{
 # Naming convention for widgets:
@@ -55,21 +55,23 @@ class StepChooseHideMixin:
         self.builder.get_object("radio_unnoticed_yes").set_active(False)
         self.builder.get_object("radio_unnoticed_no").set_active(False)
         self.builder.get_object("radio_unnoticed_none").hide()
-        if 'hide' in self.state['hide']:
-            if self.state['hide']['hide']:
+        if "hide" in self.state["hide"]:
+            if self.state["hide"]["hide"]:
                 self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
                 self.builder.get_object("radio_unnoticed_yes").set_active(True)
             else:
                 self.builder.get_object("radio_unnoticed_yes").set_sensitive(False)
                 self.builder.get_object("radio_unnoticed_no").set_active(True)
-                if self.state['hide']['bridge']:
-                    self.builder.get_object("radio_unnoticed_no_bridge").set_active(True)
+                if self.state["hide"]["bridge"]:
+                    self.builder.get_object("radio_unnoticed_no_bridge").set_active(
+                        True
+                    )
 
     def _step_hide_next(self):
-        if self.state['hide']['bridge']:
-            self.change_box('bridge')
+        if self.state["hide"]["bridge"]:
+            self.change_box("bridge")
         else:
-            self.change_box('progress')
+            self.change_box("progress")
 
     def cb_step_hide_radio_changed(self, *args):
         easy = self.builder.get_object("radio_unnoticed_no").get_active()
@@ -245,7 +247,7 @@ class StepConnectProgressMixin:
                 progress.set_text("Error setting bridges!")
                 self.state["progress"]["error"] = "setconf"
                 self.state["progress"]["error_data"] = exc.message
-                self.change_box('error')
+                self.change_box("error")
                 return False
             print("applied!")
             progress.set_fraction(0.20)
@@ -465,15 +467,15 @@ class TCAMainWindow(
                 self.state.update(content)
         else:
             data = self.app.configurator.read_conf()
-            if data and data.get('ui'):
-                self.state['hide'].update(data['ui'].get('hide', {}))
+            if data and data.get("ui"):
+                self.state["hide"].update(data["ui"].get("hide", {}))
         self.current_language = "en"
         self.connect("delete-event", self.cb_window_delete_event, None)
         self.set_position(Gtk.WindowPosition.CENTER)
 
         # Load custom CSS
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_path(os.path.join(tca.config.data_path , CSS_FILE))
+        css_provider.load_from_path(os.path.join(tca.config.data_path, CSS_FILE))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             css_provider,
@@ -497,7 +499,7 @@ class TCAMainWindow(
                 revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
 
         self.main_container = builder.get_object("box_main_container_image_step")
-        self.builder.get_object('main_img_side').set_from_file(IMG_SIDE)
+        self.builder.get_object("main_img_side").set_from_file(IMG_SIDE)
         self.add(self.main_container)
         self.change_box(self.state["step"])
 
@@ -519,9 +521,9 @@ class TCAMainWindow(
 
     def save_conf(self, successful_connect=False):
         if not successful_connect:
-            self.app.configurator.save_conf({'ui': {'hide': self.state['hide']}})
+            self.app.configurator.save_conf({"ui": {"hide": self.state["hide"]}})
         else:
-            self.app.configurator.save_conf({'ui': self.state})
+            self.app.configurator.save_conf({"ui": self.state})
 
     def change_box(self, name: str, **kwargs):
         children = self.main_container.get_children()

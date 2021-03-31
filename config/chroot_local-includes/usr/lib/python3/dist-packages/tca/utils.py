@@ -126,7 +126,7 @@ class TorConnectionProxy:
     ) -> "TorConnectionProxy":
         address, port = val.split(":")
         auth: Optional[Tuple[str, str]] = None
-        if auth_values  and any(auth_values):
+        if auth_values and any(auth_values):
             if len(auth_values) == 1:
                 auth = cast(Tuple[str, str], tuple(auth_values[0].split(":", 1)))
             elif len(auth_values) == 2:
@@ -244,7 +244,6 @@ class TorConnectionConfig:
 
         return config
 
-
     @classmethod
     def load_from_dict(cls, obj):
         """this method is suitable to retrieve configuration from a JSON object"""
@@ -294,13 +293,11 @@ class TorLauncherUtils:
     def save_conf(self, extra={}):
         if self.tor_connection_config is None:
             return
-        data = {'tor': self.tor_connection_config.to_dict()}
+        data = {"tor": self.tor_connection_config.to_dict()}
         data.update(extra)
         self.config_buf.seek(0, os.SEEK_SET)
         self.config_buf.truncate()
-        self.config_buf.write(
-            json.dumps(data, indent=2)
-        )
+        self.config_buf.write(json.dumps(data, indent=2))
         self.config_buf.flush()
 
     def read_conf(self):
