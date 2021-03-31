@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from pathlib import Path
+import re
 import subprocess
 import ipaddress
 import time
@@ -181,21 +182,31 @@ class TorConnectionConfig:
         >>> TorConnectionConfig.parse_bridge_line("  ")
 
         Just like comments
-        >>> TorConnectionConfig.parse_bridge_line(" # 1.2.3.4")
+        >>> TorConnectionConfig.parse_bridge_line(" # 1.2.3.4:443")
 
         normal bridges are expanded
-        >>> TorConnectionConfig.parse_bridge_line("1.2.3.4")
-        'bridge 1.2.3.4'
+        >>> TorConnectionConfig.parse_bridge_line("1.2.3.4:25")
+        'bridge 1.2.3.4:25'
 
         spaces are normalized
-        >>> TorConnectionConfig.parse_bridge_line("  transport   1.2.3.4 foo")
-        'transport 1.2.3.4 foo'
+        >>> TorConnectionConfig.parse_bridge_line("  transport   1.2.3.4:25 foo")
+        'transport 1.2.3.4:25 foo'
 
         An error is raised if the IP is not valid
-        >>> TorConnectionConfig.parse_bridge_line("1.2.3")
+        >>> TorConnectionConfig.parse_bridge_line("1.2.3:25")
         Traceback (most recent call last):
             ...
         ValueError: '1.2.3' does not appear to be an IPv4 or IPv6 address
+
+        An error is raised if the IP-port malformed is not valid
+        >>> TorConnectionConfig.parse_bridge_line("1.2.3.4")
+        Traceback (most recent call last):
+            ...
+        ValueError: Bridge address is malformed: '1.2.3.4'
+        >>> TorConnectionConfig.parse_bridge_line("1.2.3.4:1000:1000")
+        Traceback (most recent call last):
+            ...
+        ValueError: Bridge address is malformed: '1.2.3.4:1000:1000'
         """
         line = line.strip()
         if not line:
@@ -203,13 +214,24 @@ class TorConnectionConfig:
         if line.startswith("#"):
             return None
         parts = line.split()
-        if not parts[0].isalnum():
+        transport_name_re = re.compile(r'^[a-zA-Z0-9_]+$')
+        if not transport_name_re.match(parts[0]):
             parts.insert(0, "bridge")
-        bridge_ip = parts[1]
+        bridge_ip_port = parts[1]
+        bridge_parts = bridge_ip_port.split(':')
+        if len(bridge_parts) != 2:
+            raise ValueError("Bridge address is malformed: '%s'" % bridge_ip_port)
+        bridge_ip, bridge_port = bridge_parts
         try:
             ipaddress.ip_address(bridge_ip)
         except ValueError:
             raise
+        try:
+            int(bridge_port)
+        except ValueError:
+            raise
+        if int(bridge_port) > 65535:
+            raise ValueError("invalid port number")
         return " ".join(parts)
 
     @classmethod
@@ -219,16 +241,14 @@ class TorConnectionConfig:
 
     @classmethod
     def get_default_bridges(cls, only_type: Optional[str] = None) -> List[str]:
-        """
-        Get default bridges from a txt file.
-        """
+        """Get default bridges from a txt file."""
         bridges = []
         with open(os.path.join(tca.config.data_path, "default_bridges.txt")) as buf:
             for line in buf:
                 parsed = cls.parse_bridge_line(line)
                 if not parsed:
                     continue
-                if only_type and parsed[0] != only_type:
+                if only_type and parsed.split()[0] != only_type:
                     continue
                 bridges.append(parsed)
         return bridges

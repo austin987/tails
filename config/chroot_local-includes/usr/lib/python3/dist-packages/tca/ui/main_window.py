@@ -123,7 +123,7 @@ class StepChooseBridgeMixin:
         text = self.get_object("text").get_property("buffer").get_property("text")
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
-        except ValueError:
+        except (ValueError, IndexError):
             return False
         return len(bridges) > 0
 
