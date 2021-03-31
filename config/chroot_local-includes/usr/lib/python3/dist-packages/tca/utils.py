@@ -174,11 +174,33 @@ class TorConnectionConfig:
 
     @classmethod
     def parse_bridge_line(cls, line: str) -> Optional[str]:
-        """Validate bridges syntax."""
+        """
+        Validate bridges syntax.
+
+        Empty lines are ignored
+        >>> TorConnectionConfig.parse_bridge_line("  ")
+
+        Just like comments
+        >>> TorConnectionConfig.parse_bridge_line(" # 1.2.3.4")
+
+        normal bridges are expanded
+        >>> TorConnectionConfig.parse_bridge_line("1.2.3.4")
+        'bridge 1.2.3.4'
+
+        spaces are normalized
+        >>> TorConnectionConfig.parse_bridge_line("  transport   1.2.3.4 foo")
+        'transport 1.2.3.4 foo'
+
+        An error is raised if the IP is not valid
+        >>> TorConnectionConfig.parse_bridge_line("1.2.3")
+        Traceback (most recent call last):
+            ...
+        ValueError: '1.2.3' does not appear to be an IPv4 or IPv6 address
+        """
         line = line.strip()
         if not line:
             return None
-        if line.startswith('#'):
+        if line.startswith("#"):
             return None
         parts = line.split()
         if not parts[0].isalnum():
@@ -188,12 +210,28 @@ class TorConnectionConfig:
             ipaddress.ip_address(bridge_ip)
         except ValueError:
             raise
-        return ' '.join(parts)
+        return " ".join(parts)
 
     @classmethod
     def parse_bridge_lines(cls, lines: List[str]) -> List[str]:
         parsed_bridges = (cls.parse_bridge_line(l) for l in lines)
         return [b for b in parsed_bridges if b]
+
+    @classmethod
+    def get_default_bridges(cls, only_type: Optional[str] = None) -> List[str]:
+        """
+        Get default bridges from a txt file.
+        """
+        bridges = []
+        with open(os.path.join(tca.config.data_path, "default_bridges.txt")) as buf:
+            for line in buf:
+                parsed = cls.parse_bridge_line(line)
+                if not parsed:
+                    continue
+                if only_type and parsed[0] != only_type:
+                    continue
+                bridges.append(parsed)
+        return bridges
 
     def enable_bridges(self, bridges: List[str]):
         if not bridges:
@@ -202,21 +240,13 @@ class TorConnectionConfig:
         bridges = self.__class__.parse_bridge_lines(bridges)
         self.bridges.extend(bridges)
 
-    def default_bridges(self, only_type=None):
+    def default_bridges(self, only_type: Optional[str] = None):
         """
         Set default bridges.
 
         useful for Tor blocking, not for unnoticed-mode
         """
-        bridges = []
-        with open(os.path.join(tca.config.data_path, "default_bridges.txt")) as buf:
-            for line in buf:
-                parsed = self.__class__.parse_bridge_line(line)
-                if not parsed:
-                    continue
-                if only_type and parsed[0] != only_type:
-                    continue
-                bridges.append(parsed)
+        bridges = self.__class__.get_default_bridges(only_type)
         self.enable_bridges(bridges)
 
     @classmethod
