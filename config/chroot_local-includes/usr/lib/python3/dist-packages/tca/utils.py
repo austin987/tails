@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import subprocess
+import ipaddress
 import time
 import logging
 import os
@@ -171,23 +172,52 @@ class TorConnectionConfig:
     def disable_bridges(self):
         self.bridges.clear()
 
-    def enable_bridges(self, bridges: list):
+    @classmethod
+    def parse_bridge_line(cls, line: str) -> Optional[str]:
+        """Validate bridges syntax."""
+        line = line.strip()
+        if not line:
+            return None
+        if line.startswith('#'):
+            return None
+        parts = line.split()
+        if not parts[0].isalnum():
+            parts.insert(0, "bridge")
+        bridge_ip = parts[1]
+        try:
+            ipaddress.ip_address(bridge_ip)
+        except ValueError:
+            raise
+        return ' '.join(parts)
+
+    @classmethod
+    def parse_bridge_lines(cls, lines: List[str]) -> List[str]:
+        parsed_bridges = (cls.parse_bridge_line(l) for l in lines)
+        return [b for b in parsed_bridges if b]
+
+    def enable_bridges(self, bridges: List[str]):
         if not bridges:
             raise ValueError("Can't set empty bridge list")
         self.bridges.clear()
+        bridges = self.__class__.parse_bridge_lines(bridges)
         self.bridges.extend(bridges)
 
     def default_bridges(self, only_type=None):
-        """Set default bridges: useful for Tor blocking, not for unnoticed-mode"""
-        l = []
+        """
+        Set default bridges.
+
+        useful for Tor blocking, not for unnoticed-mode
+        """
+        bridges = []
         with open(os.path.join(tca.config.data_path, "default_bridges.txt")) as buf:
             for line in buf:
-                if not line.strip() or line.startswith("#"):
+                parsed = self.__class__.parse_bridge_line(line)
+                if not parsed:
                     continue
-                if only_type and line.split()[0] != only_type:
+                if only_type and parsed[0] != only_type:
                     continue
-                l.append(line.strip())
-        self.enable_bridges(l)
+                bridges.append(parsed)
+        self.enable_bridges(bridges)
 
     @classmethod
     def load_from_tor_stem(cls, stem_controller: Controller):

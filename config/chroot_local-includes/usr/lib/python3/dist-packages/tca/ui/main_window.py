@@ -10,7 +10,7 @@ import stem
 
 from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
-from tca.utils import TorConnectionProxy
+from tca.utils import TorConnectionProxy, TorConnectionConfig
 import tca.config
 
 
@@ -117,14 +117,13 @@ class StepChooseBridgeMixin:
 
         self.builder.get_object("step_bridge_radio_type").set_active(hide)
 
-    def _step_bridge_is_text_valid(self):
-        # XXX: do proper validation!
-        text = (
-            self.builder.get_object("step_bridge_text")
-            .get_property("buffer")
-            .get_property("text")
-        )
-        return len(text) > 10
+    def _step_bridge_is_text_valid(self) -> bool:
+        text = self.get_object("text").get_property("buffer").get_property("text")
+        try:
+            bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
+        except ValueError:
+            return False
+        return len(bridges) > 0
 
     def _step_bridge_set_actives(self):
         default = self.builder.get_object("step_bridge_radio_default").get_active()
@@ -156,9 +155,8 @@ class StepChooseBridgeMixin:
                 .get_property("buffer")
                 .get_property("text")
             )
-            self.state["bridge"]["bridges"] = [
-                line.strip() for line in text.split("\n")
-            ]
+            self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
+
         self.change_box("progress")
 
     def cb_step_bridge_btn_back_clicked(self, *args):
