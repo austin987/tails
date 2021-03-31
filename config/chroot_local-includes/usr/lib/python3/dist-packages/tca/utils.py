@@ -184,9 +184,14 @@ class TorConnectionConfig:
         Just like comments
         >>> TorConnectionConfig.parse_bridge_line(" # 1.2.3.4:443")
 
-        normal bridges are expanded
+        normal bridges are ok
         >>> TorConnectionConfig.parse_bridge_line("1.2.3.4:25")
-        'bridge 1.2.3.4:25'
+        '1.2.3.4:25'
+
+        specifying "normal" is fine, too
+        >>> TorConnectionConfig.parse_bridge_line("bridge 1.2.3.4:25")
+        '1.2.3.4:25'
+
 
         spaces are normalized
         >>> TorConnectionConfig.parse_bridge_line("  transport   1.2.3.4:25 foo")
@@ -232,6 +237,9 @@ class TorConnectionConfig:
             raise
         if int(bridge_port) > 65535:
             raise ValueError("invalid port number")
+
+        if parts[0] == 'bridge':  # normal can be omitted
+            del parts[0]
         return " ".join(parts)
 
     @classmethod
