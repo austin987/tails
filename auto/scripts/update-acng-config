@@ -5,10 +5,8 @@ set -u
 set -o pipefail
 
 list_origins () {
-   (
-      cd config/APT_snapshots.d/
-      ls --color=never -1 | grep -v --line-regexp '\.placeholder'
-   )
+   find config/APT_snapshots.d/ -mindepth 1 -maxdepth 1 \
+	-name '.placeholder' -o -printf '%f\n'
 }
 
 print_tagged_snapshots_pool_url () {
@@ -22,7 +20,7 @@ print_tagged_snapshots_pool_url () {
 conf=/etc/apt-cacher-ng/tails-snapshots.conf
 for origin in $(list_origins) ; do
    [ "$origin" != .placeholder ] || continue
-   origin_without_dashes=$(echo "$origin" | sed -e 's,-,,g')
+   origin_without_dashes="${origin//-/}"
    echo "Remap-tailssnapshots${origin_without_dashes}pool: file:tails-time-based-snapshots-$origin-pool.list file:tails-tagged-snapshots-$origin-pool.list"
 done > "$conf"
 chmod 644 "$conf"
@@ -31,7 +29,7 @@ chmod 644 "$conf"
 for origin in $(list_origins) ; do
    list="/etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list"
    current_year=$(date '+%Y')
-   for year in $(seq $(($current_year - 1)) $(($current_year + 1))) ; do
+   for year in $(seq $((current_year - 1)) $((current_year + 1))) ; do
       for month in $(seq 1 12); do
          # We need the config file to contain _at least_ everything
          # that can possibly exists, and we don't care if it has some extra

@@ -13,7 +13,8 @@ language_code_from_locale () {
 # the default is the English version.
 localized_tails_doc_page () {
     local page="${1}"
-    local lang_code="$(language_code_from_locale "${LANG}")"
+    local lang_code
+    lang_code="$(language_code_from_locale "${LANG}")"
     local try_page
     for locale in "${lang_code}" "en"; do
         try_page="${page}.${locale}.html"
