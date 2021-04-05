@@ -145,15 +145,14 @@ class TorConnectionProxy:
             if self.enabled and proxy_type == self.proxy_type:
                 continue
             r[proxy_type] = None
-        for pt in PROXY_TYPES:
-            for option in PROXY_AUTH_OPTIONS.get(pt, []):
+        for ptype in PROXY_TYPES:
+            for option in PROXY_AUTH_OPTIONS.get(ptype, []):
                 r[option] = None
         if self.enabled and self.auth is not None:
             if self.proxy_type == "HTTPSProxy":
                 r["HTTPSProxyAuthenticator"] = "%s:%s" % self.auth
             else:
                 r["Socks5ProxyUsername"], r["Socks5ProxyPassword"] = self.auth
-        log.debug("TorOpts=%s", r)
         return r
 
 
@@ -215,11 +214,11 @@ class TorConnectionConfig:
         if line.startswith("#"):
             return None
         parts = line.split()
-        transport_name_re = re.compile(r'^[a-zA-Z0-9_]+$')
+        transport_name_re = re.compile(r"^[a-zA-Z0-9_]+$")
         if not transport_name_re.match(parts[0]):
             parts.insert(0, "bridge")
         bridge_ip_port = parts[1]
-        bridge_parts = bridge_ip_port.split(':')
+        bridge_parts = bridge_ip_port.split(":")
         if len(bridge_parts) != 2:
             raise ValueError("Bridge address is malformed: '%s'" % bridge_ip_port)
         bridge_ip, bridge_port = bridge_parts
@@ -234,7 +233,7 @@ class TorConnectionConfig:
         if int(bridge_port) > 65535:
             raise ValueError("invalid port number")
 
-        if parts[0] == 'bridge':  # normal can be omitted
+        if parts[0] == "bridge":  # normal can be omitted
             del parts[0]
         return " ".join(parts)
 
@@ -324,6 +323,7 @@ class TorConnectionConfig:
         r["UseBridges"] = "1" if self.bridges else "0"
         r["Bridge"] = self.bridges if self.bridges else None
         r.update(self.proxy.to_tor_value_options().items())
+        log.debug("TorOpts=%s", r)
         return r
 
 
@@ -372,7 +372,9 @@ class TorLauncherUtils:
 
     def apply_conf(self):
         self.stem_controller.set_conf("DisableNetwork", "1")
-        self.stem_controller.set_options(self.tor_connection_config.to_tor_conf())
+        tor_conf = self.tor_connection_config.to_tor_conf()
+        log.debug("applying TorConf: %s", tor_conf)
+        self.stem_controller.set_options(tor_conf)
         self.stem_controller.set_conf("DisableNetwork", "0")
 
     def tor_has_bootstrapped(self) -> bool:
