@@ -21,14 +21,17 @@
 import gettext
 import logging
 
-from gi.repository import Gtk
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk  # noqa: E402
 
 log = logging.getLogger("translatable")
 
 
-class TranslatableWindow(object):
+class TranslatableWindow:
     """
-    Mixin providing functions to translate a window on the fly
+    Mixin providing functions to translate a window on the fly.
 
     To use this in your application, you need to implement this methods:
      - get_translation_domain(self)

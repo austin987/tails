@@ -46,13 +46,9 @@ def recover_fd_from_parent() -> tuple:
     # fds[0] must be a socket to Tor Control Port
     # fds[1] must be a rw fd for settings file
 
-    controller = None
-    socket = StemFDSocket(fds[1])
-    controller = Controller(socket)
-
     configfile = os.fdopen(fds[0], "r+")
 
-    return (configfile, controller)
+    return (configfile, )
 
 
 # PROXY_TYPES is a sequence of Tor options related to proxing.
@@ -157,7 +153,7 @@ class TorConnectionProxy:
                 r["HTTPSProxyAuthenticator"] = "%s:%s" % self.auth
             else:
                 r["Socks5ProxyUsername"], r["Socks5ProxyPassword"] = self.auth
-        print("TorOpts", r)
+        log.debug("TorOpts=%s", r)
         return r
 
 

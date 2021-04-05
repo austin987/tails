@@ -4,18 +4,19 @@ import logging
 import gettext
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
+from stem.control import Controller
+import prctl
+import gi
+
 from tca.ui.main_window import TCAMainWindow
 import tca.config
 from tca.utils import recover_fd_from_parent, TorLauncherUtils, TorLauncherNetworkUtils
 from tailslib.logutils import configure_logging
 
-import gi
 
 gi.require_version("GLib", "2.0")
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
-
-import prctl
 
 
 class TCAApplication:
@@ -23,7 +24,8 @@ class TCAApplication:
 
     def __init__(self, args):
         self.log = logging.getLogger(self.__class__.__name__)
-        self.config_buf, controller = recover_fd_from_parent()
+        self.config_buf, = recover_fd_from_parent()
+        controller = Controller.from_port(port=9051)
         controller.authenticate(password=None)
         self.configurator = TorLauncherUtils(controller, self.config_buf)
         self.configurator.load_conf()

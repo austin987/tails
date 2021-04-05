@@ -30,7 +30,6 @@ def get_parser():
     )
     p.add_argument("-u", "--user")
     p.add_argument("cmd")
-    p.add_argument("cmd_args", nargs="*")
 
     return p
 
@@ -96,7 +95,15 @@ class SocketSpec:
 
 
 def main():
-    args = get_parser().parse_args()
+    # Parsing arguments require a little hack to work around argparse annoying issue:
+    #  Only the first double-dash (--) separator is kept. They are however important in the very long command
+    #  lines run when executing programs inside netns.
+    # This hack allows to get the currect behaviour for a well-formed argument list, at the expense of good
+    # error handling when an invalid cmdline is passed to connect-drop.
+    args, cmd_args = get_parser().parse_known_args()
+    if cmd_args and cmd_args[0] == '--':
+        del cmd_args[0]
+    args.cmd_args = cmd_args
 
     # this list is needed to avoid that GC will also call close() on sockets
     sockets = []

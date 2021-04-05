@@ -9,9 +9,12 @@ import sys
 import shutil
 from pathlib import Path
 from subprocess import check_output, CalledProcessError
+from logging import getLogger, basicConfig
 
 from tailslib.gnome import gnome_env_vars
 
+NETNS = 'torlaunch'
+log = getLogger(__name__)
 
 def main():
     if os.getuid() != 0:
@@ -50,19 +53,42 @@ def main():
     confdir.chmod(0o700)
     conffile.touch(mode=0o600)
 
-    connect_drop = [
-        "/usr/local/lib/connect-drop",
-        "-c",
-        "FILE:%s:r+" % conffile,
-        "-c" "TCP:127.0.0.1:9051",
-    ]
+    connect_drop = ["/usr/local/lib/connect-drop", "-c", "FILE:%s:r+" % conffile]
+    ch_netns = ["ip", "netns", "exec", NETNS]
     runuser = ["/sbin/runuser", "-u", "amnesia"]
-    envcmd = ["env", *gnome_env_vars()]
+    # base bwrap sharing most of the system
+    bwrap = ["bwrap", "--bind", "/", "/", "--proc", "/proc", "--dev", "/dev"]
+    # passes data to us
+    bwrap += [
+        "--bind",
+        os.path.join("/tmp/netns-specific/", NETNS),
+        "/tmp/shared-with-me/",
+    ]
+    # hide data not for us
+    bwrap += ["--tmpfs", "/tmp/netns-specific/"]
+    envcmd = [
+        "env",
+        *gnome_env_vars(),
+        "AT_SPI_BUS_ADDRESS=unix:path=/tmp/shared-with-me/at.sock",
+        'IBUS_ADDRESS=unix:path=/tmp/shared-with-me/ibus.sock',
+    ]
     tcacmd = [python_bin, program]  # + sys.argv[1:]
-    args = [*connect_drop, "--", *runuser, "--", *envcmd, "--", *tcacmd]
+    args = [
+        *connect_drop,
+        "--",
+        *ch_netns,
+        *runuser,
+        "--",
+        *bwrap,
+        *envcmd,
+        *tcacmd,
+        *sys.argv[1:],
+    ]
+    log.info("%s", args)
 
     os.execv(args[0], args)
 
 
 if __name__ == "__main__":
+    basicConfig(level='DEBUG')
     main()
