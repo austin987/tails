@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
-import prctl
 import logging
 import gettext
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 from tca.ui.main_window import TCAMainWindow
 import tca.config
@@ -15,6 +14,8 @@ import gi
 gi.require_version("GLib", "2.0")
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
+
+import prctl
 
 
 class TCAApplication:
@@ -33,27 +34,42 @@ class TCAApplication:
         self.mainwindow = TCAMainWindow(self)
 
 
+def is_tails_debug_mode() -> bool:
+    """Return True IFF Tails is started with the debug flag."""
+    with open("/proc/cmdline") as buf:
+        flags = buf.read().split()
+    return "debug" in flags
+
+
 def get_parser():
-    p = ArgumentParser()
+    p = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     p.add_argument("--debug", dest="debug", action="store_true", default=False)
     p.add_argument("--debug-statefile")
     p.add_argument(
-        "--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"]
+        "--log-level",
+        default="DEBUG" if is_tails_debug_mode() else "INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Minimum log level to be displayed",
     )
-    p.add_argument("--log-target", default="auto", choices=["auto", "stderr", "syslog"])
+    p.add_argument(
+        "--log-target",
+        default="auto",
+        choices=["auto", "stderr", "syslog"],
+        help="Where to send log to; 'auto' will pick syslog IF stderr is not a tty",
+    )
     p.add_argument("gtk_args", nargs="*")
 
     return p
 
 
 if __name__ == "__main__":
-    prctl.set_name('tca')  # this get set as syslog identity!
+    prctl.set_name("tca")  # this get set as syslog identity!
     args = get_parser().parse_args()
 
     log_conf = {"level": logging.DEBUG if args.debug else args.log_level}
     configure_logging(hint=args.log_target, **log_conf)
     # translatable is a really really noisy logger. set it to debug only if really needed
-    logging.getLogger('translatable').setLevel(logging.INFO)
+    logging.getLogger("translatable").setLevel(logging.INFO)
 
     _ = gettext.gettext
     GLib.set_prgname(tca.config.APPLICATION_TITLE)
