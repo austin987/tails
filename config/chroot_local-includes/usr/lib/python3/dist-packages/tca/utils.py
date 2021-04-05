@@ -386,9 +386,11 @@ class TorLauncherUtils:
             return False
         parts = resp.split(" ")
         if parts[0] != "NOTICE":  # it is WARN
+            log.warn("Invalid response: %s", resp)
             return False
-
-        if int(parts[2].split("=")[1]) != 100:
+        progress = int(parts[2].split("=")[1])
+        log.debug("tor bootstrap progress = %d", progress)
+        if progress != 100:
             return False
         return True
 

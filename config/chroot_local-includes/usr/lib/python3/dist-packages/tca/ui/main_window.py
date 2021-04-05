@@ -239,7 +239,6 @@ class StepConnectProgressMixin:
             return True
 
         def do_tor_connect_apply():
-            print("applying conf")
             try:
                 self.app.configurator.apply_conf()
             except stem.InvalidRequest as exc:
@@ -249,7 +248,7 @@ class StepConnectProgressMixin:
                 self.state["progress"]["error_data"] = exc.message
                 self.change_box("error")
                 return False
-            print("applied!")
+            log.debug("tor configuration applied")
             progress.set_fraction(0.20)
             progress.set_text("applied")
             GLib.timeout_add(1000, do_tor_connect_check, {"count": 30})
