@@ -116,7 +116,6 @@ class TranslatableWindow(object):
                 )
                 self.placeholder_texts[widget] = widget.get_placeholder_text()
         elif isinstance(widget, Gtk.Container):
-            log.debug("Handling container '%s'", widget.get_name())
             self.containers.append(widget)
             if (
                 (isinstance(widget, Gtk.HeaderBar) or isinstance(widget, Gtk.Window))
