@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
-import os
+import prctl
 import logging
 import gettext
-import json
 from argparse import ArgumentParser
 
 from tca.ui.main_window import TCAMainWindow
 import tca.config
 from tca.utils import recover_fd_from_parent, TorLauncherUtils, TorLauncherNetworkUtils
+from tailslib.logutils import configure_logging
 
 import gi
 
@@ -18,9 +18,7 @@ from gi.repository import GLib, Gtk  # noqa: E402
 
 
 class TCAApplication:
-    """
-    main controller
-    """
+    """main controller for TCA."""
 
     def __init__(self, args):
         self.log = logging.getLogger(self.__class__.__name__)
@@ -37,20 +35,26 @@ class TCAApplication:
 
 def get_parser():
     p = ArgumentParser()
-    p.add_argument('--debug', dest='debug' , action='store_true', default=False)
-    p.add_argument('--debug-statefile')
-    p.add_argument('--log-level', default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'])
-    p.add_argument('gtk_args', nargs='*')
-    
+    p.add_argument("--debug", dest="debug", action="store_true", default=False)
+    p.add_argument("--debug-statefile")
+    p.add_argument(
+        "--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"]
+    )
+    p.add_argument("--log-target", default="auto", choices=["auto", "stderr", "syslog"])
+    p.add_argument("gtk_args", nargs="*")
+
     return p
 
 
 if __name__ == "__main__":
+    prctl.set_name('tca')  # this get set as syslog identity!
     args = get_parser().parse_args()
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=args.log_level)
+
+    log_conf = {"level": logging.DEBUG if args.debug else args.log_level}
+    configure_logging(hint=args.log_target, **log_conf)
+    # translatable is a really really noisy logger. set it to debug only if really needed
+    logging.getLogger('translatable').setLevel(logging.INFO)
+
     _ = gettext.gettext
     GLib.set_prgname(tca.config.APPLICATION_TITLE)
     GLib.set_application_name(_(tca.config.APPLICATION_TITLE))
