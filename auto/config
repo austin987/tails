@@ -29,7 +29,7 @@ if [ -n "${GIT_BRANCH}" ]; then
     BASE_BRANCH_PART=''
     if [ "${GIT_BRANCH}" != "$(base_branch)" ]; then
         CLEAN_GIT_BASE_BRANCH=$(base_branch | sed 's,/,_,g')
-        GIT_BASE_BRANCH_SHORT_ID="$(git rev-parse --verify --short $(git_base_branch_head))"
+        GIT_BASE_BRANCH_SHORT_ID="$(git rev-parse --verify --short "$(git_base_branch_head)")"
         BASE_BRANCH_PART="+${CLEAN_GIT_BASE_BRANCH}@${GIT_BASE_BRANCH_SHORT_ID}"
     fi
     BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}@${GIT_SHORT_ID}${BASE_BRANCH_PART}-${AMNESIA_NOW}"
