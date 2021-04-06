@@ -158,6 +158,8 @@ class StepChooseBridgeMixin:
                 .get_property("text")
             )
             self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
+            log.info("Bridges parsed: %s", self.state['bridge']['bridges'])
+            print("Bridges parsed:", self.state['bridge']['bridges'])
 
         self.change_box("progress")
 

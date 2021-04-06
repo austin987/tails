@@ -239,6 +239,12 @@ class TorConnectionConfig:
 
     @classmethod
     def parse_bridge_lines(cls, lines: List[str]) -> List[str]:
+        '''
+
+        Empty lines are skipped
+        >>> TorConnectionConfig.parse_bridge_lines([" bridge 1.2.3.4:80 ", "", "  "])
+        ['1.2.3.4:80']
+        '''
         parsed_bridges = (cls.parse_bridge_line(l) for l in lines)
         return [b for b in parsed_bridges if b]
 
@@ -374,6 +380,7 @@ class TorLauncherUtils:
         self.stem_controller.set_conf("DisableNetwork", "1")
         tor_conf = self.tor_connection_config.to_tor_conf()
         log.debug("applying TorConf: %s", tor_conf)
+        log.error("applying TorConf: %s", self.tor_connection_config.to_dict())
         self.stem_controller.set_options(tor_conf)
         self.stem_controller.set_conf("DisableNetwork", "0")
 
