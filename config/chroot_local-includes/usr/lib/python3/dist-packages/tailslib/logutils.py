@@ -8,14 +8,17 @@ import logging.handlers
 from logging import Handler
 
 
-def get_syslog_handler() -> Handler:
-    handler = logging.handlers.SysLogHandler(address="/dev/log")
-    try:
-        import prctl
-    except ImportError:
-        pass
+def get_syslog_handler(ident=None) -> Handler:
+    handler = logging.handlers.SysLogHandler(address="/run/systemd/journal/dev-log")
+    if ident is None:
+        try:
+            import prctl
+        except ImportError:
+            pass
+        else:
+            handler.ident = "%s: " % prctl.get_name()
     else:
-        handler.ident = "%s: " % prctl.get_name()
+        handler.ident = '%s: ' % ident
     return handler
 
 
@@ -31,19 +34,19 @@ def get_best_handler_hint() -> str:
     return "stderr"
 
 
-def get_handler_by_hint(hint: str) -> Handler:
+def get_handler_by_hint(hint: str, ident=None) -> Handler:
     if hint == "auto":
         hint = get_best_handler_hint()
     if hint == "syslog":
-        return get_syslog_handler()
+        return get_syslog_handler(ident)
     elif hint == "stderr":
         return get_stderr_handler()
     else:
         raise ValueError("unsupported hint %s" % (hint))
 
 
-def configure_logging(hint="auto", **kwargs):
-    handler = get_handler_by_hint(hint)
+def configure_logging(hint="auto", ident=None, **kwargs):
+    handler = get_handler_by_hint(hint, ident=None)
     logging.basicConfig(handlers=[handler], **kwargs)
 
 

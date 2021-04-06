@@ -69,7 +69,7 @@ if __name__ == "__main__":
     args = get_parser().parse_args()
 
     log_conf = {"level": logging.DEBUG if args.debug else args.log_level}
-    configure_logging(hint=args.log_target, **log_conf)
+    configure_logging(hint=args.log_target, ident='tca', **log_conf)
     # translatable is a really really noisy logger. set it to debug only if really needed
     logging.getLogger("translatable").setLevel(logging.INFO)
 
