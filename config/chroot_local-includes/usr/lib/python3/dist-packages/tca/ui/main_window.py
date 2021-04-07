@@ -11,7 +11,7 @@ import stem
 
 from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
-from tca.utils import TorConnectionProxy, TorConnectionConfig
+from tca.utils import TorConnectionProxy, TorConnectionConfig, InvalidBridgeException
 import tca.config
 
 
@@ -120,13 +120,20 @@ class StepChooseBridgeMixin:
 
         self.builder.get_object("step_bridge_radio_type").set_active(hide)
         self.get_object('combo').hide()  # we are forcing that to obfs4 until we support meek
+        self.get_object('box_warning').hide()
 
     def _step_bridge_is_text_valid(self) -> bool:
         text = self.get_object("text").get_property("buffer").get_property("text")
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
-        except (ValueError, IndexError):
+        except InvalidBridgeException as exc:
+            self.get_object('label_warning').set_label("Invalid: %s" % str(exc))
+            self.get_object('box_warning').show()
             return False
+        except (ValueError, IndexError):
+            self.get_object('box_warning').hide()
+            return False
+        self.get_object('box_warning').hide()
         return len(bridges) > 0
 
     def _step_bridge_set_actives(self):
@@ -542,7 +549,11 @@ class TCAMainWindow(
         log.debug("Step changed, state is now %s", str(self.state))
 
     def get_object(self, name: str):
-        """shortcut over self.builder.get_object"""
+        """
+        Get an object from glade file.
+
+        This is a shortcut over self.builder.get_object which takes steps into account
+        """
         return self.builder.get_object("step_%s_%s" % (self.state["step"], name))
 
     def cb_window_delete_event(self, widget, event, user_data=None):

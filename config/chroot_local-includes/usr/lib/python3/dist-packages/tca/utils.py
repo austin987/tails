@@ -48,7 +48,7 @@ def recover_fd_from_parent() -> tuple:
 
     configfile = os.fdopen(fds[0], "r+")
 
-    return (configfile, )
+    return (configfile,)
 
 
 # PROXY_TYPES is a sequence of Tor options related to proxing.
@@ -156,6 +156,10 @@ class TorConnectionProxy:
         return r
 
 
+class InvalidBridgeException(ValueError):
+    pass
+
+
 class TorConnectionConfig:
     def __init__(
         self,
@@ -189,8 +193,8 @@ class TorConnectionConfig:
 
 
         spaces are normalized
-        >>> TorConnectionConfig.parse_bridge_line("  transport   1.2.3.4:25 foo")
-        'transport 1.2.3.4:25 foo'
+        >>> TorConnectionConfig.parse_bridge_line("  obfs4   1.2.3.4:25 foo")
+        'obfs4 1.2.3.4:25 foo'
 
         An error is raised if the IP is not valid
         >>> TorConnectionConfig.parse_bridge_line("1.2.3:25")
@@ -206,7 +210,11 @@ class TorConnectionConfig:
         >>> TorConnectionConfig.parse_bridge_line("1.2.3.4:1000:1000")
         Traceback (most recent call last):
             ...
-        ValueError: Bridge address is malformed: '1.2.3.4:1000:1000'
+        ValueError: '1.2.3.4:1000' does not appear to be an IPv4 or IPv6 address
+
+        IPv6 is fine
+        >>> TorConnectionConfig.parse_bridge_line("[::1]:1000")
+        '[::1]:1000'
         """
         line = line.strip()
         if not line:
@@ -218,12 +226,17 @@ class TorConnectionConfig:
         if not transport_name_re.match(parts[0]):
             parts.insert(0, "bridge")
         bridge_ip_port = parts[1]
-        bridge_parts = bridge_ip_port.split(":")
+        bridge_parts = bridge_ip_port.rsplit(":", 1)
         if len(bridge_parts) != 2:
             raise ValueError("Bridge address is malformed: '%s'" % bridge_ip_port)
         bridge_ip, bridge_port = bridge_parts
+        get_ip = ipaddress.ip_address
+        if bridge_ip.startswith("[") and bridge_ip.endswith("]"):
+            bridge_ip = bridge_ip[1:-1]
+            get_ip = ipaddress.IPv6Address
+
         try:
-            ipaddress.ip_address(bridge_ip)
+            get_ip(bridge_ip)
         except ValueError:
             raise
         try:
@@ -233,18 +246,23 @@ class TorConnectionConfig:
         if int(bridge_port) > 65535:
             raise ValueError("invalid port number")
 
+        if parts[0] not in ("bridge", "obfs4"):
+            raise InvalidBridgeException("Bridge type '%s' not supported" % parts[0])
         if parts[0] == "bridge":  # normal can be omitted
             del parts[0]
         return " ".join(parts)
 
     @classmethod
     def parse_bridge_lines(cls, lines: List[str]) -> List[str]:
-        '''
+        """
+        Parse a list of lines and returns only normalized, meaningful lines.
+
+        Errors will result in an exception being raised (see parse_bridge_line).
 
         Empty lines are skipped
         >>> TorConnectionConfig.parse_bridge_lines([" bridge 1.2.3.4:80 ", "", "  "])
         ['1.2.3.4:80']
-        '''
+        """
         parsed_bridges = (cls.parse_bridge_line(l) for l in lines)
         return [b for b in parsed_bridges if b]
 
@@ -254,7 +272,10 @@ class TorConnectionConfig:
         bridges = []
         with open(os.path.join(tca.config.data_path, "default_bridges.txt")) as buf:
             for line in buf:
-                parsed = cls.parse_bridge_line(line)
+                try:
+                    parsed = cls.parse_bridge_line(line)
+                except InvalidBridgeException:
+                    continue
                 if not parsed:
                     continue
                 if only_type and parsed.split()[0] != only_type:
