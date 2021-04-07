@@ -11,7 +11,7 @@ import stem
 
 from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
-from tca.utils import TorConnectionProxy, TorConnectionConfig, InvalidBridgeException
+from tca.utils import TorConnectionProxy, TorConnectionConfig, InvalidBridgeException, VALID_BRIDGE_TYPES
 import tca.config
 
 
@@ -123,17 +123,27 @@ class StepChooseBridgeMixin:
         self.get_object('box_warning').hide()
 
     def _step_bridge_is_text_valid(self) -> bool:
+        def set_warning(msg):
+            self.get_object('label_warning').set_label(msg)
+            self.get_object('box_warning').show()
         text = self.get_object("text").get_property("buffer").get_property("text")
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
         except InvalidBridgeException as exc:
-            self.get_object('label_warning').set_label("Invalid: %s" % str(exc))
-            self.get_object('box_warning').show()
+            set_warning("Invalid: %s" % str(exc))
             return False
         except (ValueError, IndexError):
             self.get_object('box_warning').hide()
             return False
         self.get_object('box_warning').hide()
+
+        if self.state["hide"]["hide"]:
+            for br in bridges:
+                if br.split()[0] not in (VALID_BRIDGE_TYPES - {'bridge'}):
+                    set_warning('Normal bridges are not allowed in "Hide" mode')
+                    return False
+
+
         return len(bridges) > 0
 
     def _step_bridge_set_actives(self):

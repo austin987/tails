@@ -159,7 +159,7 @@ class TorConnectionProxy:
 class InvalidBridgeException(ValueError):
     pass
 
-
+VALID_BRIDGE_TYPES = {"bridge", "obfs4"}
 class TorConnectionConfig:
     def __init__(
         self,
@@ -246,7 +246,7 @@ class TorConnectionConfig:
         if int(bridge_port) > 65535:
             raise ValueError("invalid port number")
 
-        if parts[0] not in ("bridge", "obfs4"):
+        if parts[0] not in VALID_BRIDGE_TYPES:
             raise InvalidBridgeException("Bridge type '%s' not supported" % parts[0])
         if parts[0] == "bridge":  # normal can be omitted
             del parts[0]
