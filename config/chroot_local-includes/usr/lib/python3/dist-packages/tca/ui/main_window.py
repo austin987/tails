@@ -24,7 +24,16 @@ from gi.repository import Gdk, Gtk, GLib  # noqa: E402
 
 MAIN_UI_FILE = "main.ui"
 CSS_FILE = "tca.css"
-IMG_SIDE = "/usr/share/doc/tails/website/about/footprints.svg"
+IMG_FOOTPRINTS = "/usr/share/doc/tails/website/about/footprints.svg"
+IMG_RELAYS = "/usr/share/doc/tails/website/about/relays.svg"
+IMG_WALKIE = "/usr/share/doc/tails/website/about/walkie-talkie.svg"
+IMG_SIDE = {
+        'bridge': IMG_FOOTPRINTS,
+        'hide': IMG_RELAYS,
+        'connect': IMG_WALKIE,
+        'progress': IMG_WALKIE,
+        'error': IMG_WALKIE,
+        }
 
 # META {{{
 # Naming convention for widgets:
@@ -521,8 +530,10 @@ class TCAMainWindow(
                 revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
 
         self.main_container = builder.get_object("box_main_container_image_step")
-        self.builder.get_object("main_img_side").set_from_file(IMG_SIDE)
+        self.builder.get_object("main_img_side").set_from_file(IMG_SIDE[self.state['step']])
         self.add(self.main_container)
+        self.main_container.set_hexpand(True)
+        self.main_container.set_vexpand(True)
         self.change_box(self.state["step"])
 
         # builder.get_object('box_step_choose_hide')
@@ -550,9 +561,13 @@ class TCAMainWindow(
     def change_box(self, name: str, **kwargs):
         children = self.main_container.get_children()
         if len(children) > 1:
-            self.main_container.remove(children[-1])
+            self.main_container.remove(self.main_container.get_child_at(1,0))
         self.state["step"] = name
-        self.main_container.add(self.builder.get_object("step_%s_box" % name))
+        self.builder.get_object("main_img_side").set_from_file(IMG_SIDE[self.state['step']])
+        new_box = self.builder.get_object("step_%s_box" % name)
+        self.main_container.attach(new_box, 1, 0, 2, 1)
+        new_box.set_hexpand(True)
+        new_box.set_vexpand(True)
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
         log.error("State is to be saved (just to see if it works)")
