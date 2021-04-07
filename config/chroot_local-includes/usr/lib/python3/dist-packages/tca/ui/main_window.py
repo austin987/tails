@@ -4,6 +4,7 @@ import json
 import subprocess
 import gettext
 from typing import Dict, Any
+from pathlib import Path
 
 import gi
 import stem
@@ -118,6 +119,7 @@ class StepChooseBridgeMixin:
             self.builder.get_object("step_bridge_radio_default").set_sensitive(True)
 
         self.builder.get_object("step_bridge_radio_type").set_active(hide)
+        self.get_object('combo').hide()  # we are forcing that to obfs4 until we support meek
 
     def _step_bridge_is_text_valid(self) -> bool:
         text = self.get_object("text").get_property("buffer").get_property("text")
@@ -130,7 +132,7 @@ class StepChooseBridgeMixin:
     def _step_bridge_set_actives(self):
         default = self.builder.get_object("step_bridge_radio_default").get_active()
         manual = self.builder.get_object("step_bridge_radio_type").get_active()
-        self.builder.get_object("step_bridge_combo").set_sensitive(default)
+        self.get_object("combo").set_sensitive(default)
         self.builder.get_object("step_bridge_text").set_sensitive(manual)
         self.builder.get_object("step_bridge_btn_submit").set_sensitive(
             default or (manual and self._step_bridge_is_text_valid())
@@ -147,8 +149,8 @@ class StepChooseBridgeMixin:
         manual = self.builder.get_object("step_bridge_radio_type").get_active()
         if default:
             self.state["bridge"]["kind"] = "default"
-            self.state["bridge"]["default_method"] = self.builder.get_object(
-                "step_bridge_combo"
+            self.state["bridge"]["default_method"] = self.get_object(
+                "combo"
             ).get_active_id()
         elif manual:
             self.state["bridge"]["kind"] = "manual"
@@ -157,9 +159,11 @@ class StepChooseBridgeMixin:
                 .get_property("buffer")
                 .get_property("text")
             )
-            self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
-            log.info("Bridges parsed: %s", self.state['bridge']['bridges'])
-            print("Bridges parsed:", self.state['bridge']['bridges'])
+            self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(
+                text.split("\n")
+            )
+            log.info("Bridges parsed: %s", self.state["bridge"]["bridges"])
+            print("Bridges parsed:", self.state["bridge"]["bridges"])
 
         self.change_box("progress")
 
@@ -535,6 +539,7 @@ class TCAMainWindow(
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
         log.error("State is to be saved (just to see if it works)")
+        log.debug("Step changed, state is now %s", str(self.state))
 
     def get_object(self, name: str):
         """shortcut over self.builder.get_object"""
@@ -544,3 +549,14 @@ class TCAMainWindow(
         # XXX: warn the user about leaving the wizard
         Gtk.main_quit()
         return False
+
+    def on_link_help_clicked(self, linkbutton):
+        uri: str = linkbutton.get_uri()
+        # language=os.getenv('LANG', 'en').split('_')[0]
+
+        # localized_uri = uri.replace(".en.", ".%s." % language)
+        # website_path = Path('/usr/share/doct/tails/website/')
+        # path = (website_path / localized_uri)
+        # if not path.exists():
+        #     path = website_path / uri
+        subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
