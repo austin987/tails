@@ -348,23 +348,23 @@ def tor_connection_assistant
   @tor_connection_assistant
 end
 
-def tor_auto_config(mode, &block)
+def tca_configure(mode, &block)
   case mode
   when :easy
-    radio_button = /^Configure tor automatically/
+    radio_button_label = /^Configure tor automatically/
   when :hide
-    radio_button = /^Hide that I'm using Tor/
+    radio_button_label = /^Hide that I'm using Tor/
   else
     raise "bad TCA configuration mode '#{mode}'"
   end
   # XXX: We generally run this right after TCA has started, apparently
   # so early that clicking the radio button doesn't always work, so we
   # retry. Can this be fixed in TCA instead some how?
-  auto_config = tor_connection_assistant.child(
-    radio_button, roleName: 'radio button'
+   = tor_connection_assistant.child(
+    radio_button_label, roleName: 'radio button'
   )
-  until auto_config.checked
-    auto_config.click
+  until radio_button.checked
+    radio_button.click
   end
   block.call if block_given?
   tor_connection_assistant.child('Connect to Tor',
@@ -383,7 +383,7 @@ def tor_auto_config(mode, &block)
 end
 
 When /^I configure a direct connection in the Tor Connection Assistant$/ do
-  tor_auto_config(:easy)
+  tca_configure(:easy)
 end
 
 When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |bridge_type|
@@ -432,7 +432,7 @@ When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |brid
     bridge_lines << bridge_line
   end
 
-  tor_auto_config(config_mode) do
+  tca_configure(config_mode) do
     if config_mode == :easy
       tor_connection_assistant.child('Configure a Tor bridge',
                                      roleName: 'check box')
