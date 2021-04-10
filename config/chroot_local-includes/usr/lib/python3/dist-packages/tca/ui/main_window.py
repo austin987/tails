@@ -149,7 +149,7 @@ class StepChooseBridgeMixin:
         if self.state["hide"]["hide"]:
             for br in bridges:
                 if br.split()[0] not in (VALID_BRIDGE_TYPES - {'bridge'}):
-                    set_warning('Normal bridges are not allowed in "Hide" mode')
+                    set_warning('You need to configure an obfs4 bridge to hide that you are using Tor')
                     return False
 
 
