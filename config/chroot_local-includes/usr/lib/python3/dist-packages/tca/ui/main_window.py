@@ -479,7 +479,7 @@ class TCAMainWindow(
     # }}}
 
     def __init__(self, app):
-        Gtk.Window.__init__(self, title="Tor Connection Assistant")
+        Gtk.Window.__init__(self, title="Tor Connection")
         TranslatableWindow.__init__(self, self)
         self.app = app
         # self.state collects data from user interactions. Its main key is the step name
