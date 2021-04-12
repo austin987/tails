@@ -379,8 +379,8 @@ end
 
 Given /^I disable networking in Tails Greeter$/ do
   open_greeter_additional_settings
-  @screen.wait('TailsGreeterNetworkConnection.png', 30).click
-  @screen.wait('TailsGreeterNetworkConnectionDisable.png', 10).click
+  @screen.wait('TailsGreeterOfflineMode.png', 30).click
+  @screen.wait('TailsGreeterOfflineModeDisableNetwork.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsAdd.png', 10).click
 end
 

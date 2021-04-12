@@ -25,6 +25,7 @@ class AdditionalSetting(GreeterSetting):
     def __init__(self):
         super().__init__()
         self.dialog = None
+        self.hide_button_add = False
 
         self.builder = Gtk.Builder()
         self.builder.set_translation_domain(TRANSLATION_DOMAIN)
@@ -246,7 +247,7 @@ class NetworkSettingUI(AdditionalSetting):
 
     @property
     def title(self) -> str:
-        return _("_Network Connection")
+        return _("_Offline Mode")
 
     @property
     def icon_name(self) -> str:
@@ -255,15 +256,15 @@ class NetworkSettingUI(AdditionalSetting):
     @property
     def value_for_display(self) -> str:
         if self.network_enabled:
-            return _("Enabled (default)")
+            return _("Enable networking (default)")
         else:
-            return _("Disabled")
+            return _("Disable all networking")
 
     def __init__(self, network_setting: "NetworkSetting"):
         self._network_setting = network_setting
         self.network_enabled = True
         super().__init__()
-        self.accel_key = Gdk.KEY_n
+        self.accel_key = Gdk.KEY_o
 
         self.image_network_on = self.builder.get_object('image_network_on')
         self.image_network_off = self.builder.get_object('image_network_off')
@@ -303,6 +304,29 @@ class NetworkSettingUI(AdditionalSetting):
         if self.has_popover() and self.popover.is_open():
             self.popover.close(Gtk.ResponseType.YES)
         return False
+
+
+class ObsoleteNetworkSettingUI(AdditionalSetting):
+    @property
+    def id(self) -> str:
+        return "obsolete_network"
+
+    @property
+    def title(self) -> str:
+        return _("_Network Connection")
+
+    @property
+    def icon_name(self) -> str:
+        return "tails-network"
+
+    @property
+    def value_for_display(self) -> str:
+        return _("Obsolete")
+
+    def __init__(self):
+        super().__init__()
+        self.accel_key = Gdk.KEY_n
+        self.hide_button_add = True
 
 
 class UnsafeBrowserSettingUI(AdditionalSetting):
