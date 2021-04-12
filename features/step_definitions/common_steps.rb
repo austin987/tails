@@ -417,6 +417,13 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
     user: LIVE_USER
   )
+  # Since we use a simulated Tor network (via Chutney) we have to
+  # switch to its default bridges.
+  default_bridges_path = '/usr/share/tails/tca/default_bridges.txt'
+  $vm.file_overwrite(default_bridges_path, '')
+  chutney_bridge_lines('obfs4', chutney_tag: 'defbr').each do |bridge_line|
+    $vm.file_append(default_bridges_path, bridge_line)
+  end
 end
 
 When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |title, timeout|
