@@ -476,6 +476,27 @@ When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |brid
   end
 end
 
+When /^I try to configure a direct connection in the Tor Connection Assistant$/ do
+  begin
+    step "I configure a direct connection in the Tor Connection Assistant"
+  rescue TCAConnectionFailure
+    # Expected!
+    next
+  else
+    raise "TCA managed to connect to Tor but was expected to fail"
+  end
+end
+
+When /^I close the Tor Connection Assistant$/ do
+  $vm.execute(
+    'pkill -f /usr/lib/python3/dist-packages/tca/application.py'
+  )
+end
+
+Then /^the Tor Connection Assistant reports that it failed to connect$/ do
+  tor_connection_assistant.child('Failed to connect', roleName: 'label')
+end
+
 When /^all Internet traffic has only flowed through the configured bridges$/ do
   assert_not_nil(@bridge_hosts, 'No bridges has been configured via the ' \
                  "'I configure some ... bridges in the Tor Connection Assistant' step")

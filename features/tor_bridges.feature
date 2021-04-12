@@ -29,3 +29,15 @@ Feature: Using Tails with Tor bridges and pluggable transports
     Then Tor is ready
     And available upgrades have been checked
     And Tor is configured to use the default bridges
+
+  Scenario: TCA can reconnect after a connection failure
+    Given the Tor network and default bridges are blocked
+    When I try to configure a direct connection in the Tor Connection Assistant
+    Then the Tor Connection Assistant reports that it failed to connect
+    # TCA does not have a simple "retry" so we restart it
+    And I close the Tor Connection Assistant
+    Given the Tor network and default bridges are unblocked
+    And I start "Tor Connection" via GNOME Activities Overview
+    When I configure a direct connection in the Tor Connection Assistant
+    Then Tor is ready
+    And available upgrades have been checked
