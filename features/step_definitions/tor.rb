@@ -468,3 +468,37 @@ When /^all Internet traffic has only flowed through the configured bridges$/ do
     @bridge_hosts.include?({ address: c.daddr, port: c.dport })
   end
 end
+
+Given /^the Tor network is (un)?blocked$/ do |unblock|
+  relay_dirs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*relay/"
+  )
+  relay_dirs.each do |relay_dir|
+    File.open("#{relay_dir}/torrc") do |f|
+      torrc = f.readlines
+      address = torrc.grep(/^Address\b/).first.split.last
+      port = torrc.grep(/^OrPort\b/).first.split.last
+      $vm.execute_successfully("iptables -#{unblock ? 'D' : 'I'} OUTPUT " \
+                               '-p tcp ' \
+                               "--destination #{address} " \
+                               "--destination-port #{port} " \
+                               '-j REJECT --reject-with icmp-port-unreachable')
+    end
+  end
+end
+
+Then /^Tor is configured to use the default bridges$/ do
+  use_bridges = $vm.execute_successfully(
+    'tor_control_getconf UseBridges', libs: 'tor'
+  ).stdout.chomp.to_i
+  assert_equal(1, use_bridges, 'UseBridges is not set')
+  default_bridges = $vm.execute_successfully(
+    'grep ^obfs4 /usr/share/tails/tca/default_bridges.txt | sort'
+  ).stdout.chomp
+  assert(default_bridges.size > 0, 'No default bridges were found')
+  current_bridges = $vm.execute_successfully(
+    'tor_control_getconf Bridge | sort', libs: 'tor'
+  ).stdout.chomp
+  assert_equal(default_bridges, current_bridges,
+               'Current bridges does not match the default ones')
+end

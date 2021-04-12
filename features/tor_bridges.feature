@@ -22,3 +22,10 @@ Feature: Using Tails with Tor bridges and pluggable transports
     Then Tor is ready
     And available upgrades have been checked
     And all Internet traffic has only flowed through the configured bridges
+
+  Scenario: Fall back to default bridges if failing to connect directly to the Tor network
+    Given the Tor network is blocked
+    When I configure a direct connection in the Tor Connection Assistant
+    Then Tor is ready
+    And available upgrades have been checked
+    And Tor is configured to use the default bridges
