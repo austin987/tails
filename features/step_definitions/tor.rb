@@ -348,6 +348,9 @@ def tor_connection_assistant
   @tor_connection_assistant
 end
 
+class TCAConnectionFailure < StandardError
+end
+
 def tca_configure(mode, &block)
   case mode
   when :easy
@@ -370,8 +373,19 @@ def tca_configure(mode, &block)
   tor_connection_assistant.child('Connect to Tor',
                                  roleName: 'push button')
                           .click
-  try_for(120) do
-    tor_connection_assistant.child(roleName: 'progress bar').get_field('value') == '1.0'
+  failure_reported = false
+  try_for(120, exception: TCAConnectionFailure,  msg: 'Timed out while waiting for TCA to connect to Tor') do
+    if tor_connection_assistant.child?('Failed to connect', roleName: 'label', retry: false)
+      failure_reported = true
+      done = true
+    else
+      progress = tor_connection_assistant.child(roleName: 'progress bar', retry: false).get_field('value')
+      done = (progress == '1.0')
+    end
+    done
+  end
+  if failure_reported
+    raise TCAConnectionFailure, 'TCA failed to connect to Tor'
   end
   @screen.press('alt', 'F4')
 
