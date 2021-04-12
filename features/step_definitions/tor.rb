@@ -386,25 +386,19 @@ When /^I configure a direct connection in the Tor Connection Assistant$/ do
   tca_configure(:easy)
 end
 
-When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |bridge_type|
-  @tor_is_using_pluggable_transports = bridge_type != 'normal'
-  config_mode = bridge_type == 'normal' ? :easy : :hide
-  # Internally a "normal" bridge is called just "bridge" which we have
-  # to respect below.
-  bridge_type = 'bridge' if bridge_type == 'normal'
-
-  bridge_lines = []
-  @bridge_hosts = []
+def chutney_bridge_lines(bridge_type, chutney_tag: nil)
+  chutney_tag = bridge_type if chutney_tag.nil?
   bridge_dirs = Dir.glob(
-    "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
+    "#{$config['TMPDIR']}/chutney-data/nodes/*#{chutney_tag}/"
   )
-  bridge_dirs.each do |bridge_dir|
+  assert(bridge_dirs.size > 0, "No bridges of type '#{chutney_tag}' found")
+  bridge_dirs.map do |bridge_dir|
     address = $vmnet.bridge_ip_addr
     port = nil
     fingerprint = nil
     extra = nil
     if bridge_type == 'bridge'
-      File.open(bridge_dir + '/torrc') do |f|
+      File.open("#{bridge_dir}/torrc") do |f|
         port = f.grep(/^OrPort\b/).first.split.last
       end
     else
@@ -426,10 +420,25 @@ When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |brid
     File.open(bridge_dir + '/fingerprint') do |f|
       fingerprint = f.read.chomp.split.last
     end
-    @bridge_hosts << { address: address, port: port.to_i }
     bridge_line = bridge_type + ' ' + address + ':' + port
     [fingerprint, extra].each { |e| bridge_line += ' ' + e.to_s if e }
+    bridge_line
+  end
+end
+
+When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |bridge_type|
+  @tor_is_using_pluggable_transports = bridge_type != 'normal'
+  config_mode = bridge_type == 'normal' ? :easy : :hide
+  # Internally a "normal" bridge is called just "bridge" which we have
+  # to respect below.
+  bridge_type = 'bridge' if bridge_type == 'normal'
+
+  bridge_lines = []
+  @bridge_hosts = []
+  chutney_bridge_lines(bridge_type).each do |bridge_line|
     bridge_lines << bridge_line
+    address, port = bridge_line.split[1].split(":")
+    @bridge_hosts << { address: address, port: port.to_i }
   end
 
   tca_configure(config_mode) do
