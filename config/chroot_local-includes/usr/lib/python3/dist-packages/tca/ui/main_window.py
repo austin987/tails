@@ -3,7 +3,7 @@ import os.path
 import json
 import subprocess
 import gettext
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 from pathlib import Path
 
 import gi
@@ -11,7 +11,12 @@ import stem
 
 from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
-from tca.utils import TorConnectionProxy, TorConnectionConfig, InvalidBridgeException, VALID_BRIDGE_TYPES
+from tca.utils import (
+    TorConnectionProxy,
+    TorConnectionConfig,
+    InvalidBridgeException,
+    VALID_BRIDGE_TYPES,
+)
 import tca.config
 
 
@@ -20,7 +25,7 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("GLib", "2.0")
 
 
-from gi.repository import Gdk, Gtk, GLib  # noqa: E402
+from gi.repository import Gdk, GdkPixbuf, Gtk, GLib  # noqa: E402
 
 MAIN_UI_FILE = "main.ui"
 CSS_FILE = "tca.css"
@@ -28,12 +33,12 @@ IMG_FOOTPRINTS = "/usr/share/doc/tails/website/about/footprints.svg"
 IMG_RELAYS = "/usr/share/doc/tails/website/about/relays.svg"
 IMG_WALKIE = "/usr/share/doc/tails/website/about/walkie-talkie.svg"
 IMG_SIDE = {
-        'bridge': IMG_FOOTPRINTS,
-        'hide': IMG_RELAYS,
-        'connect': IMG_WALKIE,
-        'progress': IMG_WALKIE,
-        'error': IMG_WALKIE,
-        }
+    "bridge": IMG_FOOTPRINTS,
+    "hide": IMG_RELAYS,
+    "connect": IMG_WALKIE,
+    "progress": IMG_WALKIE,
+    "error": IMG_WALKIE,
+}
 
 # META {{{
 # Naming convention for widgets:
@@ -128,13 +133,16 @@ class StepChooseBridgeMixin:
             self.builder.get_object("step_bridge_radio_default").set_sensitive(True)
 
         self.builder.get_object("step_bridge_radio_type").set_active(hide)
-        self.get_object('combo').hide()  # we are forcing that to obfs4 until we support meek
-        self.get_object('box_warning').hide()
+        self.get_object(
+            "combo"
+        ).hide()  # we are forcing that to obfs4 until we support meek
+        self.get_object("box_warning").hide()
 
     def _step_bridge_is_text_valid(self) -> bool:
         def set_warning(msg):
-            self.get_object('label_warning').set_label(msg)
-            self.get_object('box_warning').show()
+            self.get_object("label_warning").set_label(msg)
+            self.get_object("box_warning").show()
+
         text = self.get_object("text").get_property("buffer").get_property("text")
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
@@ -142,16 +150,17 @@ class StepChooseBridgeMixin:
             set_warning("Invalid: %s" % str(exc))
             return False
         except (ValueError, IndexError):
-            self.get_object('box_warning').hide()
+            self.get_object("box_warning").hide()
             return False
-        self.get_object('box_warning').hide()
+        self.get_object("box_warning").hide()
 
         if self.state["hide"]["hide"]:
             for br in bridges:
-                if br.split()[0] not in (VALID_BRIDGE_TYPES - {'bridge'}):
-                    set_warning('You need to configure an obfs4 bridge to hide that you are using Tor')
+                if br.split()[0] not in (VALID_BRIDGE_TYPES - {"bridge"}):
+                    set_warning(
+                        "You need to configure an obfs4 bridge to hide that you are using Tor"
+                    )
                     return False
-
 
         return len(bridges) > 0
 
@@ -530,13 +539,9 @@ class TCAMainWindow(
                 revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
 
         self.main_container = builder.get_object("box_main_container_image_step")
-        self.builder.get_object("main_img_side").set_from_file(IMG_SIDE[self.state['step']])
         self.add(self.main_container)
-        self.main_container.set_hexpand(True)
-        self.main_container.set_vexpand(True)
         self.change_box(self.state["step"])
 
-        # builder.get_object('box_step_choose_hide')
         self.show()
 
     def todo_dialog(self, msg=""):
@@ -558,14 +563,31 @@ class TCAMainWindow(
         else:
             self.app.configurator.save_conf({"ui": self.state})
 
+    def get_screen_size(self) -> Tuple[int, int]:
+        disp = Gdk.Display.get_default()
+        mon = Gdk.Display.get_primary_monitor(disp)
+        workarea = Gdk.Monitor.get_workarea(mon)
+        return workarea.width, workarea.height
+
+    def set_image(self, fname: str):
+        screen_width, _ = self.get_screen_size()
+        target_width = screen_width / 5
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(fname)
+        scale = pixbuf.get_width() / target_width
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(fname,
+            pixbuf.get_width() / scale,
+            pixbuf.get_height() / scale,
+        )
+        self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
+
     def change_box(self, name: str, **kwargs):
         children = self.main_container.get_children()
         if len(children) > 1:
-            self.main_container.remove(self.main_container.get_child_at(1,0))
+            self.main_container.remove(children[-1])
         self.state["step"] = name
-        self.builder.get_object("main_img_side").set_from_file(IMG_SIDE[self.state['step']])
+        self.set_image(IMG_SIDE[self.state["step"]])
         new_box = self.builder.get_object("step_%s_box" % name)
-        self.main_container.attach(new_box, 1, 0, 2, 1)
+        self.main_container.pack_end(new_box, True, True, 0)
         new_box.set_hexpand(True)
         new_box.set_vexpand(True)
         if hasattr(self, "before_show_%s" % name):
