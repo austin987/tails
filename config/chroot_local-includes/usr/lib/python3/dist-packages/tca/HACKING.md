@@ -11,7 +11,7 @@ Testing failures
 If you want to test failures to Tor connection, the easiest thing you can do is block any outgoing connection
 from the debian-tor users
 
-    iptables -I OUTPUT 1 -m owner --uid-owner debian-tor -j REJECT
+    iptables -I OUTPUT 1 ! -o lo -m owner --uid-owner debian-tor -j REJECT
 
 If you want to test tor-not-working-but-my-bridges-are-working, you can use
 
