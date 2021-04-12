@@ -336,7 +336,7 @@ end
 # language-agnostic. Unfortunately this means interaction based on
 # images is not suitable, so we try more general approaches.
 
-When /^the Tor Connection Assistant autostarts$/ do
+When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
   try_for(60) do
     @tor_connection_assistant = Dogtail::Application.new('TorConnectionAssistant')
   end
@@ -352,6 +352,7 @@ class TCAConnectionFailure < StandardError
 end
 
 def tca_configure(mode, &block)
+  step 'the Tor Connection Assistant is running'
   case mode
   when :easy
     radio_button_label = /^Configure Tor automatically/
