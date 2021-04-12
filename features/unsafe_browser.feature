@@ -70,8 +70,8 @@ Feature: Browsing the web using the Unsafe Browser
     And the clearnet user has not sent packets out to the Internet
     And all Internet traffic has only flowed through Tor
 
-  Scenario: Starting the Unsafe Browser without a network connection results in a complaint about no DNS server being configured
+  Scenario: The Unsafe Browser cannot be started when I am offline
     Given I have started Tails from DVD without network and logged in with the Unsafe Browser enabled
     When I start the Unsafe Browser
     And I see and accept the Unsafe Browser start verification
-    Then the Unsafe Browser complains that no DNS server is configured
+    Then I am told I cannot start the Unsafe Browser when I am offline

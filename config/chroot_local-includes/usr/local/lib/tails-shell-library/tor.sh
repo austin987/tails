@@ -20,7 +20,8 @@ tor_control_cookie_path() {
 
 tor_control_send() {
 	local control_port cookie_path hexcookie
-	control_port="$(tor_rc_lookup ControlPort)"
+	control_port="$(tor_rc_lookup ControlPort \
+	    | sed --regexp-extended 's/.*://')"
 	cookie_path="$(tor_control_cookie_path)"
 	if [ -e "${cookie_path}" ] && [ -n "${control_port}" ]; then
 		hexcookie=$(xxd -c 32 -g 0 "${cookie_path}" | cut -d' ' -f2)

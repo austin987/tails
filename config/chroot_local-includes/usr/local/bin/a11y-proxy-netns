@@ -1,0 +1,87 @@
+#!/usr/bin/python3
+
+import os.path
+import time
+import subprocess
+from logging import getLogger, basicConfig
+from argparse import ArgumentParser
+
+import dbus
+
+log = getLogger(os.path.basename(__file__))
+
+
+def get_parser():
+    p = ArgumentParser()
+    p.add_argument(
+        "--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="DEBUG"
+    )
+    p.add_argument("netns")
+    return p
+
+
+def get_bus() -> str:
+    bus = dbus.SessionBus()
+    obj = bus.get_object("org.a11y.Bus", "/org/a11y/bus")
+    iface = dbus.Interface(obj, dbus_interface="org.a11y.Bus")
+    response = iface.GetAddress()
+    return str(response)
+
+
+def netns_exists(name: str) -> bool:
+    return os.path.exists(os.path.join("/var/run/netns", name))
+
+
+def wait_netns(name: str, sleep_time=1):
+    notified = False
+    while not netns_exists(name):
+        if not notified:
+            log.info("Waiting for netns %s to be ready", name)
+        time.sleep(1)
+
+
+def systemd_ready():
+    try:
+        # XXX: discard stdout/stderr
+        subprocess.Popen(["systemd-notify", "--ready"])
+    except FileNotFoundError:
+        # systemd not installed
+        pass
+    else:
+        log.info("systemd was notified")
+
+
+def main():
+    args = get_parser().parse_args()
+    basicConfig(level=args.log_level)
+    wait_netns(args.netns)
+    log.debug("get address")
+    at_bus_address = get_bus()
+    log.debug("address got! %s", at_bus_address)
+
+    dirname = os.path.join("/tmp/netns-specific/", args.netns)
+    os.makedirs(dirname, exist_ok=True)
+    dest_bus_path = os.path.join(dirname, "at.sock")
+    log.debug("Binding at %s", dest_bus_path)
+    if os.path.exists(dest_bus_path):
+        os.unlink(dest_bus_path)
+
+    args = ["xdg-dbus-proxy", at_bus_address, dest_bus_path]
+    log.debug("Running %r", args)
+    # we fork-exec to handle systemd notifications. though not strictly needed, they are nice!
+    p = subprocess.Popen(args)
+    log.debug("Started!")
+    # XXX: we could wait for dest_bus_path to appear, before signaling us ready.
+    systemd_ready()
+    try:
+        p.communicate()
+    except KeyboardInterrupt:
+        # this except clause will handle SIGINT, but not other signals
+        # we should probably explicitly do that!
+        p.kill()
+        log.debug("Killed %s", args[0])
+    return
+
+
+if __name__ == "__main__":
+    main()

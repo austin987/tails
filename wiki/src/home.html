@@ -13,6 +13,47 @@
   </a>
 </div>
 
+<div class="caution">
+
+<p><strong>Automatic upgrades are broken since Tails 4.14 (December 15).</strong> ([[!tails_ticket 18127]])</p>
+
+<p>If you haven't upgraded your Tails since December, you should upgrade
+to the latest version of Tails.</p>
+
+<p>To do so, you can either:</p>
+
+<ul>
+<li>
+  <p>Do a [[manual upgrade|doc/upgrade#manual]].</p>
+</li>
+<li>
+  <p>Fix the automatic upgrade from a terminal. To do so:</p>
+  <ol>
+    <li>
+      <p>Start Tails and set up an [[administration password|doc/first_steps/welcome_screen/administration_password]].</p>
+    </li>
+    <li>
+      <p>In a terminal, execute the following command:</p>
+      <pre><code>torsocks curl --silent https://gitlab.tails.boum.org/tails/tails/-/raw/master/config/chroot_local-includes/usr/share/tails/certs/lets-encrypt-r3.pem \
+| sudo tee --append /usr/local/etc/ssl/certs/tails.boum.org-CA.pem \
+&amp;&amp; systemctl --user restart tails-upgrade-frontend
+</code></pre>
+
+      <p>This command is a single command that wraps across several lines.
+      Copy and paste the entire block at once and make sure that it executes
+      as a single command.</p>
+    </li>
+    <li>
+      <p>Approximately 30 seconds later, you should be prompted to upgrade to the
+      latest version of Tails. If no prompt appear, you might already be running the
+      latest version of Tails.</p>
+    </li>
+  </ol>
+</li>
+</ul>
+
+</div>
+
 <div>
 [[!inline pages="home/donate.inline" raw="yes" sort="age"]]
 </div>

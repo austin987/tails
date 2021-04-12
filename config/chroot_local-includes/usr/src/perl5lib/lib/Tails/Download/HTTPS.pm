@@ -56,20 +56,14 @@ method _build_curl_opts () {
         push @opts, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME;
         push @opts, CURLOPT_PROXY,     '127.0.0.1:9062';
     }
-    if ($ENV{SSL_NO_VERIFY}) {
-        push @opts, CURLOPT_SSL_VERIFYHOST, 0;
-        push @opts, CURLOPT_SSL_VERIFYPEER, 0;
-    }
-    else {
-        my $cafile = $ENV{HTTPS_CA_FILE};
-        $cafile  //= '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem';
-        push @opts, CURLOPT_SSL_VERIFYHOST,  2;
-        push @opts, CURLOPT_SSL_VERIFYPEER,  1;
-        push @opts, CURLOPT_CAINFO,          $cafile;
-        push @opts, CURLOPT_CAPATH,          '';
-        push @opts, CURLOPT_PROTOCOLS,       CURLPROTO_HTTPS;
-        push @opts, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS;
-    }
+    my $cafile = $ENV{HTTPS_CA_FILE};
+    $cafile  //= '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem';
+    push @opts, CURLOPT_SSL_VERIFYHOST,  2;
+    push @opts, CURLOPT_SSL_VERIFYPEER,  1;
+    push @opts, CURLOPT_CAINFO,          $cafile;
+    push @opts, CURLOPT_CAPATH,          '';
+    push @opts, CURLOPT_PROTOCOLS,       CURLPROTO_HTTPS;
+    push @opts, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS;
     my %opts = @opts;
     return \%opts;
 }

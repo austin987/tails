@@ -13,14 +13,19 @@ close $test_file_fh;
 
 use_ok('Tails::IUK::LWP::UserAgent::WithProgress');
 
-my $ua  = Tails::IUK::LWP::UserAgent::WithProgress->new();
+my ($temp_fh, $temp_filename) = tempfile;
+close $temp_fh;
+
+my $ua  = Tails::IUK::LWP::UserAgent::WithProgress->new(
+    {
+        temp_file => $temp_filename,
+        size      => 2**20,
+    }
+);
 ok(defined $ua);
 
 my $req = HTTP::Request->new('GET', "file:///$test_file_name");
 assert_defined($req);
-
-my ($temp_fh, $temp_filename) = tempfile;
-close $temp_fh;
 
 my $res = $ua->request($req, $temp_filename);
 

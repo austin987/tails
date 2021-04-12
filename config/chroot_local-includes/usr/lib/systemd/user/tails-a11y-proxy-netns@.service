@@ -1,0 +1,14 @@
+[Unit]
+Description=Proxy AT-SPI bus inside a netns
+After=at-spi-dbus-bus.service
+Requires=at-spi-dbus-bus.service
+
+[Service]
+Type=notify
+NotifyAccess=all
+ExecStart=/usr/local/bin/a11y-proxy-netns --log-level DEBUG %i
+ExecStop=/bin/kill -INT $MAINPID
+
+
+[Install]
+WantedBy=desktop.target

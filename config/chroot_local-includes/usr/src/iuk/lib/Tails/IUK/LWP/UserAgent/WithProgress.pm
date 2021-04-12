@@ -9,11 +9,26 @@ package Tails::IUK::LWP::UserAgent::WithProgress;
 use 5.10.1;
 use strictures 2;
 use autodie qw(:all);
+use Carp::Assert;
 
 use parent 'LWP::UserAgent';
 
+sub new {
+    my $class = shift;
+    my $args  = shift;
+    assert('HASH' eq ref $args);
+
+    my $self = $class->SUPER::new(@_);
+    while (my ($k, $v) = each(%{$args})) { $self->{$k} = $v; }
+    bless($self, $class);
+
+    return $self;
+}
+
 sub progress {
-    my($self, $status, $m) = @_;
+    # When $status is "begin", $request_or_response is the
+    # HTTP::Request object, otherwise it is the HTTP::Response object.
+    my($self, $status, $request_or_response) = @_;
 
     if ($status eq "begin") {
         say "0";
@@ -25,7 +40,7 @@ sub progress {
         1; # the fraction can't be calculated
     }
     else {
-        say $status * 100;
+        say(100 * (-s $self->{temp_file}) / $self->{size});
     }
     STDOUT->flush;
 }

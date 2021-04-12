@@ -160,11 +160,11 @@ When /^I configure the Unsafe Browser to use a local proxy$/ do
   $vm.execute_successfully("sed -i -E '/^\s*export TOR_TRANSPROXY=1/d' #{lib}")
 end
 
-Then /^the Unsafe Browser complains that no DNS server is configured$/ do
+Then /^I am told I cannot start the Unsafe Browser when I am offline$/ do
   assert_not_nil(
     Dogtail::Application.new('zenity')
     .child(roleName: 'label')
-    .text['No DNS server was obtained']
+    .text['You are not connected to a local network']
   )
 end
 
