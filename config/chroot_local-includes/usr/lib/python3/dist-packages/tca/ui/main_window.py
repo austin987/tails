@@ -540,9 +540,9 @@ class TCAMainWindow(
 
         self.main_container = builder.get_object("box_main_container_image_step")
         self.add(self.main_container)
+        self.show()
         self.change_box(self.state["step"])
 
-        self.show()
 
     def todo_dialog(self, msg=""):
         print("TODO:", msg)
@@ -565,7 +565,8 @@ class TCAMainWindow(
 
     def get_screen_size(self) -> Tuple[int, int]:
         disp = Gdk.Display.get_default()
-        mon = Gdk.Display.get_primary_monitor(disp)
+        win = self.get_window()
+        mon = disp.get_monitor_at_window(win)
         workarea = Gdk.Monitor.get_workarea(mon)
         return workarea.width, workarea.height
 
