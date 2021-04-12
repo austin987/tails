@@ -266,7 +266,7 @@ module Dogtail
         child = self.children(**opts).find do |c|
           pattern.match(c.name)
         end
-        raise Failure, "Found no child matching /#{c.name.source}/" if child.nil?
+        raise Failure, "Found no child matching /#{pattern.source}/" if child.nil?
         child
       else
         self.original_child_method(pattern, **opts)
