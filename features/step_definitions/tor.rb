@@ -351,7 +351,7 @@ end
 def tca_configure(mode, &block)
   case mode
   when :easy
-    radio_button_label = /^Configure tor automatically/
+    radio_button_label = /^Configure Tor automatically/
   when :hide
     radio_button_label = /^Hide that I'm using Tor/
   else
