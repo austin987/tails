@@ -483,21 +483,30 @@ When /^all Internet traffic has only flowed through the configured bridges$/ do
   end
 end
 
-Given /^the Tor network is (un)?blocked$/ do |unblock|
+Given /^the Tor network( and default bridges)? (?:is|are) (un)?blocked$/ do |default_bridges, unblock|
   relay_dirs = Dir.glob(
-    "#{$config['TMPDIR']}/chutney-data/nodes/*relay/"
+    "#{$config['TMPDIR']}/chutney-data/nodes/*{auth,ba,relay}/"
   )
-  relay_dirs.each do |relay_dir|
+  relays = relay_dirs.map do |relay_dir|
     File.open("#{relay_dir}/torrc") do |f|
       torrc = f.readlines
-      address = torrc.grep(/^Address\b/).first.split.last
-      port = torrc.grep(/^OrPort\b/).first.split.last
-      $vm.execute_successfully("iptables -#{unblock ? 'D' : 'I'} OUTPUT " \
-                               '-p tcp ' \
-                               "--destination #{address} " \
-                               "--destination-port #{port} " \
-                               '-j REJECT --reject-with icmp-port-unreachable')
+      [
+        torrc.grep(/^Address\b/).first.split.last,
+        torrc.grep(/^OrPort\b/).first.split.last
+      ]
     end
+  end
+  if default_bridges
+    chutney_bridge_lines('obfs4', chutney_tag: 'defbr').each do |bridge_line|
+      relays << bridge_line.split[1].split(":")
+    end
+  end
+  relays.each do |address, port|
+    $vm.execute_successfully("iptables -#{unblock ? 'D' : 'I'} OUTPUT " \
+                             '-p tcp ' \
+                             "--destination #{address} " \
+                             "--destination-port #{port} " \
+                             '-j REJECT --reject-with icmp-port-unreachable')
   end
 end
 
