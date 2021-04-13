@@ -381,6 +381,8 @@ class TorLauncherUtils:
         self.config_buf.write(json.dumps(data, indent=2))
         self.config_buf.flush()
 
+        self.stem_controller.save_conf()
+
     def read_conf(self):
         self.config_buf.seek(0, os.SEEK_END)
         size = self.config_buf.tell()
