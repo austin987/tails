@@ -251,7 +251,7 @@ class NetworkSettingUI(AdditionalSetting):
 
     @property
     def icon_name(self) -> str:
-        return "tails-network"
+        return "airplane-mode-symbolic"
 
     @property
     def value_for_display(self) -> str:
