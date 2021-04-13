@@ -424,6 +424,9 @@ Given /^the Tails desktop is ready$/ do
   chutney_bridge_lines('obfs4', chutney_tag: 'defbr').each do |bridge_line|
     $vm.file_append(default_bridges_path, bridge_line)
   end
+  # Optimize upgrade check: avoid 30 second sleep
+  $vm.execute_successfully('sed -i "s/^ExecStart=.*$/& --no-wait/" /usr/lib/systemd/user/tails-upgrade-frontend.service')
+  $vm.execute_successfully('systemctl --user daemon-reload', user: LIVE_USER)
 end
 
 When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |title, timeout|
