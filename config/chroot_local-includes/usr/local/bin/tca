@@ -12,6 +12,7 @@ from subprocess import check_output, CalledProcessError
 from logging import getLogger, basicConfig
 
 from tailslib.gnome import gnome_env_vars
+from tailslib import LIVE_USERNAME
 
 NETNS = 'torlaunch'
 log = getLogger(__name__)
@@ -30,7 +31,7 @@ def main():
                     "pgrep",
                     "--count",
                     "--uid",
-                    "amnesia",
+                    LIVE_USERNAME,
                     "--full",
                     "--exact",
                     "%s %s" % (python_bin, program),
@@ -46,7 +47,7 @@ def main():
         print("TCA is already running", file=sys.stderr)
         return
 
-    confdir = Path("~amnesia/.config/tca/").expanduser()
+    confdir = Path("~%s/.config/tca/" % LIVE_USERNAME).expanduser()
     conffile = confdir / "tca.conf"
     confdir.mkdir(mode=0o700, exist_ok=True)
     shutil.chown(str(confdir), user=0, group=0)
@@ -55,7 +56,7 @@ def main():
 
     connect_drop = ["/usr/local/lib/connect-drop", "-c", "FILE:%s:r+" % conffile]
     ch_netns = ["ip", "netns", "exec", NETNS]
-    runuser = ["/sbin/runuser", "-u", "amnesia"]
+    runuser = ["/sbin/runuser", "-u", LIVE_USERNAME]
     # base bwrap sharing most of the system
     bwrap = ["bwrap", "--bind", "/", "/", "--proc", "/proc", "--dev", "/dev"]
     # passes data to us
