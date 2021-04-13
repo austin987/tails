@@ -1,44 +1,41 @@
 [[!meta title="Tails relies on Tor"]]
 
 <p class="standalone">Tails uses the Tor network because it is the strongest and most popular
-network to protect from surveillance and censorship. But Tor has some limitations if you are concerned about:
+network to protect from surveillance and censorship. But Tor has limitations if you are concerned about:
 <ul>
-<li>Hiding the fact that you are using Tor and Tails.</li>
-<li>The confidentiality of your online communications.</li>
+<li>Hiding the fact that you are using Tor and Tails</li>
+<li>Protecting your online communications from determined, skilled attackers</li>
 </ul>
 </p>
 
 <h1 id="fingerprint">Tails makes it clear that you are using Tor and probably Tails</h1>
 
-<p>Using Tails doesn't make you look like any random Internet user.
-Tor and Tails provide anonymity by making all of their users look the same
-so it is not possible to identify who is who among them.</p>
+<p>Using Tails doesn't make you look like any random Internet user. Every time you
+connect to the Internet in Tails, you use the Tor network.</p>
 
-<p>When you use Tails, your Internet service provider or your local network administrator
-can see that you're connecting to Tor. The destination server you contact through
-Tor can also know whether your communication comes from a Tor exit node by
-consulting publicly available lists of exit nodes, such as the
-<a href="https://check.torproject.org/torbulkexitlist">Bulk Exit List tool</a>
-provided by the Tor Project.</p>
+<p>Your Internet service provider (ISP) or local network administrator can
+see when you connect to the Tor network. They still won't know what sites you visit.
+To hide your Tor connection from your ISP, you can use [[Tor bridges|first_steps/welcome_screen/bridge_mode]].</p>
 
-<p> You can use [[Tor bridges|first_steps/welcome_screen/bridge_mode]]
-for additional anonymity. See also [[Can I hide the fact that I am using Tails?|fingerprint]]</p>
+<p>Any destination server you contact through Tor can also check whether
+you are using a Tor connection by consulting public lists of exit nodes,
+such as the <a href="https://check.torproject.org/torbulkexitlist">Bulk Exit List tool</a>
+provided by the Tor Project. See also [[Can I hide the fact that I am using Tails?|fingerprint]]</p>
 
 <h1 id="exit_node">Tor exit traffic can be eavesdropped</h1>
 
 <p>Tor hides your location from destination servers, but it does not encrypt
-<i>all</i> your communication. The last relay on a Tor circuit, called the exit node, establishes the actual
-connection to destination servers.</p>
+<i>all</i> your communication. The last relay on a Tor circuit, called the exit node,
+establishes the actual connection to destination servers and that last step could be unsecure.</p>
 
 [[!img htw2-tails.png link=no alt="A Tor connection usually goes through 3 relays with the last one establishing the actual connection to the final destination"]]
 
 <p>Tor cannot encrypt your connection from the exit node to the destination server,
-so an exit node could capture your traffic. See
+so the exit node itself could capture your traffic. See
 <a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes
-eavesdrop on communications?</a>. It is also possible that when Internet traffic
-is on its way from the Tor exit node, it could be intercepted. The intercepter
-could then pretend to be the valid destination server, a technique known as a
-"man-in-the-middle" (MitM) attack.</p>
+eavesdrop on communications?</a>. When your traffic leaves the Tor exit node,
+it could also be intercepted. The intercepter could then pretend to be the valid
+destination server, a technique known as a "man-in-the-middle" (MitM) attack.</p>
 
 <p>To protect yourself against such attacks, take extra care to verify server authenticity.
 Usually, this is done automatically when your browser checks each site's SSL certificates
@@ -56,9 +53,9 @@ sending email, or chatting|features#index3h2]].
 <h1 id="correlation">Adversaries watching both Tor entrance and exit nodes might be able to identify users</h1>
 
 <p>Because Tor uses fast server connections, a determined attacker could
-examine the timing and shape of traffic entering and exiting the Tor network to deanonymize Tor users.
-Such attacks are called <i>end-to-end correlation attacks</i>, because they
-require observing both ends of a Tor circuit at the same time.</p>
+examine the timing and shape of traffic entering and exiting the Tor network to identify Tor users.
+These attacks are called "end-to-end correlation attacks", because an attacker
+has to observe both ends of a Tor circuit at the same time.</p>
 
 <p>End-to-end correlation attacks have been studied in research papers,
 but we are not aware of any actual use to deanonymize Tor users. Law enforcement
