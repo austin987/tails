@@ -70,7 +70,8 @@ class StepChooseHideMixin:
         self.builder.get_object("radio_unnoticed_yes").set_active(False)
         self.builder.get_object("radio_unnoticed_no").set_active(False)
         self.builder.get_object("radio_unnoticed_none").hide()
-        if "hide" in self.state["hide"]:
+        definitive = self.state.get('progress', {}).get('started', False)
+        if definitive and "hide" in self.state["hide"]:
             if self.state["hide"]["hide"]:
                 self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
                 self.builder.get_object("radio_unnoticed_yes").set_active(True)
@@ -295,6 +296,7 @@ class StepConnectProgressMixin:
                 self.change_box("error")
                 return False
             log.debug("tor configuration applied")
+            self.state['progress']['started'] = True
             progress.set_fraction(0.20)
             progress.set_text("applied")
             GLib.timeout_add(1000, do_tor_connect_check, {"count": 30})
@@ -325,6 +327,7 @@ class StepConnectProgressMixin:
 
             ok = self.app.configurator.tor_has_bootstrapped()
             if ok:
+                self.state['progress']['success'] = True
                 self.save_conf(successful_connect=True)
                 if not self.app.configurator.tor_connection_config.bridges:
                     text = "Tor is working!"
@@ -514,6 +517,7 @@ class TCAMainWindow(
             data = self.app.configurator.read_conf()
             if data and data.get("ui"):
                 self.state["hide"].update(data["ui"].get("hide", {}))
+                self.state["progress"]['started'] = data["ui"].get("progress", {}).get('started', False)
         self.current_language = "en"
         self.connect("delete-event", self.cb_window_delete_event, None)
         self.set_position(Gtk.WindowPosition.CENTER)
