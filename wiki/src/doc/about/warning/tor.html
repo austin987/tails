@@ -12,17 +12,16 @@ network to protect from surveillance and censorship. But Tor has some limitation
 
 <p>Using Tails doesn't make you look like any random Internet user.
 Tor and Tails provide anonymity by making all of their users look the same
-so it's not possible to identify who is who amongst them.</p>
+so it is not possible to identify who is who among them.</p>
 
-<p>When you use Tails, your internet service provider (ISP) or your local network administrator
-will be able to see that you're connecting to a Tor relay, and not a normal web server;
-Tor network connections look different to them. The destination server you are
-contacting through Tor can also know whether your communication comes from a
-Tor exit node by consulting publicly available lists of exit nodes, such as the Tor Project's
-<a href="https://check.torproject.org/torbulkexitlist">Bulk Exit List tool</a></p>
+<p>When you use Tails, your Internet service provider or your local network administrator
+can see that you're connecting to Tor. The destination server you contact through
+Tor can also know whether your communication comes from a Tor exit node by
+consulting publicly available lists of exit nodes, such as the
+<a href="https://check.torproject.org/torbulkexitlist">Bulk Exit List tool</a>
+provided by the Tor Project.</p>
 
 <p> You can use [[Tor bridges|first_steps/welcome_screen/bridge_mode]]
-and Tails' [[MAC address spoofing|first_steps/welcome_screen/mac_spoofing]]
 for additional anonymity. See also [[Can I hide the fact that I am using Tails?|fingerprint]]</p>
 
 <h1 id="exit_node">Tor exit nodes can eavesdrop</h1>
@@ -30,38 +29,28 @@ for additional anonymity. See also [[Can I hide the fact that I am using Tails?|
 <p>Tor hides your location from destination servers, but it does not encrypt
 <i>all</i> your communication.</p>
 
-<p>Instead of taking a direct route from source to destination, Tor network connections
-take a random pathway through several Tor relays to cover your tracks.
-No observer at any single point can tell where your data came from or where it's going.</p>
-
 [[!img htw2-tails.png link=no alt="A Tor connection usually goes through 3 relays with the last one establishing the actual connection to the final destination"]]
 
-<p>The last relay on this circuit, called the exit node, establishes the actual
+<p>The last relay on a Tor circuit, called the exit node, establishes the actual
 connection to destination servers. Tor does not and cannot encrypt your connection
-from the exit node to the destination server, so any exit node could capture the traffic
-passing through it. See <a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes eavesdrop on
+from the exit node to the destination server, so an exit node could capture your traffic.
+See <a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes eavesdrop on
 communications?</a>.</p>
 
-<p>To protect yourself against such attacks you should use end-to-end encryption.
-Tails includes [[tools so you can use strong encryption while
-browsing, sending email or chatting|features#index3h2]].</p>
+<p>To protect yourself against such attacks, you should use end-to-end encryption.
+Tails includes [[tools so you can use end-to-end encryption while
+browsing, sending email, or chatting|features#index3h2]].</p>
 
-<h1 id="man-in-the-middle">Tor exit node traffic can be intercepted</h1>
-
-[[!img man-in-the-middle.png link=no alt="An attacker intercepting Internet traffic between a computer and the server it is trying to connect to"]]
-<!-- Source: wiki/lib/man-in-the-middle.svg -->
-
-<p>When your Internet traffic is on its way from the Tor exit node to the destination node,
+<p>When your Internet traffic is on its way from the Tor exit node,
 it could be intercepted. The intercepter could then pretend to be the valid
-destination server, an technique known as a "man-in-the-middle attack" (MitM).</p>
+destination server, a technique known as a "man-in-the-middle" (MitM) attack.</p>
 
 <p>To protect yourself from such attacks, you should use end-to-end
 encryption tools and take extra care to verify server authenticity. Usually,
 this is done automatically when your browser checks each site's SSL certificates
 against a recognized [[!wikipedia Certificate_authority desc="certificate authority"]].
 If you get a security exception message such as the one in the image below,
-you might be the victim of a man-in-the-middle attack. Don't bypass the warning
-unless you have another way to check the certificate's fingerprint.</p>
+you might be the victim of a man-in-the-middle attack. Don't bypass the warning.</p>
 
 [[!img ssl_warning.png link=no alt=""Your connection is not secure" browser warning page"]]
 
@@ -69,22 +58,15 @@ unless you have another way to check the certificate's fingerprint.</p>
 However, people or organizations running Tor exit nodes can still perform large-scale
 MitM attacks or attacks that target a specific server.</p>
 
-<p class="quoted-from">Section adapted from [[!wikipedia Man-in-the-middle_attack
-desc="Wikipedia: %s"]], [[!wikipedia
-Comodo_Group#Certificate_hacking desc="Wikipedia: %s"]] and <a
-href="https://blog.torproject.org/blog/detecting-certificate-authority-compromises-and-web-browser-collusion">Tor
-Project: Detecting Certificate Authority compromises and web browser
-collusion</a>.</p>
+<h1 id="correlation">Adversaries watching both Tor entrance and exit nodes might be able to identify users</h1>
 
-<h1 id="correlation">Adversaries watching both Tor entrance and exit nodes might be able to deanonymize users</h1>
-
-<p>Because Tor uses low-latency communications, an attacker could
-examine the traffic entering and exiting the Tor network to deanonymize Tor users.
+<p>Because Tor uses fast server connections, a determined attacker could
+examine the timing and shape of traffic entering and exiting the Tor network to deanonymize Tor users.
 Such attacks are called <i>end-to-end correlation attacks</i>, because they
 require observing both ends of a Tor circuit at the same time.</p>
 
-<p>End-to-end correlation attacks have been studied in research papers
-but we are not aware of any actual use to deanonymize Tor users. In the past,
-law enforcement agencies have preferred exploiting software vulnerabilities
+<p>End-to-end correlation attacks have been studied in research papers,
+but we are not aware of any actual use to deanonymize Tor users. Law enforcement
+agencies usually exploit software vulnerabilities
 in <i>Tor Browser</i> and Tails to deanonymize users, instead of
 performing end-to-end correlation attacks.</p>
