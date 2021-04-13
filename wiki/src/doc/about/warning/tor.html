@@ -24,39 +24,34 @@ provided by the Tor Project.</p>
 <p> You can use [[Tor bridges|first_steps/welcome_screen/bridge_mode]]
 for additional anonymity. See also [[Can I hide the fact that I am using Tails?|fingerprint]]</p>
 
-<h1 id="exit_node">Tor exit nodes can eavesdrop</h1>
+<h1 id="exit_node">Tor exit traffic can be eavesdropped</h1>
 
 <p>Tor hides your location from destination servers, but it does not encrypt
-<i>all</i> your communication.</p>
+<i>all</i> your communication. The last relay on a Tor circuit, called the exit node, establishes the actual
+connection to destination servers.</p>
 
 [[!img htw2-tails.png link=no alt="A Tor connection usually goes through 3 relays with the last one establishing the actual connection to the final destination"]]
 
-<p>The last relay on a Tor circuit, called the exit node, establishes the actual
-connection to destination servers. Tor does not and cannot encrypt your connection
-from the exit node to the destination server, so an exit node could capture your traffic.
-See <a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes eavesdrop on
-communications?</a>.</p>
+<p>Tor cannot encrypt your connection from the exit node to the destination server,
+so an exit node could capture your traffic. See
+<a href="https://support.torproject.org/https/https-1/">Tor FAQ: Can exit nodes
+eavesdrop on communications?</a>. It is also possible that when Internet traffic
+is on its way from the Tor exit node, it could be intercepted. The intercepter
+could then pretend to be the valid destination server, a technique known as a
+"man-in-the-middle" (MitM) attack.</p>
 
-<p>To protect yourself against such attacks, you should use end-to-end encryption.
-Tails includes [[tools so you can use end-to-end encryption while
-browsing, sending email, or chatting|features#index3h2]].</p>
-
-<p>When your Internet traffic is on its way from the Tor exit node,
-it could be intercepted. The intercepter could then pretend to be the valid
-destination server, a technique known as a "man-in-the-middle" (MitM) attack.</p>
-
-<p>To protect yourself from such attacks, you should use end-to-end
-encryption tools and take extra care to verify server authenticity. Usually,
-this is done automatically when your browser checks each site's SSL certificates
+<p>To protect yourself against such attacks, take extra care to verify server authenticity.
+Usually, this is done automatically when your browser checks each site's SSL certificates
 against a recognized [[!wikipedia Certificate_authority desc="certificate authority"]].
 If you get a security exception message such as the one in the image below,
-you might be the victim of a man-in-the-middle attack. Don't bypass the warning.</p>
+you might be the victim of a man-in-the-middle attack. Don't bypass the warning.
+</p>
 
 [[!img ssl_warning.png link=no alt=""Your connection is not secure" browser warning page"]]
 
-<p>Tor does make it more difficult for MitM attacks to target a specific person.
-However, people or organizations running Tor exit nodes can still perform large-scale
-MitM attacks or attacks that target a specific server.</p>
+<p>For additional protection, you should also use end-to-end encryption tools.
+Tails includes [[tools so you can use end-to-end encryption while browsing,
+sending email, or chatting|features#index3h2]].
 
 <h1 id="correlation">Adversaries watching both Tor entrance and exit nodes might be able to identify users</h1>
 
