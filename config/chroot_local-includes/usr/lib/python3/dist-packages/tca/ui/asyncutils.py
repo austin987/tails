@@ -9,7 +9,6 @@ from gi.repository import GObject  # noqa: E402
 from gi.repository import GLib  # noqa: E402
 
 
-
 class GAsyncSpawn(GObject.GObject):
     """ GObject class to wrap GLib.spawn_async().
 
@@ -52,13 +51,17 @@ class GAsyncSpawn(GObject.GObject):
         fout = os.fdopen(idout, "r")
         ferr = os.fdopen(iderr, "r")
 
-        GLib.child_watch_add(self.pid, self._on_done)
-        GLib.io_add_watch(fout, GLib.IO_IN, self._on_stdout)
-        GLib.io_add_watch(ferr, GLib.IO_IN, self._on_stderr)
+        self.event_sources = []
+
+        self.event_sources.append(GLib.child_watch_add(self.pid, self._on_done))
+        self.event_sources.append(GLib.io_add_watch(fout, GLib.IO_IN, self._on_stdout))
+        self.event_sources.append(GLib.io_add_watch(ferr, GLib.IO_IN, self._on_stderr))
         return self.pid
 
     def _on_done(self, pid, retval, *argv):
         self.emit("process-done", retval)
+        for evt in self.event_sources:
+            GLib.source_remove(evt)
 
     def _emit_std(self, name, value):
         self.emit(name + "-data", value)
