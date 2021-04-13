@@ -4,7 +4,6 @@ import json
 import subprocess
 import gettext
 from typing import Dict, Any, Tuple
-from pathlib import Path
 
 import gi
 import stem
@@ -36,6 +35,7 @@ IMG_SIDE = {
     "bridge": IMG_FOOTPRINTS,
     "hide": IMG_RELAYS,
     "connect": IMG_WALKIE,
+    "proxy": IMG_WALKIE,
     "progress": IMG_WALKIE,
     "error": IMG_WALKIE,
 }
@@ -247,8 +247,22 @@ class StepConnectProgressMixin:
         self.builder.get_object("step_progress_pbar_torconnect").show()
         progress = self.builder.get_object("step_progress_pbar_torconnect")
 
+        def _apply_proxy():
+            if not self.state["proxy"] or self.state["proxy"]["proxy_type"] == "no":
+                self.app.configurator.tor_connection_config.proxy = (
+                    TorConnectionProxy.noproxy()
+                )
+            else:
+                proxy_conf = self.state["proxy"]
+                if proxy_conf["proxy_type"] != "Socks5":
+                    del proxy_conf["username"]
+                    del proxy_conf["password"]
+                proxy_conf["proxy_type"] += "Proxy"
+                self.app.configurator.tor_connection_config.proxy = TorConnectionProxy.from_obj(
+                    proxy_conf
+                )
+
         def do_tor_connect_config():
-            print("disabling bridges")
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
             elif self.state["bridge"]["kind"] == "default":
@@ -263,28 +277,16 @@ class StepConnectProgressMixin:
                 raise ValueError(
                     "inconsistent state! you discovered a programming error"
                 )
+            _apply_proxy()
             progress.set_fraction(0.1)
             progress.set_text("configuration prepared")
             return True
 
         def do_tor_connect_default_bridges():
-            print("disabling bridges")
             self.app.configurator.tor_connection_config.default_bridges(
                 only_type="obfs4"
             )
-            if not self.state["proxy"] or self.state["proxy"]["proxy_type"] == "no":
-                self.app.configurator.tor_connection_config.proxy = (
-                    TorConnectionProxy.noproxy()
-                )
-            else:
-                proxy_conf = self.state["proxy"]
-                if proxy_conf["proxy_type"] != "Socks5":
-                    del proxy_conf["username"]
-                    del proxy_conf["password"]
-                proxy_conf["proxy_type"] += "Proxy"
-                self.app.configurator.tor_connection_config.proxy = TorConnectionProxy.from_obj(
-                    proxy_conf
-                )
+            _apply_proxy()
             progress.set_fraction(0.1)
             progress.set_text("configuration prepared")
             return True
@@ -402,7 +404,7 @@ class StepErrorMixin:
 
 class StepProxyMixin:
     def before_show_proxy(self):
-        self.state.setdefault("proxy", {"proxy_type": "no"})
+        self.state['proxy'].setdefault("proxy_type", "no")
         self.builder.get_object("step_proxy_combo").set_active_id(
             self.state["proxy"]["proxy_type"]
         )
@@ -636,11 +638,4 @@ class TCAMainWindow(
 
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
-        # language=os.getenv('LANG', 'en').split('_')[0]
-
-        # localized_uri = uri.replace(".en.", ".%s." % language)
-        # website_path = Path('/usr/share/doct/tails/website/')
-        # path = (website_path / localized_uri)
-        # if not path.exists():
-        #     path = website_path / uri
         subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
