@@ -211,16 +211,9 @@ class StepConnectProgressMixin:
         self.save_conf()
         self.state["progress"]["error"] = None
         self.builder.get_object("step_progress_box").show()
-        if not self.state["hide"]["hide"]:
-            self.builder.get_object("step_progress_spinner_internet").start()
-            self.builder.get_object("step_progress_spinner_internet").set_property(
-                "active", True
-            )
-            self.spawn_internet_test()
-        else:
-            self.builder.get_object("step_progress_box_internettest").hide()
-            self.builder.get_object("step_progress_box_internetok").hide()
-            self.spawn_tor_connect()
+        self.builder.get_object("step_progress_box_internettest").hide()
+        self.builder.get_object("step_progress_box_internetok").hide()
+        self.spawn_tor_connect()
 
     def spawn_internet_test(self):
         test_spawn = GAsyncSpawn()
