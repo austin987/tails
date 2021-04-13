@@ -568,9 +568,8 @@ class TCAMainWindow(
         target_width = screen_width / 5
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(fname)
         scale = pixbuf.get_width() / target_width
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(fname,
-            pixbuf.get_width() / scale,
-            pixbuf.get_height() / scale,
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(
+            fname, pixbuf.get_width() / scale, pixbuf.get_height() / scale
         )
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
@@ -588,6 +587,10 @@ class TCAMainWindow(
             getattr(self, "before_show_%s" % name)(**kwargs)
         log.error("State is to be saved (just to see if it works)")
         log.debug("Step changed, state is now %s", str(self.state))
+
+        # resize, just to be sure that everything is properly shown
+        screen_width, screen_height = self.get_screen_size()
+        self.resize(int(screen_width / 2), int(screen_height / 2))
 
     def get_object(self, name: str):
         """
