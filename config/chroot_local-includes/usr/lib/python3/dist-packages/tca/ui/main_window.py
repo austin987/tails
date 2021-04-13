@@ -137,6 +137,18 @@ class StepChooseBridgeMixin:
             "combo"
         ).hide()  # we are forcing that to obfs4 until we support meek
         self.get_object("box_warning").hide()
+        self._step_bridge_init_from_tor_state()
+
+    def _step_bridge_init_from_tor_state(self):
+        bridges = self.app.configurator.tor_connection_config.bridges
+        if not bridges:
+            return
+        if len(bridges) > 1 and set(bridges).issubset(set( TorConnectionConfig.get_default_bridges())):
+            self.get_object('radio_default').set_active(True)
+        else:
+            self.get_object('radio_type').set_active(True)
+            self.get_object('text').get_property("buffer").set_text('\n'.join(bridges))
+
 
     def _step_bridge_is_text_valid(self) -> bool:
         def set_warning(msg):
