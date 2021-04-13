@@ -11,7 +11,7 @@ import stem
 
 from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
-from tca.utils import (
+from tca.torutils import (
     TorConnectionProxy,
     TorConnectionConfig,
     InvalidBridgeException,

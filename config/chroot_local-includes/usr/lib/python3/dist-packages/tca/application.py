@@ -10,7 +10,7 @@ import gi
 
 from tca.ui.main_window import TCAMainWindow
 import tca.config
-from tca.utils import recover_fd_from_parent, TorLauncherUtils, TorLauncherNetworkUtils
+from tca.torutils import recover_fd_from_parent, TorLauncherUtils, TorLauncherNetworkUtils
 from tailslib.logutils import configure_logging
 
 
