@@ -70,7 +70,7 @@ class StepChooseHideMixin:
         self.builder.get_object("radio_unnoticed_yes").set_active(False)
         self.builder.get_object("radio_unnoticed_no").set_active(False)
         self.builder.get_object("radio_unnoticed_none").hide()
-        definitive = self.state.get('progress', {}).get('started', False)
+        definitive = self.state.get("progress", {}).get("started", False)
         if definitive and "hide" in self.state["hide"]:
             if self.state["hide"]["hide"]:
                 self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
@@ -144,12 +144,13 @@ class StepChooseBridgeMixin:
         bridges = self.app.configurator.tor_connection_config.bridges
         if not bridges:
             return
-        if len(bridges) > 1 and set(bridges).issubset(set( TorConnectionConfig.get_default_bridges())):
-            self.get_object('radio_default').set_active(True)
+        if len(bridges) > 1 and set(bridges).issubset(
+            set(TorConnectionConfig.get_default_bridges())
+        ):
+            self.get_object("radio_default").set_active(True)
         else:
-            self.get_object('radio_type').set_active(True)
-            self.get_object('text').get_property("buffer").set_text('\n'.join(bridges))
-
+            self.get_object("radio_type").set_active(True)
+            self.get_object("text").get_property("buffer").set_text("\n".join(bridges))
 
     def _step_bridge_is_text_valid(self) -> bool:
         def set_warning(msg):
@@ -226,7 +227,10 @@ class StepConnectProgressMixin:
         self.builder.get_object("step_progress_box").show()
         self.builder.get_object("step_progress_box_internettest").hide()
         self.builder.get_object("step_progress_box_internetok").hide()
-        self.spawn_tor_connect()
+        if not self.state["progress"]["success"]:
+            self.spawn_tor_connect()
+        else:
+            self._step_progress_success_screen()
 
     def spawn_internet_test(self):
         test_spawn = GAsyncSpawn()
@@ -296,7 +300,7 @@ class StepConnectProgressMixin:
                 self.change_box("error")
                 return False
             log.debug("tor configuration applied")
-            self.state['progress']['started'] = True
+            self.state["progress"]["started"] = True
             progress.set_fraction(0.20)
             progress.set_text("applied")
             GLib.timeout_add(1000, do_tor_connect_check, {"count": 30})
@@ -327,20 +331,23 @@ class StepConnectProgressMixin:
 
             ok = self.app.configurator.tor_has_bootstrapped()
             if ok:
-                self.state['progress']['success'] = True
-                self.save_conf(successful_connect=True)
-                if not self.app.configurator.tor_connection_config.bridges:
-                    text = "Tor is working!"
-                else:
-                    text = "Tor is working (with bridges)!"
-                progress.set_fraction(1)
-                progress.set_text(text)
-                self.builder.get_object("step_progress_box_start").show()
+                self.state["progress"]["success"] = True
+                self._step_progress_success_screen()
                 return False
             else:
                 return True
 
         idle_add_chain([do_tor_connect_config, do_tor_connect_apply])
+
+    def _step_progress_success_screen(self):
+        self.save_conf(successful_connect=True)
+        self.get_object("box_torconnect").hide()
+        self.get_object("box_tortestok").show()
+        self.get_object("label_status").set_text(
+            "Connected to Tor successfully!\n\n"
+            "You can now browse the Internet anonymously and uncensored"
+        )
+        self.get_object("box_start").show()
 
     def cb_internet_test(self, spawn, retval):
         if retval == 0:
@@ -517,7 +524,15 @@ class TCAMainWindow(
             data = self.app.configurator.read_conf()
             if data and data.get("ui"):
                 self.state["hide"].update(data["ui"].get("hide", {}))
-                self.state["progress"]['started'] = data["ui"].get("progress", {}).get('started', False)
+                self.state["progress"]["started"] = (
+                    data["ui"].get("progress", {}).get("started", False)
+                )
+            self.state["progress"][
+                "success"
+            ] = self.app.configurator.tor_has_bootstrapped()
+            if self.state['progress']['success']:
+                self.state["step"] = "progress"
+
         self.current_language = "en"
         self.connect("delete-event", self.cb_window_delete_event, None)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -551,7 +566,6 @@ class TCAMainWindow(
         self.add(self.main_container)
         self.show()
         self.change_box(self.state["step"])
-
 
     def todo_dialog(self, msg=""):
         print("TODO:", msg)
@@ -601,7 +615,6 @@ class TCAMainWindow(
         new_box.set_vexpand(True)
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
-        log.error("State is to be saved (just to see if it works)")
         log.debug("Step changed, state is now %s", str(self.state))
 
         # resize, just to be sure that everything is properly shown
