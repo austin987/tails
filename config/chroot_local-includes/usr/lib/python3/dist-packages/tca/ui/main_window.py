@@ -39,6 +39,7 @@ IMG_SIDE = {
     "progress": IMG_WALKIE,
     "error": IMG_WALKIE,
 }
+CONNECTION_TIMEOUT = 30
 
 # META {{{
 # Naming convention for widgets:
@@ -245,7 +246,6 @@ class StepConnectProgressMixin:
     def spawn_tor_connect(self):
         self.builder.get_object("step_progress_box_torconnect").show()
         self.builder.get_object("step_progress_pbar_torconnect").show()
-        progress = self.builder.get_object("step_progress_pbar_torconnect")
 
         def _apply_proxy():
             if not self.state["proxy"] or self.state["proxy"]["proxy_type"] == "no":
@@ -265,47 +265,53 @@ class StepConnectProgressMixin:
         def do_tor_connect_config():
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
+                self.get_object("label_status").set_text("Connecting to Tor...")
             elif self.state["bridge"]["kind"] == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
                 )
+                self.get_object("label_status").set_text(
+                    "Connecting with default bridges..."
+                )
             elif self.state["bridge"]["bridges"]:
                 self.app.configurator.tor_connection_config.enable_bridges(
                     self.state["bridge"]["bridges"]
+                )
+                self.get_object("label_status").set_text(
+                    "Connecting through bridges..."
                 )
             else:
                 raise ValueError(
                     "inconsistent state! you discovered a programming error"
                 )
             _apply_proxy()
-            progress.set_fraction(0.1)
-            progress.set_text("configuration prepared")
+            self.connection_progress.set_fraction(0.1)
             return True
 
         def do_tor_connect_default_bridges():
             self.app.configurator.tor_connection_config.default_bridges(
                 only_type="obfs4"
             )
+            self.get_object("label_status").set_text(
+                "Connecting with default bridges..."
+            )
             _apply_proxy()
-            progress.set_fraction(0.1)
-            progress.set_text("configuration prepared")
+            self.connection_progress.set_fraction(0.1)
             return True
 
         def do_tor_connect_apply():
             try:
                 self.app.configurator.apply_conf()
             except stem.InvalidRequest as exc:
-                progress.set_fraction(0)
-                progress.set_text("Error setting bridges!")
+                self.connection_progress.set_fraction(0)
                 self.state["progress"]["error"] = "setconf"
                 self.state["progress"]["error_data"] = exc.message
                 self.change_box("error")
                 return False
             log.debug("tor configuration applied")
             self.state["progress"]["started"] = True
-            progress.set_fraction(0.20)
-            progress.set_text("applied")
-            GLib.timeout_add(1000, do_tor_connect_check, {"count": 30})
+            self.connection_progress.set_fraction(0.20)
+            GLib.timeout_add(1000, do_tor_connect_check, {"count": CONNECTION_TIMEOUT})
             return False
 
         def do_tor_connect_check(d: dict):
@@ -313,14 +319,16 @@ class StepConnectProgressMixin:
             # Python; the dictionary is just acting like a mutable reference, job that might be done with
             # weakref or other methods, but dicts are easier to understand.
             if d["count"] <= 0:
-                progress.set_fraction(0)
-                progress.set_text("Connection error")
+                self.connection_progress.set_fraction(0)
 
                 if (
                     not self.state["hide"]["hide"] and not self.state["hide"]["bridge"]
                 ) and not self.app.configurator.tor_connection_config.bridges:
                     log.info("Retrying with default bridges")
                     self.app.configurator.tor_connection_config.default_bridges()
+                    self.get_object("label_status").set_text(
+                        "Connecting with default bridges..."
+                    )
                     idle_add_chain(
                         [do_tor_connect_default_bridges, do_tor_connect_apply]
                     )
@@ -404,7 +412,7 @@ class StepErrorMixin:
 
 class StepProxyMixin:
     def before_show_proxy(self):
-        self.state['proxy'].setdefault("proxy_type", "no")
+        self.state["proxy"].setdefault("proxy_type", "no")
         self.builder.get_object("step_proxy_combo").set_active_id(
             self.state["proxy"]["proxy_type"]
         )
@@ -532,7 +540,7 @@ class TCAMainWindow(
             self.state["progress"][
                 "success"
             ] = self.app.configurator.tor_has_bootstrapped()
-            if self.state['progress']['success']:
+            if self.state["progress"]["success"]:
                 self.state["step"] = "progress"
 
         self.current_language = "en"
@@ -565,6 +573,8 @@ class TCAMainWindow(
                 revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
 
         self.main_container = builder.get_object("box_main_container_image_step")
+        self.connection_progress = ConnectionProgress(self)
+        GLib.timeout_add(1000, self.connection_progress.tick)
         self.add(self.main_container)
         self.show()
         self.change_box(self.state["step"])
@@ -639,3 +649,29 @@ class TCAMainWindow(
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
         subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
+
+
+class ConnectionProgress:
+    """
+    This class "handles" the progress bar in the final screen.
+
+    Probably the right approach would have been to subclass Gtk.ProgressBar, but subclassing and glade are
+    hard to combine.
+    """
+
+    def __init__(self, main_window):
+        self.main_window = main_window
+        self.progress = main_window.builder.get_object("step_progress_pbar_torconnect")
+
+    def tick(self):
+        current = float(self.progress.get_fraction())
+        if current in (0, 100):
+            return True
+        current += (9 / CONNECTION_TIMEOUT) / 100
+        self.set_fraction(current)
+        return True
+
+    def set_fraction(self, num):
+        self.progress.set_fraction(num)
+        text = "%d%%" % (num * 100)
+        self.progress.set_text(text)
