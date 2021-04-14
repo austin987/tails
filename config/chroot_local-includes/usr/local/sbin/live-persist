@@ -443,6 +443,18 @@ activate_volumes ()
 		chown amnesia:amnesia "${persistent_fs}/dont-ask-again"
 	done
 
+	# Migrate obsolete network setting to offline mode setting
+	for persistent_fs in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		conf="${persistent_fs}/greeter-settings/tails.network"
+		if [ -e "${conf}" ]; then
+			. "${conf}"
+			if [ "${TAILS_NETCONF:-}" = disabled ]; then
+				echo 'TAILS_NETWORK=false' > "${conf}"
+			fi
+		fi
+	done
+
 	# Load the new persistence.conf.
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
 	get_custom_mounts ${custom_mounts} ${open_volumes}
