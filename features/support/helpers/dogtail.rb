@@ -263,10 +263,18 @@ module Dogtail
         end
       end
       if pattern.instance_of?(Regexp)
-        child = self.children(**opts).find do |c|
-          pattern.match(c.name)
+        retries = 20
+        if opts.key?(:retry)
+          retries = 1 unless opts[:retry]
+          opts.delete(:retry)
         end
-        raise Failure, "Found no child matching /#{pattern.source}/" if child.nil?
+        child = nil
+        retry_action(retries, exception: Failure, msg: "Found no child matching /#{pattern.source}/") do
+          child = self.children(**opts).find do |c|
+            pattern.match(c.name)
+          end
+          assert_not_nil(child)
+        end
         child
       else
         self.original_child_method(pattern, **opts)
