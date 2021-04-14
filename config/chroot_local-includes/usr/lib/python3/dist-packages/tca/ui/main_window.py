@@ -505,7 +505,7 @@ class StepProxyMixin:
 
 
 class TCAMainWindow(
-    Gtk.Window,
+    Gtk.ApplicationWindow,
     TranslatableWindow,
     StepChooseHideMixin,
     StepConnectProgressMixin,
@@ -523,9 +523,15 @@ class TCAMainWindow(
     # }}}
 
     def __init__(self, app):
-        Gtk.Window.__init__(self, title="Tor Connection")
+        Gtk.ApplicationWindow.__init__(self, title="Tor Connection", application=app)
         TranslatableWindow.__init__(self, self)
         self.app = app
+        self.set_role(tca.config.APPLICATION_WM_CLASS)
+        # XXX: set_wm_class is deprecated, but it's the only way I found to set taskbar title
+        self.set_wmclass(
+            tca.config.APPLICATION_WM_CLASS, tca.config.APPLICATION_WM_CLASS
+        )
+        self.set_title(_(tca.config.APPLICATION_TITLE))
         # self.state collects data from user interactions. Its main key is the step name
         self.state: Dict[str, Dict[str, Any]] = {
             "hide": {},
@@ -682,11 +688,11 @@ class ConnectionProgress:
         return self.main_window.builder.get_object("step_progress_pbar_torconnect")
 
     def tick(self):
-        '''
+        """
         Every second, performs "fake" advancement of the progress bar.
 
         This advancement does not correspond to real progress, but provides more responsive UX.
-        '''
+        """
         current = float(self.progress.get_fraction())
         if current == 0 or current > 98:
             return True

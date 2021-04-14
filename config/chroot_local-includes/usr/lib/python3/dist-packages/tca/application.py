@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import sys
 import logging
 import gettext
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -10,19 +11,27 @@ import gi
 
 from tca.ui.main_window import TCAMainWindow
 import tca.config
-from tca.torutils import recover_fd_from_parent, TorLauncherUtils, TorLauncherNetworkUtils
+from tca.torutils import (
+    recover_fd_from_parent,
+    TorLauncherUtils,
+    TorLauncherNetworkUtils,
+)
 from tailslib.logutils import configure_logging
 
 
 gi.require_version("GLib", "2.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import GLib, Gtk  # noqa: E402
+from gi.repository import GLib, Gtk, Gio  # noqa: E402
 
 
-class TCAApplication:
+class TCAApplication(Gtk.Application):
     """main controller for TCA."""
 
     def __init__(self, args):
+        super().__init__(
+            application_id="org.boum.tails.tor-connection-assistant",
+            flags=Gio.ApplicationFlags.FLAGS_NONE,
+        )
         self.log = logging.getLogger(self.__class__.__name__)
         self.config_buf, = recover_fd_from_parent()
         controller = Controller.from_port(port=9051)
@@ -32,8 +41,26 @@ class TCAApplication:
         self.netutils = TorLauncherNetworkUtils()
         self.args = args
         self.debug = args.debug
+        self.window = None
 
-        self.mainwindow = TCAMainWindow(self)
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+
+        action = Gio.SimpleAction.new("quit", None)
+        action.connect("activate", self.on_quit)
+        self.add_action(action)
+
+    def do_activate(self):
+        # We only allow a single window and raise any existing ones
+        if self.window is None:
+            # Windows are associated with the application
+            # when the last one is closed the application shuts down
+            self.window = TCAMainWindow(self)
+
+        self.window.show()
+
+    def on_quit(self, action, param):
+        self.quit()
 
 
 def is_tails_debug_mode() -> bool:
@@ -69,14 +96,12 @@ if __name__ == "__main__":
     args = get_parser().parse_args()
 
     log_conf = {"level": logging.DEBUG if args.debug else args.log_level}
-    configure_logging(hint=args.log_target, ident='tca', **log_conf)
+    configure_logging(hint=args.log_target, ident="tca", **log_conf)
     # translatable is a really really noisy logger. set it to debug only if really needed
     logging.getLogger("translatable").setLevel(logging.INFO)
 
     _ = gettext.gettext
     GLib.set_prgname(tca.config.APPLICATION_TITLE)
     GLib.set_application_name(_(tca.config.APPLICATION_TITLE))
-    Gtk.init(args.gtk_args)
     application = TCAApplication(args)
-    Gtk.Window.set_default_icon_name(tca.config.APPLICATION_ICON_NAME)
-    Gtk.main()
+    application.run([sys.argv[0]])
