@@ -407,7 +407,7 @@ class TorLauncherUtils:
         self.stem_controller.set_options(tor_conf)
         self.stem_controller.set_conf("DisableNetwork", "0")
 
-    def tor_has_bootstrapped(self) -> bool:
+    def tor_bootstrap_phase(self) -> int:
         resp = self.stem_controller.get_info("status/bootstrap-phase")
         if resp is None:
             log.warn("No response from ControlPort")
@@ -418,6 +418,10 @@ class TorLauncherUtils:
             return False
         progress = int(parts[2].split("=")[1])
         log.debug("tor bootstrap progress = %d", progress)
+        return progress
+
+    def tor_has_bootstrapped(self) -> bool:
+        progress = self.tor_bootstrap_phase()
         if progress != 100:
             return False
         return True

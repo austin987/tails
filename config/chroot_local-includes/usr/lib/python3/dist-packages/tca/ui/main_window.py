@@ -285,7 +285,9 @@ class StepConnectProgressMixin:
                     "inconsistent state! you discovered a programming error"
                 )
             _apply_proxy()
-            self.connection_progress.set_fraction(0.1)
+            self.connection_progress.set_fraction(
+                ConnectionProgress.PROGRESS_CONFIGURATION_CONFIG
+            )
             return True
 
         def do_tor_connect_default_bridges():
@@ -296,7 +298,9 @@ class StepConnectProgressMixin:
                 "Connecting with default bridges..."
             )
             _apply_proxy()
-            self.connection_progress.set_fraction(0.1)
+            self.connection_progress.set_fraction(
+                ConnectionProgress.PROGRESS_CONFIGURATION_CONFIG
+            )
             return True
 
         def do_tor_connect_apply():
@@ -310,8 +314,12 @@ class StepConnectProgressMixin:
                 return False
             log.debug("tor configuration applied")
             self.state["progress"]["started"] = True
-            self.connection_progress.set_fraction(0.20)
-            GLib.timeout_add(1000, do_tor_connect_check, {"count": CONNECTION_TIMEOUT})
+            self.connection_progress.set_fraction(
+                ConnectionProgress.PROGRESS_CONFIGURATION_APPLIED
+            )
+            GLib.timeout_add(
+                500, do_tor_connect_check, {"count": CONNECTION_TIMEOUT * 2}
+            )
             return False
 
         def do_tor_connect_check(d: dict):
@@ -345,6 +353,8 @@ class StepConnectProgressMixin:
                 self._step_progress_success_screen()
                 return False
             else:
+                progress = self.app.configurator.tor_bootstrap_phase()
+                self.connection_progress.set_fraction_from_bootstrap_phase(progress)
                 return True
 
         idle_add_chain([do_tor_connect_config, do_tor_connect_apply])
@@ -659,15 +669,33 @@ class ConnectionProgress:
     hard to combine.
     """
 
+    PROGRESS_CONFIGURATION_CONFIG = 0.01
+    PROGRESS_CONFIGURATION_APPLIED = 0.1
+    PROGRESS_BOOTSTRAP_END = 0.9
+
     def __init__(self, main_window):
         self.main_window = main_window
-        self.progress = main_window.builder.get_object("step_progress_pbar_torconnect")
+        self.bootstrap_phase = 0
+
+    @property
+    def progress(self):
+        return self.main_window.builder.get_object("step_progress_pbar_torconnect")
 
     def tick(self):
+        '''
+        Every second, performs "fake" advancement of the progress bar.
+
+        This advancement does not correspond to real progress, but provides more responsive UX.
+        '''
         current = float(self.progress.get_fraction())
-        if current in (0, 100):
+        if current == 0 or current > 98:
             return True
-        current += (9 / CONNECTION_TIMEOUT) / 100
+        # in CONNECTION_TIMEOUT ticks we must do the same range as advancing bootstrap-phase by 10%
+        range_after_many_ticks = (
+            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
+        ) / 10
+        range_for_one_tick = range_after_many_ticks / CONNECTION_TIMEOUT
+        current += range_for_one_tick / 100
         self.set_fraction(current)
         return True
 
@@ -675,3 +703,28 @@ class ConnectionProgress:
         self.progress.set_fraction(num)
         text = "%d%%" % (num * 100)
         self.progress.set_text(text)
+
+    def get_fraction_from_bootstrap_phase(self, progress: int) -> float:
+        """
+        Calculate fraction based on tor bootstrap-phase.
+
+        The 'progress' argument is the number returned by tor, which is in the range [0,100]
+
+        >>> cp = ConnectionProgress(None)
+        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(0)
+        '0.10'
+        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(100)
+        '0.90'
+        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(50)
+        '0.60'
+        """
+        normalized_value = self.PROGRESS_CONFIGURATION_APPLIED + (progress / 100) * (
+            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
+        )
+        return normalized_value
+
+    def set_fraction_from_bootstrap_phase(self, progress: int):
+        if progress == self.bootstrap_phase:
+            return
+        self.bootstrap_phase = progress
+        return self.set_fraction(self.get_fraction_from_bootstrap_phase(progress))
