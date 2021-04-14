@@ -367,8 +367,9 @@ def tca_configure(mode, &block)
   radio_button = tor_connection_assistant.child(
     radio_button_label, roleName: 'radio button'
   )
-  until radio_button.checked
+  try_for(10) do
     radio_button.click
+    radio_button.checked
   end
   block.call if block_given?
   tor_connection_assistant.child('Connect to Tor',
