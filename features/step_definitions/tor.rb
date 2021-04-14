@@ -381,8 +381,7 @@ def tca_configure(mode, &block)
       failure_reported = true
       done = true
     else
-      progress = tor_connection_assistant.child(roleName: 'progress bar', retry: false).get_field('value')
-      done = (progress == '1.0')
+      done = tor_connection_assistant.child?(/^Connected to Tor successfully/, roleName: 'label', retry: false)
     end
     done
   end
