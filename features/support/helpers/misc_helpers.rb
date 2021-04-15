@@ -66,6 +66,11 @@ def try_for(timeout, **options)
       begin
         attempts += 1
         elapsed = time_delta(start_time, Time.now)
+        # We should never have to raise unique_timeout_exception
+        # manually like this, Timeout.timeout() should handle it, but
+        # sometimes it does not, most likely due to nested usage of
+        # it, possibly due to some Ruby bug.
+        raise unique_timeout_exception if timeout < elapsed
         debug_log("try_for: attempt #{attempts} (#{elapsed}s elapsed " \
                   "of #{timeout}s)...") if options[:log]
         if yield
