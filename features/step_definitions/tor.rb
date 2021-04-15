@@ -338,7 +338,7 @@ end
 
 When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
   try_for(60) do
-    @tor_connection_assistant = Dogtail::Application.new('TorConnectionAssistant')
+    @tor_connection_assistant = Dogtail::Application.new('Tor Connection')
   end
 end
 
