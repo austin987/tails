@@ -337,8 +337,13 @@ end
 # images is not suitable, so we try more general approaches.
 
 When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
-  try_for(60) do
-    @tor_connection_assistant = Dogtail::Application.new('Tor Connection')
+  begin
+    try_for(60) do
+      @tor_connection_assistant = Dogtail::Application.new('Tor Connection')
+    end
+  rescue Timeout::Error
+    save_tor_journal
+    raise TorBootstrapFailure, 'TCA did not start'
   end
 end
 
