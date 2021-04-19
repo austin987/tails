@@ -60,7 +60,9 @@ class TCAApplication(Gtk.Application):
             changed = True
 
         self.last_nm_state = val
-        if changed:
+
+        # XXX: we should wait until the window has been initialized...
+        if changed and self.window is not None:
             # XXX: there should be a nicer way to call that function at next loop
             self.window.on_network_changed()
 
@@ -71,9 +73,10 @@ class TCAApplication(Gtk.Application):
         action.connect("activate", self.on_quit)
         self.add_action(action)
 
-        GLib.timeout_add(1000, self.do_fetch_nm_state)
+        GLib.timeout_add(1, self.do_fetch_nm_state, False)
+        GLib.timeout_add(1000, self.do_fetch_nm_state, True)
 
-    def do_fetch_nm_state(self):
+    def do_fetch_nm_state(self, repeat):
         def handle_hello_error(*args, **kwargs):
             self.log.warn("Error getting information from NetworkManager")
             self.last_nm_state = None
@@ -84,7 +87,7 @@ class TCAApplication(Gtk.Application):
         nm = dbus.Interface(nm_obj, "org.freedesktop.NetworkManager")
 
         nm.state(reply_handler=self.cb_dbus_nm_state, error_handler=handle_hello_error)
-        return True  # repeat
+        return repeat
 
     def do_activate(self):
         # We only allow a single window and raise any existing ones
