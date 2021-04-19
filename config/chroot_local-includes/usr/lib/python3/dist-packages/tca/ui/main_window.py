@@ -38,6 +38,7 @@ IMG_SIDE = {
     "proxy": IMG_WALKIE,
     "progress": IMG_WALKIE,
     "error": IMG_WALKIE,
+    "offline": IMG_RELAYS,
 }
 CONNECTION_TIMEOUT = 30
 
@@ -317,7 +318,7 @@ class StepConnectProgressMixin:
             self.connection_progress.set_fraction(
                 ConnectionProgress.PROGRESS_CONFIGURATION_APPLIED
             )
-            GLib.timeout_add(
+            self.timer_check = GLib.timeout_add(
                 500, do_tor_connect_check, {"count": CONNECTION_TIMEOUT * 2}
             )
             return False
@@ -539,6 +540,7 @@ class TCAMainWindow(
             "proxy": {},
             "progress": {},
             "step": "hide",
+            "offline": {},
         }
         if self.app.args.debug_statefile is not None:
             log.debug("loading statefile")
@@ -665,6 +667,21 @@ class TCAMainWindow(
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
         subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
+
+    def on_network_changed(self):
+        up = self.app.is_network_link_ok
+        if not up:
+            if self.state["step"] == "progress":
+                GLib.source_remove(self.timer_check)
+                self.state["offline"]["previous"] = self.state["step"]
+                self.change_box("offline")
+            elif self.state["step"] in ["error", "hide"]:
+                self.state["offline"]["previous"] = self.state["step"]
+                self.change_box("offline")
+        else:
+            prev = self.state["offline"].get("previous", False)
+            if prev:
+                self.change_box(prev)
 
 
 class ConnectionProgress:

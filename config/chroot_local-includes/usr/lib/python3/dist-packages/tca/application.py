@@ -8,6 +8,8 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from stem.control import Controller
 import prctl
 import gi
+import dbus
+import dbus.mainloop.glib
 
 from tca.ui.main_window import TCAMainWindow
 import tca.config
@@ -22,6 +24,9 @@ from tailslib.logutils import configure_logging
 gi.require_version("GLib", "2.0")
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk, Gio  # noqa: E402
+
+
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
 
 class TCAApplication(Gtk.Application):
@@ -42,6 +47,22 @@ class TCAApplication(Gtk.Application):
         self.args = args
         self.debug = args.debug
         self.window = None
+        self.sys_dbus = dbus.SystemBus()
+        self.last_nm_state = None
+
+    @property
+    def is_network_link_ok(self):
+        return self.last_nm_state is not None and self.last_nm_state >= 60
+
+    def cb_dbus_nm_state(self, val):
+        changed = False
+        if self.last_nm_state != val:
+            changed = True
+
+        self.last_nm_state = val
+        if changed:
+            # XXX: there should be a nicer way to call that function at next loop
+            self.window.on_network_changed()
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -49,6 +70,21 @@ class TCAApplication(Gtk.Application):
         action = Gio.SimpleAction.new("quit", None)
         action.connect("activate", self.on_quit)
         self.add_action(action)
+
+        GLib.timeout_add(1000, self.do_fetch_nm_state)
+
+    def do_fetch_nm_state(self):
+        def handle_hello_error(*args, **kwargs):
+            self.log.warn("Error getting information from NetworkManager")
+            self.last_nm_state = None
+
+        nm_obj = self.sys_dbus.get_object(
+            "org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager"
+        )
+        nm = dbus.Interface(nm_obj, "org.freedesktop.NetworkManager")
+
+        nm.state(reply_handler=self.cb_dbus_nm_state, error_handler=handle_hello_error)
+        return True  # repeat
 
     def do_activate(self):
         # We only allow a single window and raise any existing ones
