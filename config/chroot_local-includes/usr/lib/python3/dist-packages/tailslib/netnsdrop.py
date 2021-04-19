@@ -53,7 +53,7 @@ def run(
     extra_args=[],
 ):
     if os.getuid() == 0:
-        run_in_netns(real_executable, netns=netns)
+        run_in_netns(real_executable, *extra_args, netns=netns)
     else:
         env = os.environ.copy() if keep_env else {}
         env.update(extra_env)
