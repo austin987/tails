@@ -354,7 +354,7 @@ The last report of these checks is published on
 Machine translation
 -------------------
 
-This is important because it saves time for the translators, especially
+This is an important feature, because it saves time for translators, especially
 in cumbersome documents, and helps us to be consistent not only with our
 translations but, for example, with the Debian locales if we feed them
 to the tmserver.
@@ -374,6 +374,19 @@ The tmserver can be queried like this
 [[!tails_gitweb_puppet_tails manifests/weblate.pp desc="(see `tmserver.service`)"]]:
 
 	http://localhost:8080/tmserver/en/de/unit/contribute
+
+Automatic translation
+---------------------
+
+This is the possibility of automatically translating strings that are already translated in
+other components and have the exact same source.
+
+It is used mainly for titles that repeat (as the titles for the release notes,
+monthly reports, etc) and markup/code-only strings that repeat all around our website.
+
+Only reviewers can perform this action and it is done in a per-component basis.
+See [[!tails_gitlab tails/sysadmin/-/issues/17767 desc="the corresponding issue"]] for reference.
+
 
 <a id="access-control"></a>
 
@@ -409,18 +422,23 @@ Currently implemented proposal
 - In Weblate lingo, we use the [dedicated
   reviewers](https://docs.weblate.org/en/latest/workflows.html#dedicated-reviewers)
   workflow: it's the only one that protects us against an adversary
-  who's ready to create multiple user accounts.
+  who's ready to create multiple user accounts. The permissions for
+  the different roles are enforced through [[!tails_gitweb_puppet_tails files/weblate/config/weblate_permissions.yaml desc="puppet"]].
 
 - When not logged in, a visitor is in the `Guests` group and is
   only allowed to suggest translations.
 
-- Every logged in user is in the `Users` group. Members of this group
-  are allowed to suggest translations but not to accept suggestions
-  nor to directly save new translations of their own. They can also
-  vote on suggestions.
+- Every logged in user is in the `Users` and `Viewers` groups. Members of
+  the `Users` group are allowed to suggest translations but not to accept
+  suggestions nor to directly save new translations of their own. They can also
+  vote on suggestions. This groups are native to Weblate and we cannot
+  delete them.
 
-- A reviewer, i.e. a member of the `@Review` group in Weblate, is
-  allowed to accept and delete suggestions.
+- A reviewer, i.e. a member of the `Reviewers` group in Weblate, is
+  allowed to accept and delete all the suggestions. This group is limited
+  to a few translators that need to work in more languages than their main language.
+  There are reviewer groups specific to each of the languages in the platform,
+  such as `Reviewers Arabic`, `Reviewers French`, etc.
 
   Limitations:
 
@@ -435,25 +453,11 @@ Currently implemented proposal
     the suggestion from there, and then accepting it with their
     reviewer account.
 
-  - Reviewer status is global to our Weblate instance, and not
-    per-language, so technically, a reviewer can very well accept
-    suggestions for a language they don't speak. We will them in
-    our documentation to _not_ do that, except to fix important and
-    obvious problems that don't require knowledge of that language
-    (for example, broken syntax for ikiwiki directives).
-
-	If this ever causes actual problems, this could be fixed with
-    [group-based access
-    control](https://docs.weblate.org/en/weblate-2.20/admin/access.html#groupacl)
-
 - How one gets reviewer status:
 
-  - We will port to Weblate semantics the pre-existing trust
-    relationship we already have towards translation teams that have
-    been using Git so far: they all become reviewers.
-
-	To this aim, we have asked them to create an account on Weblate
-	and tell us what their user name is.
+  - We ported to Weblate semantics the pre-existing trust
+    relationship we already had towards translation teams that have
+    been using Git so far: they all became reviewers.
 
   - One can request reviewer status to Weblate administrators, who
     will:
@@ -464,6 +468,9 @@ Currently implemented proposal
        In other words, we use proof-of-work to increase the cost of attacks.
     2. Let <tails-l10n@boum.org> and all the other Weblate reviewers
        know about this status change.
+
+  - Contributors can reach an agreement on tails-l10n mailing list and
+    nominate a new reviewer for their language.
 
 - Bootstrapping a new language
 
