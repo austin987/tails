@@ -62,10 +62,17 @@ class TCAApplication(Gtk.Application):
 
         self.last_nm_state = val
 
-        # XXX: we should wait until the window has been initialized...
-        if changed and self.window is not None:
-            # XXX: there should be a nicer way to call that function at next loop
-            self.window.on_network_changed()
+        def wait_window():
+            if self.window is None:
+                return True
+            GLib.idle_add(self.window.on_network_changed)
+            return False
+
+        if changed:
+            if self.window is not None:
+                GLib.idle_add(self.window.on_network_changed)
+            else:
+                GLib.timeout_add(100, wait_window)
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
