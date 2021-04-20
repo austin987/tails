@@ -55,6 +55,7 @@ class TCAApplication(Gtk.Application):
         return self.last_nm_state is not None and self.last_nm_state >= 60
 
     def cb_dbus_nm_state(self, val):
+        self.log.debug('NetworkManager state is now: %d', int(val))
         changed = False
         if self.last_nm_state != val:
             changed = True
@@ -73,10 +74,9 @@ class TCAApplication(Gtk.Application):
         action.connect("activate", self.on_quit)
         self.add_action(action)
 
-        GLib.timeout_add(1, self.do_fetch_nm_state, False)
-        GLib.timeout_add(1000, self.do_fetch_nm_state, True)
+        GLib.timeout_add(1, self.do_fetch_nm_state)
 
-    def do_fetch_nm_state(self, repeat):
+    def do_fetch_nm_state(self):
         def handle_hello_error(*args, **kwargs):
             self.log.warn("Error getting information from NetworkManager")
             self.last_nm_state = None
@@ -86,8 +86,12 @@ class TCAApplication(Gtk.Application):
         )
         nm = dbus.Interface(nm_obj, "org.freedesktop.NetworkManager")
 
+        # get immediately
         nm.state(reply_handler=self.cb_dbus_nm_state, error_handler=handle_hello_error)
-        return repeat
+        # subscribe for changes
+        nm.connect_to_signal('StateChanged', self.cb_dbus_nm_state)
+
+        return False
 
     def do_activate(self):
         # We only allow a single window and raise any existing ones
