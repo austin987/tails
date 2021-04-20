@@ -334,10 +334,6 @@ class StepConnectProgressMixin:
                     not self.state["hide"]["hide"] and not self.state["hide"]["bridge"]
                 ) and not self.app.configurator.tor_connection_config.bridges:
                     log.info("Retrying with default bridges")
-                    self.app.configurator.tor_connection_config.default_bridges()
-                    self.get_object("label_status").set_text(
-                        "Connecting with default bridges..."
-                    )
                     idle_add_chain(
                         [do_tor_connect_default_bridges, do_tor_connect_apply]
                     )

@@ -403,7 +403,6 @@ class TorLauncherUtils:
         self.stem_controller.set_conf("DisableNetwork", "1")
         tor_conf = self.tor_connection_config.to_tor_conf()
         log.debug("applying TorConf: %s", tor_conf)
-        log.error("applying TorConf: %s", self.tor_connection_config.to_dict())
         self.stem_controller.set_options(tor_conf)
         self.stem_controller.set_conf("DisableNetwork", "0")
 
@@ -421,10 +420,16 @@ class TorLauncherUtils:
         return progress
 
     def tor_has_bootstrapped(self) -> bool:
-        progress = self.tor_bootstrap_phase()
-        if progress != 100:
+        resp = self.stem_controller.get_info('status/circuit-established')
+        if resp is None:
+            log.warn('No response from Controlport')
             return False
-        return True
+        if resp == '1':
+            return True
+        if resp == '0':
+            return False
+        log.warn("Unexpected reply to enough-dir-info: %s", str(resp))
+        return False
 
     def tor_has_circuits(self) -> bool:
         resp = self.stem_controller.get_info("status/circuit-established")
