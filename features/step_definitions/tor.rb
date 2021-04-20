@@ -394,12 +394,6 @@ def tca_configure(mode, &block)
     raise TCAConnectionFailure, 'TCA failed to connect to Tor'
   end
   @screen.press('alt', 'F4')
-
-  # XXX: TCA does not yet SAVECONF the working configuration, so it
-  # will be lost if tor is restarted, which we do after restoring a
-  # snapshot. In other words: let's avoid breaking most of the test
-  # suite.
-  $vm.execute_successfully('tor_control_send SAVECONF', libs: 'tor')
 end
 
 When /^I configure a direct connection in the Tor Connection Assistant$/ do
