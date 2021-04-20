@@ -166,6 +166,11 @@ apply_prefs_hacks() {
     (
         cd "${tmp}"
         7z x -tzip "${tbb_install}/browser/omni.ja"
+        # We are not using Tor Launcher, but our own Tor Connection
+        # Assistant, and we want it to use the same default bridges.
+        sed -n 's/^pref("extensions\.torlauncher\.default_bridge\..*", "\(.*\)");/\1/p' \
+            defaults/preferences/000-tor-browser.js \
+            > /usr/share/tails/tca/default_bridges.txt
         # Remove TBB's Tor Launcher settings since we don't enable it in
         # our Tor Browser.
         sed -i '/extensions\.torlauncher\./d' defaults/preferences/000-tor-browser.js
