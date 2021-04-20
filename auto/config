@@ -21,14 +21,18 @@ else
     fatal "SOURCE_DATE_EPOCH is not set. Exiting."
 fi
 
-# get git branch or tag so we can set the basename appropriately, i.e.:
-# * if we build from a tag: tails-$ARCH-$TAG.iso
-# * otherwise:              tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
+# get git branch or tag so we can set the basename appropriately.
 GIT_BRANCH="$(git_current_branch)"
 if [ -n "${GIT_BRANCH}" ]; then
     CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
     GIT_SHORT_ID="$(git_current_commit --short)"
-    BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}"
+    BASE_BRANCH_PART=''
+    if [ "${GIT_BRANCH}" != "$(base_branch)" ]; then
+        CLEAN_GIT_BASE_BRANCH=$(base_branch | sed 's,/,_,g')
+        GIT_BASE_BRANCH_SHORT_ID="$(git rev-parse --verify --short $(git_base_branch_head))"
+        BASE_BRANCH_PART="+${CLEAN_GIT_BASE_BRANCH}@${GIT_BASE_BRANCH_SHORT_ID}"
+    fi
+    BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}@${GIT_SHORT_ID}${BASE_BRANCH_PART}-${AMNESIA_NOW}"
 else
     if git_on_a_tag; then
         CLEAN_GIT_TAG=$(git_current_tag | tr '/-' '_~')
@@ -38,30 +42,6 @@ else
         # tag, remove the tag and then build)
 	fatal "Neither a Git branch nor a tag, exiting."
     fi
-fi
-
-GIT_BASE_BRANCH=$(base_branch) \
-    || fatal "GIT_BASE_BRANCH could not be guessed."
-
-if [ "${TAILS_MERGE_BASE_BRANCH:-}" = 1 ] && \
-       ! git_on_a_tag && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
-    [ -n "${BASE_BRANCH_GIT_COMMIT}" ] \
-        || fatal "Base branch's top commit is not set."
-
-    echo "I: Merging base branch ${GIT_BASE_BRANCH}" \
-         "(at commit ${BASE_BRANCH_GIT_COMMIT})..."
-    faketime -f "${SOURCE_DATE_FAKETIME}" \
-        git merge --no-edit "${BASE_BRANCH_GIT_COMMIT}" \
-	    || fatal "Failed to merge base branch."
-    git submodule update --init
-
-    # Adjust BUILD_BASENAME to embed the base branch name and its top commit
-    CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
-    GIT_BASE_BRANCH_SHORT_ID=$(git rev-parse --verify --short "${BASE_BRANCH_GIT_COMMIT}")
-    [ -n "${GIT_BASE_BRANCH_SHORT_ID}" ] \
-        || fatal "Base branch's top commit short ID could not be guessed."
-    BUILD_BASENAME="${BUILD_BASENAME}+${CLEAN_GIT_BASE_BRANCH}"
-    BUILD_BASENAME="${BUILD_BASENAME}@${GIT_BASE_BRANCH_SHORT_ID}"
 fi
 
 # save variables that lb build needs
