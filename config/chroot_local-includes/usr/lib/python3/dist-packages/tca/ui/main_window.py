@@ -607,10 +607,12 @@ class TCAMainWindow(
         dialog.destroy()
 
     def save_conf(self, successful_connect=False):
+        log.info("Saving configuration (success=%s)", successful_connect)
         if not successful_connect:
-            self.app.configurator.save_conf({"ui": {"hide": self.state["hide"]}})
+            data = {"ui": {"hide": self.state["hide"]}}
         else:
-            self.app.configurator.save_conf({"ui": self.state})
+            data = {"ui": self.state}
+        self.app.configurator.save_conf(data, save_torrc=successful_connect)
 
     def get_screen_size(self) -> Tuple[int, int]:
         disp = Gdk.Display.get_default()

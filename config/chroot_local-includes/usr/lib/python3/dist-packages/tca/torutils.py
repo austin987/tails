@@ -159,7 +159,10 @@ class TorConnectionProxy:
 class InvalidBridgeException(ValueError):
     pass
 
+
 VALID_BRIDGE_TYPES = {"bridge", "obfs4"}
+
+
 class TorConnectionConfig:
     def __init__(
         self,
@@ -371,7 +374,7 @@ class TorLauncherUtils:
                 self.stem_controller
             )
 
-    def save_conf(self, extra={}):
+    def save_conf(self, extra={}, save_torrc=True):
         if self.tor_connection_config is None:
             return
         data = {"tor": self.tor_connection_config.to_dict()}
@@ -381,7 +384,8 @@ class TorLauncherUtils:
         self.config_buf.write(json.dumps(data, indent=2))
         self.config_buf.flush()
 
-        self.stem_controller.save_conf()
+        if save_torrc:
+            self.stem_controller.save_conf()
 
     def read_conf(self):
         self.config_buf.seek(0, os.SEEK_END)
@@ -400,7 +404,7 @@ class TorLauncherUtils:
         return obj
 
     def apply_conf(self):
-        self.stem_controller.set_conf("DisableNetwork", "1")
+        # self.stem_controller.set_conf("DisableNetwork", "1")
         tor_conf = self.tor_connection_config.to_tor_conf()
         log.debug("applying TorConf: %s", tor_conf)
         self.stem_controller.set_options(tor_conf)
@@ -507,6 +511,11 @@ def backoff_wait(
 
 
 def main():
+    """
+    this main function is only called if you execute this file.
+
+    it's meant for testing, no "real" code should run that.
+    """
     conf, controller = recover_fd_from_parent()
     controller.authenticate(password=None)
     launcher = TorLauncherUtils(controller, conf)
