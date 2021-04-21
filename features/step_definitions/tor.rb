@@ -393,6 +393,13 @@ def tca_configure(mode, &block)
   if failure_reported
     raise TCAConnectionFailure, 'TCA failed to connect to Tor'
   end
+  # XXX: we're so fast closing TCA here that it's done before it
+  # issues the SAVECONF, but seemingly only for the "DisableNetwork=0"
+  # part, resulting in a lot of breakage. Ideally we would fix this in
+  # TCA itself, since a user could be this fast too, theoretically.
+  try_for(10) do
+    $vm.execute('grep "DisableNetwork 1" /etc/tor/torrc').failure?
+  end
   @screen.press('alt', 'F4')
 end
 
