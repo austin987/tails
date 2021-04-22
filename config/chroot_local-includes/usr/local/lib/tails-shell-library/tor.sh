@@ -55,7 +55,8 @@ tor_bootstrap_progress() {
 }
 
 tor_is_working() {
-	[ "$(tor_bootstrap_progress)" -eq 100 ]
+	[ "$(tor_bootstrap_progress)" -eq 100 ] && \
+	    [ "$(tor_control_getinfo status/enough-dir-info)" -eq 1 ]
 }
 
 tor_append_to_torrc () {
