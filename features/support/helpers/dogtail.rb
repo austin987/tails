@@ -269,7 +269,7 @@ module Dogtail
           opts.delete(:retry)
         end
         child = nil
-        retry_action(retries, exception: Failure, msg: "Found no child matching /#{pattern.source}/") do
+        retry_action(retries, delay: 1, exception: Failure, msg: "Found no child matching /#{pattern.source}/") do
           child = self.children(**opts).find do |c|
             pattern.match(c.name)
           end
