@@ -420,9 +420,14 @@ Given /^the Tails desktop is ready$/ do
   # Since we use a simulated Tor network (via Chutney) we have to
   # switch to its default bridges.
   default_bridges_path = '/usr/share/tails/tca/default_bridges.txt'
-  $vm.file_overwrite(default_bridges_path, '')
-  chutney_bridge_lines('obfs4', chutney_tag: 'defbr').each do |bridge_line|
-    $vm.file_append(default_bridges_path, bridge_line)
+  # XXX: We can drop the if-statement and keep just its body once
+  # tails!375 (17215-tor-launcher-replacement) is merged in a stable
+  # release.
+  if $vm.file_exist?(default_bridges_path)
+    $vm.file_overwrite(default_bridges_path, '')
+    chutney_bridge_lines('obfs4', chutney_tag: 'defbr').each do |bridge_line|
+      $vm.file_append(default_bridges_path, bridge_line)
+    end
   end
   # Optimize upgrade check: avoid 30 second sleep
   $vm.execute_successfully('sed -i "s/^ExecStart=.*$/& --no-wait/" /usr/lib/systemd/user/tails-upgrade-frontend.service')
