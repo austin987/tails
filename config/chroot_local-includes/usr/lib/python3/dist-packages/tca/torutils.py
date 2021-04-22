@@ -416,7 +416,7 @@ class TorLauncherUtils:
             log.warn("No response from ControlPort")
             return False
         parts = resp.split(" ")
-        if parts[0] != "NOTICE":  # it is WARN
+        if parts[0] not in("NOTICE", "WARN"):
             log.warn("Invalid response: %s", resp)
             return False
         progress = int(parts[2].split("=")[1])
