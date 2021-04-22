@@ -488,6 +488,9 @@ When /^I try to configure a direct connection in the Tor Connection Assistant$/ 
   rescue TCAConnectionFailure
     # Expected!
     next
+  rescue StandardError => e
+    raise "Expected TCAConnectionFailure to be raised but got " \
+          "#{e.class.name}: #{e}"
   else
     raise "TCA managed to connect to Tor but was expected to fail"
   end
