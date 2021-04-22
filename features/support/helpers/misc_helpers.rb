@@ -174,6 +174,7 @@ def retry_action(max_retries, options = {}, &block)
   assert(max_retries.is_a?(Integer), 'max_retries must be an integer')
   options[:recovery_proc] ||= nil
   options[:operation_name] ||= 'Operation'
+  options[:delay] ||= 0
 
   retries = 1
   loop do
@@ -193,6 +194,7 @@ def retry_action(max_retries, options = {}, &block)
                   "exception: #{e.class}: #{e.message}")
         options[:recovery_proc]&.call
         retries += 1
+        sleep options[:delay]
       else
         raise MaxRetriesFailure,
               "#{options[:operation_name]} failed (despite retrying " \
