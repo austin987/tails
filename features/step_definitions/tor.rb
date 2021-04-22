@@ -386,7 +386,7 @@ def tca_configure(mode, &block)
       failure_reported = true
       done = true
     else
-      done = tor_connection_assistant.child?(/^Connected to Tor successfully/, roleName: 'label', retry: false)
+      done = tor_connection_assistant.child?(/^Connected to Tor successfully/, roleName: 'label', retry: false, showingOnly: true)
     end
     done
   end
