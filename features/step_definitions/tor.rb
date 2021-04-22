@@ -500,6 +500,7 @@ When /^I close the Tor Connection Assistant$/ do
   $vm.execute(
     'pkill -f /usr/lib/python3/dist-packages/tca/application.py'
   )
+  @tor_connection_assistant = nil
 end
 
 Then /^the Tor Connection Assistant reports that it failed to connect$/ do
