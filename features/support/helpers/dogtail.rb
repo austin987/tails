@@ -172,8 +172,7 @@ module Dogtail
       end
       findChildren_opts = ''
       unless findChildren_opts_hash.empty?
-        findChildren_opts = ', '
-        + self.class.args_to_s([findChildren_opts_hash])
+        findChildren_opts = ', ' + self.class.args_to_s([findChildren_opts_hash])
       end
       predicate_opts = self.class.args_to_s(args)
       nodes_var = "nodes#{@@node_counter += 1}"
