@@ -411,7 +411,7 @@ class StepErrorMixin:
         self.change_box("proxy")
 
     def cb_step_error_btn_captive_clicked(self, *args):
-        self.todo_dialog("Open unsafe browser")
+        subprocess.Popen(["sudo", "/usr/local/sbin/unsafe-browser"])
 
     def cb_step_error_btn_bridge_clicked(self, *args):
         self.change_box("bridge", no_default_bridges=True)
