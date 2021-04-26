@@ -89,54 +89,55 @@ To learn how the new kernel works for us:
 
 ## Gather other data that will inform our decision
 
-Look for:
+Take notes on the issue of the most relevant bits, or lack thereof,
+for:
 
- - Security issues fixed since the version we currently ship
+### Security issues fixed since the version we currently ship
 
-   To do so, look for "CVE" in the
+To do so, look for "CVE" in the
+[Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
+entries newer than the kernel we currently ship.
+
+### Major security fixes still not fixed in the version we're considering
+
+(in which case, depending on when we are in our own release process,
+it may be worth delaying the analysis a bit, or exceptionally installing
+the kernel from _unstable_)
+
+To do so, use the Debian [security tracker for
+Linux](https://security-tracker.debian.org/tracker/source-package/linux).
+
+### Important regressions
+
+… i.e. bugs with severity _important_ or higher recently reported to Debian against this version of the kernel.
+
+To do so, in the [Debian
+BTS](https://udd.debian.org/bugs.cgi?release=sid&merged=ign&fnewerval=7&flastmodval=7&packages=linux&cseverity=1&sortby=id&sorto=desc&format=html#results),
+look for bugs with severity _important_ or higher that satisfy one of these
+criteria:
+
+ - the bug title includes the kernel version we're considering upgrading to
+ - the bug was reported very recently (the bug title may not say
+   what kernel version is affected, but once you open the bug's page,
+   you'll see that info; for example, [[!debbug 960871]] is marked
+   as affecting linux/5.6.7-1)
+
+If there are important hardware support regressions, ask someone who has an
+archive of WhisperBack reports (for example intrigeri) to check the
+popularity _in Tails_ of the affected hardware: while assessing the impact of
+regressions, we need to take into account that some devices are much more
+popular among Tails users than among the general Debian users population.
+
+### Relevant hardware support improvements
+
+To get a rough guts feeling about it, look for improvements related to graphics
+cards and Wi-Fi adapters support while skimming over:
+
+ - the "Drivers" section of Kernelnewbies's [human-readable
+   changelog](https://kernelnewbies.org/LinuxChanges) of upstream changes
+   (only relevant for a new major Linux release)
+ - the Debian package's
    [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
-   entries newer than the kernel we currently ship.
-
- - Major security fixes still not fixed in the version we're considering
-   (in which case, depending on when we are in our own release process,
-   it may be worth delaying the analysis a bit, or exceptionally installing
-   the kernel from _unstable_)
-
-   To do so, use the Debian [security tracker for
-   Linux](https://security-tracker.debian.org/tracker/source-package/linux).
-
- - Important regressions i.e. bugs with severity _important_ or higher
-   recently reported to Debian against this version of the kernel
-
-   To do so, in the [Debian
-   BTS](https://udd.debian.org/bugs.cgi?release=sid&merged=ign&fnewerval=7&flastmodval=7&packages=linux&cseverity=1&sortby=id&sorto=desc&format=html#results),
-   look for bugs with severity _important_ or higher that satisfy one of these
-   criteria:
-
-    - the bug title includes the kernel version we're considering upgrading to
-    - the bug was reported very recently (the bug title may not say
-      what kernel version is affected, but once you open the bug's page,
-      you'll see that info; for example, [[!debbug 960871]] is marked
-      as affecting linux/5.6.7-1)
-
-   If there are important hardware support regressions, ask someone who has an
-   archive of WhisperBack reports (for example intrigeri) to check the
-   popularity _in Tails_ of the affected hardware: while assessing the impact of
-   regressions, we need to take into account that some devices are much more
-   popular among Tails users than among the general Debian users population.
-
- - Relevant hardware support improvements
-
-   To get a rough guts feeling about it, look for improvements related to graphics
-   cards and Wi-Fi adapters support while skimming over:
-
-    - the "Drivers" section of Kernelnewbies's [human-readable
-      changelog](https://kernelnewbies.org/LinuxChanges) of upstream changes
-      (only relevant for a new major Linux release)
-    - the Debian package's
-      [Changelog](https://salsa.debian.org/kernel-team/linux/raw/sid/debian/changelog)
-
-Take notes on the issue of the most relevant bits or lack thereof.
 
 ## Make a decision
 
