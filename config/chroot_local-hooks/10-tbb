@@ -33,7 +33,7 @@ download_and_verify_files() {
         export https_proxy="${apt_proxy}"
     fi
 
-    echo "${target_files}" | while read expected_sha256 tarball; do
+    echo "${target_files}" | while read -r expected_sha256 tarball; do
         (
             cd "${destination}"
             echo "Fetching ${base_url}/${tarball} ..."
@@ -153,7 +153,7 @@ embed_extensions_in_omni_ja () {
         cp -a '/usr/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net' chrome/torbutton/content/extensions/
         find chrome/torbutton/content/extensions/ -exec touch --date="@${tbb_timestamp}" '{}' \;
         rm "${tbb_install}/omni.ja"
-        7z a -mtc=off -tzip "${tbb_install}/omni.ja" *
+        7z a -mtc=off -tzip -- "${tbb_install}/omni.ja" *
     )
     rm -r "${tmp}"
     tmp="$(mktemp -d)"
@@ -161,7 +161,7 @@ embed_extensions_in_omni_ja () {
         cd "${tmp}"
         7z x -tzip "${tbb_install}/browser/omni.ja"
         # Any $ in the below in-line patch must be escaped!
-        patch -p1 <<EOF
+        patch -p1 <<'EOF'
 diff -Naur browser-omni.orig/modules/BrowserGlue.jsm browser-omni/modules/BrowserGlue.jsm
 --- browser-omni.orig/modules/BrowserGlue.jsm	2020-09-11 19:25:00.000000000 +0200
 +++ browser-omni/modules/BrowserGlue.jsm	2020-09-19 11:44:17.439692582 +0200
@@ -198,7 +198,7 @@ diff -Naur browser-omni.orig/modules/BrowserGlue.jsm browser-omni/modules/Browse
 EOF
         touch --date="@${tbb_timestamp}" modules/BrowserGlue.jsm
         rm "${tbb_install}/browser/omni.ja"
-        7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
+        7z a -mtc=off -tzip -- "${tbb_install}/browser/omni.ja" *
     )
     rm -r "${tmp}"
 }
@@ -225,7 +225,7 @@ apply_prefs_hacks() {
             >> defaults/preferences/000-tor-browser.js
         touch --date="@${tbb_timestamp}" defaults/preferences/000-tor-browser.js
             rm "${tbb_install}/browser/omni.ja"
-            7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
+            7z a -mtc=off -tzip -- "${tbb_install}/browser/omni.ja" *
     )
     rm -r "${tmp}"
 }
@@ -258,6 +258,7 @@ supported_locale () {
     local locale
     locale="$1"
 
+    # shellcheck disable=SC2013
     for supported_language in $(cat "$LANGUAGES_FILE") ; do
         if echo "$locale" | grep -qs -E "^${supported_language}"; then
             return 0
@@ -316,7 +317,7 @@ install_debian_extensions() {
 }
 
 create_default_profile() {
-    local tbb_profile extensions_dir destination
+    local tbb_profile tbb_extensions_dir destination
     tbb_profile="${1}"
     tbb_extensions_dir="${2}"
     destination="${3}"
@@ -349,6 +350,7 @@ fi
 TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
+# shellcheck disable=SC2153
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 install_debian_extensions "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
@@ -369,6 +371,7 @@ rm -r "${TMP}"
 mv "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
 rmdir "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions
 
+# shellcheck disable=SC2153
 mkdir -p "${TBB_PROFILE}"
 create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default "${TBB_EXT}" "${TBB_PROFILE}"
 

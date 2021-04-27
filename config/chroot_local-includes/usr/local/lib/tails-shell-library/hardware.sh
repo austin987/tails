@@ -66,8 +66,8 @@ get_module_used_by_nic() {
 }
 
 get_name_of_nic() {
-  vendor=$(udevadm info -x --query=property /sys/class/net/${1} | sed -n "s/ID_VENDOR_FROM_DATABASE='\(.*\)'/\\1/p" || : )
-  device=$(udevadm info -x --query=property /sys/class/net/${1} | sed -n "s/ID_MODEL_FROM_DATABASE='\(.*\)'/\\1/p" || : )
+  vendor=$(udevadm info -x --query=property "/sys/class/net/${1}" | sed -n "s/ID_VENDOR_FROM_DATABASE='\(.*\)'/\\1/p" || : )
+  device=$(udevadm info -x --query=property "/sys/class/net/${1}" | sed -n "s/ID_MODEL_FROM_DATABASE='\(.*\)'/\\1/p" || : )
   echo "${vendor} ${device}"
 }
 
@@ -80,7 +80,8 @@ mod_rev_dep_aux() {
   local mod
   local rev_deps
   for mod in "${@}"; do
-    if echo ${MOD_REV_DEP_VISITED} | grep -qw ${mod}; then
+    # shellcheck disable=SC2086
+    if echo ${MOD_REV_DEP_VISITED} | grep -qw "${mod}"; then
         continue
     fi
     MOD_REV_DEP_VISITED="${MOD_REV_DEP_VISITED} ${mod}"
@@ -88,8 +89,9 @@ mod_rev_dep_aux() {
     rev_deps=$(lsmod | \
                sed -n "s/^${mod}\s\+\S\+\s\+\S\+\s\+\(\S\+\)/\1/p" | \
                tr ',' ' ')
+    # shellcheck disable=SC2086
     mod_rev_dep_aux ${rev_deps}
-    echo ${mod}
+    echo "${mod}"
   done
 }
 
@@ -99,11 +101,12 @@ mod_rev_dep_aux() {
 # modules that uses $1.
 mod_rev_dep() {
   MOD_REV_DEP_VISITED=""
-  mod_rev_dep_aux ${1}
+  mod_rev_dep_aux "${1}"
 }
 
 # Unloads module $1, and all modules that (transatively) depends on
 # $1 (i.e. its reverse dependencies).
 unload_module_and_rev_deps() {
-  /sbin/modprobe -r $(mod_rev_dep ${1})
+  # shellcheck disable=SC2046
+  /sbin/modprobe -r $(mod_rev_dep "${1}")
 }

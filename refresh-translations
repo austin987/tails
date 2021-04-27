@@ -15,7 +15,7 @@ PERL_PROGS="/usr/local/bin/tails-security-check \
       config/chroot_local-includes/usr/src/iuk/lib \
       config/chroot_local-includes/usr/src/perl5lib/lib \
       config/chroot_local-includes/usr/src/persistence-setup/lib \
-      -type f -name *.pm \
+      -type f -name '*.pm' \
       | perl -p -E 's{^config/chroot_local-includes}{}' \
 )"
 PYTHON_PROGS="/etc/whisperback/config.py \
@@ -101,7 +101,7 @@ prog_potfile () {
             domain="persistence-setup-$(basename "$prog")"
             ;;
         *)
-            domain=$(basename $prog)
+            domain=$(basename "$prog")
             ;;
     esac
     echo "tmp/pot/${domain}.pot"
@@ -113,7 +113,7 @@ create_pot () {
     progpath="config/chroot_local-includes${prog}"
     if [ -e "${progpath}" ]; then
         pot="$(prog_potfile "${prog}")"
-        mkdir -p "$(dirname ${pot})"
+        mkdir -p "$(dirname "${pot}")"
         case "$proglang" in
             Perl)
                 # XXX: once we can assume libintl-perl 1.28+,
@@ -139,6 +139,7 @@ create_pot () {
                 xgettext_args=
                         ;;
         esac
+	# shellcheck disable=SC2086
         xgettext --language="${proglang}" --from-code=UTF-8 \
                  $xgettext_args \
                  --add-comments="Translators:" -o "${pot}" "${progpath}"
@@ -168,7 +169,7 @@ refresh_mo () {
     for locale in "$@" ; do
         po=$(po_file $locale)
         mo=$(mo_file $locale)
-        mkdir -p $(dirname "$mo")
+        mkdir -p "$(dirname "$mo")"
         msgfmt --check -o "${mo}" "${po}"
     done
 }
@@ -202,7 +203,7 @@ intltool_update_pot () {
 intltool_merge_desktop () {
     extract_from_file_between_markers po/POTFILES.in \
         '^# Files updated by intltool-update --desktop-style' '^$' \
-        | while read infile ; do
+        | while read -r infile ; do
               intltool-merge --quiet --desktop-style --utf8 \
                              po "$infile" "${infile%.in}"
           done
@@ -211,7 +212,7 @@ intltool_merge_desktop () {
 intltool_merge_xml () {
     extract_from_file_between_markers po/POTFILES.in \
         '^# Files updated by intltool-update --xml-style' '^$' \
-        | while read infile ; do
+        | while read -r infile ; do
               intltool-merge --quiet --xml-style --utf8 \
                              po "$infile" "${infile%.in}"
           done
@@ -221,7 +222,7 @@ intltool_merge_xml () {
 
 FORCE=no
 KEEP_TMP_POT=no
-while [ -n "${@:-}" ]; do
+while [ -n "${1:-}" ]; do
     case "${1:-}" in
         '--force')
             FORCE=yes
@@ -238,15 +239,16 @@ while [ -n "${@:-}" ]; do
 done
 
 # Schedule clean up
-trap "rm -fr po/*.new po/*.orig ; [ "$KEEP_TMP_POT" = yes ] || rm -fr tmp/pot" EXIT
+# shellcheck disable=SC2064
+trap "rm -fr po/*.new po/*.orig ; [ '$KEEP_TMP_POT' = yes ] || rm -fr tmp/pot" EXIT
 
 # Update POT files
 mkdir -p tmp/pot
-for prog in $PERL_PROGS   ; do create_pot $prog Perl   ; done
-for prog in $PYTHON_PROGS ; do create_pot $prog Python ; done
-for prog in $SHELL_PROGS  ; do create_pot $prog Shell  ; done
-for prog in $JAVASCRIPT_PROGS  ; do create_pot $prog JavaScript ; done
-for prog in $GLADE_UI     ; do create_pot $prog Glade  ; done
+for prog in $PERL_PROGS   ; do create_pot "$prog" Perl   ; done
+for prog in $PYTHON_PROGS ; do create_pot "$prog" Python ; done
+for prog in $SHELL_PROGS  ; do create_pot "$prog" Shell  ; done
+for prog in $JAVASCRIPT_PROGS  ; do create_pot "$prog" JavaScript ; done
+for prog in $GLADE_UI     ; do create_pot "$prog" Glade  ; done
 intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes
@@ -258,9 +260,11 @@ if ! no_left_out_files; then
 fi
 
 # Update PO files
+# shellcheck disable=SC2046
 intltool_update_po $(po_languages)
 
 # Update files that are actually used at runtime
+# shellcheck disable=SC2046
 refresh_mo $(po_languages)
 intltool_merge_desktop
 intltool_merge_xml

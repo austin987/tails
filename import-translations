@@ -25,12 +25,12 @@ LANG_DOT_PO_LAYOUT=yes
 
 # Detect which project is in current folder,
 # and set parameters accordingly
+# shellcheck disable=SC2016
 if [ -f 'po/tails.pot' ]; then
 	BRANCH='tails-misc_release'
 	AFTER_IMPORT='intltool_update_po $(po_languages)'
 elif [ -f 'po/onioncircuits.pot' ]; then
 	LANG_DOT_PO_LAYOUT=no
-	POTFILE=onioncircuits.pot
 	BRANCH='tails-onioncircuits_release'
 	AFTER_IMPORT='./setup.py build_i18n && ( cd po && for po in *.po ; do msgmerge --update "$po" onioncircuits.pot ; done )'
 elif [ -f 'po/whisperback.pot' ]; then
@@ -60,11 +60,11 @@ find "$TAILS_PO_DIR" -name '*.po' -delete
 # For each completely translated language, merge it,
 # unless it is translated outside Transifex
 if [ "$LANG_DOT_PO_LAYOUT" = yes ] ; then
-	find "$TOR_TRANSLATION_DIR" -name '*.po' | sort | while read po_file; do
+	find "$TOR_TRANSLATION_DIR" -name '*.po' | sort | while read -r po_file; do
 		lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
 
 		! lang_is_excluded "$lang" || continue
-		if [ "$(cat "$po_file" | count_translated_strings)" -lt 1 ]; then
+		if [ "$(count_translated_strings < "$po_file")" -lt 1 ]; then
 			echo "Skipping $lang, that has no translated strings."
 			continue
 		fi
@@ -72,11 +72,11 @@ if [ "$LANG_DOT_PO_LAYOUT" = yes ] ; then
 		cp "$po_file" "$TAILS_PO_DIR"
 	done
 else
-	find "$TOR_TRANSLATION_DIR" -name '*.pot' | sort | while read po_file; do
-		lang=$(basename $(dirname "$po_file" | tr - _ | sed 's/\.pot$//'))
+	find "$TOR_TRANSLATION_DIR" -name '*.pot' | sort | while read -r po_file; do
+		lang=$(basename "$(dirname "$po_file" | tr - _ | sed 's/\.pot$//')")
 
 		! lang_is_excluded "$lang" || continue
-		if [ "$(cat "$po_file" | count_translated_strings)" -lt 1 ]; then
+		if [ "$(count_translated_strings < "$po_file")" -lt 1 ]; then
 			echo "Skipping $lang, that has no translated strings."
 			continue
 		fi

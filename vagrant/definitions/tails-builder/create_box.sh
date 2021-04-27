@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 #set -xu
 
+# We're not upstream for this script, so:
+# shellcheck disable=SC2034,SC2064,SC2086,SC2181
+
 # Imported from https://github.com/vagrant-libvirt/vagrant-libvirt
 # at commit dda5d4e1c467017c773639f0cc3df3a78898ae0b:
 #

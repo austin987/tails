@@ -25,7 +25,7 @@ is_net_module() {
 }
 net_module_filter() {
     local path
-    while read path; do
+    while read -r path; do
         if ! is_allowed "${path}" && is_net_module "${path}"; then
             echo "${path}"
         fi
@@ -33,7 +33,7 @@ net_module_filter() {
 }
 remove_allowlist_filter() {
     local path
-    while read path; do
+    while read -r path; do
         if ! is_allowed "${path}"; then
             echo "${path}"
         fi
@@ -43,9 +43,9 @@ remove_allowlist_filter() {
 generate_blocking_line() {
     local name
     local path
-    while read path; do
+    while read -r path; do
         name="$(basename "${path}" .ko)"
-        printf "install ${name} /bin/true\n"
+        printf "install %s /bin/true\n" "${name}"
     done
 }
 

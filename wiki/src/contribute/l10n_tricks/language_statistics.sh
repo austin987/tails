@@ -14,13 +14,13 @@ GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 . "${GIT_TOPLEVEL_DIR}/config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh"
 
 statistics () {
-    PO_MESSAGES="$(mktemp -t XXXXXX.$lang.po)"
-    msgcat --files-from=$PO_FILES --output=$PO_MESSAGES
-    TOTAL=$(msgattrib --no-obsolete $PO_MESSAGES | count_msgids)
-    FUZZY=$(msgattrib --only-fuzzy --no-obsolete $PO_MESSAGES | count_msgids)
-    TRANSLATED=$(cat $PO_MESSAGES | count_translated_strings)
+    PO_MESSAGES=$(mktemp -t "XXXXXX.$lang.po")
+    msgcat --files-from="$PO_FILES" --output="$PO_MESSAGES"
+    TOTAL=$(msgattrib --no-obsolete "$PO_MESSAGES" | count_msgids)
+    FUZZY=$(msgattrib --only-fuzzy --no-obsolete "$PO_MESSAGES" | count_msgids)
+    TRANSLATED=$(cat "$PO_MESSAGES" | count_translated_strings)
     echo "  - $lang: $(($TRANSLATED*100/$TOTAL))% ($TRANSLATED) strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy"
-    rm -f $PO_FILES $PO_MESSAGES
+    rm -f "$PO_FILES" "$PO_MESSAGES"
 }
 
 intltool_report () {
@@ -43,7 +43,7 @@ if pwd | grep -qs 'wiki/src$' ; then
 elif [ -d '.git' ] ; then
     WEBSITE_ROOT_DIR='wiki/src'
 else
-    echo >&2 "Error: $(basename $0) is meant to be run either from the wiki/src directory,"
+    echo >&2 "Error: $(basename "$0") is meant to be run either from the wiki/src directory,"
     echo >&2 "       or from the root of the source tree"
     exit 1
 fi
@@ -59,10 +59,10 @@ echo "## All the website"
 echo ""
 
 for lang in $LANGUAGES ; do
-    PO_FILES="$(mktemp -t XXXXXX.$lang)"
-    find "$WEBSITE_ROOT_DIR" -iname "*.$lang.po" > $PO_FILES
-    find "$WEBSITE_ROOT_DIR" -path "*/locale/$lang/LC_MESSAGES/*.po" >> $PO_FILES
-    statistics $PO_FILES
+    PO_FILES="$(mktemp -t "XXXXXX.$lang")"
+    find "$WEBSITE_ROOT_DIR" -iname "*.$lang.po" > "$PO_FILES"
+    find "$WEBSITE_ROOT_DIR" -path "*/locale/$lang/LC_MESSAGES/*.po" >> "$PO_FILES"
+    statistics "$PO_FILES"
 done
 
 # core PO files
@@ -71,12 +71,12 @@ echo "## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]"
 echo ""
 
 for lang in $LANGUAGES ; do
-    PO_FILES="$(mktemp -t XXXXXX.$lang)"
+    PO_FILES="$(mktemp -t "XXXXXX.$lang")"
     cat "$WEBSITE_ROOT_DIR"/contribute/l10n_tricks/core_po_files.txt \
         | sed "s/$/.$lang.po/g" \
         | sed "s,^,$WEBSITE_ROOT_DIR/," \
-        > $PO_FILES
-    statistics $PO_FILES
+        > "$PO_FILES"
+    statistics "$PO_FILES"
 done
 
 # core PO files (other languages)
@@ -89,8 +89,8 @@ for lang in ar ca id pl ru sr_Latn tr zh zh_TW ; do
     cat "$WEBSITE_ROOT_DIR"/contribute/l10n_tricks/core_po_files.txt \
         | sed "s/$/.$lang.po/g" \
         | sed "s,^,$WEBSITE_ROOT_DIR/," \
-        > $PO_FILES
-    statistics $PO_FILES
+        > "$PO_FILES"
+    statistics "$PO_FILES"
 done
 
 echo
