@@ -1,0 +1,122 @@
+#!/usr/bin/python3
+"""
+This service listens on a unix domain socket and provides a simple interface to run privileged actions.
+
+It is meant to be run as root.
+"""
+
+import os
+import sys
+import stat
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import socketserver
+import logging
+import socket
+import time
+from subprocess import Popen
+
+from tailslib.systemd import systemd_ready
+from tailslib.gnome import gnome_env_vars
+from tailslib import LIVE_USERNAME
+
+log = logging.getLogger("tca-helper")
+
+
+class ForkingUnixServer(socketserver.ForkingMixIn, socketserver.UnixStreamServer):
+    allow_reuse_address = True
+    timeout = None
+
+
+def run_user_command(cmd: list):
+    drop = ["runuser", "-u", LIVE_USERNAME]
+    env = ["env", *gnome_env_vars()]
+
+    args = [*drop, "--", *env, *cmd]
+    Popen(args)
+
+
+class Handler(socketserver.StreamRequestHandler):
+    """
+    This class implements the line-protocol + some glue code to call relevant actions.
+
+    The protocol is extremely simple:
+     - requests are in a single line. first word is the "command".
+     - response are in a single line. first word is a 3-digit status number loosely http-inspired. second word is an explaination
+
+    This is explicitly not supported:
+     - requests/response with additional payloads
+     - server-initiated messages (ie: signals)
+    """
+
+    MAX_LINESIZE = 128
+
+    valid_commands = {"OPEN-UNSAFEBROWSER", "OPEN-TBB", "OPEN-NETWORKMONITOR"}
+
+    spawn_user_commands = {  # some commands just mean "run this specified commands as LIVE_USERNAME, please"
+        "OPEN-UNSAFEBROWSER": ["sudo", "-n", "unsafe-browser"],
+        "OPEN-TBB": ["tor-browser"],
+        "OPEN-NETWORKMONITOR": ["gnome-system-monitor"],
+    }
+
+    def handle_line(self, line: str) -> str:
+        if not line:
+            return ""
+        cmd = line.split()[0]
+        if cmd not in self.valid_commands:
+            return "500 INVALID-CMD"
+        if cmd in self.spawn_user_commands:
+            run_user_command(self.spawn_user_commands[cmd])
+        return "200 OK"
+
+    def handle(self):
+        log = logging.getLogger("handle")
+        while True:
+            peek_ahead = self.request.recv(self.MAX_LINESIZE, socket.MSG_PEEK)
+            if not peek_ahead:
+                return
+            if b"\n" not in peek_ahead:
+                time.sleep(0.1)
+                continue
+            request_length = peek_ahead.find(b"\n")
+            line_in = self.request.recv(request_length + 1).rstrip(b"\n").decode("utf8")
+            if not line_in:
+                continue
+            log.debug("<- %s", line_in)
+            try:
+                output = self.handle_line(line_in.lstrip())
+            except Exception:
+                logging.exception("error")
+                output = "501 ERROR"
+            finally:
+                log.debug("-> %s", output)
+                output += "\n"
+                self.request.send(output.encode("utf8"))
+
+
+def main():
+    if os.getuid() != 0:
+        print("%s must be run as root" % sys.argv[0], file=sys.stderr)
+        sys.exit(1)
+    p = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    p.add_argument("--listen", metavar="SOCKET-PATH", default="/tmp/tca-helper.sock")
+    p.add_argument(
+        "--log-level",
+        metavar="LEVEL",
+        choices=["DEBUG", "INFO", "WARNING", "CRITICAL"],
+        default="INFO",
+    )
+    args = p.parse_args()
+
+    logging.basicConfig(level=args.log_level)
+
+    if os.path.exists(args.listen) and stat.S_ISSOCK(os.stat(args.listen).st_mode):
+        os.remove(args.listen)
+    with ForkingUnixServer(args.listen, Handler) as server:
+        os.chmod(args.listen, 0o600)
+        systemd_ready()
+        log.info("Listening on %s", args.listen)
+        server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
