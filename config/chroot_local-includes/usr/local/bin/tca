@@ -1,0 +1,106 @@
+#!/usr/bin/python3
+"""
+wrapper over TCA.
+
+elevates to sudo, then connect to whatever is needed and drop privileges again.
+"""
+import os
+import sys
+import shutil
+from pathlib import Path
+from subprocess import check_output, CalledProcessError
+from logging import getLogger, basicConfig
+
+from tailslib.gnome import gnome_env_vars
+from tailslib import LIVE_USERNAME
+
+NETNS = 'torlaunch'
+log = getLogger(__name__)
+
+def main():
+    if os.getuid() != 0:
+        os.execvpe("sudo", ["sudo", "-n", __file__] + sys.argv[1:], env=os.environ)
+        return
+    python_bin = "/usr/bin/python3"
+    program = "/usr/lib/python3/dist-packages/tca/application.py"
+
+    try:
+        running_processes = int(
+            check_output(
+                [
+                    "pgrep",
+                    "--count",
+                    "--uid",
+                    LIVE_USERNAME,
+                    "--full",
+                    "--exact",
+                    "%s %s" % (python_bin, program),
+                ]
+            )
+        )
+    except CalledProcessError as exc:
+        if exc.returncode == 1:
+            running_processes = 0
+        else:
+            raise
+    if running_processes:
+        print("TCA is already running", file=sys.stderr)
+        return
+
+    confdir = Path("~%s/.config/tca/" % LIVE_USERNAME).expanduser()
+    conffile = confdir / "tca.conf"
+    confdir.mkdir(mode=0o700, exist_ok=True)
+    shutil.chown(str(confdir), user=0, group=0)
+    confdir.chmod(0o700)
+    conffile.touch(mode=0o600)
+
+    connect_drop = ["/usr/local/lib/connect-drop", "-c", "FILE:%s:r+" % conffile]
+    ch_netns = ["ip", "netns", "exec", NETNS]
+    runuser = ["/sbin/runuser", "-u", LIVE_USERNAME]
+    # base bwrap sharing most of the system
+    bwrap = ["bwrap", "--bind", "/", "/", "--proc", "/proc", "--dev", "/dev"]
+    # passes data to us
+    bwrap += [
+        "--bind",
+        os.path.join("/tmp/netns-specific/", NETNS),
+        "/tmp/shared-with-me/",
+    ]
+    # hide data not for us
+    bwrap += ["--tmpfs", "/tmp/netns-specific/"]
+    envcmd = [
+        "env",
+        *gnome_env_vars(),
+        "AT_SPI_BUS_ADDRESS=unix:path=/tmp/shared-with-me/at.sock",
+        'IBUS_ADDRESS=unix:path=/tmp/shared-with-me/ibus.sock',
+    ]
+    tcacmd = [python_bin, program]
+    
+    # We run tca with several wrappers to accomplish our privilege-isolation-magic:
+    # connect_drop: opens a privileged file and pass FD to new process
+    # ch_netns: enter the new namespace
+    # runuser: change back to unprivileged user
+    # bwrap: this is probably the most complicated; what it does is sharing /tmp/netns-specific/$NETNS on
+    # /tmp/shared-with-me/ and hide /tmp/netns-specific/ . The result is that TCA will be able to access
+    # sockets that would otherwise be unreachable. See also tails-{a11y,ibus}-proxy-netns@.service
+    # envcmd: set the "right" environment; this means getting all "normal" gnome variables, AND clarifying
+    #         where is the {a11y,ibus} bus, which is related to bwrap
+
+    args = [
+        *connect_drop,
+        "--",
+        *ch_netns,
+        *runuser,
+        "--",
+        *bwrap,
+        *envcmd,
+        *tcacmd,
+        *sys.argv[1:],
+    ]
+    log.info("%s", args)
+
+    os.execv(args[0], args)
+
+
+if __name__ == "__main__":
+    basicConfig(level='DEBUG')
+    main()

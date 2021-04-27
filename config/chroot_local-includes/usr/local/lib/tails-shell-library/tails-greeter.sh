@@ -26,8 +26,10 @@ mac_spoof_is_enabled() {
     [ "$(_get_tg_setting "${MACSPOOF_SETTING}" TAILS_MACSPOOF_ENABLED)" != false ]
 }
 
-tails_netconf() {
-    _get_tg_setting "${NETWORK_SETTING}" TAILS_NETCONF
+tails_network_enabled() {
+    # Only return true when explicitly told so to increase failure
+    # safety.
+    [ "$(_get_tg_setting "${NETWORK_SETTING}" TAILS_NETWORK)" = true ]
 }
 
 unsafe_browser_is_enabled() {
