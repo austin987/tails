@@ -35,7 +35,7 @@ elif [ "$mode" = srcuris ]; then
   # only dsc: perl -ne 'if (/^'\''(.+)'\'' (\S+\.dsc)/) { my ($url, $filename) = ($1, $2); print "$filename $url\n"; }'
   apt-get.real "$@" --print-uris|perl -ne 'if (/^'\''(.+)'\'' (\S+\.dsc)/) { my ($url, $filename) = ($1, $2); print "$filename $url\n"; }' >> /debootstrap/$mode.tmp
   apt-get.real "$@"
-  while read filename uri; do
+  while read -r filename uri; do
     # extract source and version w/o taking the GnuPG version in the signature section, and add uri after that
     s_v=$(awk '/^(Source|Version):/ {print $2}' "$filename" | head -2 | xargs)
     echo "$s_v $uri" >> /debootstrap/$mode

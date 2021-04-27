@@ -9,7 +9,7 @@ po_languages () {
 }
 
 count_msgids () {
-    cat | grep -E '^msgid\s+' | wc -l
+    cat | grep --count -E '^msgid\s+'
 }
 
 count_translated_strings () {
@@ -30,20 +30,20 @@ intltool_update_po () {
     (
         cd po
         for locale in "$@" ; do
-            intltool-update --dist --gettext-package=tails $locale -o ${locale}.po.new
+            intltool-update --dist --gettext-package=tails "$locale" -o "${locale}.po.new"
 
-            [ -f ${locale}.po ]     || continue
-            [ -f ${locale}.po.new ] || continue
+            [ -f "${locale}.po" ]     || continue
+            [ -f "${locale}.po.new" ] || continue
 
             if [ "${FORCE:-}" = yes ]; then
                 echo "Force-updating '${locale}.po'."
-                mv ${locale}.po.new ${locale}.po
+                mv "${locale}.po.new" "${locale}.po"
             elif diff_without_pot_creation_date -q "${locale}.po" "${locale}.po.new"; then
                 echo "${locale}: Only header changes in PO file: keeping the old one"
-                rm ${locale}.po.new
+                rm "${locale}.po.new"
             else
                 echo "${locale}: Real changes in PO file: switching to the updated one"
-                mv ${locale}.po.new ${locale}.po
+                mv "${locale}.po.new" "${locale}.po"
             fi
         done
     )

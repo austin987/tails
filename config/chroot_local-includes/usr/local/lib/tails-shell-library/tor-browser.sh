@@ -1,6 +1,7 @@
 #!/bin/sh
 
 TBB_INSTALL=/usr/local/lib/tor-browser
+# shellcheck disable=SC2034
 TBB_PROFILE=/etc/tor-browser/profile
 TBB_EXT=/usr/local/share/tor-browser-extensions
 
@@ -56,8 +57,8 @@ exec_unconfined_firefox() {
 
 guess_best_tor_browser_locale() {
     local long_locale short_locale similar_locale
-    long_locale="$(echo ${LANG} | sed -e 's/\..*$//' -e 's/_/-/')"
-    short_locale="$(echo ${long_locale} | cut -d"-" -f1)"
+    long_locale="$(echo "${LANG}" | sed -e 's/\..*$//' -e 's/_/-/')"
+    short_locale="$(echo "${long_locale}" | cut -d"-" -f1)"
     if [ -e "${TBB_EXT}/langpack-${long_locale}@firefox.mozilla.org.xpi" ]; then
         echo "${long_locale}"
         return
@@ -67,6 +68,7 @@ guess_best_tor_browser_locale() {
     fi
     # If we use locale xx-YY and there is no langpack for xx-YY nor xx
     # there may be a similar locale xx-ZZ that we should use instead.
+    # shellcheck disable=SC2012
     similar_locale="$(ls -1 "${TBB_EXT}" | \
         sed -n "s,^langpack-\(${short_locale}-[A-Z]\+\)@firefox.mozilla.org.xpi$,\1,p" | \
         head -n 1)" || :

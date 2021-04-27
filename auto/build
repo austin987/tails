@@ -5,7 +5,7 @@ set -u
 set -x
 set -o pipefail
 
-. "$(dirname $0)/scripts/utils.sh"
+. "$(dirname "$0")/scripts/utils.sh"
 
 # get $BUILD_BASENAME
 . tmp/build_environment
@@ -16,8 +16,10 @@ umask 022
 
 BUILD_LOG="${BUILD_BASENAME}.buildlog"
 exec >  >(tee -a "$BUILD_LOG")
+# shellcheck disable=SC2064
 trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 exec 2> >(tee -a "$BUILD_LOG" >&2)
+# shellcheck disable=SC2064
 trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 
 ### functions
@@ -50,16 +52,15 @@ rm -rf cache/stages_rootfs
 . config/bootstrap
 
 # save variables that are needed by chroot_local-hooks
-echo "KERNEL_VERSION=${KERNEL_VERSION}" \
-   >> config/chroot_local-includes/usr/share/tails/build/variables
-echo "KERNEL_SOURCE_VERSION=${KERNEL_SOURCE_VERSION}" \
-   >> config/chroot_local-includes/usr/share/tails/build/variables
-echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/share/tails/build/variables
-echo "POTFILES_DOT_IN='$(
-         /bin/grep -E --no-filename '[^ #]*\.in$' po/POTFILES.in \
-       | sed -e 's,^config/chroot_local-includes,,' | tr "\n" ' '
-   )'" \
-   >> config/chroot_local-includes/usr/share/tails/build/variables
+{
+   echo "KERNEL_VERSION=${KERNEL_VERSION}"
+   echo "KERNEL_SOURCE_VERSION=${KERNEL_SOURCE_VERSION}"
+   echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}"
+   echo "POTFILES_DOT_IN='$(
+           /bin/grep -E --no-filename '[^ #]*\.in$' po/POTFILES.in \
+           | sed -e 's,^config/chroot_local-includes,,' | tr "\n" ' '
+         )'"
+} >> config/chroot_local-includes/usr/share/tails/build/variables
 
 # fix permissions on some source files that will be copied as is to the chroot.
 # they may be wrong, e.g. if the Git repository was cloned with a strict umask.
@@ -108,6 +109,7 @@ DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_KEYRING"
 
 export DEBOOTSTRAP_OPTIONS
 
+# shellcheck disable=SC2223
 : ${MKSQUASHFS_OPTIONS:='-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K -no-exports'}
 MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -mem 512M -wildcards -ef chroot/usr/share/tails/build/mksquashfs-excludes"
 export MKSQUASHFS_OPTIONS
@@ -151,6 +153,7 @@ BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
 SUBMODULES_SRC="submodules/tails-workarounds"
 SUBMODULES_DST="config/chroot_local-includes/tmp/submodules"
 mkdir -p "$SUBMODULES_DST"
+# shellcheck disable=SC2086
 cp -a $SUBMODULES_SRC "$SUBMODULES_DST"/
 
 echo "I: Building ISO image ${BUILD_ISO_FILENAME}..."
@@ -163,6 +166,7 @@ print_iso_size binary.iso
 echo "I: Hybriding it..."
 touch chroot/binary.iso
 mount --bind binary.iso chroot/binary.iso
+# shellcheck disable=SC2086
 chroot chroot isohybrid $AMNESIA_ISOHYBRID_OPTS binary.iso || fatal "isohybrid failed"
 umount chroot/binary.iso
 print_iso_size binary.iso

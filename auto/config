@@ -5,7 +5,7 @@ set -e
 set -u
 set -x
 
-. "$(dirname $0)/scripts/utils.sh"
+. "$(dirname "$0")/scripts/utils.sh"
 
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
@@ -29,7 +29,7 @@ if [ -n "${GIT_BRANCH}" ]; then
     BASE_BRANCH_PART=''
     if [ "${GIT_BRANCH}" != "$(base_branch)" ]; then
         CLEAN_GIT_BASE_BRANCH=$(base_branch | sed 's,/,_,g')
-        GIT_BASE_BRANCH_SHORT_ID="$(git rev-parse --verify --short $(git_base_branch_head))"
+        GIT_BASE_BRANCH_SHORT_ID="$(git rev-parse --verify --short "$(git_base_branch_head)")"
         BASE_BRANCH_PART="+${CLEAN_GIT_BASE_BRANCH}@${GIT_BASE_BRANCH_SHORT_ID}"
     fi
     BUILD_BASENAME="tails-amd64-${CLEAN_GIT_BRANCH}@${GIT_SHORT_ID}${BASE_BRANCH_PART}-${AMNESIA_NOW}"
@@ -58,7 +58,7 @@ if grep -qs -E '^Pin:\s+release\s+.*o=Debian Backports' \
     fatal "Found unsupported 'o=Debian Backports' syntax," \
           "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
 fi
-if [ $(dpkg --print-architecture) != amd64 ] ; then
+if [ "$(dpkg --print-architecture)" != amd64 ] ; then
     fatal "Only amd64 build systems are supported"
 fi
 
@@ -83,10 +83,11 @@ fi
 # record what APT snapshots this build is going to use, so that one
 # can try to reproduce it more reliably
 JENKINS_ENV_PROPERTIES=tails-build-env.list
-echo "# This file is in Java property file format"   >> "$JENKINS_ENV_PROPERTIES"
-echo "# (https://en.wikipedia.org/wiki/.properties)" >> "$JENKINS_ENV_PROPERTIES"
-echo "APT_SNAPSHOTS_SERIALS = $(apt-snapshots-serials cat-json tmp/APT_snapshots.d)" \
-   >> "$JENKINS_ENV_PROPERTIES"
+{
+    echo "# This file is in Java property file format"
+    echo "# (https://en.wikipedia.org/wiki/.properties)"
+    echo "APT_SNAPSHOTS_SERIALS = $(apt-snapshots-serials cat-json tmp/APT_snapshots.d)"
+} >> "$JENKINS_ENV_PROPERTIES"
 
 DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
@@ -152,10 +153,10 @@ echo "TAILS_WIKI_SUPPORTED_LANGUAGES='${TAILS_WIKI_SUPPORTED_LANGUAGES}'" \
 
 # version
 echo "${AMNESIA_FULL_VERSION}" > config/chroot_local-includes/etc/amnesia/version
-if git rev-list HEAD 2>&1 >/dev/null; then
+if git rev-list HEAD >/dev/null 2>&1; then
    git rev-list HEAD | head -n 1 >> config/chroot_local-includes/etc/amnesia/version
 fi
-echo "live-build: `dpkg-query -W -f='${Version}\n' live-build`" \
+echo "live-build: $(dpkg-query -W -f='${Version}\n' live-build)" \
    >> config/chroot_local-includes/etc/amnesia/version
 # os-release
 cat >> config/chroot_local-includes/etc/os-release <<EOF

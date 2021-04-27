@@ -31,6 +31,7 @@ done
 
 ssh rsync.lizard gpg --import < wiki/src/tails-signing.key
 
+# shellcheck disable=SC2087
 ssh rsync.lizard << EOF
    wget --quiet \
       "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
@@ -39,6 +40,7 @@ ssh rsync.lizard << EOF
    gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
 EOF
 
+# shellcheck disable=SC2087
 ssh rsync.lizard << EOF
   sudo install -o root -g rsync_tails -m 0755 -d \
      /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \

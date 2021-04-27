@@ -3,7 +3,7 @@
 set -e
 set -u
 
-. "$(dirname $0)/utils.sh"
+. "$(dirname "$0")/utils.sh"
 
 APT_MIRROR_URL="http://deb.tails.boum.org/"
 DEFAULT_COMPONENTS="main contrib non-free"
@@ -31,7 +31,7 @@ output_overlay_apt_binary_sources() {
 [ -d config/APT_overlays.d ] || fatal 'config/APT_overlays.d/ does not exist'
 [ -e config/base_branch  ]   || fatal 'config/base_branch does not exist'
 
-[ "$(cat config/base_branch | wc -l)" -eq 1 ] \
+[ "$(wc -l < config/base_branch)" -eq 1 ] \
     || fatal 'config/base_branch must contain exactly one line'
 
 if on_base_branch && ! [ "$(base_branch)" = "$(git_current_branch)" ] ; then

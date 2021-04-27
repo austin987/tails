@@ -17,7 +17,10 @@ BRANCH="$1"
 ### Merge the APT overlays in reprepro
 
 git checkout "$BRANCH"
-for overlay in $(ls config/APT_overlays.d/) ; do
+for overlay in config/APT_overlays.d/* ; do
+    # handle the case when there is no overlay
+    [[ -e "$overlay" ]] || break
+    # shellcheck disable=SC2029
     if ! ssh reprepro@incoming.deb.tails.boum.org \
          tails-merge-suite "$overlay" "$BRANCH" ; then
         error "Failed to merge '$overlay' into '$BRANCH': $?"

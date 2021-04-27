@@ -2,10 +2,10 @@
 
 TOR_RC_DEFAULTS=/usr/share/tor/tor-service-defaults-torrc
 TOR_RC=/etc/tor/torrc
+# shellcheck disable=SC2034
 TOR_LOG=/var/log/tor/log
+# shellcheck disable=SC2034
 TOR_DIR=/var/lib/tor
-TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
-NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
 tor_rc_lookup() {
 	grep --no-filename "^${1}\s" "${TOR_RC_DEFAULTS}" "${TOR_RC}" | \
@@ -51,7 +51,7 @@ tor_bootstrap_progress() {
        local res
        res=$(tor_control_getinfo status/bootstrap-phase | \
                     sed --regexp-extended 's/^.* BOOTSTRAP PROGRESS=([[:digit:]]+) .*$/\1/')
-       echo ${res:-0}
+       echo "${res:-0}"
 }
 
 tor_is_working() {

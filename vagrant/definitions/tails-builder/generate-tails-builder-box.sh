@@ -48,13 +48,14 @@ fi
 rm -f "${TARGET_NAME}".*
 
 # FIXME: vmdebootstrap is orphaned/deprecated (#15349).
+# shellcheck disable=SC2154
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
      LC_ALL=${LC_ALL} \
-     ARCHITECTURE=${ARCHITECTURE} \
-     DISTRIBUTION=${DISTRIBUTION} \
-     DEBIAN_SERIAL=${DEBIAN_SERIAL} \
-     DEBIAN_SECURITY_SERIAL=${DEBIAN_SECURITY_SERIAL} \
-     TAILS_SERIAL=${TAILS_SERIAL} \
+     ARCHITECTURE="${ARCHITECTURE}" \
+     DISTRIBUTION="${DISTRIBUTION}" \
+     DEBIAN_SERIAL="${DEBIAN_SERIAL}" \
+     DEBIAN_SECURITY_SERIAL="${DEBIAN_SECURITY_SERIAL}" \
+     TAILS_SERIAL="${TAILS_SERIAL}" \
      vmdebootstrap \
      --arch "${ARCHITECTURE}" \
      --distribution "${DISTRIBUTION}" \

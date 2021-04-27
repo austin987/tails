@@ -37,12 +37,13 @@ enigmail_configured() {
 }
 
 notify_enigmail_migration() {
-    local dialog_msg="<b><big>`gettext \"You need to migrate your OpenPGP keys\"`</big></b>
+    local dialog_msg open_docs ignore
+    dialog_msg="<b><big>$(gettext "You need to migrate your OpenPGP keys")</big></b>
 
-`gettext \"<i>Thunderbird</i> 78 now replaces the <i>Enigmail</i> extension with built-in support for OpenPGP encryption. To continue using your OpenPGP keys in <i>Thunderbird</i>, follow our migration instructions.\"`
+$(gettext "<i>Thunderbird</i> 78 now replaces the <i>Enigmail</i> extension with built-in support for OpenPGP encryption. To continue using your OpenPGP keys in <i>Thunderbird</i>, follow our migration instructions.")
 "
-    local open_docs="`gettext \"_Open Migration Instructions\"`"
-    local ignore="`gettext \"_Migrate Later\"`"
+    open_docs=$(gettext "_Open Migration Instructions")
+    ignore=$(gettext "_Migrate Later")
     zenity --question --width 480 --title "OpenPGP Migration" --text "${dialog_msg}" \
            --ok-label "${open_docs}" --cancel-label "${ignore}"
 }

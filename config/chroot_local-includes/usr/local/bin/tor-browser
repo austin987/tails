@@ -43,10 +43,11 @@ ask_for_confirmation() {
         return
     fi
 
-    local dialog_title="`gettext \"Tor is not ready\"`"
-    local dialog_text="`gettext \"Tor is not ready. Start Tor Browser anyway?\"`"
-    local dialog_start="`gettext \"Start Tor Browser\"`"
-    local dialog_cancel="`gettext \"Cancel\"`"
+    local dialog_title dialog_text dialog_start dialog_cancel
+    dialog_title="$(gettext "Tor is not ready")"
+    dialog_text="$(gettext "Tor is not ready. Start Tor Browser anyway?")"
+    dialog_start="$(gettext "Start Tor Browser")"
+    dialog_cancel="$(gettext "Cancel")"
     zenity --question --ellipsize --title "$dialog_title" --text="$dialog_text" \
            --default-cancel --ok-label "$dialog_start" --cancel-label "$dialog_cancel"
 }
@@ -57,6 +58,7 @@ start_browser() {
     fi
 
     TMPDIR="${PROFILE}/tmp"
+    # shellcheck disable=SC2174
     mkdir --mode=0700 -p "$TMPDIR"
     export TMPDIR
 
