@@ -330,25 +330,96 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
   $vm.execute_successfully('tails-upgrade-frontend-wrapper', user: LIVE_USER)
 end
 
-When /^the Tor Launcher autostarts$/ do
-  @screen.wait('TorLauncherWindow.png', 60)
+# Note about the "basic" Tor Connection Assistant steps: we have tests which will
+# start Tor Connection Assistant (and connect directly to the Tor Network) in
+# other languages, so we need to make those steps
+# language-agnostic. Unfortunately this means interaction based on
+# images is not suitable, so we try more general approaches.
+
+When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
+  begin
+    try_for(60) do
+      @tor_connection_assistant = Dogtail::Application.new('Tor Connection')
+    end
+  rescue Timeout::Error
+    save_tor_journal
+    raise TorBootstrapFailure, 'TCA did not start'
+  end
 end
 
-When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
-  @screen.wait('TorLauncherConfigureButton.png', 10).click
-  @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
-  @screen.wait('TorLauncherBridgeList.png', 10).click
-  @bridge_hosts = []
-  bridge_dirs = Dir.glob(
-    "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
+def tor_connection_assistant
+  assert_not_nil(@tor_connection_assistant,
+                 "you must run the 'the Tor Connection Assistant autostarts' step first")
+  @tor_connection_assistant
+end
+
+class TCAConnectionFailure < StandardError
+end
+
+def tca_configure(mode, &block)
+  step 'the Tor Connection Assistant is running'
+  case mode
+  when :easy
+    radio_button_label = /^Configure Tor automatically/
+  when :hide
+    radio_button_label = /^Hide to my local network that I'm using Tor/
+  else
+    raise "bad TCA configuration mode '#{mode}'"
+  end
+  # XXX: We generally run this right after TCA has started, apparently
+  # so early that clicking the radio button doesn't always work, so we
+  # retry. Can this be fixed in TCA instead some how?
+  radio_button = tor_connection_assistant.child(
+    radio_button_label, roleName: 'radio button'
   )
-  bridge_dirs.each do |bridge_dir|
+  try_for(10) do
+    radio_button.click
+    radio_button.checked
+  end
+  block.call if block_given?
+  tor_connection_assistant.child('Connect to Tor',
+                                 roleName: 'push button')
+                          .click
+  failure_reported = false
+  try_for(120, exception: TCAConnectionFailure,  msg: 'Timed out while waiting for TCA to connect to Tor') do
+    if tor_connection_assistant.child?('Failed to connect', roleName: 'label', retry: false)
+      failure_reported = true
+      done = true
+    else
+      done = tor_connection_assistant.child?(/^Connected to Tor successfully/, roleName: 'label', retry: false, showingOnly: true)
+    end
+    done
+  end
+  if failure_reported
+    raise TCAConnectionFailure, 'TCA failed to connect to Tor'
+  end
+  # XXX: we're so fast closing TCA here that it's done before it
+  # issues the SAVECONF, but seemingly only for the "DisableNetwork=0"
+  # part, resulting in a lot of breakage. Ideally we would fix this in
+  # TCA itself, since a user could be this fast too, theoretically.
+  try_for(10, msg: 'DisableNetwork is still set in torrc') do
+    $vm.execute('grep "DisableNetwork 1" /etc/tor/torrc').failure?
+  end
+  @screen.press('alt', 'F4')
+end
+
+When /^I configure a direct connection in the Tor Connection Assistant$/ do
+  tca_configure(:easy)
+end
+
+def chutney_bridge_lines(bridge_type, chutney_tag: nil)
+  chutney_tag = bridge_type if chutney_tag.nil?
+  bridge_dirs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*#{chutney_tag}/"
+  )
+  assert(bridge_dirs.size > 0, "No bridges of type '#{chutney_tag}' found")
+  bridge_dirs.map do |bridge_dir|
     address = $vmnet.bridge_ip_addr
     port = nil
     fingerprint = nil
     extra = nil
     if bridge_type == 'bridge'
-      File.open(bridge_dir + '/torrc') do |f|
+      File.open("#{bridge_dir}/torrc") do |f|
         port = f.grep(/^OrPort\b/).first.split.last
       end
     else
@@ -370,21 +441,119 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     File.open(bridge_dir + '/fingerprint') do |f|
       fingerprint = f.read.chomp.split.last
     end
-    @bridge_hosts << { address: address, port: port.to_i }
     bridge_line = bridge_type + ' ' + address + ':' + port
     [fingerprint, extra].each { |e| bridge_line += ' ' + e.to_s if e }
-    @screen.type(bridge_line, ['Return'])
+    bridge_line
   end
-  @screen.hide_cursor
-  @screen.wait('TorLauncherFinishButton.png', 10).click
-  @screen.wait('TorLauncherConnectingWindow.png', 10)
-  @screen.wait_vanish('TorLauncherConnectingWindow.png', 120)
 end
 
-When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
+When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |bridge_type|
+  @tor_is_using_pluggable_transports = bridge_type != 'normal'
+  config_mode = bridge_type == 'normal' ? :easy : :hide
+  # Internally a "normal" bridge is called just "bridge" which we have
+  # to respect below.
+  bridge_type = 'bridge' if bridge_type == 'normal'
+
+  bridge_lines = []
+  @bridge_hosts = []
+  chutney_bridge_lines(bridge_type).each do |bridge_line|
+    bridge_lines << bridge_line
+    address, port = bridge_line.split[1].split(":")
+    @bridge_hosts << { address: address, port: port.to_i }
+  end
+
+  tca_configure(config_mode) do
+    if config_mode == :easy
+      tor_connection_assistant.child('Configure a Tor bridge',
+                                     roleName: 'check box')
+                              .click
+    end
+    tor_connection_assistant.child('Connect to Tor',
+                                   roleName: 'push button')
+                            .click
+    tor_connection_assistant.child('Type in a bridge that I already know',
+                                 roleName: 'radio button')
+                            .click
+    tor_connection_assistant.child(roleName: 'scroll pane').click
+
+    bridge_lines.each do |bridge_line|
+      @screen.type(bridge_line, ['Return'])
+    end
+  end
+end
+
+When /^I try to configure a direct connection in the Tor Connection Assistant$/ do
+  begin
+    step "I configure a direct connection in the Tor Connection Assistant"
+  rescue TCAConnectionFailure
+    # Expected!
+    next
+  rescue StandardError => e
+    raise "Expected TCAConnectionFailure to be raised but got " \
+          "#{e.class.name}: #{e}"
+  else
+    raise "TCA managed to connect to Tor but was expected to fail"
+  end
+end
+
+When /^I close the Tor Connection Assistant$/ do
+  $vm.execute(
+    'pkill -f /usr/lib/python3/dist-packages/tca/application.py'
+  )
+  @tor_connection_assistant = nil
+end
+
+Then /^the Tor Connection Assistant reports that it failed to connect$/ do
+  tor_connection_assistant.child('Failed to connect', roleName: 'label')
+end
+
+When /^all Internet traffic has only flowed through the configured bridges$/ do
   assert_not_nil(@bridge_hosts, 'No bridges has been configured via the ' \
-                 "'I configure some ... bridges in Tor Launcher' step")
+                 "'I configure some ... bridges in the Tor Connection Assistant' step")
   assert_all_connections(@sniffer.pcap_file) do |c|
     @bridge_hosts.include?({ address: c.daddr, port: c.dport })
   end
+end
+
+Given /^the Tor network( and default bridges)? (?:is|are) (un)?blocked$/ do |default_bridges, unblock|
+  relay_dirs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*{auth,ba,relay}/"
+  )
+  relays = relay_dirs.map do |relay_dir|
+    File.open("#{relay_dir}/torrc") do |f|
+      torrc = f.readlines
+      [
+        torrc.grep(/^Address\b/).first.split.last,
+        torrc.grep(/^OrPort\b/).first.split.last
+      ]
+    end
+  end
+  if default_bridges
+    chutney_bridge_lines('obfs4', chutney_tag: 'defbr').each do |bridge_line|
+      relays << bridge_line.split[1].split(":")
+    end
+  end
+  relays.each do |address, port|
+    $vm.execute_successfully("iptables -#{unblock ? 'D' : 'I'} OUTPUT " \
+                             '-p tcp ' \
+                             "--destination #{address} " \
+                             "--destination-port #{port} " \
+                             '-j REJECT --reject-with icmp-port-unreachable')
+  end
+end
+
+Then /^Tor is configured to use the default bridges$/ do
+  use_bridges = $vm.execute_successfully(
+    'tor_control_getconf UseBridges', libs: 'tor'
+  ).stdout.chomp.to_i
+  assert_equal(1, use_bridges, 'UseBridges is not set')
+  default_bridges = $vm.execute_successfully(
+    'grep ^obfs4 /usr/share/tails/tca/default_bridges.txt | sort'
+  ).stdout.chomp
+  assert(default_bridges.size > 0, 'No default bridges were found')
+  current_bridges = $vm.execute_successfully(
+    'tor_control_getconf Bridge | sort', libs: 'tor'
+  ).stdout.chomp
+  assert_equal(default_bridges, current_bridges,
+               'Current bridges does not match the default ones')
 end

@@ -110,7 +110,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.box_storage_unlocked = builder.get_object('box_storage_unlocked')
         self.entry_storage_passphrase = builder.get_object('entry_storage_passphrase')
         self.frame_language = builder.get_object('frame_language')
-        self.infobar_network = builder.get_object('infobar_network')
         self.infobar_settings_loaded = builder.get_object('infobar_settings_loaded')
         self.label_settings_default = builder.get_object('label_settings_default')
         self.listbox_add_setting = builder.get_object('listbox_add_setting')
@@ -285,9 +284,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         super().show()
         self.button_start.grab_focus()
         self.get_root_window().set_cursor(Gdk.Cursor.new(Gdk.CursorType.ARROW))
-
-    def set_bridge_infobar_visibility(self, value: bool):
-        self.infobar_network.set_visible(value)
 
     # Callbacks
 

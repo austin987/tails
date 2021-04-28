@@ -2,65 +2,98 @@
 
 import os
 import sys
+from argparse import ArgumentParser
 
 from tailslib.systemd import tor_has_bootstrapped
 
-WEBSITE_URL = 'https://tails.boum.org'
-WEBSITE_LOCAL_PATH = '/usr/share/doc/tails/website'
-LANG_CODE = os.getenv('LANG', 'en')[0:2]
+WEBSITE_URL = "https://tails.boum.org"
+WEBSITE_LOCAL_PATH = "/usr/share/doc/tails/website"
+LANG_CODE = os.getenv("LANG", "en")[0:2]
 
 
 def find_local_page(page: str) -> str:
-    for lang_code in (LANG_CODE, 'en', None):
+    for lang_code in (LANG_CODE, "en", None):
         local_page = get_local_path(page, lang_code)
         if os.path.isfile(local_page):
-            return 'file://' + local_page
+            return "file://" + local_page
     return ""
 
 
 def get_local_path(page, lang_code: str) -> str:
     if lang_code:
-        return os.path.join(WEBSITE_LOCAL_PATH, page + '.' + lang_code + ".html")
+        return os.path.join(WEBSITE_LOCAL_PATH, page + "." + lang_code + ".html")
     else:
         return os.path.join(WEBSITE_LOCAL_PATH, page + ".html")
 
 
-def parse_args() -> (str, str):
-    try:
-        page = sys.argv[1]
-    except IndexError:
-        page = 'doc'
+def get_parser():
+    p = ArgumentParser()
+    p.add_argument("--force-local", default=False, action="store_true")
+    p.add_argument("--doctest", default=False, action="store_true")
+    p.add_argument("page", default="doc", nargs="?")
+    p.add_argument("anchor", default=None, nargs="?")
+    return p
 
-    try:
-        anchor = sys.argv[2]
-    except IndexError:
-        anchor = None
 
-    return page, anchor
+def parse_args(_args=None):
+    """
+
+    >>> parse_args([]).page
+    'doc'
+    >>> parse_args([]).anchor is None
+    True
+
+    >>> parse_args(['foo']).page
+    'foo'
+    >>> parse_args(['foo']).anchor is None
+    True
+
+    >>> parse_args(['foo', 'bar']).page
+    'foo'
+    >>> parse_args(['foo', 'bar']).anchor
+    'bar'
+
+    >>> parse_args(['--force-local', 'foo', 'bar']).page
+    'foo'
+    >>> parse_args(['--force-local', 'foo', 'bar']).anchor
+    'bar'
+    """
+    return get_parser().parse_args(_args)
 
 
 def main():
-    page, anchor = parse_args()
+    args = parse_args()
+    page = args.page
+    anchor = args.anchor
+
+    if args.doctest:
+        import doctest
+        ret = doctest.testmod()
+        print('tails-documentation doctest:', ret)
+        if ret.failed:
+            sys.exit(1)
+        else:
+            sys.exit(0)
+        return
 
     # If possible, let's hand-off to our website, which should be the most
     # up-to-date option.
-    if tor_has_bootstrapped():
+    if not args.force_local and tor_has_bootstrapped():
         # Open page in the user-configured language, if available
         if os.path.isfile(get_local_path(page, LANG_CODE)):
-            uri = WEBSITE_URL + '/' + page + '/index.' + LANG_CODE + '.html'
+            uri = WEBSITE_URL + "/" + page + "/index." + LANG_CODE + ".html"
         else:
-            uri = WEBSITE_URL + '/' + page
+            uri = WEBSITE_URL + "/" + page
     else:
         uri = find_local_page(page)
         if not uri:
-            sys.exit('error: could not find the requested documentation page')
+            sys.exit("error: could not find the requested documentation page")
 
     if anchor:
-        uri = uri + '#' + anchor
+        uri = uri + "#" + anchor
 
-    os.environ['TOR_BROWSER_SKIP_OFFLINE_WARNING'] = 'yes'
-    os.execv('/usr/bin/gtk-launch',
-             ['/usr/bin/gtk-launch', 'tor-browser.desktop', uri])
+    os.environ["TOR_BROWSER_SKIP_OFFLINE_WARNING"] = "yes"
+    os.execv("/usr/bin/gtk-launch", ["/usr/bin/gtk-launch", "tor-browser.desktop", uri])
 
 
 if __name__ == "__main__":

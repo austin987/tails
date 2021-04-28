@@ -1,0 +1,751 @@
+import logging
+import os.path
+import json
+import subprocess
+import gettext
+from typing import Dict, Any, Tuple
+
+import gi
+import stem
+
+from tca.translatable_window import TranslatableWindow
+from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
+from tca.torutils import (
+    TorConnectionProxy,
+    TorConnectionConfig,
+    InvalidBridgeException,
+    VALID_BRIDGE_TYPES,
+)
+import tca.config
+
+
+gi.require_version("Gdk", "3.0")
+gi.require_version("Gtk", "3.0")
+gi.require_version("GLib", "2.0")
+
+
+from gi.repository import Gdk, GdkPixbuf, Gtk, GLib  # noqa: E402
+
+MAIN_UI_FILE = "main.ui"
+CSS_FILE = "tca.css"
+IMG_FOOTPRINTS = "/usr/share/doc/tails/website/about/footprints.svg"
+IMG_RELAYS = "/usr/share/doc/tails/website/about/relays.svg"
+IMG_WALKIE = "/usr/share/doc/tails/website/about/walkie-talkie.svg"
+IMG_SIDE = {
+    "bridge": IMG_FOOTPRINTS,
+    "hide": IMG_RELAYS,
+    "connect": IMG_WALKIE,
+    "proxy": IMG_WALKIE,
+    "progress": IMG_WALKIE,
+    "error": IMG_WALKIE,
+    "offline": IMG_RELAYS,
+}
+CONNECTION_TIMEOUT = 30
+
+# META {{{
+# Naming convention for widgets:
+# step_<stepname>_<type> if there's a single type in that step
+# step_<stepname>_<type>_<name> otherwise
+# Callbacks have a similar name, and start with cb_step_<stepname>_
+#
+# Mixins are used to avoid the "huge class" so typical in UI development. They are NOT meant for code reuse,
+# so feel free to break encapsulation whenever you see fit
+# Each Mixin cares about one of the steps. Each step has a name
+# Special methods:
+#  - before_show_<stepname>() is called when changing from one step to the other
+# }}}
+
+_ = gettext.gettext
+
+log = logging.getLogger(__name__)
+
+
+class StepChooseHideMixin:
+    """
+    most utils related to the step in which the user can choose between an easier configuration and going
+    unnoticed
+    """
+
+    def before_show_hide(self):
+        self.state.setdefault("hide", {})
+        self.builder.get_object("radio_unnoticed_none").set_active(True)
+        self.builder.get_object("radio_unnoticed_yes").set_active(False)
+        self.builder.get_object("radio_unnoticed_no").set_active(False)
+        self.builder.get_object("radio_unnoticed_none").hide()
+        definitive = self.state.get("progress", {}).get("started", False)
+        if definitive and "hide" in self.state["hide"]:
+            if self.state["hide"]["hide"]:
+                self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
+                self.builder.get_object("radio_unnoticed_yes").set_active(True)
+            else:
+                self.builder.get_object("radio_unnoticed_yes").set_sensitive(False)
+                self.builder.get_object("radio_unnoticed_no").set_active(True)
+                if self.state["hide"]["bridge"]:
+                    self.builder.get_object("radio_unnoticed_no_bridge").set_active(
+                        True
+                    )
+
+    def _step_hide_next(self):
+        if self.state["hide"]["bridge"]:
+            self.change_box("bridge")
+        else:
+            self.change_box("progress")
+
+    def cb_step_hide_radio_changed(self, *args):
+        easy = self.builder.get_object("radio_unnoticed_no").get_active()
+        hide = self.builder.get_object("radio_unnoticed_yes").get_active()
+        active = easy or hide
+        self.builder.get_object("step_hide_btn_submit").set_sensitive(active)
+        if easy:
+            self.builder.get_object("step_hide_box_bridge").show()
+        else:
+            self.builder.get_object("step_hide_box_bridge").hide()
+
+    def cb_step_hide_btn_connect_clicked(self, user_data=None):
+        easy = self.builder.get_object("radio_unnoticed_no").get_active()
+        hide = self.builder.get_object("radio_unnoticed_yes").get_active()
+        if not easy and not hide:
+            return
+        if hide:
+            self.state["hide"]["hide"] = True
+            self.state["hide"]["bridge"] = True
+        else:
+            self.state["hide"]["hide"] = False
+            if self.builder.get_object("radio_unnoticed_no_bridge").get_active():
+                self.state["hide"]["bridge"] = True
+            else:
+                self.state["hide"]["bridge"] = False
+        self._step_hide_next()
+
+
+class StepChooseBridgeMixin:
+    def before_show_bridge(self, no_default_bridges=False):
+        self.state["bridge"]: Dict[str, Any] = {}
+        self.builder.get_object("step_bridge_box").show()
+        self.builder.get_object("step_bridge_radio_none").set_active(True)
+        self.builder.get_object("step_bridge_radio_none").hide()
+        self.builder.get_object("step_bridge_text").get_property("buffer").connect(
+            "changed", self.cb_step_bridge_text_changed
+        )
+        hide = self.state["hide"]["hide"]
+        if hide or no_default_bridges:
+            self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
+            self.builder.get_object("step_bridge_text").grab_focus()
+        else:
+            self.builder.get_object("step_bridge_radio_default").grab_focus()
+            self.builder.get_object("step_bridge_radio_default").set_sensitive(True)
+
+        self.builder.get_object("step_bridge_radio_type").set_active(hide)
+        self.get_object(
+            "combo"
+        ).hide()  # we are forcing that to obfs4 until we support meek
+        self.get_object("box_warning").hide()
+        self._step_bridge_init_from_tor_state()
+
+    def _step_bridge_init_from_tor_state(self):
+        bridges = self.app.configurator.tor_connection_config.bridges
+        if not bridges:
+            return
+        if len(bridges) > 1 and set(bridges).issubset(
+            set(TorConnectionConfig.get_default_bridges())
+        ):
+            self.get_object("radio_default").set_active(True)
+        else:
+            self.get_object("radio_type").set_active(True)
+            self.get_object("text").get_property("buffer").set_text("\n".join(bridges))
+
+    def _step_bridge_is_text_valid(self) -> bool:
+        def set_warning(msg):
+            self.get_object("label_warning").set_label(msg)
+            self.get_object("box_warning").show()
+
+        text = self.get_object("text").get_property("buffer").get_property("text")
+        try:
+            bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
+        except InvalidBridgeException as exc:
+            set_warning("Invalid: %s" % str(exc))
+            return False
+        except (ValueError, IndexError):
+            self.get_object("box_warning").hide()
+            return False
+        self.get_object("box_warning").hide()
+
+        if self.state["hide"]["hide"]:
+            for br in bridges:
+                if br.split()[0] not in (VALID_BRIDGE_TYPES - {"bridge"}):
+                    set_warning(
+                        "You need to configure an obfs4 bridge to hide that you are using Tor"
+                    )
+                    return False
+
+        return len(bridges) > 0
+
+    def _step_bridge_set_actives(self):
+        default = self.builder.get_object("step_bridge_radio_default").get_active()
+        manual = self.builder.get_object("step_bridge_radio_type").get_active()
+        self.get_object("combo").set_sensitive(default)
+        self.builder.get_object("step_bridge_text").set_sensitive(manual)
+        self.builder.get_object("step_bridge_btn_submit").set_sensitive(
+            default or (manual and self._step_bridge_is_text_valid())
+        )
+
+    def cb_step_bridge_radio_changed(self, *args):
+        self._step_bridge_set_actives()
+
+    def cb_step_bridge_text_changed(self, *args):
+        self._step_bridge_set_actives()
+
+    def cb_step_bridge_btn_submit_clicked(self, *args):
+        default = self.builder.get_object("step_bridge_radio_default").get_active()
+        manual = self.builder.get_object("step_bridge_radio_type").get_active()
+        if default:
+            self.state["bridge"]["kind"] = "default"
+            self.state["bridge"]["default_method"] = self.get_object(
+                "combo"
+            ).get_active_id()
+        elif manual:
+            self.state["bridge"]["kind"] = "manual"
+            text = (
+                self.builder.get_object("step_bridge_text")
+                .get_property("buffer")
+                .get_property("text")
+            )
+            self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(
+                text.split("\n")
+            )
+            log.info("Bridges parsed: %s", self.state["bridge"]["bridges"])
+            print("Bridges parsed:", self.state["bridge"]["bridges"])
+
+        self.change_box("progress")
+
+    def cb_step_bridge_btn_back_clicked(self, *args):
+        self.change_box("hide")
+
+
+class StepConnectProgressMixin:
+    def before_show_progress(self):
+        self.save_conf()
+        self.state["progress"]["error"] = None
+        self.builder.get_object("step_progress_box").show()
+        self.builder.get_object("step_progress_box_internettest").hide()
+        self.builder.get_object("step_progress_box_internetok").hide()
+        if not self.state["progress"]["success"]:
+            self.spawn_tor_connect()
+        else:
+            self._step_progress_success_screen()
+
+    def spawn_internet_test(self):
+        test_spawn = GAsyncSpawn()
+        test_spawn.connect("process-done", self.cb_internet_test)
+        test_spawn.run(["/bin/sh", "-c", "sleep 0.5; true"])
+
+    def spawn_tor_test(self):
+        test_spawn = GAsyncSpawn()
+        test_spawn.connect("process-done", self.cb_tor_test)
+        test_spawn.run(["/bin/sh", "-c", "sleep 0.5; true"])
+
+    def spawn_tor_connect(self):
+        self.builder.get_object("step_progress_box_torconnect").show()
+        self.builder.get_object("step_progress_pbar_torconnect").show()
+
+        def _apply_proxy():
+            if not self.state["proxy"] or self.state["proxy"]["proxy_type"] == "no":
+                self.app.configurator.tor_connection_config.proxy = (
+                    TorConnectionProxy.noproxy()
+                )
+            else:
+                proxy_conf = self.state["proxy"]
+                if proxy_conf["proxy_type"] != "Socks5":
+                    del proxy_conf["username"]
+                    del proxy_conf["password"]
+                proxy_conf["proxy_type"] += "Proxy"
+                self.app.configurator.tor_connection_config.proxy = TorConnectionProxy.from_obj(
+                    proxy_conf
+                )
+
+        def do_tor_connect_config():
+            if not self.state["hide"]["bridge"]:
+                self.app.configurator.tor_connection_config.disable_bridges()
+                self.get_object("label_status").set_text("Connecting to Tor...")
+            elif self.state["bridge"]["kind"] == "default":
+                self.app.configurator.tor_connection_config.default_bridges(
+                    only_type=self.state["bridge"]["default_method"]
+                )
+                self.get_object("label_status").set_text(
+                    "Connecting with default bridges..."
+                )
+            elif self.state["bridge"]["bridges"]:
+                self.app.configurator.tor_connection_config.enable_bridges(
+                    self.state["bridge"]["bridges"]
+                )
+                self.get_object("label_status").set_text(
+                    "Connecting through bridges..."
+                )
+            else:
+                raise ValueError(
+                    "inconsistent state! you discovered a programming error"
+                )
+            _apply_proxy()
+            self.connection_progress.set_fraction(
+                ConnectionProgress.PROGRESS_CONFIGURATION_CONFIG
+            )
+            return True
+
+        def do_tor_connect_default_bridges():
+            self.app.configurator.tor_connection_config.default_bridges(
+                only_type="obfs4"
+            )
+            self.get_object("label_status").set_text(
+                "Connecting with default bridges..."
+            )
+            _apply_proxy()
+            self.connection_progress.set_fraction(
+                ConnectionProgress.PROGRESS_CONFIGURATION_CONFIG
+            )
+            return True
+
+        def do_tor_connect_apply():
+            try:
+                self.app.configurator.apply_conf()
+            except stem.InvalidRequest as exc:
+                self.connection_progress.set_fraction(0)
+                self.state["progress"]["error"] = "setconf"
+                self.state["progress"]["error_data"] = exc.message
+                self.change_box("error")
+                return False
+            log.debug("tor configuration applied")
+            self.state["progress"]["started"] = True
+            self.connection_progress.set_fraction(
+                ConnectionProgress.PROGRESS_CONFIGURATION_APPLIED
+            )
+            self.timer_check = GLib.timeout_add(
+                500, do_tor_connect_check, {"count": CONNECTION_TIMEOUT * 2}
+            )
+            return False
+
+        def do_tor_connect_check(d: dict):
+            # this dictionary trick is a argument to circumvent the fact that integers are immutable in
+            # Python; the dictionary is just acting like a mutable reference, job that might be done with
+            # weakref or other methods, but dicts are easier to understand.
+            if d["count"] <= 0:
+                self.connection_progress.set_fraction(0)
+
+                if (
+                    not self.state["hide"]["hide"] and not self.state["hide"]["bridge"]
+                ) and not self.app.configurator.tor_connection_config.bridges:
+                    log.info("Retrying with default bridges")
+                    idle_add_chain(
+                        [do_tor_connect_default_bridges, do_tor_connect_apply]
+                    )
+                else:
+                    self.state["progress"]["error"] = "tor"
+                    log.info("Failed with bridges")
+                    self.change_box("error")
+                return False
+            d["count"] -= 1
+
+            ok = self.app.configurator.tor_has_bootstrapped()
+            if ok:
+                self.state["progress"]["success"] = True
+                self._step_progress_success_screen()
+                return False
+            else:
+                progress = self.app.configurator.tor_bootstrap_phase()
+                self.connection_progress.set_fraction_from_bootstrap_phase(progress)
+                return True
+
+        idle_add_chain([do_tor_connect_config, do_tor_connect_apply])
+
+    def _step_progress_success_screen(self):
+        self.save_conf(successful_connect=True)
+        self.get_object("box_torconnect").hide()
+        self.get_object("box_tortestok").show()
+        self.get_object("label_status").set_text(
+            "Connected to Tor successfully!\n\n"
+            "You can now browse the Internet anonymously and uncensored"
+        )
+        self.get_object("box_start").show()
+
+    def cb_internet_test(self, spawn, retval):
+        if retval == 0:
+            self.builder.get_object("step_progress_box_internettest").hide()
+            self.builder.get_object("step_progress_box_internetok").show()
+            self.builder.get_object("step_progress_box_tortest").show()
+            self.spawn_tor_test()
+        else:
+            self.state["progress"]["error"] = "internet"
+            self.change_box("error")
+
+    def cb_tor_test(self, spawn, retval):
+        self.builder.get_object("step_progress_box_tortest").hide()
+        self.builder.get_object("step_progress_box_torok").show()
+        if retval == 0:
+            self.spawn_tor_connect()
+            return
+        else:
+            self.builder.get_object("step_progress_box_tortest").hide()
+            self.builder.get_object("step_progress_box_torok").show()
+            self.builder.get_object("step_progress_img_torok").set_from_stock(
+                "gtk-dialog-error", Gtk.IconSize.BUTTON
+            )
+
+    def cb_step_progress_btn_starttbb_clicked(self, *args):
+        subprocess.Popen(["/usr/local/bin/tor-browser"])
+
+    def cb_step_progress_btn_reset_clicked(self, *args):
+        self.todo_dialog("I should reset Tor connection")
+
+    def cb_step_progress_btn_monitor_clicked(self, *args):
+        subprocess.Popen(["/usr/bin/gnome-system-monitor", "-r"])
+
+    def cb_step_progress_btn_onioncircuits_clicked(self, *args):
+        subprocess.Popen(["/usr/local/bin/onioncircuits"])
+
+
+class StepErrorMixin:
+    def before_show_error(self):
+        self.state["error"] = {}
+        # XXX: fetch data from self.state['progress']['error'] and self.state['progress']['error_data']
+
+    def cb_step_error_btn_proxy_clicked(self, *args):
+        self.change_box("proxy")
+
+    def cb_step_error_btn_captive_clicked(self, *args):
+        subprocess.Popen(["sudo", "/usr/local/sbin/unsafe-browser"])
+
+    def cb_step_error_btn_bridge_clicked(self, *args):
+        self.change_box("bridge", no_default_bridges=True)
+
+
+class StepProxyMixin:
+    def before_show_proxy(self):
+        self.state["proxy"].setdefault("proxy_type", "no")
+        self.builder.get_object("step_proxy_combo").set_active_id(
+            self.state["proxy"]["proxy_type"]
+        )
+
+        for entry in ("address", "port", "username", "password"):
+            buf = self.get_object("entry_" + entry).get_property("buffer")
+            buf.connect("deleted-text", self.cb_step_proxy_entry_changed)
+            buf.connect("inserted-text", self.cb_step_proxy_entry_changed)
+            if entry in self.state["proxy"]:
+                content = self.state["proxy"][entry]
+                buf.set_text(content, len(content))
+
+        self._step_proxy_set_actives()
+        self.get_object("combo").grab_focus()
+
+    def _step_proxy_is_valid(self) -> bool:
+        proxy_type = self.get_object("combo").get_active_id()
+
+        def get_text(name):
+            return self.get_object("entry_" + name).get_text()
+
+        if proxy_type == "no":
+            return True
+        if not get_text("address"):
+            return False
+        if not get_text("port"):
+            return False
+        if proxy_type == "Socks5":
+            if get_text("username") and not get_text("password"):
+                return False
+        return True
+
+    def _step_proxy_set_actives(self):
+        proxy_type = self.get_object("combo").get_active_id()
+        if proxy_type == "no":
+            for entry in ("address", "port", "username", "password"):
+                self.get_object("entry_%s" % entry).set_sensitive(False)
+        elif proxy_type in ("HTTPS", "Socks4"):
+            for entry in ("address", "port"):
+                self.get_object("entry_%s" % entry).set_sensitive(True)
+            for entry in ("username", "password"):
+                self.get_object("entry_%s" % entry).set_sensitive(False)
+        else:
+            for entry in ("address", "port", "username", "password"):
+                self.get_object("entry_%s" % entry).set_sensitive(True)
+
+        self.get_object("btn_submit").set_sensitive(self._step_proxy_is_valid())
+
+    def _step_proxy_is_port_valid(self):
+        entry = self.get_object("entry_port")
+        port = entry.get_text()
+        if not port:
+            return True
+        elif port.isdigit() and int(port) > 0 and int(port) < 65536:
+            return True
+        else:
+            return False
+
+    def cb_step_proxy_entry_changed(self, *args):
+        self._step_proxy_set_actives()
+        if self._step_proxy_is_port_valid():
+            icon_name = ""
+        else:
+            icon_name = "gtk-dialog-warning"
+        entry = self.get_object("entry_port")
+        entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, icon_name)
+
+    def cb_step_proxy_combo_changed(self, *args):
+        self._step_proxy_set_actives()
+
+    def cb_step_proxy_btn_back_clicked(self, *args):
+        self.change_box("error")
+
+    def cb_step_proxy_btn_submit_clicked(self, *args):
+        self.state["proxy"]["proxy_type"] = self.get_object("combo").get_active_id()
+        for entry in ("address", "port", "username", "password"):
+            self.state["proxy"][entry] = self.get_object("entry_%s" % entry).get_text()
+
+        self.change_box("progress")
+
+
+class TCAMainWindow(
+    Gtk.ApplicationWindow,
+    TranslatableWindow,
+    StepChooseHideMixin,
+    StepConnectProgressMixin,
+    StepChooseBridgeMixin,
+    StepErrorMixin,
+    StepProxyMixin,
+):
+    # TranslatableWindow mixin {{{
+    def get_translation_domain(self):
+        return "tails"
+
+    def get_locale_dir(self):
+        return tca.config.locale_dir
+
+    # }}}
+
+    def __init__(self, app):
+        Gtk.ApplicationWindow.__init__(self, title="Tor Connection", application=app)
+        TranslatableWindow.__init__(self, self)
+        self.app = app
+        self.set_role(tca.config.APPLICATION_WM_CLASS)
+        # XXX: set_wm_class is deprecated, but it's the only way I found to set taskbar title
+        self.set_wmclass(
+            tca.config.APPLICATION_WM_CLASS, tca.config.APPLICATION_WM_CLASS
+        )
+        self.set_title(_(tca.config.APPLICATION_TITLE))
+        # self.state collects data from user interactions. Its main key is the step name
+        self.state: Dict[str, Dict[str, Any]] = {
+            "hide": {},
+            "bridge": {},
+            "proxy": {},
+            "progress": {},
+            "step": "hide",
+            "offline": {},
+        }
+        if self.app.args.debug_statefile is not None:
+            log.debug("loading statefile")
+            with open(self.app.args.debug_statefile) as buf:
+                content = json.load(buf)
+                log.debug("content found %s", content)
+                self.state.update(content)
+        else:
+            data = self.app.configurator.read_conf()
+            if data and data.get("ui"):
+                self.state["hide"].update(data["ui"].get("hide", {}))
+                self.state["progress"]["started"] = (
+                    data["ui"].get("progress", {}).get("started", False)
+                )
+            self.state["progress"][
+                "success"
+            ] = self.app.configurator.tor_has_bootstrapped()
+            if self.state["progress"]["success"]:
+                self.state["step"] = "progress"
+
+        self.current_language = "en"
+        self.connect("delete-event", self.cb_window_delete_event, None)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        # Load custom CSS
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_path(os.path.join(tca.config.data_path, CSS_FILE))
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+        # Load UI interface definition
+        self.builder = builder = Gtk.Builder()
+        builder.set_translation_domain(self.get_translation_domain())
+        builder.add_from_file(tca.config.data_path + MAIN_UI_FILE)
+        builder.connect_signals(self)
+
+        for widget in builder.get_objects():
+            # Store translations for the builder objects
+            self.store_translations(widget)
+            # Workaround Gtk bug #710888 - GtkInfoBar not shown after calling
+            # gtk_widget_show:
+            # https://bugzilla.gnome.org/show_bug.cgi?id=710888
+            if isinstance(widget, Gtk.InfoBar):
+                revealer = widget.get_template_child(Gtk.InfoBar, "revealer")
+                revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
+
+        self.main_container = builder.get_object("box_main_container_image_step")
+        self.connection_progress = ConnectionProgress(self)
+        GLib.timeout_add(1000, self.connection_progress.tick)
+        self.add(self.main_container)
+        self.show()
+        self.change_box(self.state["step"])
+
+    def todo_dialog(self, msg=""):
+        print("TODO:", msg)
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.CANCEL,
+            text="This is still TODO",
+        )
+        dialog.format_secondary_text(msg)
+        dialog.run()
+        dialog.destroy()
+
+    def save_conf(self, successful_connect=False):
+        log.info("Saving configuration (success=%s)", successful_connect)
+        if not successful_connect:
+            data = {"ui": {"hide": self.state["hide"]}}
+        else:
+            data = {"ui": self.state}
+        self.app.configurator.save_conf(data, save_torrc=successful_connect)
+
+    def get_screen_size(self) -> Tuple[int, int]:
+        disp = Gdk.Display.get_default()
+        win = self.get_window()
+        mon = disp.get_monitor_at_window(win)
+        workarea = Gdk.Monitor.get_workarea(mon)
+        return workarea.width, workarea.height
+
+    def set_image(self, fname: str):
+        screen_width, _ = self.get_screen_size()
+        target_width = screen_width / 5
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(fname)
+        scale = pixbuf.get_width() / target_width
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(
+            fname, pixbuf.get_width() / scale, pixbuf.get_height() / scale
+        )
+        self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
+
+    def change_box(self, name: str, **kwargs):
+        children = self.main_container.get_children()
+        if len(children) > 1:
+            self.main_container.remove(children[-1])
+        self.state["step"] = name
+        self.set_image(IMG_SIDE[self.state["step"]])
+        new_box = self.builder.get_object("step_%s_box" % name)
+        self.main_container.pack_end(new_box, True, True, 0)
+        new_box.set_hexpand(True)
+        new_box.set_vexpand(True)
+        if hasattr(self, "before_show_%s" % name):
+            getattr(self, "before_show_%s" % name)(**kwargs)
+        log.debug("Step changed, state is now %s", str(self.state))
+
+        # resize, just to be sure that everything is properly shown
+        screen_width, screen_height = self.get_screen_size()
+        self.resize(int(screen_width / 2), int(screen_height / 2))
+
+    def get_object(self, name: str):
+        """
+        Get an object from glade file.
+
+        This is a shortcut over self.builder.get_object which takes steps into account
+        """
+        return self.builder.get_object("step_%s_%s" % (self.state["step"], name))
+
+    def cb_window_delete_event(self, widget, event, user_data=None):
+        # XXX: warn the user about leaving the wizard
+        Gtk.main_quit()
+        return False
+
+    def on_link_help_clicked(self, linkbutton):
+        uri: str = linkbutton.get_uri()
+        subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
+
+    def on_network_changed(self):
+        up = self.app.is_network_link_ok
+        if not up:
+            if self.state["step"] == "progress":
+                GLib.source_remove(self.timer_check)
+                self.state["offline"]["previous"] = self.state["step"]
+                self.change_box("offline")
+            elif self.state["step"] in ["error", "hide"]:
+                self.state["offline"]["previous"] = self.state["step"]
+                self.change_box("offline")
+        else:
+            prev = self.state["offline"].get("previous", False)
+            if prev:
+                self.change_box(prev)
+
+
+class ConnectionProgress:
+    """
+    This class "handles" the progress bar in the final screen.
+
+    Probably the right approach would have been to subclass Gtk.ProgressBar, but subclassing and glade are
+    hard to combine.
+    """
+
+    PROGRESS_CONFIGURATION_CONFIG = 0.01
+    PROGRESS_CONFIGURATION_APPLIED = 0.1
+    PROGRESS_BOOTSTRAP_END = 0.9
+
+    def __init__(self, main_window):
+        self.main_window = main_window
+        self.bootstrap_phase = 0
+
+    @property
+    def progress(self):
+        return self.main_window.builder.get_object("step_progress_pbar_torconnect")
+
+    def tick(self):
+        """
+        Every second, performs "fake" advancement of the progress bar.
+
+        This advancement does not correspond to real progress, but provides more responsive UX.
+        """
+        current = float(self.progress.get_fraction())
+        if current == 0 or current > 98:
+            return True
+        # in CONNECTION_TIMEOUT ticks we must do the same range as advancing bootstrap-phase by 10%
+        range_after_many_ticks = (
+            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
+        ) / 10
+        range_for_one_tick = range_after_many_ticks / CONNECTION_TIMEOUT
+        current += range_for_one_tick / 100
+        self.set_fraction(current)
+        return True
+
+    def set_fraction(self, num):
+        self.progress.set_fraction(num)
+        text = "%d%%" % (num * 100)
+        self.progress.set_text(text)
+
+    def get_fraction_from_bootstrap_phase(self, progress: int) -> float:
+        """
+        Calculate fraction based on tor bootstrap-phase.
+
+        The 'progress' argument is the number returned by tor, which is in the range [0,100]
+
+        >>> cp = ConnectionProgress(None)
+        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(0)
+        '0.10'
+        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(100)
+        '0.90'
+        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(50)
+        '0.60'
+        """
+        normalized_value = self.PROGRESS_CONFIGURATION_APPLIED + (progress / 100) * (
+            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
+        )
+        return normalized_value
+
+    def set_fraction_from_bootstrap_phase(self, progress: int):
+        if progress == self.bootstrap_phase:
+            return
+        self.bootstrap_phase = progress
+        return self.set_fraction(self.get_fraction_from_bootstrap_phase(progress))
