@@ -266,7 +266,7 @@ class StepConnectProgressMixin:
         def do_tor_connect_config():
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
-                self.get_object("label_status").set_text("Connecting to Tor...")
+                self.get_object("label_status").set_text("Connecting to Tor without bridges...")
             elif self.state["bridge"]["kind"] == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
@@ -279,7 +279,7 @@ class StepConnectProgressMixin:
                     self.state["bridge"]["bridges"]
                 )
                 self.get_object("label_status").set_text(
-                    "Connecting through bridges..."
+                    "Connecting with custom bridges..."
                 )
             else:
                 raise ValueError(
@@ -296,7 +296,7 @@ class StepConnectProgressMixin:
                 only_type="obfs4"
             )
             self.get_object("label_status").set_text(
-                "Connecting with default bridges..."
+                "Connecting to Tor with default bridges..."
             )
             _apply_proxy()
             self.connection_progress.set_fraction(
@@ -362,7 +362,7 @@ class StepConnectProgressMixin:
         self.get_object("box_tortestok").show()
         self.get_object("label_status").set_text(
             "Connected to Tor successfully!\n\n"
-            "You can now browse the Internet anonymously and uncensored"
+            "You can now browse the Internet anonymously and uncensored."
         )
         self.get_object("box_start").show()
 
