@@ -4,18 +4,13 @@ The website [[https://tails.boum.org/]] is built using
 [Ikiwiki](https://ikiwiki.info) from source code that is available in
 our main Git repository, along with the rest of the Tails code.
 
-You can build a local copy of the website on your computer. Building the
+You can build a local copy of the website on any Debian system, including Tails.
+
+Building the
 website produces a set a HTML pages stored on your system that you can
 open in your usual web browser even while working offline. Doing so is
 useful for writers and designers to see how their
 changes will apply on the website.
-
-[[!toc]]
-
-Build the website in Linux
-==========================
-
-If you are in Tails, see the [[dedicated instructions|website#tails]].
 
 1. Update the list of available packages:
 
@@ -36,60 +31,33 @@ If you are in Tails, see the [[dedicated instructions|website#tails]].
 
         git clone https://gitlab.tails.boum.org/tails/tails.git
 
-[[!inline pages="contribute/build/website/src.inline" raw="yes" sort="age"]]
+   <div class="tip">
+
+   <p>The source code of the website is located in the
+   <span class="filename">wiki/src/</span> folder.</p>
+
+   </div>
+
+   <div class="tip">
+
+4. If you want to display the search box in the banner of your local build,
+   uncomment the following line in *ikiwiki.setup*:
+
+       # -  search
 
 5. Build the website:
 
         cd tails && \
         ./build-website
 
-[[!inline pages="contribute/build/website/languages.inline" raw="yes" sort="age"]]
+   <div class="tip">
+
+   <p>To accelerate the build, you can disable some languages by editing
+   the <span class="code">po_slave_languages</span> parameter in the file
+   <span class="filename">ikiwiki.setup</span>.</p>
+
+   </div>
 
 6. You can now browse your local copy of the website in the following folder:
 
    <span class="filename">config/chroot_local-includes/usr/share/doc/tails/website/</span>
-
-<a id="tails"></a>
-
-Build the website in Tails
-==========================
-
-1. [[Create and configure|doc/first_steps/persistence/configure]] a Persistent Storage and turn on the following features:
-
-   - Personal Data
-   - Additional Software
-
-2. Restart Tails, [[unlock the Persistent Storage|doc/first_steps/persistence/use]], and [[set up an administration password|doc/first_steps/welcome_screen/administration_password]].
-
-3. Update the list of available packages:
-
-        sudo apt update
-
-4. Install the required packages:
-
-        sudo apt install \
-           ikiwiki \
-           libyaml-perl \
-           libyaml-libyaml-perl \
-           libyaml-syck-perl \
-           perlmagick \
-           po4a \
-           ruby
-
-5. Clone our main [[Git repository|git]] in the <span class="filename">Persistent</span> folder:
-
-        cd ~/Persistent/ && \
-        git clone https://gitlab.tails.boum.org/tails/tails.git
-
-[[!inline pages="contribute/build/website/src.inline" raw="yes" sort="age"]]
-
-6. Build the website:
-
-        cd tails && \
-        ./build-website --set destdir="/home/amnesia/Persistent/Tor Browser/tails" "$@"
-
-[[!inline pages="contribute/build/website/languages.inline" raw="yes" sort="age"]]
-
-7. You can now visit the following link in <span class="application">Tor Browser</span> to browse your local copy of the website:
-
-   [[file:///home/amnesia/Persistent/Tor Browser/tails/index.en.html]]
