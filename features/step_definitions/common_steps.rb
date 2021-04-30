@@ -924,7 +924,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
                end
   @screen.press('ctrl', 'p')
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
-  print_dialog.child('Print to File', 'table cell').click
+  print_dialog.child('Print to File', roleName: 'table cell').click
   print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click
   # Yes, TorBrowserPrintFileDialog.png != Gtk3PrintFileDialog.png.
   # If you try to unite them, make sure this does not break the tests
