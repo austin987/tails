@@ -8,7 +8,6 @@ from typing import Dict, Any, Tuple
 import gi
 import stem
 
-from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
 from tca.torutils import (
     TorConnectionProxy,
@@ -503,25 +502,19 @@ class StepProxyMixin:
 
 class TCAMainWindow(
     Gtk.ApplicationWindow,
-    TranslatableWindow,
     StepChooseHideMixin,
     StepConnectProgressMixin,
     StepChooseBridgeMixin,
     StepErrorMixin,
     StepProxyMixin,
 ):
-    # TranslatableWindow mixin {{{
+    # l10n {{{
     def get_translation_domain(self):
         return "tails"
-
-    def get_locale_dir(self):
-        return tca.config.locale_dir
-
     # }}}
 
     def __init__(self, app):
         Gtk.ApplicationWindow.__init__(self, title="Tor Connection", application=app)
-        TranslatableWindow.__init__(self, self)
         self.app = app
         self.set_role(tca.config.APPLICATION_WM_CLASS)
         # XXX: set_wm_class is deprecated, but it's the only way I found to set taskbar title
@@ -575,16 +568,6 @@ class TCAMainWindow(
         builder.set_translation_domain(self.get_translation_domain())
         builder.add_from_file(tca.config.data_path + MAIN_UI_FILE)
         builder.connect_signals(self)
-
-        for widget in builder.get_objects():
-            # Store translations for the builder objects
-            self.store_translations(widget)
-            # Workaround Gtk bug #710888 - GtkInfoBar not shown after calling
-            # gtk_widget_show:
-            # https://bugzilla.gnome.org/show_bug.cgi?id=710888
-            if isinstance(widget, Gtk.InfoBar):
-                revealer = widget.get_template_child(Gtk.InfoBar, "revealer")
-                revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
 
         self.main_container = builder.get_object("box_main_container_image_step")
         self.connection_progress = ConnectionProgress(self)
