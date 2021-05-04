@@ -14,3 +14,122 @@ Network filter
 ==============
 
 [[!inline pages="contribute/design/Tor_enforcement/Network_filter" raw=yes sort="age"]]
+
+Other non-Tor traffic
+=====================
+
+When the user [allows Tails to connect to Tor
+automatically](https://gitlab.tails.boum.org/tails/blueprints/-/wikis/network_connection#consent-question),
+they consent to Tails initiating Internet activity without going through Tor, in
+order to help them connect to Tor.
+
+This can be useful, for example, to set the clock correctly or detect
+captive portals.
+
+Guidelines
+----------
+
+- Do our best even when we can't be perfect: take into account less advanced
+  adversaries too
+
+  We should do our best to make it less obvious to less advanced adversaries,
+  e.g. home surveillance (such as abusive partner), even when we can't protect
+  against more advanced ones (e.g. ISP).
+
+- Try to blend in: make the "anonymity set" as large as possible
+
+  E.g. if the best we can do is to look like a Fedora/Ubuntu user who has tor
+  installed, it's already useful against some adversaries.
+
+  We have lost already wrt. the ISP when we do exactly 1 non-Tor check
+  connection followed by connecting directly to Tor. The best we can do is to
+  look a bit more like a Fedora/Ubuntu/etc. user who has tor installed and
+  started at boot time (but then most of these ones will fetch YUM/DNF/APT
+  packages lists).
+
+- Keep it simple to avoid maintenance churn
+
+  Better emulate software that we can understand easily and that does not change
+  its behavior too often (e.g. NetworkManager rather than Firefox).
+
+- Take into account connection patterns
+
+  2+ connections in a row to the same organization or hoster may leak this info
+  more easily than 1. So when we can get 2 pieces of info with 1 single
+  connection, do that.
+
+- Avoid services in a position to aggregate lots of data
+
+  Implement such traffic in a way that we can be reasonably confident the server
+  will not trivially identify the connection as coming from a Tails user. E.g.
+  let's not pick the NSA, Google, AWS, or Cloudflare or other
+  omnipresent actors.
+
+- Use reliable services
+
+  The goal here is to improve UX. Connecting to unreliable services would yield
+  the opposite outcome, i.e. user confusion, except perhaps at the cost of more
+  code complexity (⇒ dev & maintenance cost).
+
+  Note that fallback to another service is an identifiable pattern.
+
+Case studies
+------------
+
+### Time synchronization
+
+- Google captive portal detection: no (aggregation)
+  ⇒ perfect except against Google
+
+- Fedora's captive portal detection
+
+  Run by Red Hat, some of it at AWS ⇒ fails aggregation
+  to some degree; Amazon can get the same data, and does not see
+  the HTTP implementation details,
+  but is probably less motivated to do so than Google.
+  ⇒ somewhat less bad than Google wrt. aggregation,
+  but blends in less than Google vs. ISP (DNS request)
+
+- Debian's NM captive portal detection
+  (apt install network-manager-config-connectivity-debian)
+  few users: 0.5% of Debian NetworkManager users according to popcon
+  ⇒ fails the "blend in" guideline.
+  ok wrt. other guidelines
+  ⇒ not good if your adversary is your ISP or home surveillance;
+  better than Riseup on all counts
+
+- get time from Riseup via a HTTPS request to https://mail.riseup.net/
+  or https://riseup.net/canary (HTP)
+  - does not meet the "connection pattern" guideline: short lived connection,
+    not fetching related web resources ⇒ we don't blend in any bigger set
+    of users from the ISP's perspective, and from Riseup's
+  - reliability: great but not spotless; would perhaps not be a blocker
+    if it were the only issue
+  ⇒ not good if your adversary is your ISP or home surveillance
+
+- Ubuntu's captive portal detection
+  - connectivity-check.ubuntu.com → 3 Google IP addresses
+    ⇒ leaks more info to the ISP, home surveillance, and Google,
+    than to using Google's captive portal detection page directly
+
+- Firefox' captive portal detection
+  - harder to track (internal implementation detail of Firefox,
+    rather than a public API'ish setup like NM) → fails "Keep it simple". But at the moment it's just a
+    document containing the string "success"
+  - detectportal.firefox.com → AWZ, Google IP addresses → fails "aggregation"
+  - keep in mind that firefox uses NSS so it's not a curl/wget call away,
+    but probably not too hard either
+  ⇒ worse than using Google directly (leaks) or Fedora@AWS (maintainability)
+
+
+- Ubuntu/Fedora NTP pool
+  - cleartext, no authentication → ISP can replay bad Tor consensus
+  - only gives us the time, not captive portal detection
+    ⇒ if we have to do captive portal detection anyway, then there's no reason
+    to do NTP on top
+
+Currently implemented
+---------------------
+
+At the time we're writing this, no such background non-torified
+Internet connection is implemented in current Tails.
