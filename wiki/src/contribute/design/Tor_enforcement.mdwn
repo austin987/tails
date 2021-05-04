@@ -84,55 +84,71 @@ to see how they perform regarding to the above guidelines.
 
 ### Time synchronization
 
-- Google captive portal detection: no (aggregation)
-  ⇒ perfect except against Google
+#### Candidates
 
-- Fedora's captive portal detection
+- Google captive portal detection: only fails the "aggregation" guideline
 
-  Run by Red Hat, some of it at AWS ⇒ fails aggregation
-  to some degree; Amazon can get the same data, and does not see
-  the HTTP implementation details,
-  but is probably less motivated to do so than Google.
-  ⇒ somewhat less bad than Google wrt. aggregation,
-  but blends in less than Google vs. ISP (DNS request)
+  ⇒ perfect except when Google is a relevant adversary in the user's threat model
 
-- Debian's NM captive portal detection
-  (apt install network-manager-config-connectivity-debian)
-  few users: 0.5% of Debian NetworkManager users according to popcon
-  ⇒ fails the "blend in" guideline.
-  ok wrt. other guidelines
-  ⇒ not good if your adversary is your ISP or home/work surveillance;
-  better than Riseup on all counts
+- Fedora's *NetworkManager* captive portal detection
 
-- get time from Riseup via a HTTPS request to https://mail.riseup.net/
-  or https://riseup.net/canary (HTP)
-  - does not meet the "connection pattern" guideline: short lived connection,
-    not fetching related web resources ⇒ we don't blend in any bigger set
-    of users from the ISP's perspective, and from Riseup's
-  - reliability: great but not spotless; would perhaps not be a blocker
+  Run by Red Hat, some of it at AWS: only fails the "aggregation" guideline to
+  some degree (Amazon can get the same data, and does not see the HTTP
+  implementation details, but is probably less motivated to do so than Google).
+
+  ⇒ On the one hand it's somewhat better than Google wrt. aggregation. On the
+  other hand, the anonymity set is smaller when the ISP or home/work
+  surveillance are relevant adversaries, since the DNS request is
+  Fedora-specific.
+
+- Debian's *NetworkManager* captive portal detection ([[!debpts network-manager-config-connectivity-debian]]):
+  only fails the "blend in" guideline: has very few users (0.5% of Debian NetworkManager users according to popcon)
+
+  ⇒ Bad if the ISP or home/work surveillance are relevant adversaries.
+  Better than Riseup on all counts.
+
+#### Dismissed options
+
+We determined that each of these candidate options are strictly worse than
+another one:
+
+- Get the time from Riseup via a HTTPS request to https://riseup.net/canary (HTP)
+  - fails the "connection pattern" guideline: short lived connection,
+    not fetching related web resources ⇒ we don't blend into any existing
+    anonymity set, be it from the ISP's perspective, or from Riseup's
+  - reliability: good but not spotless; would perhaps not be a blocker
     if it were the only issue
-  ⇒ not good if your adversary is your ISP or home/work surveillance
 
-- Ubuntu's captive portal detection
-  - connectivity-check.ubuntu.com → 3 Google IP addresses
-    ⇒ leaks more info to the ISP, home/work surveillance, and Google,
-    than to using Google's captive portal detection page directly
+  ⇒ Very bad if the ISP or home/work surveillance are relevant adversaries.
+
+  Dismissed: worse than Debian's *NetworkManager* captive portal detection on all counts
+
+- Ubuntu's *NetworkManager* captive portal detection:
+  connectivity-check.ubuntu.com points to 3 Google IP addresses,
+  so it leaks more info to the ISP, home/work surveillance, and Google,
+  than to using Google's captive portal detection page directly
+
+  Dismissed: worse than Google on all counts
 
 - Firefox' captive portal detection
-  - harder to track (internal implementation detail of Firefox,
-    rather than a public API'ish setup like NM) → fails "Keep it simple". But at the moment it's just a
-    document containing the string "success"
-  - detectportal.firefox.com → AWZ, Google IP addresses → fails "aggregation"
-  - keep in mind that firefox uses NSS so it's not a curl/wget call away,
-    but probably not too hard either
-  ⇒ worse than using Google directly (leaks) or Fedora@AWS (maintainability)
+  - harder to track (internal implementation detail of Firefox, rather than
+    a public API'ish setup like NM) → fails "Keep it simple". But at the moment
+    it's just a document containing the string "success"
+  - detectportal.firefox.com → AWZ and Google IP addresses → fails the
+    "aggregation" guideline
+  - Firefox uses NSS so emulating it is not a curl/wget call away, but probably
+    not too hard either.
 
+  Dismissed: worse than using either Google directly (DNS requests yield
+  a smaller anonymity set) or Fedora@AWS (harder to implement and maintain)
 
 - Ubuntu/Fedora NTP pool
-  - cleartext, no authentication → ISP can replay bad Tor consensus
-  - only gives us the time, not captive portal detection
-    ⇒ if we have to do captive portal detection anyway, then there's no reason
-    to do NTP on top
+  - cleartext, no authentication ⇒ the ISP can replay an old, bad, Tor consensus
+  - only gives us the time ⇒ if we have to do another connection to detect
+    captive portals anyway, we can get the time from that other connection (via
+    HTP), and then there's no reason to do NTP on top. This could become
+    a candidate again if we decided to implement time synchronization without
+    captive portal detection.
 
 Currently implemented
 ---------------------
