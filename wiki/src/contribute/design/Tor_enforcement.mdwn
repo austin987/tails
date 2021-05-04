@@ -33,45 +33,45 @@ Guidelines
   adversaries too
 
   We should do our best to make it less obvious to less advanced adversaries,
-  e.g. home surveillance (such as abusive partner), even when we can't protect
-  against more advanced ones (e.g. ISP).
+  for example home surveillance (such as abusive partner or parents), even when
+  we can't protect against more advanced ones (such as the ISP).
 
 - Try to blend in: make the "anonymity set" as large as possible
 
-  E.g. if the best we can do is to look like a Fedora/Ubuntu user who has tor
-  installed, it's already useful against some adversaries.
-
-  We have lost already wrt. the ISP when we do exactly 1 non-Tor check
-  connection followed by connecting directly to Tor. The best we can do is to
-  look a bit more like a Fedora/Ubuntu/etc. user who has tor installed and
-  started at boot time (but then most of these ones will fetch YUM/DNF/APT
-  packages lists).
+  For example, if the best we can do is to look somewhat like a Fedora/Ubuntu
+  user who has tor installed, it's already useful against some adversaries.
 
 - Keep it simple to avoid maintenance churn
 
-  Better emulate software that we can understand easily and that does not change
-  its behavior too often (e.g. NetworkManager rather than Firefox).
+  Whenever we try to emulate the behavior of another piece of software than
+  Tails in order to blend in, we should emulate software that we can understand
+  easily and that does not change its behavior too often.
 
 - Take into account connection patterns
 
-  2+ connections in a row to the same organization or hoster may leak this info
-  more easily than 1. So when we can get 2 pieces of info with 1 single
-  connection, do that.
+  Two connections in a row or more to the same organization or hosting service
+  may be more identifiable than 1 single connection, by said organization or by
+  the user's ISP. So we should try to get as much information as we can from
+  every such connection.
 
 - Avoid services in a position to aggregate lots of data
 
-  Implement such traffic in a way that we can be reasonably confident the server
-  will not trivially identify the connection as coming from a Tails user. E.g.
-  let's not pick the NSA, Google, AWS, or Cloudflare or other
-  omnipresent actors.
+  Omnipresent Internet actors, such as the NSA, Google, AWS, or Cloudflare, can
+  correlate Tails' non-Tor activity with other data they aggregate. We should
+  try to make it non-trivial to such adversaries that the connection is coming
+  from a Tails user, to make such correlation more difficult.
 
 - Use reliable services
 
-  The goal here is to improve UX. Connecting to unreliable services would yield
-  the opposite outcome, i.e. user confusion, except perhaps at the cost of more
-  code complexity (⇒ dev & maintenance cost).
+  We're doing non-Tor connections in order to improve UX. If these connections
+  rely on unreliable services, then we either have to take the risk that we'll
+  get users confused, or spend more time of software design, development, and
+  maintenance, in order to deal with the unreliability. Both outcomes are
+  problematic, so we should try to connect to reliable services.
 
-  Note that fallback to another service is an identifiable pattern.
+  In passing, note that falling back to another service when the first attempted
+  one is unreliable, can be used as an identifiable pattern by both passive and
+  active adversaries.
 
 Case studies
 ------------
