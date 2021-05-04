@@ -54,7 +54,9 @@ def main():
     confdir.chmod(0o700)
     conffile.touch(mode=0o600)
 
-    connect_drop = ["/usr/local/lib/connect-drop", "-c", "FILE:%s:r+" % conffile]
+    portalsock = '/run/tca-portal.sock'
+
+    connect_drop = ["/usr/local/lib/connect-drop", "-c", "FILE:%s:r+" % conffile, "-c", "UNIX:%s" % portalsock]
     ch_netns = ["ip", "netns", "exec", NETNS]
     runuser = ["/sbin/runuser", "-u", LIVE_USERNAME]
     # base bwrap sharing most of the system

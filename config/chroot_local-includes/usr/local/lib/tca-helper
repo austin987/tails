@@ -53,12 +53,12 @@ class Handler(socketserver.StreamRequestHandler):
 
     MAX_LINESIZE = 1024
 
-    valid_commands = {"OPEN-UNSAFEBROWSER", "OPEN-TBB", "OPEN-NETWORKMONITOR"}
+    valid_commands = {"open-unsafebrowser", "open-tbb", "open-networkmonitor"}
 
     spawn_user_commands = {  # some commands just mean "run this specified commands as LIVE_USERNAME, please"
-        "OPEN-UNSAFEBROWSER": ["sudo", "-n", "unsafe-browser"],
-        "OPEN-TBB": ["tor-browser"],
-        "OPEN-NETWORKMONITOR": ["gnome-system-monitor"],
+        "open-unsafebrowser": ["sudo", "-n", "unsafe-browser"],
+        "open-tbb": ["tor-browser"],
+        "open-networkmonitor": ["gnome-system-monitor"],
     }
 
     protocol = JSONRPCProtocol()
@@ -111,7 +111,7 @@ def main():
         print("%s must be run as root" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     p = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    p.add_argument("--listen", metavar="SOCKET-PATH", default="/tmp/tca-helper.sock")
+    p.add_argument("--listen", metavar="SOCKET-PATH", default="/run/tca-portal.sock")
     p.add_argument(
         "--log-level",
         metavar="LEVEL",

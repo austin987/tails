@@ -1,12 +1,78 @@
 import os
 from typing import List, Callable
+import socket
 
 import gi
+from tinyrpc.protocols.jsonrpc import JSONRPCProtocol
+from tinyrpc.exc import BadReplyError
 
 gi.require_version("GLib", "2.0")
 
 from gi.repository import GObject  # noqa: E402
 from gi.repository import GLib  # noqa: E402
+
+
+class GJsonRpcClient(GObject.GObject):
+    """
+    Wrap a raw socket and uses JSON-RPC over it.
+
+    Supports calling methods, but not receiving server-initiated messages (ie: signals)
+    """
+
+    __gsignals__ = {
+        "connection-closed": (
+            GObject.SIGNAL_RUN_LAST,
+            GObject.TYPE_NONE,
+            (),
+        ),
+        "response": (
+            GObject.SIGNAL_RUN_LAST,
+            GObject.TYPE_NONE,
+            (GObject.TYPE_INT, GObject.TYPE_STRING),
+        ),
+        "response-error": (
+            GObject.SIGNAL_RUN_LAST,
+            GObject.TYPE_NONE,
+            (GObject.TYPE_INT, GObject.TYPE_STRING),
+        ),
+    }
+
+    MAX_LINESIZE = 1024
+
+    def __init__(self, sock: socket.socket):
+        GObject.GObject.__init__(self)
+        self.protocol = JSONRPCProtocol()
+        self.sock = sock
+        self.buffer = b""
+
+    def run(self):
+        GLib.io_add_watch(self.sock.fileno(), GLib.IO_IN, self._on_data)
+        GLib.io_add_watch(self.sock.fileno(), GLib.IO_HUP | GLib.IO_ERR, self._on_close)
+
+    def call_async(self, method: str, params=[]):
+        req = self.protocol.create_request(method, params)
+        print('call async', req.unique_id)
+        output = req.serialize() + "\n"
+        self.sock.send(output.encode("utf8"))
+
+    def _on_close(self, *args):
+        self.emit('connection-closed')
+
+    def _on_data(self, *args):
+        self.buffer += self.sock.recv(self.MAX_LINESIZE)
+        while b"\n" in self.buffer:
+            newline_pos = self.buffer.find(b"\n")
+            msg = self.buffer[:newline_pos]
+            self.buffer = self.buffer[newline_pos + 1 :]
+            try:
+                response = self.protocol.parse_reply(msg)
+            except BadReplyError:
+                return
+            if hasattr(response, "error"):
+                self.emit("response-error", response.unique_id, response.error)
+            else:
+                self.emit("response", response.unique_id, response.result)
+        return True
 
 
 class GAsyncSpawn(GObject.GObject):
@@ -77,7 +143,7 @@ class GAsyncSpawn(GObject.GObject):
 
 def idle_add_chain(functions: List[Callable]):
     """
-    this is a wrapper over GLib.idle_add
+    Wrap GLib.idle_add allowing chains of functions.
 
     Use case: idle_add is very cool, but modifications to widgets aren't applied until the whole method add.
     A simple solution to this shortcoming is split your function in many small ones, and call them in a chain.
