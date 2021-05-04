@@ -15,6 +15,10 @@ import socket
 import time
 from subprocess import Popen
 
+from tinyrpc.protocols.jsonrpc import  JSONRPCProtocol, JSONRPCParseError
+from tinyrpc.protocols import  RPCRequest, RPCResponse
+from tinyrpc.exc import InvalidRequestError
+
 from tailslib.systemd import systemd_ready
 from tailslib.gnome import gnome_env_vars
 from tailslib import LIVE_USERNAME
@@ -37,18 +41,17 @@ def run_user_command(cmd: list):
 
 class Handler(socketserver.StreamRequestHandler):
     """
-    This class implements the line-protocol + some glue code to call relevant actions.
+    This class implements the JSON-RPC line-protocol + some glue code to call relevant actions.
 
-    The protocol is extremely simple:
-     - requests are in a single line. first word is the "command".
-     - response are in a single line. first word is a 3-digit status number loosely http-inspired. second word is an explaination
+    The protocol is basically JSON-RPC with some more restrictions:
+     - requests are in a single line
+     - response are in a single line
 
-    This is explicitly not supported:
-     - requests/response with additional payloads
+    This is not supported at the moment, but could:
      - server-initiated messages (ie: signals)
     """
 
-    MAX_LINESIZE = 128
+    MAX_LINESIZE = 1024
 
     valid_commands = {"OPEN-UNSAFEBROWSER", "OPEN-TBB", "OPEN-NETWORKMONITOR"}
 
@@ -58,18 +61,32 @@ class Handler(socketserver.StreamRequestHandler):
         "OPEN-NETWORKMONITOR": ["gnome-system-monitor"],
     }
 
-    def handle_line(self, line: str) -> str:
-        if not line:
-            return ""
-        cmd = line.split()[0]
-        if cmd not in self.valid_commands:
-            return "500 INVALID-CMD"
-        if cmd in self.spawn_user_commands:
-            run_user_command(self.spawn_user_commands[cmd])
-        return "200 OK"
+    protocol = JSONRPCProtocol()
+
+    def handle_line(self, line: bytes) -> RPCResponse:
+        try:
+            req = self.protocol.parse_request(line)
+        except JSONRPCParseError as exc:
+            return exc.error_respond()
+        except InvalidRequestError as exc:
+            return exc.error_respond()
+
+        try:
+            return self.handle_request(req)
+        except Exception:
+            return req.error_respond(error="Server error")
+
+    def handle_request(self, req: RPCRequest) -> RPCResponse:
+        if req.method not in self.valid_commands:
+            return req.error_respond(error="Invalid method")
+        if req.method in self.spawn_user_commands:
+            run_user_command(self.spawn_user_commands[req.method])
+            return req.respond(result={"ok": True})
+        return req.error_respond(error="Method not implemented")
 
     def handle(self):
-        log = logging.getLogger("handle")
+        log = logging.getLogger("traffic")
+
         while True:
             peek_ahead = self.request.recv(self.MAX_LINESIZE, socket.MSG_PEEK)
             if not peek_ahead:
@@ -82,15 +99,11 @@ class Handler(socketserver.StreamRequestHandler):
             if not line_in:
                 continue
             log.debug("<- %s", line_in)
-            try:
-                output = self.handle_line(line_in.lstrip())
-            except Exception:
-                logging.exception("error")
-                output = "501 ERROR"
-            finally:
-                log.debug("-> %s", output)
-                output += "\n"
-                self.request.send(output.encode("utf8"))
+            response = self.handle_line(line_in.lstrip())
+            output = response.serialize()
+            log.debug("-> %s", output)
+            output += "\n"
+            self.request.send(output.encode("utf8"))
 
 
 def main():
