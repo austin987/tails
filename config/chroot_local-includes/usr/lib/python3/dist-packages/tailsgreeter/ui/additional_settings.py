@@ -184,7 +184,7 @@ class MACSpoofSettingUI(AdditionalSetting):
 
     @property
     def title(self) -> str:
-        return _("_MAC Address Spoofing")
+        return _("_MAC Address Anonymization")
 
     @property
     def icon_name(self) -> str:
