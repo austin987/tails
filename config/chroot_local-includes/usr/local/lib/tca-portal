@@ -15,18 +15,39 @@ import socket
 import time
 from subprocess import Popen
 
-from tinyrpc.protocols.jsonrpc import  JSONRPCProtocol, JSONRPCParseError
-from tinyrpc.protocols import  RPCRequest, RPCResponse
+from tinyrpc.protocols.jsonrpc import JSONRPCProtocol, JSONRPCParseError
+from tinyrpc.protocols import RPCRequest, RPCResponse
 from tinyrpc.exc import InvalidRequestError
+
+import systemd.daemon
 
 from tailslib.systemd import systemd_ready
 from tailslib.gnome import gnome_env_vars
 from tailslib import LIVE_USERNAME
 
-log = logging.getLogger("tca-helper")
+log = logging.getLogger("tca-portal")
 
 
-class ForkingUnixServer(socketserver.ForkingMixIn, socketserver.UnixStreamServer):
+class FDUnixStreamServer(socketserver.UnixStreamServer):
+    '''
+    This server can *both* use a previously activated fd, or bind a new one.
+
+    To make it use a previously activated fd, just pass it as `fd` keyword parameter to the constructor.
+    '''
+
+    def __init__(self, *args, **kwargs):
+        self.fd: int = kwargs.pop("fd", None)
+        if self.fd is not None:
+            # Invoke base but omit bind/listen steps
+            kwargs["bind_and_activate"] = False
+        socketserver.UnixStreamServer.__init__(self, *args, **kwargs)
+        if self.fd is not None:
+            self.socket = socket.fromfd(
+                self.fd, self.address_family, self.socket_type
+            )
+
+
+class ForkingUnixServer(socketserver.ForkingMixIn, FDUnixStreamServer):
     allow_reuse_address = True
     timeout = None
 
@@ -111,7 +132,18 @@ def main():
         print("%s must be run as root" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     p = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    p.add_argument("--listen", metavar="SOCKET-PATH", default="/run/tca-portal.sock")
+    p.add_argument(
+        "--systemd-socket",
+        action="store_true",
+        default=False,
+        help="use systemd-activated socket",
+    )
+    p.add_argument(
+        "--listen",
+        metavar="SOCKET-PATH",
+        default="/run/tca-portal.sock",
+        help="Ignored if --systemd-socket is used",
+    )
     p.add_argument(
         "--log-level",
         metavar="LEVEL",
@@ -122,12 +154,28 @@ def main():
 
     logging.basicConfig(level=args.log_level)
 
-    if os.path.exists(args.listen) and stat.S_ISSOCK(os.stat(args.listen).st_mode):
-        os.remove(args.listen)
-    with ForkingUnixServer(args.listen, Handler) as server:
-        os.chmod(args.listen, 0o600)
+    if not args.systemd_socket:
+        if os.path.exists(args.listen) and stat.S_ISSOCK(os.stat(args.listen).st_mode):
+            os.remove(args.listen)
+    if args.systemd_socket:
+        available_fds = systemd.daemon.listen_fds()
+        log.debug("Available fds: %s" % str(available_fds))
+        if not available_fds:
+            print("Error: no systemd-activated socket found", file=sys.stderr)
+            sys.exit(1)
+        elif len(available_fds) != 1:
+            print("Error: number of FDs received is incorrect")
+            sys.exit(1)
+        listen_fd = available_fds[0]
+    else:
+        listen_fd = None
+    with ForkingUnixServer(args.listen, Handler, fd=listen_fd) as server:
+        if not args.systemd_socket:
+            os.chmod(args.listen, 0o600)
+            log.info("Listening on %s", args.listen)
+        else:
+            log.info("Serving on a systemd-activated socket", args.listen)
         systemd_ready()
-        log.info("Listening on %s", args.listen)
         server.serve_forever()
 
 

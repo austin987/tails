@@ -1,10 +1,11 @@
 [Unit]
 Description=Provides privileged functions for TCA
+Requires=tca-portal.socket
 
 [Service]
-Type=simple
+Type=notify
 User=root
-ExecStart=/usr/local/lib/tca-helper --listen /run/tor-connection-helper.sock
+ExecStart=/usr/local/lib/tca-portal --systemd-socket
 
 [Install]
 WantedBy=desktop.target
