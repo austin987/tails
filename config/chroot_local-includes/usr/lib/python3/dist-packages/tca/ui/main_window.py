@@ -40,7 +40,7 @@ IMG_SIDE = {
     "error": IMG_WALKIE,
     "offline": IMG_RELAYS,
 }
-CONNECTION_TIMEOUT = 30
+CONNECTION_TIMEOUT = 120
 
 # META {{{
 # Naming convention for widgets:
