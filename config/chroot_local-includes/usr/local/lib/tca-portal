@@ -29,11 +29,11 @@ log = logging.getLogger("tca-portal")
 
 
 class FDUnixStreamServer(socketserver.UnixStreamServer):
-    '''
+    """
     This server can *both* use a previously activated fd, or bind a new one.
 
     To make it use a previously activated fd, just pass it as `fd` keyword parameter to the constructor.
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         self.fd: int = kwargs.pop("fd", None)
@@ -42,9 +42,7 @@ class FDUnixStreamServer(socketserver.UnixStreamServer):
             kwargs["bind_and_activate"] = False
         socketserver.UnixStreamServer.__init__(self, *args, **kwargs)
         if self.fd is not None:
-            self.socket = socket.fromfd(
-                self.fd, self.address_family, self.socket_type
-            )
+            self.socket = socket.fromfd(self.fd, self.address_family, self.socket_type)
 
 
 class ForkingUnixServer(socketserver.ForkingMixIn, FDUnixStreamServer):
@@ -74,13 +72,14 @@ class Handler(socketserver.StreamRequestHandler):
 
     MAX_LINESIZE = 1024
 
-    valid_commands = {"open-unsafebrowser", "open-tbb", "open-networkmonitor"}
 
     spawn_user_commands = {  # some commands just mean "run this specified commands as LIVE_USERNAME, please"
         "open-unsafebrowser": ["sudo", "-n", "unsafe-browser"],
         "open-tbb": ["tor-browser"],
         "open-networkmonitor": ["gnome-system-monitor"],
+        "open-onioncircuits": ["onioncircuits"],
     }
+    valid_commands = set(spawn_user_commands.keys())
 
     protocol = JSONRPCProtocol()
 
@@ -174,7 +173,7 @@ def main():
             os.chmod(args.listen, 0o600)
             log.info("Listening on %s", args.listen)
         else:
-            log.info("Serving on a systemd-activated socket", args.listen)
+            log.info("Serving on a systemd-activated socket")
         systemd_ready()
         server.serve_forever()
 
