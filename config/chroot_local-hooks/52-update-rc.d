@@ -35,6 +35,7 @@ systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
+systemctl --global enable tca-portal.service
 systemctl --global enable tails-a11y-proxy-netns@onioncircs.service
 systemctl --global enable tails-ibus-proxy-netns@onioncircs.service
 systemctl --global enable tails-a11y-proxy-netns@torlaunch.service
