@@ -36,7 +36,7 @@ systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 
-for netns in onioncircs torlaunch onionshare tbb; do
+for netns in onioncircs torlaunch tbb; do
     for bus in a11y ibus; do
         systemctl --global enable "tails-$bus-proxy-netns@$netns.service"
     done
