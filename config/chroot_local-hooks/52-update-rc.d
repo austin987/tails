@@ -22,6 +22,7 @@ systemctl enable tails-shutdown-on-media-removal.service
 systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
+systemctl enable tca-portal.service
 systemctl enable run-initramfs.mount
 systemctl enable var-tmp.mount
 
@@ -35,7 +36,6 @@ systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
-systemctl --global enable tca-portal.service
 systemctl --global enable tails-a11y-proxy-netns@onioncircs.service
 systemctl --global enable tails-ibus-proxy-netns@onioncircs.service
 systemctl --global enable tails-a11y-proxy-netns@torlaunch.service
