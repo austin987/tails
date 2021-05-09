@@ -664,7 +664,7 @@ class TCAMainWindow(
 
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
-        subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
+        self.app.portal.call_async('open-documentation', ["--force-local", uri])
 
     def on_network_changed(self):
         up = self.app.is_network_link_ok
