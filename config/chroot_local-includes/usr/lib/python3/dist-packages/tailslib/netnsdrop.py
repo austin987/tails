@@ -12,6 +12,7 @@ import os
 import logging
 
 from tailslib.gnome import gnome_env_vars
+from tailslib import LIVE_USERNAME
 
 
 def run_in_netns(*args, netns, user="amnesia"):
@@ -25,22 +26,26 @@ def run_in_netns(*args, netns, user="amnesia"):
     ]
     # hide data not for us
     bwrap += ["--tmpfs", "/tmp/netns-specific/"]
-    cmd = [
-        "/bin/ip",
-        "netns",
-        "exec",
-        netns,
-        "/sbin/runuser",
-        "-u",
-        user,
-        "--",
-        *bwrap,
-        "/usr/bin/env",
+
+    ch_netns = ["ip", "netns", "exec", netns]
+    runuser = ["/sbin/runuser", "-u", LIVE_USERNAME]
+    envcmd = [
+        "/usr/bin/env", "--",
         *gnome_env_vars(),
         "AT_SPI_BUS_ADDRESS=unix:path=/tmp/shared-with-me/at.sock",
         "IBUS_ADDRESS=unix:path=/tmp/shared-with-me/ibus.sock",
-        *args,
     ]
+    # We run tca with several wrappers to accomplish our privilege-isolation-magic:
+    # connect_drop: opens a privileged file and pass FD to new process
+    # ch_netns: enter the new namespace
+    # runuser: change back to unprivileged user
+    # bwrap: this is probably the most complicated; what it does is sharing /tmp/netns-specific/$NETNS on
+    # /tmp/shared-with-me/ and hide /tmp/netns-specific/ . The result is that TCA will be able to access
+    # sockets that would otherwise be unreachable. See also tails-{a11y,ibus}-proxy-netns@.service
+    # envcmd: set the "right" environment; this means getting all "normal" gnome variables, AND clarifying
+    #         where is the {a11y,ibus} bus, which is related to bwrap
+
+    cmd = [*ch_netns, *runuser, "--", *bwrap, "--", *envcmd, *args]
     logging.info("Running %s", cmd)
     os.execvp(cmd[0], cmd)
 
