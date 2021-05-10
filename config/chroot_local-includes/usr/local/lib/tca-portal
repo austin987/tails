@@ -50,12 +50,28 @@ class ForkingUnixServer(socketserver.ForkingMixIn, FDUnixStreamServer):
     timeout = None
 
 
-def run_user_command(cmd: list):
-    drop = ["runuser", "-u", LIVE_USERNAME]
-    env = ["env", *gnome_env_vars()]
+class Command:
+    def __init__(self, cmd: list, arguments: bool):
+        self.cmd = cmd
+        self.arguments = arguments
 
-    args = [*drop, "--", *env, *cmd]
-    Popen(args)
+    def full_command(self, request: RPCRequest) -> list:
+        cmd = self.cmd
+        if self.arguments:
+            cmd = cmd + request.args
+        return cmd
+
+    def run(self, request: RPCRequest):
+        Popen(self.full_command(request))
+
+
+class UserCommand(Command):
+    def full_command(self, request: RPCRequest):
+        drop = ["runuser", "-u", LIVE_USERNAME]
+        env = ["env", *gnome_env_vars()]
+
+        args = [*drop, "--", *env, *(super().full_command(request))]
+        return args
 
 
 class Handler(socketserver.StreamRequestHandler):
@@ -72,14 +88,16 @@ class Handler(socketserver.StreamRequestHandler):
 
     MAX_LINESIZE = 1024
 
-
-    spawn_user_commands = {  # some commands just mean "run this specified commands as LIVE_USERNAME, please"
-        "open-unsafebrowser": ["sudo", "-n", "unsafe-browser"],
-        "open-tbb": ["tor-browser"],
-        "open-networkmonitor": ["gnome-system-monitor", "--show-resources-tab"],
-        "open-onioncircuits": ["onioncircuits"],
+    spawn_commands = {  # some commands just mean "run this specified commands as LIVE_USERNAME, please"
+        "open-unsafebrowser": UserCommand(["sudo", "-n", "unsafe-browser"], False),
+        "open-tbb": UserCommand(["tor-browser"], False),
+        "open-networkmonitor": UserCommand(
+            ["gnome-system-monitor", "--show-resources-tab"], False
+        ),
+        "open-onioncircuits": UserCommand(["onioncircuits"], False),
+        "open-documentation": UserCommand(["tails-documentation"], True),
     }
-    valid_commands = set(spawn_user_commands.keys())
+    valid_commands = set(spawn_commands.keys())
 
     protocol = JSONRPCProtocol()
 
@@ -94,13 +112,15 @@ class Handler(socketserver.StreamRequestHandler):
         try:
             return self.handle_request(req)
         except Exception:
+            log.exception("Error processing request %s", req)
             return req.error_respond(error="Server error")
 
     def handle_request(self, req: RPCRequest) -> RPCResponse:
         if req.method not in self.valid_commands:
             return req.error_respond(error="Invalid method")
-        if req.method in self.spawn_user_commands:
-            run_user_command(self.spawn_user_commands[req.method])
+        if req.method in self.spawn_commands:
+            cmd = self.spawn_commands[req.method]
+            cmd.run(req)
             return req.respond(result={"ok": True})
         return req.error_respond(error="Method not implemented")
 
