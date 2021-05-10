@@ -8,7 +8,6 @@ from typing import Dict, Any, Tuple
 import gi
 import stem
 
-from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
 from tca.torutils import (
     TorConnectionProxy,
@@ -55,7 +54,8 @@ CONNECTION_TIMEOUT = 30
 #  - before_show_<stepname>() is called when changing from one step to the other
 # }}}
 
-_ = gettext.gettext
+translation = gettext.translation("tails", "/usr/share/locale", fallback=True)
+_ = translation.gettext
 
 log = logging.getLogger(__name__)
 
@@ -163,7 +163,7 @@ class StepChooseBridgeMixin:
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
         except InvalidBridgeException as exc:
-            set_warning("Invalid: %s" % str(exc))
+            set_warning(_("Invalid: {exception}").format(exception=str(exc)))
             return False
         except (ValueError, IndexError):
             self.get_object("box_warning").hide()
@@ -174,7 +174,7 @@ class StepChooseBridgeMixin:
             for br in bridges:
                 if br.split()[0] not in (VALID_BRIDGE_TYPES - {"bridge"}):
                     set_warning(
-                        "You need to configure an obfs4 bridge to hide that you are using Tor"
+                        _("You need to configure an obfs4 bridge to hide that you are using Tor")
                     )
                     return False
 
@@ -266,20 +266,20 @@ class StepConnectProgressMixin:
         def do_tor_connect_config():
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
-                self.get_object("label_status").set_text("Connecting to Tor...")
+                self.get_object("label_status").set_text(_("Connecting to Tor without bridges..."))
             elif self.state["bridge"]["kind"] == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
                 )
                 self.get_object("label_status").set_text(
-                    "Connecting with default bridges..."
+                    _("Connecting with default bridges...")
                 )
             elif self.state["bridge"]["bridges"]:
                 self.app.configurator.tor_connection_config.enable_bridges(
                     self.state["bridge"]["bridges"]
                 )
                 self.get_object("label_status").set_text(
-                    "Connecting through bridges..."
+                    _("Connecting with custom bridges...")
                 )
             else:
                 raise ValueError(
@@ -296,7 +296,7 @@ class StepConnectProgressMixin:
                 only_type="obfs4"
             )
             self.get_object("label_status").set_text(
-                "Connecting with default bridges..."
+                _("Connecting to Tor with default bridges...")
             )
             _apply_proxy()
             self.connection_progress.set_fraction(
@@ -360,10 +360,10 @@ class StepConnectProgressMixin:
         self.save_conf(successful_connect=True)
         self.get_object("box_torconnect").hide()
         self.get_object("box_tortestok").show()
-        self.get_object("label_status").set_text(
+        self.get_object("label_status").set_text(_(
             "Connected to Tor successfully!\n\n"
-            "You can now browse the Internet anonymously and uncensored"
-        )
+            "You can now browse the Internet anonymously and uncensored."
+        ))
         self.get_object("box_start").show()
 
     def cb_internet_test(self, spawn, retval):
@@ -503,32 +503,26 @@ class StepProxyMixin:
 
 class TCAMainWindow(
     Gtk.ApplicationWindow,
-    TranslatableWindow,
     StepChooseHideMixin,
     StepConnectProgressMixin,
     StepChooseBridgeMixin,
     StepErrorMixin,
     StepProxyMixin,
 ):
-    # TranslatableWindow mixin {{{
+    # l10n {{{
     def get_translation_domain(self):
         return "tails"
-
-    def get_locale_dir(self):
-        return tca.config.locale_dir
-
     # }}}
 
     def __init__(self, app):
-        Gtk.ApplicationWindow.__init__(self, title="Tor Connection", application=app)
-        TranslatableWindow.__init__(self, self)
+        Gtk.ApplicationWindow.__init__(self, title=tca.config.APPLICATION_TITLE, application=app)
         self.app = app
         self.set_role(tca.config.APPLICATION_WM_CLASS)
         # XXX: set_wm_class is deprecated, but it's the only way I found to set taskbar title
         self.set_wmclass(
             tca.config.APPLICATION_WM_CLASS, tca.config.APPLICATION_WM_CLASS
         )
-        self.set_title(_(tca.config.APPLICATION_TITLE))
+        self.set_title(tca.config.APPLICATION_TITLE)
         # self.state collects data from user interactions. Its main key is the step name
         self.state: Dict[str, Dict[str, Any]] = {
             "hide": {},
@@ -575,16 +569,6 @@ class TCAMainWindow(
         builder.set_translation_domain(self.get_translation_domain())
         builder.add_from_file(tca.config.data_path + MAIN_UI_FILE)
         builder.connect_signals(self)
-
-        for widget in builder.get_objects():
-            # Store translations for the builder objects
-            self.store_translations(widget)
-            # Workaround Gtk bug #710888 - GtkInfoBar not shown after calling
-            # gtk_widget_show:
-            # https://bugzilla.gnome.org/show_bug.cgi?id=710888
-            if isinstance(widget, Gtk.InfoBar):
-                revealer = widget.get_template_child(Gtk.InfoBar, "revealer")
-                revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
 
         self.main_container = builder.get_object("box_main_container_image_step")
         self.connection_progress = ConnectionProgress(self)
