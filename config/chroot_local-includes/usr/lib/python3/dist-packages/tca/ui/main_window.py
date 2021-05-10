@@ -735,8 +735,36 @@ class ConnectionProgress:
         '0.1133'
         >>> f(0.5, True)
         '0.5033'
+
+        So in `n` steps we will arrive to the next progress.
+        To test this, let's setup a helper function. this will just recurse "n" times
+        >>> ft = lambda x: ConnectionProgress._get_value_after_tick(x, True)
+        >>> ff = lambda x: ConnectionProgress._get_value_after_tick(x, False)
+        >>> ftn = lambda x, n: ftn(ft(x), n-1) if n > 1 else ft(x)
+
+        Let's test the helper itself:
+        >>> '%.4f' % ftn(0.5, 1)
+        '0.5033'
+        >>> '%.4f' % ftn(0.5, 2)
+        '0.5067'
+        >>> ftn(0.5, TOR_BOOTSTRAP_TIMEOUT) - ConnectionProgress.PROGRESS_BOOTSTRAP_END < 0.001
+        True
+
+        >>> ffn = lambda x, n: ffn(ff(x), n-1) if n > 1 else ff(x)
+
+        That's the same, but for "before sign_of_life"
+        >>> '%.4f' % ffn(0.1, 1)
+        '0.1133'
+        >>> '%.4f' % ffn(0.1, 2)
+        '0.1267'
+        >>> '%.4f' % ffn(0.1, 3)
+        '0.1400'
+        >>> '%.4f' % ffn(0.1, 30)
+        '0.5000'
+
+
         """
-        if not cls.sign_of_life:
+        if not sign_of_life:
             # in TOR_SIGNOFLIFE_TIMEOUT ticks we must go from 0.1 to 0.5 in TOR_SIGNOFLIFE_TIMEOUT seconds
             range_to_cover = (
                 cls.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE - cls.PROGRESS_CONFIGURATION_APPLIED
@@ -745,7 +773,7 @@ class ConnectionProgress:
         else:
             range_to_cover = (
                 cls.PROGRESS_BOOTSTRAP_END - cls.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE
-            ) / 2
+            )
             time_to_cover = TOR_BOOTSTRAP_TIMEOUT
         return current + range_to_cover / time_to_cover
 
