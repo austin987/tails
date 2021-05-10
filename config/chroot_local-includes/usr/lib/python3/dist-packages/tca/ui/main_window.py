@@ -163,7 +163,7 @@ class StepChooseBridgeMixin:
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
         except InvalidBridgeException as exc:
-            set_warning(_("Invalid: {exception}").format(exception=str(exc))
+            set_warning(_("Invalid: {exception}").format(exception=str(exc)))
             return False
         except (ValueError, IndexError):
             self.get_object("box_warning").hide()
