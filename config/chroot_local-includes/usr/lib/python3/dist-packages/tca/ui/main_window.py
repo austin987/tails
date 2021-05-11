@@ -215,6 +215,7 @@ class StepChooseBridgeMixin:
     def cb_step_bridge_btn_submit_clicked(self, *args):
         default = self.builder.get_object("step_bridge_radio_default").get_active()
         manual = self.builder.get_object("step_bridge_radio_type").get_active()
+        self.state['hide']['bridge'] = True
         if default:
             self.state["bridge"]["kind"] = "default"
             self.state["bridge"]["default_method"] = self.get_object(
