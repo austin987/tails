@@ -56,7 +56,7 @@ has 'estimated_end_time' => (
     is      => 'rw',
     isa     => Str,
     lazy    => 1,
-    default => __(q{Unknow time}),
+    default => __(q{Unknown time}),
 );
 
 has 'time_duration' => (
