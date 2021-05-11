@@ -1,7 +1,6 @@
 import logging
 import os.path
 import json
-import subprocess
 import gettext
 from typing import Dict, Any, Tuple
 
@@ -247,6 +246,8 @@ class StepConnectProgressMixin:
         self.builder.get_object("step_progress_box").show()
         self.builder.get_object("step_progress_box_internettest").hide()
         self.builder.get_object("step_progress_box_internetok").hide()
+        self.get_object("box_tor_direct_fail").hide()
+        self.connection_progress.set_fraction(0.0, allow_going_back=True)
         if not self.state["progress"]["success"]:
             self.spawn_tor_connect()
         else:
@@ -354,6 +355,8 @@ class StepConnectProgressMixin:
                     not self.state["hide"]["hide"] and not self.state["hide"]["bridge"]
                 ) and not self.app.configurator.tor_connection_config.bridges:
                     log.info("Retrying with default bridges")
+                    self.get_object("box_tor_direct_fail").show()
+                    self.connection_progress.set_fraction(0.0, allow_going_back=True)
                     idle_add_chain(
                         [do_tor_connect_default_bridges, do_tor_connect_apply]
                     )
@@ -373,11 +376,9 @@ class StepConnectProgressMixin:
             else:
                 progress = self.app.configurator.tor_bootstrap_phase()
                 if not d["sign_of_life"] and progress >= TOR_BOOTSTRAP_STATUS_CONN_DONE:
-                    log.info(
-                        "We received some sign of life from Tor network"
-                    )
+                    log.info("We received some sign of life from Tor network")
                     d["sign_of_life"] = True
-                    d["count"] = TOR_BOOTSTRAP_TIMEOUT
+                    d["count"] = TOR_BOOTSTRAP_TIMEOUT - 1
                 self.connection_progress.set_fraction_from_bootstrap_phase(progress)
                 return True
 
@@ -788,8 +789,10 @@ class ConnectionProgress:
         self.set_fraction(new)
         return True
 
-    def set_fraction(self, num):
-        if self.progress.get_fraction() >= num: # we're never going back because UX
+    def set_fraction(self, num, allow_going_back=False):
+        if (
+            not allow_going_back and self.progress.get_fraction() >= num
+        ):  # we're never going back because UX
             return
         self.progress.set_fraction(num)
         text = "%d%%" % (num * 100)
