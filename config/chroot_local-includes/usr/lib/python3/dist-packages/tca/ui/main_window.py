@@ -67,8 +67,9 @@ log = logging.getLogger(__name__)
 
 class StepChooseHideMixin:
     """
-    most utils related to the step in which the user can choose between an easier configuration and going
-    unnoticed
+    Handles the "consent question" step.
+
+    Here, the user can choose between an easier configuration and going unnoticed.
     """
 
     def before_show_hide(self):
@@ -78,7 +79,8 @@ class StepChooseHideMixin:
         self.builder.get_object("radio_unnoticed_no").set_active(False)
         self.builder.get_object("radio_unnoticed_none").hide()
         definitive = self.state.get("progress", {}).get("started", False)
-        if definitive and "hide" in self.state["hide"]:
+        if definitive:
+            assert "hide" in self.state["hide"]
             if self.state["hide"]["hide"]:
                 self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
                 self.builder.get_object("radio_unnoticed_yes").set_active(True)
@@ -89,6 +91,15 @@ class StepChooseHideMixin:
                     self.builder.get_object("radio_unnoticed_no_bridge").set_active(
                         True
                     )
+        elif (
+            "hide" in self.state["hide"]
+        ):  # the user is changing her mind before connecting to Tor
+            hide = self.state["hide"]["hide"]
+            self.builder.get_object("radio_unnoticed_yes").set_active(hide)
+            self.builder.get_object("radio_unnoticed_no").set_active(not hide)
+            self.builder.get_object("radio_unnoticed_no_bridge").set_active(
+                self.state['hide']['bridge']
+            )
 
     def _step_hide_next(self):
         if self.state["hide"]["bridge"]:
@@ -111,6 +122,7 @@ class StepChooseHideMixin:
         hide = self.builder.get_object("radio_unnoticed_yes").get_active()
         if not easy and not hide:
             return
+        assert easy is not hide
         if hide:
             self.state["hide"]["hide"] = True
             self.state["hide"]["bridge"] = True
@@ -124,7 +136,7 @@ class StepChooseHideMixin:
 
 
 class StepChooseBridgeMixin:
-    def before_show_bridge(self, no_default_bridges=False):
+    def before_show_bridge(self):
         self.state["bridge"]: Dict[str, Any] = {}
         self.builder.get_object("step_bridge_box").show()
         self.builder.get_object("step_bridge_radio_none").set_active(True)
@@ -133,7 +145,7 @@ class StepChooseBridgeMixin:
             "changed", self.cb_step_bridge_text_changed
         )
         hide = self.state["hide"]["hide"]
-        if hide or no_default_bridges:
+        if hide:
             self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
             self.builder.get_object("step_bridge_text").grab_focus()
         else:
@@ -151,8 +163,8 @@ class StepChooseBridgeMixin:
         bridges = self.app.configurator.tor_connection_config.bridges
         if not bridges:
             return
-        if len(bridges) > 1 and set(bridges).issubset(
-            set(TorConnectionConfig.get_default_bridges())
+        if len(bridges) > 1 and set(bridges) == set(
+            TorConnectionConfig.get_default_bridges()
         ):
             self.get_object("radio_default").set_active(True)
         else:
@@ -428,7 +440,7 @@ class StepErrorMixin:
         self.app.portal.call_async("open-unsafebrowser")
 
     def cb_step_error_btn_bridge_clicked(self, *args):
-        self.change_box("bridge", no_default_bridges=True)
+        self.change_box("bridge")
 
 
 class StepProxyMixin:
