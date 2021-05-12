@@ -29,7 +29,7 @@ CSS_FILE = "tca.css"
 IMG_FOOTPRINTS = "/usr/share/doc/tails/website/about/footprints.svg"
 IMG_RELAYS = "/usr/share/doc/tails/website/about/relays.svg"
 IMG_WALKIE = "/usr/share/doc/tails/website/about/walkie-talkie.svg"
-IMG_SIDE: Dict[str,str] = {
+IMG_SIDE: Dict[str, str] = {
     "bridge": IMG_FOOTPRINTS,
     "hide": IMG_RELAYS,
     "connect": IMG_WALKIE,
@@ -157,6 +157,7 @@ class StepChooseBridgeMixin:
         ).hide()  # we are forcing that to obfs4 until we support meek
         self.get_object("box_warning").hide()
         self._step_bridge_init_from_tor_state()
+        self._step_bridge_set_actives()
 
     def _step_bridge_init_from_tor_state(self):
         bridges = self.app.configurator.tor_connection_config.bridges
@@ -568,7 +569,7 @@ class TCAMainWindow(
             "bridge": {},
             "proxy": {},
             "progress": {},
-            'step': 'hide',
+            "step": "hide",
             "offline": {},
         }
         if self.app.args.debug_statefile is not None:
