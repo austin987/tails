@@ -39,7 +39,12 @@ IMG_SIDE = {
     "error": IMG_WALKIE,
     "offline": IMG_RELAYS,
 }
-CONNECTION_TIMEOUT = 30
+
+TOR_BOOTSTRAP_STATUS_CONN_DONE = 10  # see tor.git:src/feature/control/control_events.h
+TOR_SIGNOFLIFE_TIMEOUT = (
+    30
+)  # this timeout means "time to wait for the first sign of life" which we define as bootstrap-phase=BOOTSTRAP_STATUS_CONN_DONE
+TOR_BOOTSTRAP_TIMEOUT = 120  # this is *summed* to the previous timeout
 
 # META {{{
 # Naming convention for widgets:
@@ -319,7 +324,9 @@ class StepConnectProgressMixin:
                 ConnectionProgress.PROGRESS_CONFIGURATION_APPLIED
             )
             self.timer_check = GLib.timeout_add(
-                500, do_tor_connect_check, {"count": CONNECTION_TIMEOUT * 2}
+                1000,
+                do_tor_connect_check,
+                {"count": TOR_SIGNOFLIFE_TIMEOUT, "sign_of_life": False},
             )
             return False
 
@@ -347,10 +354,17 @@ class StepConnectProgressMixin:
             ok = self.app.configurator.tor_has_bootstrapped()
             if ok:
                 self.state["progress"]["success"] = True
+                self.connection_progress.set_fraction(1)
                 self._step_progress_success_screen()
                 return False
             else:
                 progress = self.app.configurator.tor_bootstrap_phase()
+                if not d["sign_of_life"] and progress >= TOR_BOOTSTRAP_STATUS_CONN_DONE:
+                    log.info(
+                        "We received some sign of life from Tor network"
+                    )
+                    d["sign_of_life"] = True
+                    d["count"] = TOR_BOOTSTRAP_TIMEOUT
                 self.connection_progress.set_fraction_from_bootstrap_phase(progress)
                 return True
 
@@ -390,16 +404,16 @@ class StepConnectProgressMixin:
             )
 
     def cb_step_progress_btn_starttbb_clicked(self, *args):
-        self.app.portal.call_async('open-tbb')
+        self.app.portal.call_async("open-tbb")
 
     def cb_step_progress_btn_reset_clicked(self, *args):
-        self.app.portal.call_async('tor/restart')
+        self.app.portal.call_async("tor/restart")
 
     def cb_step_progress_btn_monitor_clicked(self, *args):
-        self.app.portal.call_async('open-networkmonitor')
+        self.app.portal.call_async("open-networkmonitor")
 
     def cb_step_progress_btn_onioncircuits_clicked(self, *args):
-        self.app.portal.call_async('open-onioncircuits')
+        self.app.portal.call_async("open-onioncircuits")
 
 
 class StepErrorMixin:
@@ -411,7 +425,7 @@ class StepErrorMixin:
         self.change_box("proxy")
 
     def cb_step_error_btn_captive_clicked(self, *args):
-        self.app.portal.call_async('open-unsafebrowser')
+        self.app.portal.call_async("open-unsafebrowser")
 
     def cb_step_error_btn_bridge_clicked(self, *args):
         self.change_box("bridge", no_default_bridges=True)
@@ -676,6 +690,7 @@ class ConnectionProgress:
 
     PROGRESS_CONFIGURATION_CONFIG = 0.01
     PROGRESS_CONFIGURATION_APPLIED = 0.1
+    PROGRESS_BOOTSTRAP_SIGN_OF_LIFE = 0.5
     PROGRESS_BOOTSTRAP_END = 0.9
 
     def __init__(self, main_window):
@@ -686,6 +701,66 @@ class ConnectionProgress:
     def progress(self):
         return self.main_window.builder.get_object("step_progress_pbar_torconnect")
 
+    @property
+    def log(self):
+        return logging.getLogger(self.__class__.__name__)
+
+    @property
+    def sign_of_life(self):
+        return self.bootstrap_phase >= TOR_BOOTSTRAP_STATUS_CONN_DONE
+
+    @classmethod
+    def _get_value_after_tick(cls, current: float, sign_of_life: bool) -> float:
+        """
+        Calculate value. This is helpful to make testing possible.
+
+        >>> f = lambda x,y: '%.4f' % ConnectionProgress._get_value_after_tick(x,y)
+        >>> f(0.1, False)
+        '0.1133'
+        >>> f(0.5, True)
+        '0.5033'
+
+        So in `n` steps we will arrive to the next progress.
+        To test this, let's setup a helper function. this will just recurse "n" times
+        >>> ft = lambda x: ConnectionProgress._get_value_after_tick(x, True)
+        >>> ff = lambda x: ConnectionProgress._get_value_after_tick(x, False)
+        >>> ftn = lambda x, n: ftn(ft(x), n-1) if n > 1 else ft(x)
+
+        Let's test the helper itself:
+        >>> '%.4f' % ftn(0.5, 1)
+        '0.5033'
+        >>> '%.4f' % ftn(0.5, 2)
+        '0.5067'
+        >>> ftn(0.5, TOR_BOOTSTRAP_TIMEOUT) - ConnectionProgress.PROGRESS_BOOTSTRAP_END < 0.001
+        True
+
+        >>> ffn = lambda x, n: ffn(ff(x), n-1) if n > 1 else ff(x)
+
+        That's the same, but for "before sign_of_life"
+        >>> '%.4f' % ffn(0.1, 1)
+        '0.1133'
+        >>> '%.4f' % ffn(0.1, 2)
+        '0.1267'
+        >>> '%.4f' % ffn(0.1, 3)
+        '0.1400'
+        >>> '%.4f' % ffn(0.1, 30)
+        '0.5000'
+
+
+        """
+        if not sign_of_life:
+            # in TOR_SIGNOFLIFE_TIMEOUT ticks we must go from 0.1 to 0.5 in TOR_SIGNOFLIFE_TIMEOUT seconds
+            range_to_cover = (
+                cls.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE - cls.PROGRESS_CONFIGURATION_APPLIED
+            )
+            time_to_cover = TOR_SIGNOFLIFE_TIMEOUT
+        else:
+            range_to_cover = (
+                cls.PROGRESS_BOOTSTRAP_END - cls.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE
+            )
+            time_to_cover = TOR_BOOTSTRAP_TIMEOUT
+        return current + range_to_cover / time_to_cover
+
     def tick(self):
         """
         Every second, performs "fake" advancement of the progress bar.
@@ -693,43 +768,38 @@ class ConnectionProgress:
         This advancement does not correspond to real progress, but provides more responsive UX.
         """
         current = float(self.progress.get_fraction())
-        if current == 0 or current > 98:
+        if current == 0 or current >= self.PROGRESS_BOOTSTRAP_END:
             return True
-        # in CONNECTION_TIMEOUT ticks we must do the same range as advancing bootstrap-phase by 10%
-        range_after_many_ticks = (
-            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
-        ) / 10
-        range_for_one_tick = range_after_many_ticks / CONNECTION_TIMEOUT
-        current += range_for_one_tick / 100
-        self.set_fraction(current)
+        new = self._get_value_after_tick(current, self.sign_of_life)
+        self.log.debug("tick moves from %.3f to %.3f", current * 100, new * 100)
+        self.set_fraction(new)
         return True
 
     def set_fraction(self, num):
+        if self.progress.get_fraction() >= num: # we're never going back because UX
+            return
         self.progress.set_fraction(num)
         text = "%d%%" % (num * 100)
         self.progress.set_text(text)
 
-    def get_fraction_from_bootstrap_phase(self, progress: int) -> float:
+    def get_fraction_from_bootstrap_phase(
+        self, progress: int, sign_of_life=None
+    ) -> float:
         """
         Calculate fraction based on tor bootstrap-phase.
 
         The 'progress' argument is the number returned by tor, which is in the range [0,100]
-
-        >>> cp = ConnectionProgress(None)
-        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(0)
-        '0.10'
-        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(100)
-        '0.90'
-        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(50)
-        '0.60'
         """
-        normalized_value = self.PROGRESS_CONFIGURATION_APPLIED + (progress / 100) * (
-            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
-        )
-        return normalized_value
+        if sign_of_life is None:
+            sign_of_life = self.sign_of_life
+        if not sign_of_life:
+            return self.PROGRESS_CONFIGURATION_APPLIED
+        return self.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE
 
     def set_fraction_from_bootstrap_phase(self, progress: int):
         if progress == self.bootstrap_phase:
             return
         self.bootstrap_phase = progress
-        return self.set_fraction(self.get_fraction_from_bootstrap_phase(progress))
+        fraction = self.get_fraction_from_bootstrap_phase(progress)
+        self.log.info("new bootstrap_phase received: %d going to %.2f%%", progress, fraction * 100)
+        return self.set_fraction(fraction)
