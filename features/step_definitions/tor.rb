@@ -266,7 +266,7 @@ STREAM_ISOLATION_INFO = {
   },
   'Tor Browser'                    => {
     grep_monitor_expr: 'users:(("firefox\.real"',
-    socksport:         9150,
+    socksport:         9050,
     controller:        true,
   },
   'SSH'                            => {
@@ -288,7 +288,8 @@ When /^I monitor the network connections of (.*)$/ do |application|
   @process_monitor_log = '/tmp/ss.log'
   info = stream_isolation_info(application)
   $vm.spawn('while true; do ' \
-            "  ss -taupen | grep '#{info[:grep_monitor_expr]}'; " \
+            "  ip netns exec tbb ss -taupen " \
+            "    | grep '#{info[:grep_monitor_expr]}'; " \
             '  sleep 0.1; ' \
             "done > #{@process_monitor_log}")
 end
