@@ -29,7 +29,7 @@ CSS_FILE = "tca.css"
 IMG_FOOTPRINTS = "/usr/share/doc/tails/website/about/footprints.svg"
 IMG_RELAYS = "/usr/share/doc/tails/website/about/relays.svg"
 IMG_WALKIE = "/usr/share/doc/tails/website/about/walkie-talkie.svg"
-IMG_SIDE = {
+IMG_SIDE: Dict[str,str] = {
     "bridge": IMG_FOOTPRINTS,
     "hide": IMG_RELAYS,
     "connect": IMG_WALKIE,
@@ -97,7 +97,7 @@ class StepChooseHideMixin:
             self.builder.get_object("radio_unnoticed_yes").set_active(hide)
             self.builder.get_object("radio_unnoticed_no").set_active(not hide)
             self.builder.get_object("radio_unnoticed_no_bridge").set_active(
-                self.state['hide']['bridge']
+                self.state["hide"]["bridge"]
             )
 
     def _step_hide_next(self):
@@ -190,7 +190,9 @@ class StepChooseBridgeMixin:
             for br in bridges:
                 if br.split()[0] not in (VALID_BRIDGE_TYPES - {"bridge"}):
                     set_warning(
-                        _("You need to configure an obfs4 bridge to hide that you are using Tor")
+                        _(
+                            "You need to configure an obfs4 bridge to hide that you are using Tor"
+                        )
                     )
                     return False
 
@@ -214,7 +216,7 @@ class StepChooseBridgeMixin:
     def cb_step_bridge_btn_submit_clicked(self, *args):
         default = self.builder.get_object("step_bridge_radio_default").get_active()
         manual = self.builder.get_object("step_bridge_radio_type").get_active()
-        self.state['hide']['bridge'] = True
+        self.state["hide"]["bridge"] = True
         if default:
             self.state["bridge"]["kind"] = "default"
             self.state["bridge"]["default_method"] = self.get_object(
@@ -285,7 +287,9 @@ class StepConnectProgressMixin:
         def do_tor_connect_config():
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
-                self.get_object("label_status").set_text(_("Connecting to Tor without bridges..."))
+                self.get_object("label_status").set_text(
+                    _("Connecting to Tor without bridges...")
+                )
             elif self.state["bridge"]["kind"] == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
@@ -388,10 +392,12 @@ class StepConnectProgressMixin:
         self.save_conf(successful_connect=True)
         self.get_object("box_torconnect").hide()
         self.get_object("box_tortestok").show()
-        self.get_object("label_status").set_text(_(
-            "Connected to Tor successfully!\n\n"
-            "You can now browse the Internet anonymously and uncensored."
-        ))
+        self.get_object("label_status").set_text(
+            _(
+                "Connected to Tor successfully!\n\n"
+                "You can now browse the Internet anonymously and uncensored."
+            )
+        )
         self.get_object("box_start").show()
 
     def cb_internet_test(self, spawn, retval):
@@ -537,13 +543,18 @@ class TCAMainWindow(
     StepErrorMixin,
     StepProxyMixin,
 ):
+
+    STEPS_ORDER = ["offline", "hide", "bridge", "proxy", "error", "progress"]
     # l10n {{{
     def get_translation_domain(self):
         return "tails"
+
     # }}}
 
     def __init__(self, app):
-        Gtk.ApplicationWindow.__init__(self, title=tca.config.APPLICATION_TITLE, application=app)
+        Gtk.ApplicationWindow.__init__(
+            self, title=tca.config.APPLICATION_TITLE, application=app
+        )
         self.app = app
         self.set_role(tca.config.APPLICATION_WM_CLASS)
         # XXX: set_wm_class is deprecated, but it's the only way I found to set taskbar title
@@ -552,12 +563,12 @@ class TCAMainWindow(
         )
         self.set_title(tca.config.APPLICATION_TITLE)
         # self.state collects data from user interactions. Its main key is the step name
-        self.state: Dict[str, Dict[str, Any]] = {
+        self.state: Dict[str, Any] = {
             "hide": {},
             "bridge": {},
             "proxy": {},
             "progress": {},
-            "step": "hide",
+            'step': 'hide',
             "offline": {},
         }
         if self.app.args.debug_statefile is not None:
@@ -599,6 +610,12 @@ class TCAMainWindow(
         builder.connect_signals(self)
 
         self.main_container = builder.get_object("box_main_container_image_step")
+        self.stack = builder.get_object("box_main_container_stack")
+        for step in self.STEPS_ORDER:
+            box = builder.get_object("step_{}_box".format(step))
+            box.show()
+            self.stack.add_named(box, step)
+
         self.connection_progress = ConnectionProgress(self)
         GLib.timeout_add(1000, self.connection_progress.tick)
         self.add(self.main_container)
@@ -644,22 +661,17 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
-        children = self.main_container.get_children()
-        if len(children) > 1:
-            self.main_container.remove(children[-1])
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
-        new_box = self.builder.get_object("step_%s_box" % name)
-        self.main_container.pack_end(new_box, True, True, 0)
-        new_box.set_hexpand(True)
-        new_box.set_vexpand(True)
+        self.stack.set_visible_child_name(name)
+
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
         log.debug("Step changed, state is now %s", str(self.state))
 
-        # resize, just to be sure that everything is properly shown
-        screen_width, screen_height = self.get_screen_size()
-        self.resize(int(screen_width / 2), int(screen_height / 2))
+        # # resize, just to be sure that everything is properly shown
+        # screen_width, screen_height = self.get_screen_size()
+        # self.resize(int(screen_width / 2), int(screen_height / 2))
 
     def get_object(self, name: str):
         """
@@ -676,7 +688,7 @@ class TCAMainWindow(
 
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
-        self.app.portal.call_async('open-documentation', ["--force-local", uri])
+        self.app.portal.call_async("open-documentation", ["--force-local", uri])
 
     def on_network_changed(self):
         up = self.app.is_network_link_ok
@@ -817,5 +829,7 @@ class ConnectionProgress:
             return
         self.bootstrap_phase = progress
         fraction = self.get_fraction_from_bootstrap_phase(progress)
-        self.log.info("new bootstrap_phase received: %d going to %.2f%%", progress, fraction * 100)
+        self.log.info(
+            "new bootstrap_phase received: %d going to %.2f%%", progress, fraction * 100
+        )
         return self.set_fraction(fraction)
