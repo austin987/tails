@@ -266,7 +266,7 @@ STREAM_ISOLATION_INFO = {
   },
   'Tor Browser'                    => {
     grep_monitor_expr: 'users:(("firefox\.real"',
-    socksport:         9150,
+    socksport:         9050,
     controller:        true,
   },
   'SSH'                            => {
