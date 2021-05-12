@@ -384,7 +384,7 @@ def tca_configure(mode, &block)
                                  roleName: 'push button')
                           .click
   failure_reported = false
-  try_for(120, exception: TCAConnectionFailure,  msg: 'Timed out while waiting for TCA to connect to Tor') do
+  try_for(120, msg: 'Timed out while waiting for TCA to connect to Tor') do
     if tor_connection_assistant.child?('Error connecting to Tor', roleName: 'label', retry: false)
       failure_reported = true
       done = true
