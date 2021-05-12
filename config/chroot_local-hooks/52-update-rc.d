@@ -35,10 +35,13 @@ systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
-systemctl --global enable tails-a11y-proxy-netns@onioncircs.service
-systemctl --global enable tails-ibus-proxy-netns@onioncircs.service
-systemctl --global enable tails-a11y-proxy-netns@torlaunch.service
-systemctl --global enable tails-ibus-proxy-netns@torlaunch.service
+
+for netns in onioncircs torlaunch tbb; do
+    for bus in a11y ibus; do
+        systemctl --global enable "tails-$bus-proxy-netns@$netns.service"
+    done
+done
+
 
 # Use socket activation only, to delay the startup of cupsd.
 # In practice, this means that cupsd is started during
