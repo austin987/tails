@@ -390,16 +390,16 @@ class StepConnectProgressMixin:
             )
 
     def cb_step_progress_btn_starttbb_clicked(self, *args):
-        subprocess.Popen(["/usr/local/bin/tor-browser"])
+        self.app.portal.call_async('open-tbb')
 
     def cb_step_progress_btn_reset_clicked(self, *args):
-        self.todo_dialog("I should reset Tor connection")
+        self.app.portal.call_async('tor/restart')
 
     def cb_step_progress_btn_monitor_clicked(self, *args):
-        subprocess.Popen(["/usr/bin/gnome-system-monitor", "-r"])
+        self.app.portal.call_async('open-networkmonitor')
 
     def cb_step_progress_btn_onioncircuits_clicked(self, *args):
-        subprocess.Popen(["/usr/local/bin/onioncircuits"])
+        self.app.portal.call_async('open-onioncircuits')
 
 
 class StepErrorMixin:
@@ -411,7 +411,7 @@ class StepErrorMixin:
         self.change_box("proxy")
 
     def cb_step_error_btn_captive_clicked(self, *args):
-        subprocess.Popen(["sudo", "/usr/local/sbin/unsafe-browser"])
+        self.app.portal.call_async('open-unsafebrowser')
 
     def cb_step_error_btn_bridge_clicked(self, *args):
         self.change_box("bridge", no_default_bridges=True)
@@ -648,7 +648,7 @@ class TCAMainWindow(
 
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
-        subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
+        self.app.portal.call_async('open-documentation', ["--force-local", uri])
 
     def on_network_changed(self):
         up = self.app.is_network_link_ok
