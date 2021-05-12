@@ -143,15 +143,15 @@ class StepChooseBridgeMixin:
         self.builder.get_object("step_bridge_text").get_property("buffer").connect(
             "changed", self.cb_step_bridge_text_changed
         )
-        hide = self.state["hide"]["hide"]
-        if hide:
-            self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
+        hide_mode: bool = self.state["hide"]["hide"]
+        if hide_mode:
             self.builder.get_object("step_bridge_text").grab_focus()
         else:
             self.builder.get_object("step_bridge_radio_default").grab_focus()
-            self.builder.get_object("step_bridge_radio_default").set_sensitive(True)
+        self.get_object("radio_default").set_sensitive(not hide_mode)
+        self.get_object("label_explain_hide").set_visible(hide_mode)
 
-        self.builder.get_object("step_bridge_radio_type").set_active(hide)
+        self.builder.get_object("step_bridge_radio_type").set_active(hide_mode)
         self.get_object(
             "combo"
         ).hide()  # we are forcing that to obfs4 until we support meek
