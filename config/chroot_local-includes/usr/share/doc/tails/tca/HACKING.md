@@ -65,3 +65,14 @@ tca honors the debug kernel cmdline flag; if passed, its `--log-level` will defa
 
 tca will send logs to syslog when run without a tty attached (ie: on the automatic nm-dispatcher thing), but
 will send logs to stderr when run from terminal. This behaviour can be changed using `--log-target`
+
+Change interface CSS
+---------------------
+
+yes, gtk has css ;)
+
+TCA style file is in `/usr/share/tails/tca/tca.css`.
+
+To try real-time changes, you can edit `/usr/local/bin/tca` and look for `# "GTK_DEBUG=interactive",`.
+Uncomment the  line, removing the hash. Now start `tca` again and you will have gtk inspector running!
+
