@@ -653,7 +653,7 @@ class TCAMainWindow(
 
     def set_image(self, fname: str):
         screen_width, _ = self.get_screen_size()
-        target_width = screen_width / 5
+        target_width = screen_width / 7
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(fname)
         scale = pixbuf.get_width() / target_width
         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(
