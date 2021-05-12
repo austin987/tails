@@ -385,7 +385,7 @@ def tca_configure(mode, &block)
                           .click
   failure_reported = false
   try_for(120, exception: TCAConnectionFailure,  msg: 'Timed out while waiting for TCA to connect to Tor') do
-    if tor_connection_assistant.child?('Failed to connect', roleName: 'label', retry: false)
+    if tor_connection_assistant.child?('Error connecting to Tor', roleName: 'label', retry: false)
       failure_reported = true
       done = true
     else
@@ -507,7 +507,7 @@ When /^I close the Tor Connection Assistant$/ do
 end
 
 Then /^the Tor Connection Assistant reports that it failed to connect$/ do
-  tor_connection_assistant.child('Failed to connect', roleName: 'label')
+  tor_connection_assistant.child('Error connecting to Tor', roleName: 'label')
 end
 
 When /^all Internet traffic has only flowed through the configured bridges$/ do
