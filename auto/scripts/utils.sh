@@ -62,7 +62,6 @@ git_only_doc_changes_since() {
 		'*' \
 		':!/wiki' \
 		':!/ikiwiki.setup' \
-		':!/ikiwiki-cgi.setup' \
 		':!*.po' \
 	)"
 
