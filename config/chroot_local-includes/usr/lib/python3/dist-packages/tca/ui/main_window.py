@@ -1,7 +1,6 @@
 import logging
 import os.path
 import json
-import subprocess
 import gettext
 from typing import Dict, Any, Tuple
 
@@ -30,7 +29,7 @@ CSS_FILE = "tca.css"
 IMG_FOOTPRINTS = "/usr/share/doc/tails/website/about/footprints.svg"
 IMG_RELAYS = "/usr/share/doc/tails/website/about/relays.svg"
 IMG_WALKIE = "/usr/share/doc/tails/website/about/walkie-talkie.svg"
-IMG_SIDE = {
+IMG_SIDE: Dict[str, str] = {
     "bridge": IMG_FOOTPRINTS,
     "hide": IMG_RELAYS,
     "connect": IMG_WALKIE,
@@ -67,8 +66,9 @@ log = logging.getLogger(__name__)
 
 class StepChooseHideMixin:
     """
-    most utils related to the step in which the user can choose between an easier configuration and going
-    unnoticed
+    Handles the "consent question" step.
+
+    Here, the user can choose between an easier configuration and going unnoticed.
     """
 
     def before_show_hide(self):
@@ -78,7 +78,8 @@ class StepChooseHideMixin:
         self.builder.get_object("radio_unnoticed_no").set_active(False)
         self.builder.get_object("radio_unnoticed_none").hide()
         definitive = self.state.get("progress", {}).get("started", False)
-        if definitive and "hide" in self.state["hide"]:
+        if definitive:
+            assert "hide" in self.state["hide"]
             if self.state["hide"]["hide"]:
                 self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
                 self.builder.get_object("radio_unnoticed_yes").set_active(True)
@@ -89,6 +90,15 @@ class StepChooseHideMixin:
                     self.builder.get_object("radio_unnoticed_no_bridge").set_active(
                         True
                     )
+        elif (
+            "hide" in self.state["hide"]
+        ):  # the user is changing her mind before connecting to Tor
+            hide = self.state["hide"]["hide"]
+            self.builder.get_object("radio_unnoticed_yes").set_active(hide)
+            self.builder.get_object("radio_unnoticed_no").set_active(not hide)
+            self.builder.get_object("radio_unnoticed_no_bridge").set_active(
+                self.state["hide"]["bridge"]
+            )
 
     def _step_hide_next(self):
         if self.state["hide"]["bridge"]:
@@ -111,6 +121,7 @@ class StepChooseHideMixin:
         hide = self.builder.get_object("radio_unnoticed_yes").get_active()
         if not easy and not hide:
             return
+        assert easy is not hide
         if hide:
             self.state["hide"]["hide"] = True
             self.state["hide"]["bridge"] = True
@@ -124,7 +135,7 @@ class StepChooseHideMixin:
 
 
 class StepChooseBridgeMixin:
-    def before_show_bridge(self, no_default_bridges=False):
+    def before_show_bridge(self):
         self.state["bridge"]: Dict[str, Any] = {}
         self.builder.get_object("step_bridge_box").show()
         self.builder.get_object("step_bridge_radio_none").set_active(True)
@@ -132,27 +143,28 @@ class StepChooseBridgeMixin:
         self.builder.get_object("step_bridge_text").get_property("buffer").connect(
             "changed", self.cb_step_bridge_text_changed
         )
-        hide = self.state["hide"]["hide"]
-        if hide or no_default_bridges:
-            self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
+        hide_mode: bool = self.state["hide"]["hide"]
+        if hide_mode:
             self.builder.get_object("step_bridge_text").grab_focus()
         else:
             self.builder.get_object("step_bridge_radio_default").grab_focus()
-            self.builder.get_object("step_bridge_radio_default").set_sensitive(True)
+        self.get_object("radio_default").set_sensitive(not hide_mode)
+        self.get_object("label_explain_hide").set_visible(hide_mode)
 
-        self.builder.get_object("step_bridge_radio_type").set_active(hide)
+        self.builder.get_object("step_bridge_radio_type").set_active(hide_mode)
         self.get_object(
             "combo"
         ).hide()  # we are forcing that to obfs4 until we support meek
         self.get_object("box_warning").hide()
         self._step_bridge_init_from_tor_state()
+        self._step_bridge_set_actives()
 
     def _step_bridge_init_from_tor_state(self):
         bridges = self.app.configurator.tor_connection_config.bridges
         if not bridges:
             return
-        if len(bridges) > 1 and set(bridges).issubset(
-            set(TorConnectionConfig.get_default_bridges())
+        if len(bridges) > 1 and set(bridges) == set(
+            TorConnectionConfig.get_default_bridges()
         ):
             self.get_object("radio_default").set_active(True)
         else:
@@ -179,7 +191,9 @@ class StepChooseBridgeMixin:
             for br in bridges:
                 if br.split()[0] not in (VALID_BRIDGE_TYPES - {"bridge"}):
                     set_warning(
-                        _("You need to configure an obfs4 bridge to hide that you are using Tor")
+                        _(
+                            "You need to configure an obfs4 bridge to hide that you are using Tor"
+                        )
                     )
                     return False
 
@@ -203,6 +217,7 @@ class StepChooseBridgeMixin:
     def cb_step_bridge_btn_submit_clicked(self, *args):
         default = self.builder.get_object("step_bridge_radio_default").get_active()
         manual = self.builder.get_object("step_bridge_radio_type").get_active()
+        self.state["hide"]["bridge"] = True
         if default:
             self.state["bridge"]["kind"] = "default"
             self.state["bridge"]["default_method"] = self.get_object(
@@ -234,6 +249,8 @@ class StepConnectProgressMixin:
         self.builder.get_object("step_progress_box").show()
         self.builder.get_object("step_progress_box_internettest").hide()
         self.builder.get_object("step_progress_box_internetok").hide()
+        self.get_object("box_tor_direct_fail").hide()
+        self.connection_progress.set_fraction(0.0, allow_going_back=True)
         if not self.state["progress"]["success"]:
             self.spawn_tor_connect()
         else:
@@ -271,7 +288,9 @@ class StepConnectProgressMixin:
         def do_tor_connect_config():
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
-                self.get_object("label_status").set_text(_("Connecting to Tor without bridges..."))
+                self.get_object("label_status").set_text(
+                    _("Connecting to Tor without bridges...")
+                )
             elif self.state["bridge"]["kind"] == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
@@ -341,6 +360,8 @@ class StepConnectProgressMixin:
                     not self.state["hide"]["hide"] and not self.state["hide"]["bridge"]
                 ) and not self.app.configurator.tor_connection_config.bridges:
                     log.info("Retrying with default bridges")
+                    self.get_object("box_tor_direct_fail").show()
+                    self.connection_progress.set_fraction(0.0, allow_going_back=True)
                     idle_add_chain(
                         [do_tor_connect_default_bridges, do_tor_connect_apply]
                     )
@@ -360,11 +381,9 @@ class StepConnectProgressMixin:
             else:
                 progress = self.app.configurator.tor_bootstrap_phase()
                 if not d["sign_of_life"] and progress >= TOR_BOOTSTRAP_STATUS_CONN_DONE:
-                    log.info(
-                        "We received some sign of life from Tor network"
-                    )
+                    log.info("We received some sign of life from Tor network")
                     d["sign_of_life"] = True
-                    d["count"] = TOR_BOOTSTRAP_TIMEOUT
+                    d["count"] = TOR_BOOTSTRAP_TIMEOUT - 1
                 self.connection_progress.set_fraction_from_bootstrap_phase(progress)
                 return True
 
@@ -374,10 +393,12 @@ class StepConnectProgressMixin:
         self.save_conf(successful_connect=True)
         self.get_object("box_torconnect").hide()
         self.get_object("box_tortestok").show()
-        self.get_object("label_status").set_text(_(
-            "Connected to Tor successfully!\n\n"
-            "You can now browse the Internet anonymously and uncensored."
-        ))
+        self.get_object("label_status").set_text(
+            _(
+                "Connected to Tor successfully!\n\n"
+                "You can now browse the Internet anonymously and uncensored."
+            )
+        )
         self.get_object("box_start").show()
 
     def cb_internet_test(self, spawn, retval):
@@ -428,7 +449,7 @@ class StepErrorMixin:
         self.app.portal.call_async("open-unsafebrowser")
 
     def cb_step_error_btn_bridge_clicked(self, *args):
-        self.change_box("bridge", no_default_bridges=True)
+        self.change_box("bridge")
 
 
 class StepProxyMixin:
@@ -523,13 +544,18 @@ class TCAMainWindow(
     StepErrorMixin,
     StepProxyMixin,
 ):
+
+    STEPS_ORDER = ["offline", "hide", "bridge", "proxy", "error", "progress"]
     # l10n {{{
     def get_translation_domain(self):
         return "tails"
+
     # }}}
 
     def __init__(self, app):
-        Gtk.ApplicationWindow.__init__(self, title=tca.config.APPLICATION_TITLE, application=app)
+        Gtk.ApplicationWindow.__init__(
+            self, title=tca.config.APPLICATION_TITLE, application=app
+        )
         self.app = app
         self.set_role(tca.config.APPLICATION_WM_CLASS)
         # XXX: set_wm_class is deprecated, but it's the only way I found to set taskbar title
@@ -538,7 +564,7 @@ class TCAMainWindow(
         )
         self.set_title(tca.config.APPLICATION_TITLE)
         # self.state collects data from user interactions. Its main key is the step name
-        self.state: Dict[str, Dict[str, Any]] = {
+        self.state: Dict[str, Any] = {
             "hide": {},
             "bridge": {},
             "proxy": {},
@@ -585,6 +611,12 @@ class TCAMainWindow(
         builder.connect_signals(self)
 
         self.main_container = builder.get_object("box_main_container_image_step")
+        self.stack = builder.get_object("box_main_container_stack")
+        for step in self.STEPS_ORDER:
+            box = builder.get_object("step_{}_box".format(step))
+            box.show()
+            self.stack.add_named(box, step)
+
         self.connection_progress = ConnectionProgress(self)
         GLib.timeout_add(1000, self.connection_progress.tick)
         self.add(self.main_container)
@@ -621,7 +653,7 @@ class TCAMainWindow(
 
     def set_image(self, fname: str):
         screen_width, _ = self.get_screen_size()
-        target_width = screen_width / 5
+        target_width = screen_width / 7
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(fname)
         scale = pixbuf.get_width() / target_width
         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(
@@ -630,22 +662,17 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
-        children = self.main_container.get_children()
-        if len(children) > 1:
-            self.main_container.remove(children[-1])
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
-        new_box = self.builder.get_object("step_%s_box" % name)
-        self.main_container.pack_end(new_box, True, True, 0)
-        new_box.set_hexpand(True)
-        new_box.set_vexpand(True)
+        self.stack.set_visible_child_name(name)
+
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
         log.debug("Step changed, state is now %s", str(self.state))
 
-        # resize, just to be sure that everything is properly shown
-        screen_width, screen_height = self.get_screen_size()
-        self.resize(int(screen_width / 2), int(screen_height / 2))
+        # # resize, just to be sure that everything is properly shown
+        # screen_width, screen_height = self.get_screen_size()
+        # self.resize(int(screen_width / 2), int(screen_height / 2))
 
     def get_object(self, name: str):
         """
@@ -662,7 +689,7 @@ class TCAMainWindow(
 
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
-        self.app.portal.call_async('open-documentation', ["--force-local", uri])
+        self.app.portal.call_async("open-documentation", ["--force-local", uri])
 
     def on_network_changed(self):
         up = self.app.is_network_link_ok
@@ -775,8 +802,10 @@ class ConnectionProgress:
         self.set_fraction(new)
         return True
 
-    def set_fraction(self, num):
-        if self.progress.get_fraction() >= num: # we're never going back because UX
+    def set_fraction(self, num, allow_going_back=False):
+        if (
+            not allow_going_back and self.progress.get_fraction() >= num
+        ):  # we're never going back because UX
             return
         self.progress.set_fraction(num)
         text = "%d%%" % (num * 100)
@@ -801,5 +830,7 @@ class ConnectionProgress:
             return
         self.bootstrap_phase = progress
         fraction = self.get_fraction_from_bootstrap_phase(progress)
-        self.log.info("new bootstrap_phase received: %d going to %.2f%%", progress, fraction * 100)
+        self.log.info(
+            "new bootstrap_phase received: %d going to %.2f%%", progress, fraction * 100
+        )
         return self.set_fraction(fraction)
