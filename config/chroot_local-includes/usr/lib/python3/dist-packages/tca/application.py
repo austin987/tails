@@ -18,6 +18,7 @@ from tca.torutils import (
     TorLauncherUtils,
     TorLauncherNetworkUtils,
 )
+from tca.ui.asyncutils import GJsonRpcClient
 from tailslib.logutils import configure_logging
 
 
@@ -38,11 +39,15 @@ class TCAApplication(Gtk.Application):
             flags=Gio.ApplicationFlags.FLAGS_NONE,
         )
         self.log = logging.getLogger(self.__class__.__name__)
-        self.config_buf, = recover_fd_from_parent()
+        self.config_buf, portal_sock = recover_fd_from_parent()
         controller = Controller.from_port(port=9051)
         controller.authenticate(password=None)
         self.configurator = TorLauncherUtils(controller, self.config_buf)
         self.configurator.load_conf()
+        self.portal = GJsonRpcClient(portal_sock)
+        self.portal.connect("response-error", self.on_portal_error)
+        self.portal.connect("response", self.on_portal_response)
+        self.portal.run()
         self.netutils = TorLauncherNetworkUtils()
         self.args = args
         self.debug = args.debug
@@ -54,8 +59,14 @@ class TCAApplication(Gtk.Application):
     def is_network_link_ok(self):
         return self.last_nm_state is not None and self.last_nm_state >= 60
 
+    def on_portal_response(self, portal, unique_id, result):
+        self.log.debug("response<%d> from portal : %s", unique_id, result)
+
+    def on_portal_error(self, portal, unique_id, error):
+        self.log.error("response-error<%d> from portal : %s", unique_id, error)
+
     def cb_dbus_nm_state(self, val):
-        self.log.debug('NetworkManager state is now: %d', int(val))
+        self.log.debug("NetworkManager state is now: %d", int(val))
         changed = False
         if self.last_nm_state != val:
             changed = True
@@ -96,7 +107,7 @@ class TCAApplication(Gtk.Application):
         # get immediately
         nm.state(reply_handler=self.cb_dbus_nm_state, error_handler=handle_hello_error)
         # subscribe for changes
-        nm.connect_to_signal('StateChanged', self.cb_dbus_nm_state)
+        nm.connect_to_signal("StateChanged", self.cb_dbus_nm_state)
 
         return False
 

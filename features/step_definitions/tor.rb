@@ -266,8 +266,9 @@ STREAM_ISOLATION_INFO = {
   },
   'Tor Browser'                    => {
     grep_monitor_expr: 'users:(("firefox\.real"',
-    socksport:         9150,
+    socksport:         9050,
     controller:        true,
+    netns:             'tbb',
   },
   'SSH'                            => {
     grep_monitor_expr: 'users:(("\(nc\|ssh\)"',
@@ -287,8 +288,10 @@ end
 When /^I monitor the network connections of (.*)$/ do |application|
   @process_monitor_log = '/tmp/ss.log'
   info = stream_isolation_info(application)
+  netns_wrapper = info[:netns].nil? ? '' : "ip netns exec #{info[:netns]}"
   $vm.spawn('while true; do ' \
-            "  ss -taupen | grep '#{info[:grep_monitor_expr]}'; " \
+            "  #{netns_wrapper} ss -taupen " \
+            "    | grep '#{info[:grep_monitor_expr]}'; " \
             '  sleep 0.1; ' \
             "done > #{@process_monitor_log}")
 end
@@ -381,8 +384,8 @@ def tca_configure(mode, &block)
                                  roleName: 'push button')
                           .click
   failure_reported = false
-  try_for(120, exception: TCAConnectionFailure,  msg: 'Timed out while waiting for TCA to connect to Tor') do
-    if tor_connection_assistant.child?('Failed to connect', roleName: 'label', retry: false)
+  try_for(120, msg: 'Timed out while waiting for TCA to connect to Tor') do
+    if tor_connection_assistant.child?('Error connecting to Tor', roleName: 'label', retry: false)
       failure_reported = true
       done = true
     else
@@ -504,7 +507,7 @@ When /^I close the Tor Connection Assistant$/ do
 end
 
 Then /^the Tor Connection Assistant reports that it failed to connect$/ do
-  tor_connection_assistant.child('Failed to connect', roleName: 'label')
+  tor_connection_assistant.child('Error connecting to Tor', roleName: 'label')
 end
 
 When /^all Internet traffic has only flowed through the configured bridges$/ do
