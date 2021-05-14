@@ -455,3 +455,14 @@ ensure
     # We aborted before p was assigned, so no clean up needed.
   end
 end
+
+def translate(str, drop_accelerator: true)
+  rv = $vm.execute_successfully("gettext tails '#{str}'").stdout
+  if drop_accelerator
+    assert(str.count('_') <= 1, 'translate() are supposed to drop the ' \
+                                'accelerator, but there are multiple ' \
+                                "ones in: #{str}")
+    rv.gsub!('_', '')
+  end
+  rv
+end
