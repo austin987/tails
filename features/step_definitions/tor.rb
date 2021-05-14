@@ -342,7 +342,7 @@ end
 When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
   begin
     try_for(60) do
-      @tor_connection_assistant = Dogtail::Application.new('Tor Connection')
+      tor_connection_assistant
     end
   rescue Timeout::Error
     save_tor_journal
@@ -351,9 +351,7 @@ When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
 end
 
 def tor_connection_assistant
-  assert_not_nil(@tor_connection_assistant,
-                 "you must run the 'the Tor Connection Assistant autostarts' step first")
-  @tor_connection_assistant
+  Dogtail::Application.new('Tor Connection')
 end
 
 class TCAConnectionFailure < StandardError
@@ -503,7 +501,6 @@ When /^I close the Tor Connection Assistant$/ do
   $vm.execute(
     'pkill -f /usr/lib/python3/dist-packages/tca/application.py'
   )
-  @tor_connection_assistant = nil
 end
 
 Then /^the Tor Connection Assistant reports that it failed to connect$/ do
