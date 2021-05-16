@@ -222,6 +222,7 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         self.target_selected = False
         self.devices_with_persistence = []
         self.force_reinstall = False
+        self.force_reinstall_button_available = False
 
         self._build_ui()
 
@@ -341,7 +342,6 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             return
         self.force_reinstall = True
         self.opts.partition = True
-        self.__button_force_reinstall.set_visible(False)
         self.on_start_clicked(button)
 
     def on_source_file_set(self, filechooserbutton):
@@ -362,13 +362,16 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             self.__help_link.set_label(_('Manual Upgrade Instructions'))
             self.__help_link.set_uri('https://tails.boum.org/upgrade/')
             if device['is_device_big_enough_for_reinstall']:
+                self.force_reinstall_button_available = True
                 self.__button_force_reinstall.set_visible(True)
             else:
+                self.force_reinstall_button_available = False
                 self.__button_force_reinstall.set_visible(False)
         else:
             self.opts.partition = True
             self.force_reinstall = True
             self.__button_start.set_label(_('Install'))
+            self.force_reinstall_button_available = False
             self.__button_force_reinstall.set_visible(False)
             self.__help_link.set_label(_('Installation Instructions'))
             self.__help_link.set_uri('https://tails.boum.org/install/')
@@ -540,6 +543,8 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
     def enable_widgets(self, enabled=True):
         if enabled:
             self.update_start_button()
+            if self.force_reinstall_button_available:
+                self.__button_force_reinstall.set_visible(True)
         else:
             self.__button_start.set_sensitive(False)
             self.__button_force_reinstall.set_visible(False)
