@@ -456,7 +456,7 @@ ensure
   end
 end
 
-def translate(str, drop_accelerator: true)
+def translate(str, drop_accelerator: true, drop_markup: true)
   if $language.empty?
     rv = str
   else
@@ -467,6 +467,10 @@ def translate(str, drop_accelerator: true)
                                 'accelerator, but there are multiple ' \
                                 "ones in: #{str}")
     rv.gsub!('_', '')
+  end
+  if drop_markup
+    # Drop markup like "<b>text</b>" → "text"
+    rv.gsub!(/<\/?[^>]+>/, '')
   end
   rv
 end
