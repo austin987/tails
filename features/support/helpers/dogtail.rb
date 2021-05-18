@@ -64,7 +64,7 @@ module Dogtail
 
     def initialize(app_name, **opts)
       @var = "node#{@@node_counter += 1}"
-      @app_name = app_name
+      @app_name = translate(app_name)
       @opts = opts
       @opts[:user] ||= LIVE_USER
       @find_code = "dogtail.tree.root.application('#{@app_name}')"
@@ -237,6 +237,7 @@ module Dogtail
 
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
+        args[0] = translate(args[0]) if args[0].class == String
         args_str = self.class.args_to_s(args)
         method_call = "#{method}(#{args_str})"
         Node.new("#{@var}.#{method_call}", **@opts)

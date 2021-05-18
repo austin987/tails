@@ -457,7 +457,11 @@ ensure
 end
 
 def translate(str, drop_accelerator: true)
-  rv = $vm.execute_successfully("gettext tails '#{str}'").stdout
+  if $language.empty?
+    rv = str
+  else
+    rv = $vm.execute_successfully("gettext tails '#{str}'").stdout
+  end
   if drop_accelerator
     assert(str.count('_') <= 1, 'translate() are supposed to drop the ' \
                                 'accelerator, but there are multiple ' \
