@@ -118,7 +118,9 @@ module Dogtail
       elsif value == false
         'False'
       elsif value.class == String
-        "'#{value}'"
+        # Since we use single-quote the string we have to escape any
+        # occurrences inside.
+        "'#{value.gsub("'", "\\\\'")}'"
       elsif [Integer, Float].include?(value.class)
         v.to_s
       else
