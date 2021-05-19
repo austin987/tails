@@ -266,8 +266,9 @@ STREAM_ISOLATION_INFO = {
   },
   'Tor Browser'                    => {
     grep_monitor_expr: 'users:(("firefox\.real"',
-    socksport:         9150,
+    socksport:         9050,
     controller:        true,
+    netns:             'tbb',
   },
   'SSH'                            => {
     grep_monitor_expr: 'users:(("\(nc\|ssh\)"',
@@ -287,8 +288,10 @@ end
 When /^I monitor the network connections of (.*)$/ do |application|
   @process_monitor_log = '/tmp/ss.log'
   info = stream_isolation_info(application)
+  netns_wrapper = info[:netns].nil? ? '' : "ip netns exec #{info[:netns]}"
   $vm.spawn('while true; do ' \
-            "  ss -taupen | grep '#{info[:grep_monitor_expr]}'; " \
+            "  #{netns_wrapper} ss -taupen " \
+            "    | grep '#{info[:grep_monitor_expr]}'; " \
             '  sleep 0.1; ' \
             "done > #{@process_monitor_log}")
 end
@@ -339,7 +342,7 @@ end
 When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
   begin
     try_for(60) do
-      @tor_connection_assistant = Dogtail::Application.new('Tor Connection')
+      tor_connection_assistant
     end
   rescue Timeout::Error
     save_tor_journal
@@ -348,9 +351,7 @@ When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
 end
 
 def tor_connection_assistant
-  assert_not_nil(@tor_connection_assistant,
-                 "you must run the 'the Tor Connection Assistant autostarts' step first")
-  @tor_connection_assistant
+  Dogtail::Application.new(translate('Tor Connection'))
 end
 
 class TCAConnectionFailure < StandardError
@@ -369,6 +370,9 @@ def tca_configure(mode, &block)
   # XXX: We generally run this right after TCA has started, apparently
   # so early that clicking the radio button doesn't always work, so we
   # retry. Can this be fixed in TCA instead some how?
+  # XXX: The use of regexes that are partial label strings make it
+  # impossible to use translate() (it needs the full string) in order
+  # to support non-Enlgish locales. See #18320.
   radio_button = tor_connection_assistant.child(
     radio_button_label, roleName: 'radio button'
   )
@@ -377,16 +381,23 @@ def tca_configure(mode, &block)
     radio_button.checked
   end
   block.call if block_given?
-  tor_connection_assistant.child('Connect to Tor',
+  tor_connection_assistant.child(translate('Connect to _Tor'),
                                  roleName: 'push button')
                           .click
   failure_reported = false
-  try_for(120, exception: TCAConnectionFailure,  msg: 'Timed out while waiting for TCA to connect to Tor') do
-    if tor_connection_assistant.child?('Failed to connect', roleName: 'label', retry: false)
+  try_for(120, msg: 'Timed out while waiting for TCA to connect to Tor') do
+    if tor_connection_assistant.child?(translate('Error connecting to Tor'),
+                                       roleName: 'label', retry: false)
       failure_reported = true
       done = true
     else
-      done = tor_connection_assistant.child?(/^Connected to Tor successfully/, roleName: 'label', retry: false, showingOnly: true)
+      # See #18320.
+      too_long_label = "Connected to Tor successfully
+
+You can now browse the Internet anonymously and uncensored"
+      done = tor_connection_assistant.child?(
+        too_long_label, roleName: 'label', retry: false, showingOnly: true
+      )
     end
     done
   end
@@ -464,14 +475,14 @@ When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |brid
 
   tca_configure(config_mode) do
     if config_mode == :easy
-      tor_connection_assistant.child('Configure a Tor bridge',
+      tor_connection_assistant.child(translate('Configure a Tor bridge'),
                                      roleName: 'check box')
                               .click
     end
-    tor_connection_assistant.child('Connect to Tor',
+    tor_connection_assistant.child(translate('Connect to _Tor'),
                                    roleName: 'push button')
                             .click
-    tor_connection_assistant.child('Type in a bridge that I already know',
+    tor_connection_assistant.child(translate('Type in a bridge that I already know'),
                                  roleName: 'radio button')
                             .click
     tor_connection_assistant.child(roleName: 'scroll pane').click
@@ -500,11 +511,10 @@ When /^I close the Tor Connection Assistant$/ do
   $vm.execute(
     'pkill -f /usr/lib/python3/dist-packages/tca/application.py'
   )
-  @tor_connection_assistant = nil
 end
 
 Then /^the Tor Connection Assistant reports that it failed to connect$/ do
-  tor_connection_assistant.child('Failed to connect', roleName: 'label')
+  tor_connection_assistant.child('Error connecting to Tor', roleName: 'label')
 end
 
 When /^all Internet traffic has only flowed through the configured bridges$/ do

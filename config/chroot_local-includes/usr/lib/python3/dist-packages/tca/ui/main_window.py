@@ -1,14 +1,12 @@
 import logging
 import os.path
 import json
-import subprocess
 import gettext
 from typing import Dict, Any, Tuple
 
 import gi
 import stem
 
-from tca.translatable_window import TranslatableWindow
 from tca.ui.asyncutils import GAsyncSpawn, idle_add_chain
 from tca.torutils import (
     TorConnectionProxy,
@@ -31,7 +29,7 @@ CSS_FILE = "tca.css"
 IMG_FOOTPRINTS = "/usr/share/doc/tails/website/about/footprints.svg"
 IMG_RELAYS = "/usr/share/doc/tails/website/about/relays.svg"
 IMG_WALKIE = "/usr/share/doc/tails/website/about/walkie-talkie.svg"
-IMG_SIDE = {
+IMG_SIDE: Dict[str, str] = {
     "bridge": IMG_FOOTPRINTS,
     "hide": IMG_RELAYS,
     "connect": IMG_WALKIE,
@@ -40,7 +38,12 @@ IMG_SIDE = {
     "error": IMG_WALKIE,
     "offline": IMG_RELAYS,
 }
-CONNECTION_TIMEOUT = 30
+
+TOR_BOOTSTRAP_STATUS_CONN_DONE = 10  # see tor.git:src/feature/control/control_events.h
+TOR_SIGNOFLIFE_TIMEOUT = (
+    30
+)  # this timeout means "time to wait for the first sign of life" which we define as bootstrap-phase=BOOTSTRAP_STATUS_CONN_DONE
+TOR_BOOTSTRAP_TIMEOUT = 120  # this is *summed* to the previous timeout
 
 # META {{{
 # Naming convention for widgets:
@@ -55,15 +58,17 @@ CONNECTION_TIMEOUT = 30
 #  - before_show_<stepname>() is called when changing from one step to the other
 # }}}
 
-_ = gettext.gettext
+translation = gettext.translation("tails", "/usr/share/locale", fallback=True)
+_ = translation.gettext
 
 log = logging.getLogger(__name__)
 
 
 class StepChooseHideMixin:
     """
-    most utils related to the step in which the user can choose between an easier configuration and going
-    unnoticed
+    Handles the "consent question" step.
+
+    Here, the user can choose between an easier configuration and going unnoticed.
     """
 
     def before_show_hide(self):
@@ -73,7 +78,8 @@ class StepChooseHideMixin:
         self.builder.get_object("radio_unnoticed_no").set_active(False)
         self.builder.get_object("radio_unnoticed_none").hide()
         definitive = self.state.get("progress", {}).get("started", False)
-        if definitive and "hide" in self.state["hide"]:
+        if definitive:
+            assert "hide" in self.state["hide"]
             if self.state["hide"]["hide"]:
                 self.builder.get_object("radio_unnoticed_no").set_sensitive(False)
                 self.builder.get_object("radio_unnoticed_yes").set_active(True)
@@ -84,6 +90,15 @@ class StepChooseHideMixin:
                     self.builder.get_object("radio_unnoticed_no_bridge").set_active(
                         True
                     )
+        elif (
+            "hide" in self.state["hide"]
+        ):  # the user is changing her mind before connecting to Tor
+            hide = self.state["hide"]["hide"]
+            self.builder.get_object("radio_unnoticed_yes").set_active(hide)
+            self.builder.get_object("radio_unnoticed_no").set_active(not hide)
+            self.builder.get_object("radio_unnoticed_no_bridge").set_active(
+                self.state["hide"]["bridge"]
+            )
 
     def _step_hide_next(self):
         if self.state["hide"]["bridge"]:
@@ -106,6 +121,7 @@ class StepChooseHideMixin:
         hide = self.builder.get_object("radio_unnoticed_yes").get_active()
         if not easy and not hide:
             return
+        assert easy is not hide
         if hide:
             self.state["hide"]["hide"] = True
             self.state["hide"]["bridge"] = True
@@ -119,7 +135,7 @@ class StepChooseHideMixin:
 
 
 class StepChooseBridgeMixin:
-    def before_show_bridge(self, no_default_bridges=False):
+    def before_show_bridge(self):
         self.state["bridge"]: Dict[str, Any] = {}
         self.builder.get_object("step_bridge_box").show()
         self.builder.get_object("step_bridge_radio_none").set_active(True)
@@ -127,27 +143,28 @@ class StepChooseBridgeMixin:
         self.builder.get_object("step_bridge_text").get_property("buffer").connect(
             "changed", self.cb_step_bridge_text_changed
         )
-        hide = self.state["hide"]["hide"]
-        if hide or no_default_bridges:
-            self.builder.get_object("step_bridge_radio_default").set_sensitive(False)
+        hide_mode: bool = self.state["hide"]["hide"]
+        if hide_mode:
             self.builder.get_object("step_bridge_text").grab_focus()
         else:
             self.builder.get_object("step_bridge_radio_default").grab_focus()
-            self.builder.get_object("step_bridge_radio_default").set_sensitive(True)
+        self.get_object("radio_default").set_sensitive(not hide_mode)
+        self.get_object("label_explain_hide").set_visible(hide_mode)
 
-        self.builder.get_object("step_bridge_radio_type").set_active(hide)
+        self.builder.get_object("step_bridge_radio_type").set_active(hide_mode)
         self.get_object(
             "combo"
         ).hide()  # we are forcing that to obfs4 until we support meek
         self.get_object("box_warning").hide()
         self._step_bridge_init_from_tor_state()
+        self._step_bridge_set_actives()
 
     def _step_bridge_init_from_tor_state(self):
         bridges = self.app.configurator.tor_connection_config.bridges
         if not bridges:
             return
-        if len(bridges) > 1 and set(bridges).issubset(
-            set(TorConnectionConfig.get_default_bridges())
+        if len(bridges) > 1 and set(bridges) == set(
+            TorConnectionConfig.get_default_bridges()
         ):
             self.get_object("radio_default").set_active(True)
         else:
@@ -163,7 +180,7 @@ class StepChooseBridgeMixin:
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
         except InvalidBridgeException as exc:
-            set_warning("Invalid: %s" % str(exc))
+            set_warning(_("Invalid: {exception}").format(exception=str(exc)))
             return False
         except (ValueError, IndexError):
             self.get_object("box_warning").hide()
@@ -174,7 +191,9 @@ class StepChooseBridgeMixin:
             for br in bridges:
                 if br.split()[0] not in (VALID_BRIDGE_TYPES - {"bridge"}):
                     set_warning(
-                        "You need to configure an obfs4 bridge to hide that you are using Tor"
+                        _(
+                            "You need to configure an obfs4 bridge to hide that you are using Tor"
+                        )
                     )
                     return False
 
@@ -198,6 +217,7 @@ class StepChooseBridgeMixin:
     def cb_step_bridge_btn_submit_clicked(self, *args):
         default = self.builder.get_object("step_bridge_radio_default").get_active()
         manual = self.builder.get_object("step_bridge_radio_type").get_active()
+        self.state["hide"]["bridge"] = True
         if default:
             self.state["bridge"]["kind"] = "default"
             self.state["bridge"]["default_method"] = self.get_object(
@@ -229,6 +249,8 @@ class StepConnectProgressMixin:
         self.builder.get_object("step_progress_box").show()
         self.builder.get_object("step_progress_box_internettest").hide()
         self.builder.get_object("step_progress_box_internetok").hide()
+        self.get_object("box_tor_direct_fail").hide()
+        self.connection_progress.set_fraction(0.0, allow_going_back=True)
         if not self.state["progress"]["success"]:
             self.spawn_tor_connect()
         else:
@@ -266,20 +288,22 @@ class StepConnectProgressMixin:
         def do_tor_connect_config():
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
-                self.get_object("label_status").set_text("Connecting to Tor...")
+                self.get_object("label_status").set_text(
+                    _("Connecting to Tor without bridges...")
+                )
             elif self.state["bridge"]["kind"] == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
                 )
                 self.get_object("label_status").set_text(
-                    "Connecting with default bridges..."
+                    _("Connecting with default bridges...")
                 )
             elif self.state["bridge"]["bridges"]:
                 self.app.configurator.tor_connection_config.enable_bridges(
                     self.state["bridge"]["bridges"]
                 )
                 self.get_object("label_status").set_text(
-                    "Connecting through bridges..."
+                    _("Connecting with custom bridges...")
                 )
             else:
                 raise ValueError(
@@ -296,7 +320,7 @@ class StepConnectProgressMixin:
                 only_type="obfs4"
             )
             self.get_object("label_status").set_text(
-                "Connecting with default bridges..."
+                _("Connecting to Tor with default bridges...")
             )
             _apply_proxy()
             self.connection_progress.set_fraction(
@@ -319,7 +343,9 @@ class StepConnectProgressMixin:
                 ConnectionProgress.PROGRESS_CONFIGURATION_APPLIED
             )
             self.timer_check = GLib.timeout_add(
-                500, do_tor_connect_check, {"count": CONNECTION_TIMEOUT * 2}
+                1000,
+                do_tor_connect_check,
+                {"count": TOR_SIGNOFLIFE_TIMEOUT, "sign_of_life": False},
             )
             return False
 
@@ -334,6 +360,8 @@ class StepConnectProgressMixin:
                     not self.state["hide"]["hide"] and not self.state["hide"]["bridge"]
                 ) and not self.app.configurator.tor_connection_config.bridges:
                     log.info("Retrying with default bridges")
+                    self.get_object("box_tor_direct_fail").show()
+                    self.connection_progress.set_fraction(0.0, allow_going_back=True)
                     idle_add_chain(
                         [do_tor_connect_default_bridges, do_tor_connect_apply]
                     )
@@ -347,10 +375,15 @@ class StepConnectProgressMixin:
             ok = self.app.configurator.tor_has_bootstrapped()
             if ok:
                 self.state["progress"]["success"] = True
+                self.connection_progress.set_fraction(1)
                 self._step_progress_success_screen()
                 return False
             else:
                 progress = self.app.configurator.tor_bootstrap_phase()
+                if not d["sign_of_life"] and progress >= TOR_BOOTSTRAP_STATUS_CONN_DONE:
+                    log.info("We received some sign of life from Tor network")
+                    d["sign_of_life"] = True
+                    d["count"] = TOR_BOOTSTRAP_TIMEOUT - 1
                 self.connection_progress.set_fraction_from_bootstrap_phase(progress)
                 return True
 
@@ -361,8 +394,10 @@ class StepConnectProgressMixin:
         self.get_object("box_torconnect").hide()
         self.get_object("box_tortestok").show()
         self.get_object("label_status").set_text(
-            "Connected to Tor successfully!\n\n"
-            "You can now browse the Internet anonymously and uncensored"
+            _(
+                "Connected to Tor successfully!\n\n"
+                "You can now browse the Internet anonymously and uncensored."
+            )
         )
         self.get_object("box_start").show()
 
@@ -390,16 +425,16 @@ class StepConnectProgressMixin:
             )
 
     def cb_step_progress_btn_starttbb_clicked(self, *args):
-        subprocess.Popen(["/usr/local/bin/tor-browser"])
+        self.app.portal.call_async("open-tbb")
 
     def cb_step_progress_btn_reset_clicked(self, *args):
-        self.todo_dialog("I should reset Tor connection")
+        self.app.portal.call_async("tor/restart")
 
     def cb_step_progress_btn_monitor_clicked(self, *args):
-        subprocess.Popen(["/usr/bin/gnome-system-monitor", "-r"])
+        self.app.portal.call_async("open-networkmonitor")
 
     def cb_step_progress_btn_onioncircuits_clicked(self, *args):
-        subprocess.Popen(["/usr/local/bin/onioncircuits"])
+        self.app.portal.call_async("open-onioncircuits")
 
 
 class StepErrorMixin:
@@ -411,10 +446,10 @@ class StepErrorMixin:
         self.change_box("proxy")
 
     def cb_step_error_btn_captive_clicked(self, *args):
-        subprocess.Popen(["sudo", "/usr/local/sbin/unsafe-browser"])
+        self.app.portal.call_async("open-unsafebrowser")
 
     def cb_step_error_btn_bridge_clicked(self, *args):
-        self.change_box("bridge", no_default_bridges=True)
+        self.change_box("bridge")
 
 
 class StepProxyMixin:
@@ -503,34 +538,33 @@ class StepProxyMixin:
 
 class TCAMainWindow(
     Gtk.ApplicationWindow,
-    TranslatableWindow,
     StepChooseHideMixin,
     StepConnectProgressMixin,
     StepChooseBridgeMixin,
     StepErrorMixin,
     StepProxyMixin,
 ):
-    # TranslatableWindow mixin {{{
+
+    STEPS_ORDER = ["offline", "hide", "bridge", "proxy", "error", "progress"]
+    # l10n {{{
     def get_translation_domain(self):
         return "tails"
-
-    def get_locale_dir(self):
-        return tca.config.locale_dir
 
     # }}}
 
     def __init__(self, app):
-        Gtk.ApplicationWindow.__init__(self, title="Tor Connection", application=app)
-        TranslatableWindow.__init__(self, self)
+        Gtk.ApplicationWindow.__init__(
+            self, title=tca.config.APPLICATION_TITLE, application=app
+        )
         self.app = app
         self.set_role(tca.config.APPLICATION_WM_CLASS)
         # XXX: set_wm_class is deprecated, but it's the only way I found to set taskbar title
         self.set_wmclass(
             tca.config.APPLICATION_WM_CLASS, tca.config.APPLICATION_WM_CLASS
         )
-        self.set_title(_(tca.config.APPLICATION_TITLE))
+        self.set_title(tca.config.APPLICATION_TITLE)
         # self.state collects data from user interactions. Its main key is the step name
-        self.state: Dict[str, Dict[str, Any]] = {
+        self.state: Dict[str, Any] = {
             "hide": {},
             "bridge": {},
             "proxy": {},
@@ -576,17 +610,13 @@ class TCAMainWindow(
         builder.add_from_file(tca.config.data_path + MAIN_UI_FILE)
         builder.connect_signals(self)
 
-        for widget in builder.get_objects():
-            # Store translations for the builder objects
-            self.store_translations(widget)
-            # Workaround Gtk bug #710888 - GtkInfoBar not shown after calling
-            # gtk_widget_show:
-            # https://bugzilla.gnome.org/show_bug.cgi?id=710888
-            if isinstance(widget, Gtk.InfoBar):
-                revealer = widget.get_template_child(Gtk.InfoBar, "revealer")
-                revealer.set_transition_type(Gtk.RevealerTransitionType.NONE)
-
         self.main_container = builder.get_object("box_main_container_image_step")
+        self.stack = builder.get_object("box_main_container_stack")
+        for step in self.STEPS_ORDER:
+            box = builder.get_object("step_{}_box".format(step))
+            box.show()
+            self.stack.add_named(box, step)
+
         self.connection_progress = ConnectionProgress(self)
         GLib.timeout_add(1000, self.connection_progress.tick)
         self.add(self.main_container)
@@ -623,7 +653,7 @@ class TCAMainWindow(
 
     def set_image(self, fname: str):
         screen_width, _ = self.get_screen_size()
-        target_width = screen_width / 5
+        target_width = screen_width / 7
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(fname)
         scale = pixbuf.get_width() / target_width
         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(
@@ -632,22 +662,17 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
-        children = self.main_container.get_children()
-        if len(children) > 1:
-            self.main_container.remove(children[-1])
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
-        new_box = self.builder.get_object("step_%s_box" % name)
-        self.main_container.pack_end(new_box, True, True, 0)
-        new_box.set_hexpand(True)
-        new_box.set_vexpand(True)
+        self.stack.set_visible_child_name(name)
+
         if hasattr(self, "before_show_%s" % name):
             getattr(self, "before_show_%s" % name)(**kwargs)
         log.debug("Step changed, state is now %s", str(self.state))
 
-        # resize, just to be sure that everything is properly shown
-        screen_width, screen_height = self.get_screen_size()
-        self.resize(int(screen_width / 2), int(screen_height / 2))
+        # # resize, just to be sure that everything is properly shown
+        # screen_width, screen_height = self.get_screen_size()
+        # self.resize(int(screen_width / 2), int(screen_height / 2))
 
     def get_object(self, name: str):
         """
@@ -664,7 +689,7 @@ class TCAMainWindow(
 
     def on_link_help_clicked(self, linkbutton):
         uri: str = linkbutton.get_uri()
-        subprocess.Popen(["/usr/local/bin/tails-documentation", "--force-local", uri])
+        self.app.portal.call_async("open-documentation", ["--force-local", uri])
 
     def on_network_changed(self):
         up = self.app.is_network_link_ok
@@ -692,6 +717,7 @@ class ConnectionProgress:
 
     PROGRESS_CONFIGURATION_CONFIG = 0.01
     PROGRESS_CONFIGURATION_APPLIED = 0.1
+    PROGRESS_BOOTSTRAP_SIGN_OF_LIFE = 0.5
     PROGRESS_BOOTSTRAP_END = 0.9
 
     def __init__(self, main_window):
@@ -702,6 +728,66 @@ class ConnectionProgress:
     def progress(self):
         return self.main_window.builder.get_object("step_progress_pbar_torconnect")
 
+    @property
+    def log(self):
+        return logging.getLogger(self.__class__.__name__)
+
+    @property
+    def sign_of_life(self):
+        return self.bootstrap_phase >= TOR_BOOTSTRAP_STATUS_CONN_DONE
+
+    @classmethod
+    def _get_value_after_tick(cls, current: float, sign_of_life: bool) -> float:
+        """
+        Calculate value. This is helpful to make testing possible.
+
+        >>> f = lambda x,y: '%.4f' % ConnectionProgress._get_value_after_tick(x,y)
+        >>> f(0.1, False)
+        '0.1133'
+        >>> f(0.5, True)
+        '0.5033'
+
+        So in `n` steps we will arrive to the next progress.
+        To test this, let's setup a helper function. this will just recurse "n" times
+        >>> ft = lambda x: ConnectionProgress._get_value_after_tick(x, True)
+        >>> ff = lambda x: ConnectionProgress._get_value_after_tick(x, False)
+        >>> ftn = lambda x, n: ftn(ft(x), n-1) if n > 1 else ft(x)
+
+        Let's test the helper itself:
+        >>> '%.4f' % ftn(0.5, 1)
+        '0.5033'
+        >>> '%.4f' % ftn(0.5, 2)
+        '0.5067'
+        >>> ftn(0.5, TOR_BOOTSTRAP_TIMEOUT) - ConnectionProgress.PROGRESS_BOOTSTRAP_END < 0.001
+        True
+
+        >>> ffn = lambda x, n: ffn(ff(x), n-1) if n > 1 else ff(x)
+
+        That's the same, but for "before sign_of_life"
+        >>> '%.4f' % ffn(0.1, 1)
+        '0.1133'
+        >>> '%.4f' % ffn(0.1, 2)
+        '0.1267'
+        >>> '%.4f' % ffn(0.1, 3)
+        '0.1400'
+        >>> '%.4f' % ffn(0.1, 30)
+        '0.5000'
+
+
+        """
+        if not sign_of_life:
+            # in TOR_SIGNOFLIFE_TIMEOUT ticks we must go from 0.1 to 0.5 in TOR_SIGNOFLIFE_TIMEOUT seconds
+            range_to_cover = (
+                cls.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE - cls.PROGRESS_CONFIGURATION_APPLIED
+            )
+            time_to_cover = TOR_SIGNOFLIFE_TIMEOUT
+        else:
+            range_to_cover = (
+                cls.PROGRESS_BOOTSTRAP_END - cls.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE
+            )
+            time_to_cover = TOR_BOOTSTRAP_TIMEOUT
+        return current + range_to_cover / time_to_cover
+
     def tick(self):
         """
         Every second, performs "fake" advancement of the progress bar.
@@ -709,43 +795,42 @@ class ConnectionProgress:
         This advancement does not correspond to real progress, but provides more responsive UX.
         """
         current = float(self.progress.get_fraction())
-        if current == 0 or current > 98:
+        if current == 0 or current >= self.PROGRESS_BOOTSTRAP_END:
             return True
-        # in CONNECTION_TIMEOUT ticks we must do the same range as advancing bootstrap-phase by 10%
-        range_after_many_ticks = (
-            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
-        ) / 10
-        range_for_one_tick = range_after_many_ticks / CONNECTION_TIMEOUT
-        current += range_for_one_tick / 100
-        self.set_fraction(current)
+        new = self._get_value_after_tick(current, self.sign_of_life)
+        self.log.debug("tick moves from %.3f to %.3f", current * 100, new * 100)
+        self.set_fraction(new)
         return True
 
-    def set_fraction(self, num):
+    def set_fraction(self, num, allow_going_back=False):
+        if (
+            not allow_going_back and self.progress.get_fraction() >= num
+        ):  # we're never going back because UX
+            return
         self.progress.set_fraction(num)
         text = "%d%%" % (num * 100)
         self.progress.set_text(text)
 
-    def get_fraction_from_bootstrap_phase(self, progress: int) -> float:
+    def get_fraction_from_bootstrap_phase(
+        self, progress: int, sign_of_life=None
+    ) -> float:
         """
         Calculate fraction based on tor bootstrap-phase.
 
         The 'progress' argument is the number returned by tor, which is in the range [0,100]
-
-        >>> cp = ConnectionProgress(None)
-        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(0)
-        '0.10'
-        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(100)
-        '0.90'
-        >>> '%.2f' % cp.get_fraction_from_bootstrap_phase(50)
-        '0.60'
         """
-        normalized_value = self.PROGRESS_CONFIGURATION_APPLIED + (progress / 100) * (
-            self.PROGRESS_BOOTSTRAP_END - self.PROGRESS_CONFIGURATION_APPLIED
-        )
-        return normalized_value
+        if sign_of_life is None:
+            sign_of_life = self.sign_of_life
+        if not sign_of_life:
+            return self.PROGRESS_CONFIGURATION_APPLIED
+        return self.PROGRESS_BOOTSTRAP_SIGN_OF_LIFE
 
     def set_fraction_from_bootstrap_phase(self, progress: int):
         if progress == self.bootstrap_phase:
             return
         self.bootstrap_phase = progress
-        return self.set_fraction(self.get_fraction_from_bootstrap_phase(progress))
+        fraction = self.get_fraction_from_bootstrap_phase(progress)
+        self.log.info(
+            "new bootstrap_phase received: %d going to %.2f%%", progress, fraction * 100
+        )
+        return self.set_fraction(fraction)

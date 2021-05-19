@@ -42,13 +42,14 @@ class StemFDSocket(stem.socket.ControlSocket):
 
 
 def recover_fd_from_parent() -> tuple:
-    fds = [int(fd) for fd in os.getenv("INHERIT_FD").split(",")]
-    # fds[0] must be a socket to Tor Control Port
-    # fds[1] must be a rw fd for settings file
+    fds = [int(fd) for fd in os.getenv("INHERIT_FD", '').split(",")]
+    # fds[0] must be a rw fd for settings file
+    # fds[1] must be a socket to tca-portal
 
     configfile = os.fdopen(fds[0], "r+")
+    portal = socket.socket(fileno=fds[1])
 
-    return (configfile,)
+    return (configfile, portal)
 
 
 # PROXY_TYPES is a sequence of Tor options related to proxing.
