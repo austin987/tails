@@ -456,6 +456,19 @@ ensure
   end
 end
 
+# Drop valid markup (i.e. with balanced tags) like "<b>text</b>" → "text"
+def drop_markup(str)
+  done, first_tag, rest = str.partition(%r{<([^/>]+)>})
+  return str if first_tag.empty?
+  closer = %r{</#{Regexp.last_match[1]}>}
+  if rest.match(closer)
+    rest.sub!(closer, '')
+  else
+    done += first_tag
+  end
+  done + drop_markup(rest)
+end
+
 def translate(str, drop_accelerator: true, drop_markup: true)
   if $language.empty?
     rv = str
@@ -469,8 +482,7 @@ def translate(str, drop_accelerator: true, drop_markup: true)
     rv.gsub!('_', '')
   end
   if drop_markup
-    # Drop markup like "<b>text</b>" → "text"
-    rv.gsub!(/<\/?[^>]+>/, '')
+    rv = drop_markup(rv)
   end
   rv
 end
