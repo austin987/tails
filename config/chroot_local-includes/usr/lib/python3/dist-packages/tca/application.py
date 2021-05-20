@@ -164,5 +164,6 @@ if __name__ == "__main__":
     _ = gettext.gettext
     GLib.set_prgname(tca.config.APPLICATION_TITLE)
     GLib.set_application_name(_(tca.config.APPLICATION_TITLE))
+
     application = TCAApplication(args)
     application.run([sys.argv[0]])
