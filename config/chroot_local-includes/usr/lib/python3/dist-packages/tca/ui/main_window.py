@@ -296,14 +296,14 @@ class StepConnectProgressMixin:
                     only_type=self.state["bridge"]["default_method"]
                 )
                 self.get_object("label_status").set_text(
-                    _("Connecting with default bridges…")
+                    _("Connecting to Tor with default bridges…")
                 )
             elif self.state["bridge"]["bridges"]:
                 self.app.configurator.tor_connection_config.enable_bridges(
                     self.state["bridge"]["bridges"]
                 )
                 self.get_object("label_status").set_text(
-                    _("Connecting with custom bridges…")
+                    _("Connecting to Tor with custom bridges…")
                 )
             else:
                 raise ValueError(
