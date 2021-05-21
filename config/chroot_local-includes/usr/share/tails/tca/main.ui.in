@@ -603,6 +603,7 @@ To request obfs4 bridges, you can send an empty email to
     <property name="valign">baseline</property>
     <property name="vexpand">False</property>
     <property name="orientation">vertical</property>
+    <property name="spacing">12</property>
     <property name="baseline-position">top</property>
     <child>
       <object class="GtkLabel">
@@ -639,8 +640,7 @@ Tor relays are servers operated by different organizations and volunteers around
       <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="valign">center</property>
-        <property name="vexpand">True</property>
+        <property name="vexpand">False</property>
         <property name="orientation">vertical</property>
         <child>
           <object class="GtkRadioButton" id="radio_unnoticed_no">
@@ -648,6 +648,8 @@ Tor relays are servers operated by different organizations and volunteers around
             <property name="can-focus">True</property>
             <property name="has-focus">True</property>
             <property name="receives-default">False</property>
+            <property name="halign">start</property>
+            <property name="margin-bottom">6</property>
             <property name="draw-indicator">True</property>
             <signal name="activate" handler="cb_step_hide_btn_connect_clicked" swapped="no"/>
             <signal name="toggled" handler="cb_step_hide_radio_changed" swapped="no"/>
@@ -655,12 +657,8 @@ Tor relays are servers operated by different organizations and volunteers around
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-left">20</property>
-                <property name="label" translatable="yes">&lt;b&gt;Configure Tor automatically (easier)&lt;/b&gt;
-
-We recommend configuring Tor automatically if:
- • You are connecting from a public Wi-Fi network.
- • Connecting to Tor might be blocked in your country but using Tor is not criminalized.</property>
+                <property name="margin-left">6</property>
+                <property name="label" translatable="yes">&lt;b&gt;Configure Tor automatically (easier)&lt;/b&gt;</property>
                 <property name="use-markup">True</property>
                 <property name="wrap">True</property>
               </object>
@@ -674,8 +672,23 @@ We recommend configuring Tor automatically if:
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="step_hide_box_bridge">
+          <object class="GtkLabel" id="unnoticed_no_explanation">
+            <property name="name">unnoticed_no_explanation</property>
             <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-left">18</property>
+            <property name="label" translatable="yes">We recommend configuring Tor automatically if:
+ - You are connecting from a public Wi-Fi network.
+ - Connecting to Tor might be blocked in your country but using Tor is not criminalized.</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="step_hide_box_bridge">
             <property name="can-focus">False</property>
             <property name="halign">start</property>
             <property name="valign">start</property>
@@ -724,7 +737,7 @@ We recommend configuring Tor automatically if:
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
@@ -732,7 +745,10 @@ We recommend configuring Tor automatically if:
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">False</property>
+            <property name="halign">start</property>
             <property name="valign">start</property>
+            <property name="margin-top">12</property>
+            <property name="margin-bottom">6</property>
             <property name="draw-indicator">True</property>
             <property name="group">radio_unnoticed_no</property>
             <signal name="activate" handler="cb_step_hide_btn_connect_clicked" swapped="no"/>
@@ -742,14 +758,10 @@ We recommend configuring Tor automatically if:
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="valign">baseline</property>
-                <property name="margin-left">20</property>
+                <property name="margin-left">6</property>
                 <property name="hexpand">False</property>
                 <property name="vexpand">False</property>
-                <property name="label" translatable="yes">&lt;b&gt;Hide to my local network that I'm using Tor (safer)&lt;/b&gt;
-
-You might need to go unnoticed if:
- - Using Tor might look suspicious to someone monitoring your home or work network.
- - Using Tor is criminalized in your country.</property>
+                <property name="label" translatable="yes">&lt;b&gt;Hide to my local network that I'm using Tor (safer)&lt;/b&gt;</property>
                 <property name="use-markup">True</property>
                 <property name="wrap">True</property>
               </object>
@@ -759,7 +771,26 @@ You might need to go unnoticed if:
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="padding">6</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <object class="GtkLabel" id="unnoticed_yes_explanation">
+            <property name="name">unnoticed_yes_explanation</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-left">18</property>
+            <property name="label" translatable="yes">You might need to go unnoticed if:
+ - Using Tor might look suspicious to someone monitoring your home or work network.
+ - Using Tor is criminalized in your country.</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">5</property>
           </packing>
         </child>
         <child>
@@ -767,7 +798,9 @@ You might need to go unnoticed if:
             <property name="label" translatable="yes">None</property>
             <property name="can-focus">True</property>
             <property name="receives-default">False</property>
+            <property name="halign">start</property>
             <property name="valign">start</property>
+            <property name="margin-top">12</property>
             <property name="active">True</property>
             <property name="draw-indicator">True</property>
             <property name="group">radio_unnoticed_no</property>
@@ -776,7 +809,7 @@ You might need to go unnoticed if:
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="padding">6</property>
-            <property name="position">3</property>
+            <property name="position">6</property>
           </packing>
         </child>
       </object>
@@ -795,7 +828,7 @@ You might need to go unnoticed if:
         <property name="receives-default">True</property>
         <property name="halign">end</property>
         <property name="valign">end</property>
-        <property name="vexpand">False</property>
+        <property name="vexpand">True</property>
         <property name="use-underline">True</property>
         <signal name="clicked" handler="cb_step_hide_btn_connect_clicked" swapped="no"/>
         <style>
