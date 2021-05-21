@@ -107,45 +107,54 @@
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkBox">
+          <object class="GtkRadioButton" id="step_bridge_radio_default">
             <property name="visible">True</property>
-            <property name="can-focus">False</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
             <property name="margin-bottom">12</property>
+            <property name="draw-indicator">True</property>
+            <property name="group">step_bridge_radio_none</property>
+            <signal name="toggled" handler="cb_step_bridge_radio_changed" swapped="no"/>
             <child>
-              <object class="GtkRadioButton" id="step_bridge_radio_default">
-                <property name="label" translatable="yes">Use a default bridge</property>
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">False</property>
-                <property name="draw-indicator">True</property>
-                <property name="group">step_bridge_radio_none</property>
-                <signal name="toggled" handler="cb_step_bridge_radio_changed" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBoxText" id="step_bridge_combo">
-                <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can-focus">False</property>
-                <property name="halign">center</property>
-                <property name="valign">start</property>
-                <property name="active">0</property>
-                <property name="button-sensitivity">on</property>
-                <items>
-                  <item id="obfs4" translatable="yes">obfs4 (recommended)</item>
-                  <item id="meek_lite" translatable="yes">meek</item>
-                </items>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin-start">6</property>
+                    <property name="label" translatable="yes">Use a default bridge</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkComboBoxText" id="step_bridge_combo">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">center</property>
+                    <property name="valign">start</property>
+                    <property name="margin-start">12</property>
+                    <property name="active">0</property>
+                    <property name="button-sensitivity">on</property>
+                    <items>
+                      <item id="obfs4" translatable="yes">obfs4 (recommended)</item>
+                      <item id="meek_lite" translatable="yes">meek</item>
+                    </items>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
             </child>
           </object>
           <packing>
@@ -155,15 +164,16 @@
           </packing>
         </child>
         <child>
-          <object class="GtkRadioButton" id="step_bridge_radio_new">
-            <property name="label" translatable="yes">Request a new bridge</property>
+          <placeholder/>
+        </child>
+        <child>
+          <object class="GtkRadioButton" id="step_bridge_radio_none">
+            <property name="label" translatable="yes">None</property>
             <property name="can-focus">True</property>
             <property name="receives-default">False</property>
             <property name="halign">start</property>
-            <property name="margin-bottom">12</property>
+            <property name="active">True</property>
             <property name="draw-indicator">True</property>
-            <property name="group">step_bridge_radio_none</property>
-            <signal name="toggled" handler="cb_step_bridge_radio_changed" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -172,14 +182,39 @@
           </packing>
         </child>
         <child>
+          <object class="GtkRadioButton" id="step_bridge_radio_new">
+            <property name="can-focus">True</property>
+            <property name="receives-default">False</property>
+            <property name="halign">start</property>
+            <property name="margin-bottom">12</property>
+            <property name="draw-indicator">True</property>
+            <property name="group">step_bridge_radio_none</property>
+            <signal name="toggled" handler="cb_step_bridge_radio_changed" swapped="no"/>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">start</property>
+                <property name="margin-start">6</property>
+                <property name="label" translatable="yes">Request a new bridge</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-bottom">12</property>
             <property name="vexpand">True</property>
             <property name="orientation">vertical</property>
             <child>
               <object class="GtkRadioButton" id="step_bridge_radio_type">
-                <property name="label" translatable="yes">Type in a bridge that I already know</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">False</property>
@@ -187,6 +222,15 @@
                 <property name="draw-indicator">True</property>
                 <property name="group">step_bridge_radio_none</property>
                 <signal name="toggled" handler="cb_step_bridge_radio_changed" swapped="no"/>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin-start">6</property>
+                    <property name="label" translatable="yes">Type in a bridge that I already know</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -200,7 +244,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
-                <property name="margin-start">18</property>
+                <property name="margin-start">12</property>
                 <property name="margin-bottom">6</property>
                 <property name="label" translatable="yes">Currently in Tails, only obfs4 bridges hide that you are using Tor.
 
@@ -222,6 +266,7 @@ To request obfs4 bridges, you can send an empty email to
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
+                <property name="margin-start">30</property>
                 <property name="shadow-type">in</property>
                 <property name="min-content-height">60</property>
                 <child>
@@ -288,21 +333,7 @@ To request obfs4 bridges, you can send an empty email to
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkRadioButton" id="step_bridge_radio_none">
-            <property name="label" translatable="yes">None</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">False</property>
-            <property name="active">True</property>
-            <property name="draw-indicator">True</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </object>
@@ -657,6 +688,7 @@ Tor relays are servers operated by different organizations and volunteers around
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="halign">start</property>
                 <property name="margin-start">6</property>
                 <property name="label" translatable="yes">&lt;b&gt;Configure Tor automatically (easier)&lt;/b&gt;</property>
                 <property name="use-markup">True</property>
@@ -677,7 +709,7 @@ Tor relays are servers operated by different organizations and volunteers around
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="halign">start</property>
-            <property name="margin-start">24</property>
+            <property name="margin-start">30</property>
             <property name="label" translatable="yes">We recommend configuring Tor automatically if:
  - You are connecting from a public Wi-Fi network.
  - Connecting to Tor might be blocked in your country but using Tor is not criminalized.</property>
@@ -758,6 +790,7 @@ Tor relays are servers operated by different organizations and volunteers around
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="halign">start</property>
                 <property name="valign">baseline</property>
                 <property name="margin-start">6</property>
                 <property name="hexpand">False</property>
@@ -784,7 +817,7 @@ Tor relays are servers operated by different organizations and volunteers around
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="halign">start</property>
-            <property name="margin-start">24</property>
+            <property name="margin-start">30</property>
             <property name="label" translatable="yes">You might need to go unnoticed if:
  - Using Tor might look suspicious to someone monitoring your home or work network.
  - Using Tor is criminalized in your country.</property>
