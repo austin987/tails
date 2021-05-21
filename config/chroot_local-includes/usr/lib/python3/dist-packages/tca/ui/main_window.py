@@ -687,8 +687,7 @@ class TCAMainWindow(
         Gtk.main_quit()
         return False
 
-    def on_link_help_clicked(self, linkbutton):
-        uri: str = linkbutton.get_uri()
+    def on_link_help_clicked(self, label, uri: str):
         self.app.portal.call_async("open-documentation", ["--force-local", uri])
 
     def on_network_changed(self):
