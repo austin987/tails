@@ -35,6 +35,11 @@ if __name__ == "__main__":
         "--active", action="store_true", help="Only consider active users"
     )
     parser.add_argument(
+        "--deactivated",
+        action="store_true",
+        help="Only consider deactivated users",
+    )
+    parser.add_argument(
         "--min-creation-age",
         type=django.utils.dateparse.parse_duration,
         required=True,
@@ -73,6 +78,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.deactivated and args.active:
+        sys.exit("Cannot use --deactivated and --active at the same time")
+
     if args.deactivate and args.delete:
         sys.exit("Cannot use --deactivate and --delete at the same time")
 
@@ -105,6 +113,14 @@ if __name__ == "__main__":
 
     for user in users:
         user_desc = f"{user.username} (id={user.id})"
+
+        if args.deactivated and user.state != "deactivated":
+            log.debug(
+                "User %s is not deactivated (state: %s) ⇒ skipping",
+                user_desc,
+                user.state,
+            )
+            continue
 
         if dateutil.parser.isoparse(user.created_at) < max_creation_date:
             log.info(
