@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--action",
         type=str,
-        help="Action to take on selected users, among: deactivate, block, delete",
+        help="Action to take on selected users, among: deactivate, block, deactivate-or-block, delete",
     )
 
     # General behavior control
@@ -284,6 +284,27 @@ if __name__ == "__main__":
                 )
                 if not args.dry_run:
                     user.block()
+        elif args.action == "deactivate-or-block":
+            if user.state in ["blocked", "deactivated"]:
+                log.debug("User %s is already %s", user_desc, user.state)
+            else:
+                log.info(
+                    "Deactivating user %s (previous state: %s)",
+                    user_desc,
+                    user.state,
+                )
+                if not args.dry_run:
+                    try:
+                        user.deactivate()
+                    # The GitLab API forbids deactivating a user who
+                    # has been active in the past 90 days, so block them.
+                    except gitlab.exceptions.GitlabDeactivateError:
+                        log.info(
+                            "Deactivating user %s (previous state: %s) failed, so blocking them",
+                            user_desc,
+                            user.state,
+                        )
+                        user.block()
         elif args.action == "delete":
             raise NotImplementedError("User deletion is not implemented yet.")
         else:
