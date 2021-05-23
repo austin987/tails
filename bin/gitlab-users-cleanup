@@ -151,6 +151,8 @@ if __name__ == "__main__":
     for user in users:
         user_desc = f"{user.username} (id={user.id})"
 
+        # Filter out users we don't want to act upon
+
         if args.deactivated and user.state != "deactivated":
             log.debug(
                 "User %s is not deactivated (state: %s) ⇒ skipping",
@@ -257,6 +259,8 @@ if __name__ == "__main__":
                 len(issues_events),
             )
             continue
+
+        # If we reached this point, perform args.action
 
         if args.action == "deactivate":
             if user.state == "blocked":
