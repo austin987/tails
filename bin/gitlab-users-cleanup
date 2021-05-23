@@ -52,6 +52,12 @@ if __name__ == "__main__":
         help="Only consider users inactive since this duration",
     )
     parser.add_argument(
+        "--max-post-sign-up-activity",
+        type=django.utils.dateparse.parse_duration,
+        required=True,
+        help="Don't consider users who have been active for at least this duration after signing-up",
+    )
+    parser.add_argument(
         "--max-sign-in-count",
         type=int,
         default=2,
@@ -101,6 +107,8 @@ if __name__ == "__main__":
 
     max_activity_date = now - args.min_inactivity
     log.debug("Max activity date: %s", max_activity_date)
+
+    log.debug("Max post-sign-up activity: %s", args.max_post_sign_up_activity)
 
     user_filters = {"exclude_internal": True}
     if args.blocked:
@@ -154,6 +162,28 @@ if __name__ == "__main__":
                 args.min_inactivity,
             )
             continue
+
+        if (
+            user.last_activity_on is not None
+            and args.max_post_sign_up_activity is not None
+        ):
+            created_at = dateutil.parser.isoparse(user.created_at)
+            last_activity_on = dateutil.parser.isoparse(
+                user.last_activity_on + "T00Z"
+            )
+            if last_activity_on < created_at + args.max_post_sign_up_activity:
+                log.info(
+                    "User %s has not been active for more than %s after sign-up",
+                    user_desc,
+                    args.max_post_sign_up_activity,
+                )
+            else:
+                log.debug(
+                    "User %s has been active for more than %s after sign-up ⇒ skipping",
+                    user_desc,
+                    args.max_post_sign_up_activity,
+                )
+                continue
 
         if args.max_sign_in_count is not None:
             user_obj = gl.users.get(user.id)
