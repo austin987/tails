@@ -255,7 +255,10 @@ if __name__ == "__main__":
             )
             continue
 
-        issues_events = user_obj.events.list(target_type="issue")
+        events = user_obj.events.list()
+        issues_events = [
+            e for e in events if e.target_type in ["DiscussionNote", "Issue"]
+        ]
         if len(issues_events) <= args.max_issues_events:
             log.info(
                 "User %s has done less than %i operations on issues",
