@@ -80,6 +80,11 @@ if __name__ == "__main__":
         type=str,
         help="Only consider users who satisfy this search criterion",
     )
+    parser.add_argument(
+        "--email-ends-with",
+        type=str,
+        help="Only consider users whose email address ends with this string",
+    )
 
     # Actions
     parser.add_argument(
@@ -223,6 +228,13 @@ if __name__ == "__main__":
                 args.not_in_group,
             )
             continue
+
+        if args.email_ends_with is not None:
+            if user.email.endswith(args.email_ends_with):
+                log.info("User %s has an email address that ends with %s", user_desc, args.email_ends_with)
+            else:
+                log.debug("User %s has no email address that ends with %s", user_desc, args.email_ends_with)
+                continue
 
         user_obj = gl.users.get(user.id)
 
