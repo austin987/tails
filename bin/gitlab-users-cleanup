@@ -63,6 +63,12 @@ if __name__ == "__main__":
         default=2,
         help="Only consider users who have not signed-in more often than this",
     )
+    parser.add_argument(
+        "--max-issues-events",
+        type=int,
+        default=0,
+        help="Only consider users who have not acted on issues more often than this",
+    )
 
     # Actions
     parser.add_argument(
@@ -200,6 +206,21 @@ if __name__ == "__main__":
                 user_desc,
                 user_obj.sign_in_count,
                 args.max_sign_in_count,
+            )
+            continue
+
+        issues_events = user_obj.events.list(target_type="issue")
+        if len(issues_events) <= args.max_issues_events:
+            log.info(
+                "User %s has done less than %i operations on issues",
+                user_desc,
+                args.max_issues_events,
+            )
+        else:
+            log.debug(
+                "User %s has done more than %i operations on issues ⇒ skipping",
+                user_desc,
+                args.max_issues_events,
             )
             continue
 
