@@ -185,23 +185,23 @@ if __name__ == "__main__":
                 )
                 continue
 
-        if args.max_sign_in_count is not None:
-            user_obj = gl.users.get(user.id)
-            if user_obj.sign_in_count <= args.max_sign_in_count:
-                log.info(
-                    "User %s has signed-in %i <= %i times",
-                    user_desc,
-                    user_obj.sign_in_count,
-                    args.max_sign_in_count,
-                )
-            else:
-                log.debug(
-                    "User %s has signed-in %i > %i times ⇒ skipping",
-                    user_desc,
-                    user_obj.sign_in_count,
-                    args.max_sign_in_count,
-                )
-                continue
+        user_obj = gl.users.get(user.id)
+
+        if user_obj.sign_in_count <= args.max_sign_in_count:
+            log.info(
+                "User %s has signed-in %i <= %i times",
+                user_desc,
+                user_obj.sign_in_count,
+                args.max_sign_in_count,
+            )
+        else:
+            log.debug(
+                "User %s has signed-in %i > %i times ⇒ skipping",
+                user_desc,
+                user_obj.sign_in_count,
+                args.max_sign_in_count,
+            )
+            continue
 
         if args.deactivate:
             if user.state == "blocked":
