@@ -69,6 +69,12 @@ if __name__ == "__main__":
         default=0,
         help="Only consider users who have not acted on issues more often than this",
     )
+    parser.add_argument(
+        "--not-in-group",
+        type=str,
+        default="contributors-team",
+        help="Only consider users who are not members of this group",
+    )
 
     # Actions
     parser.add_argument(
@@ -115,6 +121,18 @@ if __name__ == "__main__":
     log.debug("Max activity date: %s", max_activity_date)
 
     log.debug("Max post-sign-up activity: %s", args.max_post_sign_up_activity)
+
+    if args.not_in_group is not None:
+        group = [
+            g
+            for g in gl.groups.list(all=True)
+            # Disambiguate between groups whose names share a common prefix
+            if g.full_path == args.not_in_group
+        ][0]
+        group_members_ids = [m.id for m in group.members.all(all=True)]
+    else:
+        group_members_ids = []
+    log.debug("Group members: %s", group_members_ids)
 
     user_filters = {
         "exclude_internal": True,
@@ -193,6 +211,14 @@ if __name__ == "__main__":
                     args.max_post_sign_up_activity,
                 )
                 continue
+
+        if user.id in group_members_ids:
+            log.info(
+                "User %s is in group %s ⇒ skipping",
+                user_desc,
+                args.not_in_group,
+            )
+            continue
 
         user_obj = gl.users.get(user.id)
 
