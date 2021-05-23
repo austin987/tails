@@ -88,6 +88,9 @@ if __name__ == "__main__":
         help="Deactivate the selected users",
     )
     parser.add_argument(
+        "--block", action="store_true", help="Block the selected users"
+    )
+    parser.add_argument(
         "--delete", action="store_true", help="Delete the selected users"
     )
 
@@ -104,8 +107,14 @@ if __name__ == "__main__":
     if args.deactivated and args.active:
         sys.exit("Cannot use --deactivated and --active at the same time")
 
-    if args.deactivate and args.delete:
-        sys.exit("Cannot use --deactivate and --delete at the same time")
+    if (
+        (args.deactivate and args.delete)
+        or (args.deactivate and args.block)
+        or (args.delete and args.block)
+    ):
+        sys.exit(
+            "Cannot use more than one of --deactivate, --delete, and --block at the same time"
+        )
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
@@ -276,5 +285,16 @@ if __name__ == "__main__":
                 )
                 if not args.dry_run:
                     user.deactivate()
+        elif args.block:
+            if user.state == "blocked":
+                log.debug("User %s is already blocked", user_desc)
+            else:
+                log.info(
+                    "Blocking user %s (previous state: %s)",
+                    user_desc,
+                    user.state,
+                )
+                if not args.dry_run:
+                    user.block()
         elif args.delete:
             raise NotImplementedError("User deletion is not implemented yet.")
