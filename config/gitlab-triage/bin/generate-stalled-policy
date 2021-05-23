@@ -12,11 +12,17 @@ PYTHON_GITLAB_CONFIG_FILE = os.getenv('PYTHON_GITLAB_CONFIG_FILE',
 
 PYTHON_GITLAB_NAME = os.getenv('GITLAB_NAME', default='TailsGardener')
 
+user_filters = {
+    "exclude_internal": True,
+    "active": True,
+}
+
 gl = gitlab.Gitlab.from_config(PYTHON_GITLAB_NAME,
                                config_files=[PYTHON_GITLAB_CONFIG_FILE])
 gl.auth()
+
 usernames = [user.username for user in gl.users.list(
-    all=True
+    all=True, **user_filters
 )]
 
 env = Environment(loader=FileSystemLoader('config/gitlab-triage/templates'),
