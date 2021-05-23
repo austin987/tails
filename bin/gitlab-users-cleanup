@@ -75,6 +75,11 @@ if __name__ == "__main__":
         default="contributors-team",
         help="Only consider users who are not members of this group",
     )
+    parser.add_argument(
+        "--search",
+        type=str,
+        help="Only consider users who satisfy this search criterion",
+    )
 
     # Actions
     parser.add_argument(
@@ -142,6 +147,9 @@ if __name__ == "__main__":
         user_filters["blocked"] = True
     if args.active:
         user_filters["active"] = True
+    if args.search is not None:
+        user_filters["search"] = args.search
+
     users = gl.users.list(all=True, **user_filters)
 
     log.debug("Users: %s", users)
