@@ -83,15 +83,9 @@ if __name__ == "__main__":
 
     # Actions
     parser.add_argument(
-        "--deactivate",
-        action="store_true",
-        help="Deactivate the selected users",
-    )
-    parser.add_argument(
-        "--block", action="store_true", help="Block the selected users"
-    )
-    parser.add_argument(
-        "--delete", action="store_true", help="Delete the selected users"
+        "--action",
+        type=str,
+        help="Action to take on selected users, among: deactivate, block, delete",
     )
 
     # General behavior control
@@ -106,15 +100,6 @@ if __name__ == "__main__":
 
     if args.deactivated and args.active:
         sys.exit("Cannot use --deactivated and --active at the same time")
-
-    if (
-        (args.deactivate and args.delete)
-        or (args.deactivate and args.block)
-        or (args.delete and args.block)
-    ):
-        sys.exit(
-            "Cannot use more than one of --deactivate, --delete, and --block at the same time"
-        )
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
@@ -273,7 +258,7 @@ if __name__ == "__main__":
             )
             continue
 
-        if args.deactivate:
+        if args.action == "deactivate":
             if user.state == "blocked":
                 log.debug(
                     "User %s is already blocked, cannot deactivate", user_desc
@@ -288,7 +273,7 @@ if __name__ == "__main__":
                 )
                 if not args.dry_run:
                     user.deactivate()
-        elif args.block:
+        elif args.action == "block":
             if user.state == "blocked":
                 log.debug("User %s is already blocked", user_desc)
             else:
@@ -299,5 +284,7 @@ if __name__ == "__main__":
                 )
                 if not args.dry_run:
                     user.block()
-        elif args.delete:
+        elif args.action == "delete":
             raise NotImplementedError("User deletion is not implemented yet.")
+        else:
+            sys.exit("Unsupported action: %s" % args.action)
