@@ -123,18 +123,20 @@ def main():
 
 def get_zenity_cmd() -> list:
     _ = gettext.gettext
+    title = _(tca.config.APPLICATION_TITLE)
+    textlines = [
+        _("You turned on Offline Mode in the Welcome Screen."),
+        _("It is impossible to connect to Tor in Offline Mode."),
+        _("To connect to Tor and the Internet, restart Tails without Offline Mode."),
+    ]
     zenity = [
         "zenity",
         "--error",
         "--no-wrap",
         "--title",
-        _(tca.config.APPLICATION_TITLE),
+        title,
         "--text",
-        _(
-            "You are in Offline mode, "
-            "therefore you cannot use Tor Connection assistant.\n\n"
-            "Reboot and enable networking if you want to connect to Tor."
-        ),
+        "\n".join(textlines),
     ]
     return zenity
 

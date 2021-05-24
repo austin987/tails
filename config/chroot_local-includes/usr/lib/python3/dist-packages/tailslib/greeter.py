@@ -22,10 +22,10 @@ def _greeter_sh_wrapper(fname: str, variable: str) -> str:
     return output.decode("ascii")
 
 
-
 def get_greeter_variable(variable: str) -> str:
     fname = variable_to_file[variable]
     return _greeter_sh_wrapper(fname, variable)
+
 
 def get_greeter_variable_bool(variable: str) -> bool:
     v = get_greeter_variable(variable)
