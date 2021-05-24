@@ -141,6 +141,10 @@ class StepChooseHideMixin:
         widget = self.builder.get_object("unnoticed_yes_help")
         widget.set_visible(not widget.is_visible())
 
+    def cb_toggle_help_bridges(self, user_data=None):
+        widget = self.builder.get_object("bridges_help")
+        widget.set_visible(not widget.is_visible())
+
 
 class StepChooseBridgeMixin:
     def before_show_bridge(self):

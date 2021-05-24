@@ -789,13 +789,53 @@ Someone monitoring your Internet connection could identify this online traffic a
             <property name="margin-top">6</property>
             <property name="hexpand">False</property>
             <property name="vexpand">False</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkCheckButton" id="radio_unnoticed_no_bridge">
-                <property name="label" translatable="yes">Configure a Tor bridge</property>
+              <object class="GtkBox" id="step_hide_bridge_heading">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">False</property>
-                <property name="draw-indicator">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">start</property>
+                <property name="valign">start</property>
+                <property name="margin-top">6</property>
+                <property name="margin-bottom">6</property>
+                <property name="hexpand">False</property>
+                <property name="vexpand">False</property>
+                <child>
+                  <object class="GtkCheckButton" id="radio_unnoticed_no_bridge">
+                    <property name="label" translatable="yes">Configure a Tor bridge</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="draw-indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="step_hide_link_helpbridge">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <property name="halign">end</property>
+                    <property name="relief">none</property>
+                    <signal name="activate-link" handler="cb_toggle_help_bridges" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">tails-help</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -804,21 +844,16 @@ Someone monitoring your Internet connection could identify this online traffic a
               </packing>
             </child>
             <child>
-              <object class="GtkLinkButton" id="step_hide_link_helpbridge">
+              <object class="GtkLabel" id="bridges_help">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-                <property name="halign">end</property>
-                <property name="relief">none</property>
-                <property name="uri">doc/first_steps/welcome_screen/bridge_mode</property>
-                <signal name="activate-link" handler="on_link_help_clicked" swapped="no"/>
-                <child>
-                  <object class="GtkImage">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">tails-help</property>
-                  </object>
-                </child>
+                <property name="can-focus">False</property>
+                <property name="margin-start">24</property>
+                <property name="label" translatable="yes">Tor bridges are hidden Tor relays. Use a bridge as your first Tor relay if connecting to Tor is blocked, for example in China, on some public networks, or parental controls.
+
+Choose this option if you already know that you need bridges. Otherwise, Tails will autodetect whether you need bridges to connect to Tor from your local network.</property>
+                <property name="wrap">True</property>
+                <property name="max-width-chars">70</property>
+                <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="expand">False</property>
