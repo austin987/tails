@@ -410,6 +410,7 @@ class TorLauncherUtils:
         log.debug("applying TorConf: %s", tor_conf)
         self.stem_controller.set_options(tor_conf)
         self.stem_controller.set_conf("DisableNetwork", "0")
+        self.stem_controller.save_conf()
 
     def tor_bootstrap_phase(self) -> int:
         resp = self.stem_controller.get_info("status/bootstrap-phase")
