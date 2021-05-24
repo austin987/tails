@@ -584,6 +584,9 @@ suite should be ready, so it is time to:
 
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
 
+1. Take note of the value of `$SOURCE_DATE_EPOCH`: you'll need it to "Build the
+   Incremental Upgrade Kits on Jenkins" until [[!tails_ticket 18318]] is solved.
+
 1. tag the release *again*, with all included files in:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
@@ -847,7 +850,8 @@ Build the Incremental Upgrade Kits on Jenkins
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
     - `SOURCE_DATE_EPOCH`: the value of `$SOURCE_DATE_EPOCH` in your
-      release environment
+      release environment, i.e. the same value you are using to
+      "Build the Incremental Upgrade Kits locally"
     - `NEW_VERSION`: the value of `$VERSION` in your release environment
     - `EXTRA_ARGS`: leave it blank
 
@@ -1381,11 +1385,14 @@ Check if every active mirror in the pool has the new version:
 	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
-Ask the mirrors team to disable mirrors that are lagging behind:
+To disable mirrors that are lagging behind:
 
- - either over email: <tails-mirrors@boum.org>
- - or by creating a merge request that modifies the
-   [mirrors pool](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json)
+1. Set their weight to 0 in the
+   [mirrors pool](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json).
+2. Push to the [[!tails_gitlab tails/mirror-pool]] `master` branch.
+3. Verify that the CI pipeline passed on [[!tails_gitlab tails/mirror-pool/-/pipelines]].
+4. Notify <tails-mirrors@boum.org>, so they communicate with the operators of the
+   outdated mirrors.
 
 Sanity checks
 -------------
