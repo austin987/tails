@@ -48,10 +48,9 @@ def main():
         print("TCA is already running", file=sys.stderr)
         return
 
-    confdir = Path("~%s/.config/tca/" % LIVE_USERNAME).expanduser()
+    confdir = Path("/var/lib/tca/").expanduser()
     conffile = confdir / "tca.conf"
     confdir.mkdir(mode=0o700, exist_ok=True)
-    shutil.chown(str(confdir), user=0, group=0)
     confdir.chmod(0o700)
     conffile.touch(mode=0o600)
 
