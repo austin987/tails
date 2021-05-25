@@ -460,8 +460,8 @@ end
 def drop_markup(str)
   done, first_tag, rest = str.partition(%r{<([^/>]+)>})
   return str if first_tag.empty?
-  closer = %r{</#{Regexp.last_match[1]}>}
-  if rest.match(closer)
+  closer = "</#{Regexp.last_match[1]}>"
+  if rest.include?(closer)
     rest.sub!(closer, '')
   else
     done += first_tag
