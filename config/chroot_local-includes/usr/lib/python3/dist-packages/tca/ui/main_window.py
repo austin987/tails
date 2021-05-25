@@ -289,21 +289,21 @@ class StepConnectProgressMixin:
             if not self.state["hide"]["bridge"]:
                 self.app.configurator.tor_connection_config.disable_bridges()
                 self.get_object("label_status").set_text(
-                    _("Connecting to Tor without bridges...")
+                    _("Connecting to Tor without bridges…")
                 )
             elif self.state["bridge"]["kind"] == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
                 )
                 self.get_object("label_status").set_text(
-                    _("Connecting with default bridges...")
+                    _("Connecting to Tor with default bridges…")
                 )
             elif self.state["bridge"]["bridges"]:
                 self.app.configurator.tor_connection_config.enable_bridges(
                     self.state["bridge"]["bridges"]
                 )
                 self.get_object("label_status").set_text(
-                    _("Connecting with custom bridges...")
+                    _("Connecting to Tor with custom bridges…")
                 )
             else:
                 raise ValueError(
@@ -320,7 +320,7 @@ class StepConnectProgressMixin:
                 only_type="obfs4"
             )
             self.get_object("label_status").set_text(
-                _("Connecting to Tor with default bridges...")
+                _("Connecting to Tor with default bridges…")
             )
             _apply_proxy()
             self.connection_progress.set_fraction(
@@ -687,8 +687,7 @@ class TCAMainWindow(
         Gtk.main_quit()
         return False
 
-    def on_link_help_clicked(self, linkbutton):
-        uri: str = linkbutton.get_uri()
+    def on_link_help_clicked(self, label, uri: str):
         self.app.portal.call_async("open-documentation", ["--force-local", uri])
 
     def on_network_changed(self):
