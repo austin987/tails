@@ -6,13 +6,18 @@ elevates to sudo, then connect to whatever is needed and drop privileges again.
 """
 import os
 import sys
+import gettext
 import shutil
 from pathlib import Path
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, Popen
 from logging import getLogger, basicConfig
+from typing import List
 
-from tailslib.gnome import gnome_env_vars
 from tailslib import LIVE_USERNAME
+from tailslib.gnome import gnome_env_vars
+from tailslib.greeter import get_greeter_variable_bool
+
+import tca.config
 
 NETNS = "torlaunch"
 log = getLogger(__name__)
@@ -22,6 +27,7 @@ def main():
     if os.getuid() != 0:
         os.execvpe("sudo", ["sudo", "-n", __file__] + sys.argv[1:], env=os.environ)
         return
+
     python_bin = "/usr/bin/python3"
     program = "/usr/lib/python3/dist-packages/tca/application.py"
 
@@ -63,8 +69,9 @@ def main():
         "FILE:%s:r+" % conffile,
         "-c",
         "UNIX:%s" % portalsock,
+        "--",
     ]
-    ch_netns = ["ip", "netns", "exec", NETNS]
+    ch_netns = ["/bin/ip", "netns", "exec", NETNS]
     runuser = ["/sbin/runuser", "-u", LIVE_USERNAME]
     # base bwrap sharing most of the system
     bwrap = ["bwrap", "--bind", "/", "/", "--proc", "/proc", "--dev", "/dev"]
@@ -84,7 +91,11 @@ def main():
         # uncomment this if you want to tweak the UI
         # 'GTK_DEBUG=interactive',
     ]
-    tcacmd = [python_bin, program]
+    if get_greeter_variable_bool("TAILS_NETWORK"):
+        tcacmd = [python_bin, program]
+    else:
+        tcacmd = get_display_error_cmd()
+        connect_drop = []
 
     # We run tca with several wrappers to accomplish our privilege-isolation-magic:
     # connect_drop: opens a privileged file and pass FD to new process
@@ -98,7 +109,6 @@ def main():
 
     args = [
         *connect_drop,
-        "--",
         *ch_netns,
         *runuser,
         "--",
@@ -110,6 +120,26 @@ def main():
     log.info("%s", args)
 
     os.execv(args[0], args)
+
+
+def get_display_error_cmd() -> List[str]:
+    _ = gettext.gettext
+    title = _(tca.config.APPLICATION_TITLE)
+    textlines = [
+        _("You turned on Offline Mode in the Welcome Screen."),
+        _("It is impossible to connect to Tor in Offline Mode."),
+        _("To connect to Tor and the Internet, restart Tails without Offline Mode."),
+    ]
+    zenity = [
+        "zenity",
+        "--error",
+        "--no-wrap",
+        "--title",
+        title,
+        "--text",
+        "\n".join(textlines),
+    ]
+    return zenity
 
 
 if __name__ == "__main__":
