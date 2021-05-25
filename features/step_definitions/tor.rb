@@ -361,18 +361,15 @@ def tca_configure(mode, &block)
   step 'the Tor Connection Assistant is running'
   case mode
   when :easy
-    radio_button_label = /^Configure Tor automatically/
+    radio_button_label = 'Connect to Tor automatically (easier)'
   when :hide
-    radio_button_label = /^Hide to my local network that I'm using Tor/
+    radio_button_label = "Hide to my local network that I\\'m connecting to Tor (safer)"
   else
     raise "bad TCA configuration mode '#{mode}'"
   end
   # XXX: We generally run this right after TCA has started, apparently
   # so early that clicking the radio button doesn't always work, so we
   # retry. Can this be fixed in TCA instead some how?
-  # XXX: The use of regexes that are partial label strings make it
-  # impossible to use translate() (it needs the full string) in order
-  # to support non-Enlgish locales. See #18320.
   radio_button = tor_connection_assistant.child(
     radio_button_label, roleName: 'radio button'
   )
@@ -391,12 +388,8 @@ def tca_configure(mode, &block)
       failure_reported = true
       done = true
     else
-      # See #18320.
-      too_long_label = "Connected to Tor successfully
-
-You can now browse the Internet anonymously and uncensored"
       done = tor_connection_assistant.child?(
-        too_long_label, roleName: 'label', retry: false, showingOnly: true
+        'Connected to Tor successfully', roleName: 'label', retry: false, showingOnly: true
       )
     end
     done
