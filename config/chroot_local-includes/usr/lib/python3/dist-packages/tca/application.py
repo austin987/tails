@@ -4,6 +4,7 @@ import sys
 import logging
 import gettext
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from pathlib import Path
 
 from stem.control import Controller
 import prctl
@@ -29,6 +30,7 @@ from gi.repository import GLib, Gtk, Gio  # noqa: E402
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
+TOR_HAS_BOOTSTRAPPED_PATH = Path('/run/tor-has-bootstrapped/done')
 
 class TCAApplication(Gtk.Application):
     """main controller for TCA."""
@@ -54,14 +56,39 @@ class TCAApplication(Gtk.Application):
         self.window = None
         self.sys_dbus = dbus.SystemBus()
         self.last_nm_state = None
+        self._tor_is_working = TOR_HAS_BOOTSTRAPPED_PATH.exists()
+
+    def do_monitor_tor_is_working(self):
+        # init tor-ready monitoring
+        print('MONITORO')
+        f = Gio.File.new_for_path(str(TOR_HAS_BOOTSTRAPPED_PATH))
+        monitor = f.monitor(Gio.FileMonitorFlags.NONE, None)
+        self._tor_is_working_monitor = monitor  # otherwise it will get GC'ed
+        monitor_id = monitor.connect('changed', self.check_tor_is_working)
+        print(monitor_id)
+
+        return False
+
+    def check_tor_is_working(self, monitor, _file, otherfile, event):
+        if event == Gio.FileMonitorEvent.CREATED:
+            self._tor_is_working = True
+        elif event == Gio.FileMonitorEvent.DELETED:
+            self._tor_is_working = False
+        else:
+            return
+        self.log.info("tor_is_working = %s", self._tor_is_working)
+        GLib.idle_add(self.window.on_tor_working_changed, self.is_tor_working)
 
     @property
-    def is_network_link_ok(self):
+    def is_tor_working(self) -> bool:
+        return bool(self._tor_is_working)
+
+    @property
+    def is_network_link_ok(self) -> bool:
         return self.last_nm_state is not None and self.last_nm_state >= 60
 
     def on_portal_response(self, portal, unique_id, result):
         self.log.debug("response<%d> from portal : %s", unique_id, result)
-
     def on_portal_error(self, portal, unique_id, error):
         self.log.error("response-error<%d> from portal : %s", unique_id, error)
 
@@ -93,6 +120,7 @@ class TCAApplication(Gtk.Application):
         self.add_action(action)
 
         GLib.timeout_add(1, self.do_fetch_nm_state)
+        GLib.timeout_add(1, self.do_monitor_tor_is_working)
 
     def do_fetch_nm_state(self):
         def handle_hello_error(*args, **kwargs):
