@@ -11,6 +11,7 @@ import shutil
 from pathlib import Path
 from subprocess import check_output, CalledProcessError, Popen
 from logging import getLogger, basicConfig
+from typing import List
 
 from tailslib import LIVE_USERNAME
 from tailslib.gnome import gnome_env_vars
@@ -93,7 +94,7 @@ def main():
     if get_greeter_variable_bool("TAILS_NETWORK"):
         tcacmd = [python_bin, program]
     else:
-        tcacmd = get_zenity_cmd()
+        tcacmd = get_display_error_cmd()
         connect_drop = []
 
     # We run tca with several wrappers to accomplish our privilege-isolation-magic:
@@ -121,7 +122,7 @@ def main():
     os.execv(args[0], args)
 
 
-def get_zenity_cmd() -> list:
+def get_display_error_cmd() -> List[str]:
     _ = gettext.gettext
     title = _(tca.config.APPLICATION_TITLE)
     textlines = [
