@@ -30,10 +30,10 @@ If you want to test tor-not-working-but-default-bridges-are-working, you can use
 Reset TCA state
 -------------
 
-tca state is kept in `/home/amnesia/.config/tca/` . That directory is owned by root, and a regular user can't
+tca state is kept in `/var/lib/tca/` . That directory is owned by root, and a regular user can't
 access, nor delete it.
 
-    sudo rm -rf /home/amnesia/.config/tca/
+    sudo rm -rf /var/lib/tca/
 
 Really restart tor
 ---------------------
