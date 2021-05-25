@@ -363,7 +363,7 @@ def tca_configure(mode, &block)
   when :easy
     radio_button_label = 'Connect to Tor automatically (easier)'
   when :hide
-    radio_button_label = "Hide to my local network that I\\'m connecting to Tor (safer)"
+    radio_button_label = "Hide to my local network that I'm connecting to Tor (safer)"
   else
     raise "bad TCA configuration mode '#{mode}'"
   end
