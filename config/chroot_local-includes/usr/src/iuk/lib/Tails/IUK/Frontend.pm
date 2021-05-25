@@ -620,10 +620,10 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             @cmd = ('sudo', '-n', '-u', 'tails-iuk-get-target-file', @cmd);
         }
         my ($exit_code, $stderr);
-        my $success = 1;
+        my $success = 0;
 
         if ($self->batch) {
-            IPC::Run::run \@cmd, '2>', \$stderr or $success = 0;
+            $success = 1 if IPC::Run::run \@cmd, '2>', \$stderr;
             $exit_code = $?;
         }
         else {
@@ -685,7 +685,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                 }
             };
         }
-        $success or $self->fatal(
+        $success and defined $exit_code and $exit_code == 0 or $self->fatal(
             errf("<b>%{error_msg}s</b>\n\n%{details}s",
                  {
                      error_msg => __(
