@@ -192,8 +192,13 @@ test-python-doctest:
 
 test-tca:
   script:
-    - apt-get -qy install python3 python3-stem python3-gi gir1.2-gtk-3.0 python3-prctl
+    - apt-get -qy install python3 python3-stem python3-gi gir1.2-gtk-3.0 python3-prctl python3-tinyrpc
     - 'cd config/chroot_local-includes/usr/lib/python3/dist-packages ; find tca -name "*.py" -print0 | xargs -0 -L1 env PYTHONPATH=. python3 -m doctest'
+
+test-tailslib:
+  script:
+    - apt-get -qy install python3 python3-atomicwrites python3-sh git
+    - 'cd config/chroot_local-includes/usr/lib/python3/dist-packages ; find tailslib -name "*.py" -print0 | grep --null-data -v -e netnsdrop.py -e gnome.py | xargs -0 -L1 env PYTHONPATH=. python3 -m doctest'
 
 test-whisperback:
   script:
