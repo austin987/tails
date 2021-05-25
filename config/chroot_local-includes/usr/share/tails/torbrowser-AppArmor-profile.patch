@@ -1,8 +1,8 @@
 diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index 57c0359..e89da56 100644
+index 60e2067..515e5cd 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
-@@ -1,11 +1,12 @@
+@@ -1,7 +1,7 @@
  #include <tunables/global>
  #include <tunables/torbrowser>
  
@@ -11,12 +11,7 @@ index 57c0359..e89da56 100644
  
  profile torbrowser_firefox @{torbrowser_firefox_executable} {
    #include <abstractions/audio>
-   #include <abstractions/gnome>
-+  #include <abstractions/ibus>
- 
-   # Uncomment the following lines if you want to give the Tor Browser read-write
-   # access to most of your personal files.
-@@ -14,6 +15,7 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -16,6 +16,7 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
  
    # Audio support
    /{,usr/}bin/pulseaudio Pixr,
@@ -24,7 +19,7 @@ index 57c0359..e89da56 100644
  
    #dbus,
    network netlink raw,
-@@ -29,6 +31,8 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -31,6 +32,8 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny /etc/passwd r,
    deny /etc/group r,
    deny /etc/mailcap r,
@@ -33,7 +28,7 @@ index 57c0359..e89da56 100644
  
    /etc/machine-id r,
    /var/lib/dbus/machine-id r,
-@@ -44,40 +48,35 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -47,40 +50,35 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -101,8 +96,8 @@ index 57c0359..e89da56 100644
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -101,22 +100,20 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
-   /sys/devices/system/node/node[0-9]*/meminfo r,
+@@ -107,22 +105,20 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+   /sys/fs/cgroup/cpu,cpuacct/user.slice/cpu.cfs_quota_us r,
    deny /sys/devices/virtual/block/*/uevent r,
  
 -  # Should use abstractions/gstreamer instead once merged upstream
@@ -130,9 +125,9 @@ index 57c0359..e89da56 100644
    deny @{HOME}/.cache/fontconfig/ rw,
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
-@@ -128,6 +125,24 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -133,6 +129,24 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+   deny /run/user/[0-9]*/dconf/user rw,
    deny /usr/bin/lsb_release x,
-   deny capability sys_admin,
  
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
@@ -155,17 +150,24 @@ index 57c0359..e89da56 100644
    # Silence denial logs about PulseAudio
    deny /etc/pulse/client.conf r,
    deny /usr/bin/pulseaudio x,
-@@ -148,5 +163,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -153,11 +167,16 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    # Yubikey NEO also needs this:
    /sys/devices/**/hidraw/hidraw*/uevent r,
  
--  #include <local/torbrowser.Browser.firefox>
 +  # Deny access to global tmp directories, that's granted by the user-tmp
 +  # abstraction, which is sourced by the gnome abstraction, that we include.
 +  deny owner /var/tmp/**     rwklx,
 +  deny /var/tmp/             rwklx,
 +  deny owner /tmp/**         rwklx,
 +  deny /tmp/                 rwklx,
++
+   # Needed for Firefox sandboxing via unprivileged user namespaces
+   capability sys_admin,
+   capability sys_chroot,
+   owner @{PROC}/@{pid}/{gid,uid}_map w,
+   owner @{PROC}/@{pid}/setgroups w,
+-
+-  #include <local/torbrowser.Browser.firefox>
  }
 diff --git a/etc/apparmor.d/tunables/torbrowser b/etc/apparmor.d/tunables/torbrowser
 index 9b31139..f77e082 100644
