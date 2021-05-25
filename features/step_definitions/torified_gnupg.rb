@@ -70,11 +70,8 @@ Given /^I delete the "([^"]+)" subkey from the live user's public keyring$/ do |
 end
 
 def disable_ipv6_for_dirmngr
-  # When dirmngr connects to the Onion service run by Chutney, the
-  # isotester redirects the connection to keys.openpgp.org:11371 over
-  # IPv4 (see setup_onion_keyserver), and then keys.openpgp.org
-  # redirects us to https://keys.openpgp.org, that is resolved by
-  # dirmngr. By default we would get an IPv6 address here, which works
+  # keys.openpgp.org is resolved by dirmngr.
+  # By default we would get an IPv6 address here, which works
   # just fine in a normal Tails, but here we exit from Chutney's Tor
   # network that runs on our CI infrastructure, which is IPv4-only, so
   # that would fail. Therefore, let's ensure dirmngr only picks IPv4
