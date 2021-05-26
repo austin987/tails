@@ -25,7 +25,10 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+* `gitlab-cli jq tidy mktorrent podman python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+  - Note: if the Debian version you are running does not include all required
+    Go packages, such as [[!debpts podman]], you should be able to install
+    them from a more recent Debian release with APT pinning.
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -37,6 +40,18 @@ To release Tails you'll need some packages installed:
      are not supported by _i18nspector_ yet.
 * `i18nspector` 0.26 or newer
 * packages to [[build a local version of the website|contribute/build/website/]]
+
+System configuration
+--------------------
+
+- Enable unprivileged user namespaces
+
+  If you're running a Debian kernel older than 5.10.1-1~exp1,
+  set the `kernel.unprivileged_userns_clone` sysctl to 1:
+
+        echo 'kernel.unprivileged_userns_clone=1' \
+           | sudo tee /etc/sysctl.d/unprivileged-user-namespaces.conf && \
+        && sudo sysctl -p
 
 Configuration files
 -------------------
@@ -585,6 +600,9 @@ suite should be ready, so it is time to:
 
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
 
+1. Take note of the value of `$SOURCE_DATE_EPOCH`: you'll need it to "Build the
+   Incremental Upgrade Kits on Jenkins" until [[!tails_ticket 18318]] is solved.
+
 1. tag the release *again*, with all included files in:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
@@ -848,7 +866,8 @@ Build the Incremental Upgrade Kits on Jenkins
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
     - `SOURCE_DATE_EPOCH`: the value of `$SOURCE_DATE_EPOCH` in your
-      release environment
+      release environment, i.e. the same value you are using to
+      "Build the Incremental Upgrade Kits locally"
     - `NEW_VERSION`: the value of `$VERSION` in your release environment
     - `EXTRA_ARGS`: leave it blank
 
@@ -1441,23 +1460,20 @@ Skip this part if preparing a release candidate.
    submit a MR against [[!tails_gitlab tails/gitlab-config]]
    to create one.
 
-2. Ensure you have an up-to-date `tails:gitlab-triage-stable` Docker image:
+2. Ensure you have an up-to-date `tails:gitlab-triage-stable` container image:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo ./config/gitlab-triage/bin/ensure-up-to-date-Docker-image
+        ./config/gitlab-triage/bin/ensure-up-to-date-container-image
 
 3. Postpone to the next scheduled release any remaining open issue and merge
    request whose milestone is the version you've just released:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo \
-            VERSION="${VERSION:?}" \
-            NEXT_PLANNED_VERSION="${NEXT_PLANNED_VERSION:?}" \
-            ./bin/gitlab-triage-post-release \
-                --host-url "$(bin/gitlab-url TailsRM)" \
-                --token "$(bin/gitlab-api-token TailsRM)"
+        ./bin/gitlab-triage-post-release \
+            --host-url "$(bin/gitlab-url TailsRM)" \
+            --token "$(bin/gitlab-api-token TailsRM)"
 
 4. Finally, submit a MR against [[!tails_gitlab tails/gitlab-config]] to:
 
