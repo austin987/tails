@@ -709,7 +709,7 @@ class TCAMainWindow(
             # XXX: we should explain better that closing the window and opening it again could have a bad
             # UX in case of errors connecting.
             _(
-                "Quitting during connection will <i>not</i> stop the connection to Tor"
+                "Quitting while connecting will <i>not</i> stop the connection to Tor"
                 " and will make it harder for you to notice errors."
             )
         ]
