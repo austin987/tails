@@ -41,7 +41,92 @@ the Foundations Team's duties.
 
 # Shift
 
-## Emergency release
+## In the beginning of your shift
+
+- Check the [Tor Browser release
+  schedule](https://gitlab.torproject.org/tpo/applications/tor-browser/-/wikis/Release_Schedule). `[skip-if-emergency-release]`
+- Check the Mozilla release calendars: `[skip-if-emergency-release]`
+  * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
+  * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
+- Reply to the email sent to <tails-dev@boum.org> and
+  <tails-l10n@boum.org> by the RM for the previous release,
+  to provide any information they could not, such as: `[skip-if-emergency-release]`
+  - Code freeze date
+  - If this will be a major release: the release schedule for its RC.
+- Ask for a _Trusted Reproducer_:
+
+        ./bin/generate-call-for-trusted-reproducer \
+           --version VERSION_YOU_WILL_RELEASE
+
+- Update [[contribute/calendar]] accordingly.
+- Check if there's a
+  [[!tails_gitlab groups/tails/-/milestones desc="GitLab milestone"]]
+  with the correct due date. If it is not, create a merge request against
+  [[!tails_gitlab tails/gitlab-config]] to fix it.
+- Create an issue with the `Core Work: Technical Writing` label, about
+  writing the release notes. This also applies to betas and release
+  candidates, so you might create multiple such issues during one
+  shift.
+- The ISO images for *every* previous beta, RC, and final release
+  based on the version of Debian that will be used for the release
+  you'll be preparing.
+
+  To get the list of images you'll need, run:
+
+        ./bin/iuk-source-versions VERSION_YOU_WILL_RELEASE
+
+  For example, if you're preparing 4.4, you need the ISO images
+  for 4.0~beta1, 4.0~beta2, 4.0~rc1, 4.0, 4.1, 4.1.1, 4.2, 4.2.2, and 4.3.
+
+- Ensure the next steps are tracked in your preferred personal
+  organization tool.
+
+## Two weeks after the beginning of your shift
+
+- Ensure you have found a _Trusted Reproducer_ and write who this is
+  in the [[contribute/calendar]].
+- Create an issue with the `Core Work: Foundations Team` label,
+  about upgrading Tor Browser in the release your shift is about.
+- Check if you have enough manual testers registered.
+  If not, ping the usual testers.
+
+## The Friday before the release date
+
+Ask the Tor Browser developers when they expect they'll have
+tarballs ready.
+
+Rationale: we need to coordinate our Tails release with the Tor Browser
+developers to make sure that the Tor Browser we plan to include in our
+release is ready in time for when we build the release image. The
+Friday prior to the release is a good candidate, since it's
+around this time they usually release tarballs for testing, and it
+will still give some time for us to improvise according to their
+"delayed" schedule and arrange a contingency plan (e.g. possibly
+delaying our release a day or two). Asking for a status report a day
+or two earlier than Friday *in addition* won't hurt, too.
+
+<div class="note">
+
+Note: the Tor Browser team Cc's tails-dev@boum.org when sending QA
+requests to tor-qa@lists.torproject.org which makes this easier.
+We are also often notified of any last last-minute rebuilds, better
+ask explicitly the Tor Browser team what their plans are.
+
+</div>
+
+As soon as the new *Tor Browser* tarballs are ready, you may import
+them in a topic branch and trigger CI runs, which will save you
+some precious time on pre-release Monday. See the
+[[Upgrading the Tor Browser|contribute/release_process/tor-browser]]
+page for details.
+
+## Make the release happen
+
+No kidding. See [[contribute/release_process]].
+
+<a id="emergency-release"></a>
+
+# Emergency release
 
 This section documents what differs, when preparing an emergency release,
 from publishing a scheduled release.
@@ -100,82 +185,3 @@ By definition, an emergency release happens under timing constraints that are
 different from a scheduled release. To account for this, ignore timing
 indications below such as "Two weeks after" or "The Friday": assume everything
 is relevant shall happen as soon as reasonably possible.
-
-## In the beginning of your shift
-
-- Check the [Tor Browser release
-  schedule](https://gitlab.torproject.org/tpo/applications/tor-browser/-/wikis/Release-Schedule). `[skip-if-emergency-release]`
-- Check the Mozilla release calendars: `[skip-if-emergency-release]`
-  * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
-  * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
-- Reply to the email sent to <tails-dev@boum.org> and
-  <tails-l10n@boum.org> by the RM for the previous release,
-  to provide any information they could not, such as: `[skip-if-emergency-release]`
-  - Code freeze date
-  - If this will be a major release: the release schedule for its RC.
-- Ask for a _Trusted Reproducer_:
-
-        ./bin/generate-call-for-trusted-reproducer \
-           --version VERSION_YOU_WILL_RELEASE
-
-- Update [[contribute/calendar]] accordingly.
-- Check if there's a
-  [[!tails_gitlab groups/tails/-/milestones desc="GitLab milestone"]]
-  with the correct due date. If it is not, create a merge request against
-  [[!tails_gitlab tails/gitlab-config]] to fix it.
-- The ISO images for *every* previous beta, RC, and final release
-  based on the version of Debian that will be used for the release
-  you'll be preparing.
-
-  To get the list of images you'll need, run:
-
-        ./bin/iuk-source-versions VERSION_YOU_WILL_RELEASE
-
-  For example, if you're preparing 4.4, you need the ISO images
-  for 4.0~beta1, 4.0~beta2, 4.0~rc1, 4.0, 4.1, 4.1.1, 4.2, 4.2.2, and 4.3.
-
-- Ensure the next steps are tracked in your preferred personal
-  organization tool.
-
-## Two weeks after the beginning of your shift
-
-- Ensure you have found a _Trusted Reproducer_ and write who this is
-  in the [[contribute/calendar]].
-- Create an issue with the `Core Work: Foundations Team` label,
-  about upgrading Tor Browser in the release your shift is about.
-- Check if you have enough manual testers registered.
-  If not, ping the usual testers.
-
-## The Friday before the release date
-
-Ask the Tor Browser developers when they expect they'll have
-tarballs ready.
-
-Rationale: we need to coordinate our Tails release with the Tor Browser
-developers to make sure that the Tor Browser we plan to include in our
-release is ready in time for when we build the release image. The
-Friday prior to the release is a good candidate, since it's
-around this time they usually release tarballs for testing, and it
-will still give some time for us to improvise according to their
-"delayed" schedule and arrange a contingency plan (e.g. possibly
-delaying our release a day or two). Asking for a status report a day
-or two earlier than Friday *in addition* won't hurt, too.
-
-<div class="note">
-
-Note: the Tor Browser team Cc's tails-dev@boum.org when sending QA
-requests to tor-qa@lists.torproject.org which makes this easier.
-We are also often notified of any last last-minute rebuilds, better
-ask explicitly the Tor Browser team what their plans are.
-
-</div>
-
-As soon as the new *Tor Browser* tarballs are ready, you may import
-them in a topic branch and trigger CI runs, which will save you
-some precious time on pre-release Monday. See the
-[[Upgrading the Tor Browser|contribute/release_process/tor-browser]]
-page for details.
-
-## Make the release happen
-
-No kidding. See [[contribute/release_process]].
