@@ -259,9 +259,8 @@ class StepConnectProgressMixin:
         self.save_conf()
         self.state["progress"]["error"] = None
         self.builder.get_object("step_progress_box").show()
-        self.builder.get_object("step_progress_box_internettest").hide()
-        self.builder.get_object("step_progress_box_internetok").hide()
-        self.get_object("box_tor_direct_fail").hide()
+        for obj in ['box_start', 'box_tortestok', 'box_internetok', 'box_internettest', 'box_tor_direct_fail']:
+            self.get_object(obj).hide()
         self.connection_progress.set_fraction(0.0, allow_going_back=True)
         if not self.state["progress"]["success"]:
             self.spawn_tor_connect()
@@ -731,11 +730,12 @@ class TCAMainWindow(
             # TODO: what should we do? go to 0? go to consent question? go to error page?
             log.warn("We are not connected to Tor anymore!")
             self.change_box("error")
-            return
 
         if tor_working:
             self.state["progress"]["success"] = True
             self.change_box("progress")
+
+        self.state['progress']['success'] = tor_working
 
     def on_network_changed(self):
         if self.app.is_network_link_ok:
