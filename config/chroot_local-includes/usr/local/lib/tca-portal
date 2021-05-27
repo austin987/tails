@@ -89,12 +89,12 @@ class Handler(socketserver.StreamRequestHandler):
     MAX_LINESIZE = 1024
 
     spawn_commands = {  # some commands just mean "run this specified commands as LIVE_USERNAME, please"
-        "open-unsafebrowser": UserCommand(["sudo", "-n", "unsafe-browser"], False),
-        "open-tbb": UserCommand(["tor-browser"], False),
+        "open-unsafebrowser": UserCommand(["gtk-launch", "unsafe-browser"], False),
+        "open-tbb": UserCommand(["gtk-launch", "tor-browser"], False),
         "open-networkmonitor": UserCommand(
             ["gnome-system-monitor", "--show-resources-tab"], False
         ),
-        "open-onioncircuits": UserCommand(["onioncircuits"], False),
+        "open-onioncircuits": UserCommand(["gtk-launch", "onioncircuits"], False),
         "open-documentation": UserCommand(["tails-documentation"], True),
     }
     valid_commands = set(spawn_commands.keys())
