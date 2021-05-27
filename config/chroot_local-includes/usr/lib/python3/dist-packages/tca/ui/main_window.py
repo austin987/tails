@@ -581,7 +581,7 @@ class TCAMainWindow(
             "bridge": {},
             "proxy": {},
             "progress": {},
-            "step": "hide",
+            "step": "",
             "offline": {},
         }
         if self.app.args.debug_statefile is not None:
@@ -672,6 +672,9 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
+        if self.state["step"] == name:
+            log.debug("State was already %s, not changed", name)
+            return
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
         self.stack.set_visible_child_name(name)
@@ -700,35 +703,59 @@ class TCAMainWindow(
     def on_link_help_clicked(self, label, uri: str):
         self.app.portal.call_async("open-documentation", ["--force-local", uri])
 
-    # Called from parent application
+    # Called from parent Application {{{
 
-    def on_network_changed(self):
+    def _decide_right_step(self):
+        disable_network = bool(int(self.app.tor_info['DisableNetwork']))
         up = self.app.is_network_link_ok
+        tor_working = self.app.is_tor_working
+        step = self.state["step"]
         if not up:
             if self.state["step"] == "progress":
-                GLib.source_remove(self.timer_check)
                 self.state["offline"]["previous"] = self.state["step"]
                 self.change_box("offline")
             elif self.state["step"] in ["error", "hide"]:
                 self.state["offline"]["previous"] = self.state["step"]
                 self.change_box("offline")
-        else:
+            return
+
+        # local network is ok
+
+        if disable_network:
+            self.change_box('hide')
+            return
+
+        # tor network is enabled
+
+        if not tor_working and step == "progress" and self.state["progress"]["success"]:
+            # TODO: what should we do? go to 0? go to consent question? go to error page?
+            log.warn("We are not connected to Tor anymore!")
+            self.change_box("error")
+            return
+
+        if tor_working:
+            self.state["progress"]["success"] = True
+            self.change_box("progress")
+
+    def on_network_changed(self):
+        if self.app.is_network_link_ok:
             prev = self.state["offline"].get("previous", False)
             if prev:
                 self.change_box(prev)
+            else:
+                self.change_box('hide')
+        else:
+            self._decide_right_step()
+        return
 
     def on_tor_working_changed(self, working: bool):
-        step = self.state['step']
-        if not working and step != "progress":
-            # that's expected
-            return
-        if not working and step == 'progress' and self.state['progress']['success']:
-            # TODO: what should we do? go to 0? go to consent question? go to error page?
-            log.warn("We are not connected to Tor anymore!")
-            self.change_box('error')
-        if working:
-            self.state["progress"]["success"] = True
-            self.change_box("progress")
+        self._decide_right_step()
+
+    def on_tor_state_changed(self, tor_info: dict, changed: set):
+        """Reacts to DisableNetwork changes."""
+        self._decide_right_step()
+
+    # called from parent Application }}}
 
 
 class ConnectionProgress:
