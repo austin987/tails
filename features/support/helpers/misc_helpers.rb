@@ -456,13 +456,33 @@ ensure
   end
 end
 
-def translate(str, drop_accelerator: true)
-  rv = $vm.execute_successfully("gettext tails '#{str}'").stdout
+# Drop valid markup (i.e. with balanced tags) like "<b>text</b>" → "text"
+def drop_markup(str)
+  done, first_tag, rest = str.partition(%r{<([^/>]+)>})
+  return str if first_tag.empty?
+  closer = "</#{Regexp.last_match[1]}>"
+  if rest.include?(closer)
+    rest.sub!(closer, '')
+  else
+    done += first_tag
+  end
+  done + drop_markup(rest)
+end
+
+def translate(str, drop_accelerator: true, drop_markup: true)
+  if $language.empty?
+    rv = str
+  else
+    rv = $vm.execute_successfully("gettext tails '#{str}'").stdout
+  end
   if drop_accelerator
     assert(str.count('_') <= 1, 'translate() are supposed to drop the ' \
                                 'accelerator, but there are multiple ' \
                                 "ones in: #{str}")
     rv.gsub!('_', '')
+  end
+  if drop_markup
+    rv = drop_markup(rv)
   end
   rv
 end
