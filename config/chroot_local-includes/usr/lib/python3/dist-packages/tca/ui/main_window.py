@@ -706,7 +706,6 @@ class TCAMainWindow(
         up = self.app.is_network_link_ok
         if not up:
             if self.state["step"] == "progress":
-                GLib.source_remove(self.timer_check)
                 self.state["offline"]["previous"] = self.state["step"]
                 self.change_box("offline")
             elif self.state["step"] in ["error", "hide"]:
@@ -719,7 +718,7 @@ class TCAMainWindow(
 
     def on_tor_working_changed(self, working: bool):
         step = self.state['step']
-        if not working and step != "progress":
+        if not working and step not in {"progress", "offline"}:
             # that's expected
             return
         if not working and step == 'progress' and self.state['progress']['success']:
