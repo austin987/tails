@@ -695,9 +695,39 @@ class TCAMainWindow(
         return self.builder.get_object("step_%s_%s" % (self.state["step"], name))
 
     def cb_window_delete_event(self, widget, event, user_data=None):
-        # XXX: warn the user about leaving the wizard
-        Gtk.main_quit()
-        return False
+        if self.state["step"] != "progress" or self.state["progress"]["success"]:
+            # just close, no questions asked
+            return False
+
+        d = Gtk.MessageDialog(
+            transient_for=self,
+            modal=True,
+            buttons=Gtk.ButtonsType.YES_NO,
+            text=_("Are you sure you want to quit?"),
+        )
+        secondary = [
+            # XXX: we should explain better that closing the window and opening it again could have a bad
+            # UX in case of errors connecting.
+            _(
+                "Quitting while connecting will <i>not</i> stop the connection to Tor"
+                " and will make it harder for you to notice errors."
+            )
+        ]
+        d.format_secondary_markup(
+            "\n".join(secondary)
+        )
+
+        def on_dialog_response(dialog, response):
+            dialog.destroy()
+            if response == Gtk.ResponseType.YES:
+                self.destroy()
+                # Gtk.main_quit()
+
+        d.connect("response", on_dialog_response)
+        d.show()
+
+        # keep the application open; the dialog response will close it
+        return True
 
     def on_link_help_clicked(self, label, uri: str):
         self.app.portal.call_async("open-documentation", ["--force-local", uri])
