@@ -29,7 +29,6 @@ python3-pil
 python3-potr
 python3-slixmpp
 qemu-system-x86
-redir
 ruby-guestfs
 ruby-json
 ruby-libvirt
@@ -136,7 +135,7 @@ check_dependencies() {
         fi
         shift
     done
-    tor_version=$(tor --version | awk '{print $3}' | sed --regexp-extended 's,[.]$,,')
+    tor_version=$(tor --version | head -n1 | awk '{print $3}' | sed --regexp-extended 's,[.]$,,')
     if dpkg --compare-versions "$tor_version" lt "$MINIMUM_TOR_VERSION"; then
 	error "Please upgrade to tor ${MINIMUM_TOR_VERSION} or newer."
     fi
