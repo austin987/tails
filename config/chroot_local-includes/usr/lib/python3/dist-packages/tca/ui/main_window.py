@@ -630,7 +630,8 @@ class TCAMainWindow(
         GLib.timeout_add(1000, self.connection_progress.tick)
         self.add(self.main_container)
         self.show()
-        self.change_box(self.state["step"])
+        log.info("At the end of init, let's call _decide_right_step")
+        self._decide_right_step()
 
     def todo_dialog(self, msg=""):
         print("TODO:", msg)
@@ -735,7 +736,7 @@ class TCAMainWindow(
     # Called from parent Application {{{
 
     def _decide_right_step(self):
-        disable_network = bool(int(self.app.tor_info['DisableNetwork']))
+        disable_network = self.app.tor_info["DisableNetwork"] == '1'
         up = self.app.is_network_link_ok
         tor_working = self.app.is_tor_working
         step = self.state["step"]
@@ -773,7 +774,7 @@ class TCAMainWindow(
             if prev:
                 self.change_box(prev)
             else:
-                self.change_box('hide')
+                self._decide_right_step()
         else:
             self._decide_right_step()
         return
