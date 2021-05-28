@@ -672,8 +672,12 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
-        if self.state["step"] == name:
-            log.debug("State was already %s, not changed", name)
+        if (
+            self.state["step"] == name
+            # transition from progress to itself is allowed because success screen is mostly a sub-step
+            and name != "progress"
+        ):
+            log.info("State was already %s, not changed", name)
             return
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
@@ -759,35 +763,33 @@ class TCAMainWindow(
             log.info("Tor not working")
             if step != 'progress':
                 log.info("Not in progress, going there")
-                self.change_box('progress')
+                self.state["progress"]["success"] = False
+                self.change_box("progress")
             elif self.state["progress"]["success"]:
                 log.warn("We are not connected to Tor anymore!")
                 # TODO: what should we do? go to 0? go to consent question? go to error page?
                 self.change_box("error")
         else:
             self.state["progress"]["success"] = True
-            log.info("Passo da %s a progress", step)
             self.change_box("progress")
 
         self.state["progress"]["success"] = tor_working
 
     def on_network_changed(self):
-        if self.app.is_network_link_ok:
-            prev = self.state["offline"].get("previous", False)
-            if prev:
-                self.change_box(prev)
-            else:
-                self._decide_right_step()
-        else:
-            self._decide_right_step()
-        return
+        log.info("Local network changed %s", self.app.is_network_link_ok)
+        self._decide_right_step()
+        log.debug(self.state["step"])
 
     def on_tor_working_changed(self, working: bool):
+        log.info("Tor working changed %s", working)
         self._decide_right_step()
+        log.debug(self.state["step"])
 
     def on_tor_state_changed(self, tor_info: dict, changed: set):
         """Reacts to DisableNetwork changes."""
+        log.info("DisableNetwork changed %s", tor_info["DisableNetwork"])
         self._decide_right_step()
+        log.debug(self.state["step"])
 
     # called from parent Application }}}
 
