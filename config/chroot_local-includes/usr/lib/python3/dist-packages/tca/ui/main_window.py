@@ -740,11 +740,9 @@ class TCAMainWindow(
         up = self.app.is_network_link_ok
         tor_working = self.app.is_tor_working
         step = self.state["step"]
+        log.info(f"Status: up={up} disable_network={disable_network}, working={tor_working}, step={step}")
         if not up:
-            if self.state["step"] == "progress":
-                self.state["offline"]["previous"] = self.state["step"]
-                self.change_box("offline")
-            elif self.state["step"] in ["error", "hide"]:
+            if self.state["step"] != "offline":
                 self.state["offline"]["previous"] = self.state["step"]
                 self.change_box("offline")
             return
@@ -752,21 +750,26 @@ class TCAMainWindow(
         # local network is ok
 
         if disable_network:
-            self.change_box('hide')
+            self.change_box("hide")
             return
 
         # tor network is enabled
 
-        if not tor_working and step == "progress" and self.state["progress"]["success"]:
-            # TODO: what should we do? go to 0? go to consent question? go to error page?
-            log.warn("We are not connected to Tor anymore!")
-            self.change_box("error")
-
-        if tor_working:
+        if not tor_working:
+            log.info("Tor not working")
+            if step != 'progress':
+                log.info("Not in progress, going there")
+                self.change_box('progress')
+            elif self.state["progress"]["success"]:
+                log.warn("We are not connected to Tor anymore!")
+                # TODO: what should we do? go to 0? go to consent question? go to error page?
+                self.change_box("error")
+        else:
             self.state["progress"]["success"] = True
+            log.info("Passo da %s a progress", step)
             self.change_box("progress")
 
-        self.state['progress']['success'] = tor_working
+        self.state["progress"]["success"] = tor_working
 
     def on_network_changed(self):
         if self.app.is_network_link_ok:
