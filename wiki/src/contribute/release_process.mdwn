@@ -25,7 +25,10 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+* `gitlab-cli jq tidy mktorrent podman python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+  - Note: if the Debian version you are running does not include all required
+    Go packages, such as [[!debpts podman]], you should be able to install
+    them from a more recent Debian release with APT pinning.
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -37,6 +40,18 @@ To release Tails you'll need some packages installed:
      are not supported by _i18nspector_ yet.
 * `i18nspector` 0.26 or newer
 * packages to [[build a local version of the website|contribute/build/website/]]
+
+System configuration
+--------------------
+
+- Enable unprivileged user namespaces
+
+  If you're running a Debian kernel older than 5.10.1-1~exp1,
+  set the `kernel.unprivileged_userns_clone` sysctl to 1:
+
+        echo 'kernel.unprivileged_userns_clone=1' \
+           | sudo tee /etc/sysctl.d/unprivileged-user-namespaces.conf && \
+        && sudo sysctl -p
 
 Configuration files
 -------------------
@@ -343,9 +358,6 @@ Update more included files
 
 Changelog
 ---------
-
-If `debian/changelog` on `$RELEASE_BRANCH` has an `UNRELEASED` entry
-for a version lower than `$VERSION`, remove it.
 
 Update the Changelog entry for the release you're preparing:
 
@@ -734,11 +746,7 @@ files metadata:
 Prepare incremental upgrades
 ============================
 
-Since Tails 4.2, we use a new upgrade scheme, which fundamentally
-changes what the source version number of an upgrade means: it's now
-the version that was *initially installed* and *not* the currently
-running version. For details, see the corresponding
-[[design documentation|contribute/design/incremental_upgrades]].
+Reference: [[design documentation|contribute/design/incremental_upgrades]]
 
 Sanity checks
 -------------
@@ -757,6 +765,11 @@ that is not present locally yet):
         echo "ERROR! Add a section for iso-history.tails.boum.org' to your ~/.netrc"
         echo "The corresponding login and password are in the RMs' keyringer."
     fi
+
+Add to `$IGNORED_TAGS`, in `./bin/iuk-source-versions`, any recent alpha or beta
+release that gets no security support, and as such, shall not get automatic
+upgrades. Here is a useful heuristics: if we did not do our manual test suite on
+a release, it does not get security support.
 
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
@@ -1444,23 +1457,20 @@ Skip this part if preparing a release candidate.
    submit a MR against [[!tails_gitlab tails/gitlab-config]]
    to create one.
 
-2. Ensure you have an up-to-date `tails:gitlab-triage-stable` Docker image:
+2. Ensure you have an up-to-date `tails:gitlab-triage-stable` container image:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo ./config/gitlab-triage/bin/ensure-up-to-date-Docker-image
+        ./config/gitlab-triage/bin/ensure-up-to-date-container-image
 
 3. Postpone to the next scheduled release any remaining open issue and merge
    request whose milestone is the version you've just released:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo \
-            VERSION="${VERSION:?}" \
-            NEXT_PLANNED_VERSION="${NEXT_PLANNED_VERSION:?}" \
-            ./bin/gitlab-triage-post-release \
-                --host-url "$(bin/gitlab-url TailsRM)" \
-                --token "$(bin/gitlab-api-token TailsRM)"
+        ./bin/gitlab-triage-post-release \
+            --host-url "$(bin/gitlab-url TailsRM)" \
+            --token "$(bin/gitlab-api-token TailsRM)"
 
 4. Finally, submit a MR against [[!tails_gitlab tails/gitlab-config]] to:
 

@@ -222,7 +222,7 @@ method _build__presets () {
             id          => 'Dotfiles',
             name        => __(q{Dotfiles}),
             description => __(
-                q{Symlink into $HOME every file or directory found in the `dotfiles' directory}
+                q{Symlink every file in the Dotfiles folder into the Home folder}
             ),
             icon_name   => 'preferences-desktop',
             enabled     => 0,
