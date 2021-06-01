@@ -405,11 +405,16 @@ class TorLauncherUtils:
         return obj
 
     def apply_conf(self):
-        # self.stem_controller.set_conf("DisableNetwork", "1")
         tor_conf = self.tor_connection_config.to_tor_conf()
         log.debug("applying TorConf: %s", tor_conf)
         self.stem_controller.set_options(tor_conf)
-        self.stem_controller.set_conf("DisableNetwork", "0")
+        # We have seen a very odd bug where issuing "DisableNetwork 0"
+        # when it already is 0 kills tor. There is a lot of
+        # uncertainty remaining around what exactly is going on, and
+        # weird stuff like running tor under strace preventing the
+        # killing.
+        if self.stem_controller.get_conf("DisableNetwork") == "1":
+            self.stem_controller.set_conf("DisableNetwork", "0")
         self.stem_controller.save_conf()
 
     def tor_bootstrap_phase(self) -> int:

@@ -351,7 +351,7 @@ When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
 end
 
 def tor_connection_assistant
-  Dogtail::Application.new(translate('Tor Connection'))
+  Dogtail::Application.new('Tor Connection')
 end
 
 class TCAConnectionFailure < StandardError
@@ -363,7 +363,7 @@ def tca_configure(mode, &block)
   when :easy
     radio_button_label = 'Connect to Tor automatically (easier)'
   when :hide
-    radio_button_label = "Hide to my local network that I\\'m connecting to Tor (safer)"
+    radio_button_label = "Hide to my local network that I'm connecting to Tor (safer)"
   else
     raise "bad TCA configuration mode '#{mode}'"
   end
@@ -378,12 +378,11 @@ def tca_configure(mode, &block)
     radio_button.checked
   end
   block.call if block_given?
-  tor_connection_assistant.child(translate('Connect to _Tor'),
-                                 roleName: 'push button')
+  tor_connection_assistant.child('Connect to _Tor', roleName: 'push button')
                           .click
   failure_reported = false
   try_for(120, msg: 'Timed out while waiting for TCA to connect to Tor') do
-    if tor_connection_assistant.child?(translate('Error connecting to Tor'),
+    if tor_connection_assistant.child?('Error connecting to Tor',
                                        roleName: 'label', retry: false)
       failure_reported = true
       done = true
@@ -468,14 +467,14 @@ When /^I configure some (\w+) bridges in the Tor Connection Assistant$/ do |brid
 
   tca_configure(config_mode) do
     if config_mode == :easy
-      tor_connection_assistant.child(translate('Configure a Tor bridge'),
+      tor_connection_assistant.child('Configure a Tor bridge',
                                      roleName: 'check box')
                               .click
     end
-    tor_connection_assistant.child(translate('Connect to _Tor'),
+    tor_connection_assistant.child('Connect to _Tor',
                                    roleName: 'push button')
                             .click
-    tor_connection_assistant.child(translate('Type in a bridge that I already know'),
+    tor_connection_assistant.child('Type in a bridge that I already know',
                                  roleName: 'radio button')
                             .click
     tor_connection_assistant.child(roleName: 'scroll pane').click
@@ -559,4 +558,10 @@ Then /^Tor is configured to use the default bridges$/ do
   ).stdout.chomp
   assert_equal(default_bridges, current_bridges,
                'Current bridges does not match the default ones')
+end
+
+When /^I set (.*)=(.*) over Tor's control port$/ do |key, val|
+  current_bridges = $vm.execute_successfully(
+    "tor_control_setconf '#{key}=#{val}'", libs: 'tor'
+  )
 end

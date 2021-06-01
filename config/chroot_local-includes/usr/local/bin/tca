@@ -9,7 +9,7 @@ import sys
 import gettext
 import shutil
 from pathlib import Path
-from subprocess import check_output, CalledProcessError, Popen
+from subprocess import check_output, CalledProcessError
 from logging import getLogger, basicConfig
 from typing import List
 
@@ -25,7 +25,13 @@ log = getLogger(__name__)
 
 def main():
     if os.getuid() != 0:
-        os.execvpe("sudo", ["sudo", "-n", __file__] + sys.argv[1:], env=os.environ)
+        env_vars = []
+        for var in ("DESKTOP_STARTUP_ID",):
+            if var in os.environ:
+                env_vars.append("%s=%s" % (var, os.environ[var]))
+        cmd = ["sudo", "-n", *env_vars, __file__] + sys.argv[1:]
+        log.debug('Running %s', cmd)
+        os.execvpe(cmd[0], cmd, env=os.environ)
         return
 
     python_bin = "/usr/bin/python3"
@@ -85,6 +91,7 @@ def main():
     envcmd = [
         "env",
         *gnome_env_vars(),
+        'DESKTOP_STARTUP_ID=%s' % os.environ.get('DESKTOP_STARTUP_ID', ''),
         "AT_SPI_BUS_ADDRESS=unix:path=/tmp/shared-with-me/at.sock",
         "IBUS_ADDRESS=unix:path=/tmp/shared-with-me/ibus.sock",
         # uncomment this if you want to tweak the UI

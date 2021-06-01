@@ -36,6 +36,10 @@ Feature: Using Tails with Tor bridges and pluggable transports
     Then the Tor Connection Assistant reports that it failed to connect
     # TCA does not have a simple "retry" so we restart it
     And I close the Tor Connection Assistant
+    # Before we unblock we must stop Tor from retrying, otherwise the
+    # above first try might succeed, which isn't what we expect or
+    # want to test here.
+    And I set DisableNetwork=1 over Tor's control port
     Given the Tor network and default bridges are unblocked
     And I start "Tor Connection" via GNOME Activities Overview
     When I configure a direct connection in the Tor Connection Assistant
