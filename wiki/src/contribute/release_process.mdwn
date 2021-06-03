@@ -25,7 +25,10 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+* `gitlab-cli jq tidy mktorrent podman python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+  - Note: if the Debian version you are running does not include all required
+    Go packages, such as [[!debpts podman]], you should be able to install
+    them from a more recent Debian release with APT pinning.
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -37,6 +40,18 @@ To release Tails you'll need some packages installed:
      are not supported by _i18nspector_ yet.
 * `i18nspector` 0.26 or newer
 * packages to [[build a local version of the website|contribute/build/website/]]
+
+System configuration
+--------------------
+
+- Enable unprivileged user namespaces
+
+  If you're running a Debian kernel older than 5.10.1-1~exp1,
+  set the `kernel.unprivileged_userns_clone` sysctl to 1:
+
+        echo 'kernel.unprivileged_userns_clone=1' \
+           | sudo tee /etc/sysctl.d/unprivileged-user-namespaces.conf && \
+        && sudo sysctl -p
 
 Configuration files
 -------------------
@@ -345,9 +360,6 @@ Update more included files
 Changelog
 ---------
 
-If `debian/changelog` on `$RELEASE_BRANCH` has an `UNRELEASED` entry
-for a version lower than `$VERSION`, remove it.
-
 Update the Changelog entry for the release you're preparing:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
@@ -585,6 +597,9 @@ suite should be ready, so it is time to:
 
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
 
+1. Take note of the value of `$SOURCE_DATE_EPOCH`: you'll need it to "Build the
+   Incremental Upgrade Kits on Jenkins" until [[!tails_ticket 18318]] is solved.
+
 1. tag the release *again*, with all included files in:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
@@ -732,11 +747,7 @@ files metadata:
 Prepare incremental upgrades
 ============================
 
-Since Tails 4.2, we use a new upgrade scheme, which fundamentally
-changes what the source version number of an upgrade means: it's now
-the version that was *initially installed* and *not* the currently
-running version. For details, see the corresponding
-[[design documentation|contribute/design/incremental_upgrades]].
+Reference: [[design documentation|contribute/design/incremental_upgrades]]
 
 Sanity checks
 -------------
@@ -755,6 +766,11 @@ that is not present locally yet):
         echo "ERROR! Add a section for iso-history.tails.boum.org' to your ~/.netrc"
         echo "The corresponding login and password are in the RMs' keyringer."
     fi
+
+Add to `$IGNORED_TAGS`, in `./bin/iuk-source-versions`, any recent alpha or beta
+release that gets no security support, and as such, shall not get automatic
+upgrades. Here is a useful heuristics: if we did not do our manual test suite on
+a release, it does not get security support.
 
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
@@ -848,7 +864,8 @@ Build the Incremental Upgrade Kits on Jenkins
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
     - `SOURCE_DATE_EPOCH`: the value of `$SOURCE_DATE_EPOCH` in your
-      release environment
+      release environment, i.e. the same value you are using to
+      "Build the Incremental Upgrade Kits locally"
     - `NEW_VERSION`: the value of `$VERSION` in your release environment
     - `EXTRA_ARGS`: leave it blank
 
@@ -1441,23 +1458,20 @@ Skip this part if preparing a release candidate.
    submit a MR against [[!tails_gitlab tails/gitlab-config]]
    to create one.
 
-2. Ensure you have an up-to-date `tails:gitlab-triage-stable` Docker image:
+2. Ensure you have an up-to-date `tails:gitlab-triage-stable` container image:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo ./config/gitlab-triage/bin/ensure-up-to-date-Docker-image
+        ./config/gitlab-triage/bin/ensure-up-to-date-container-image
 
 3. Postpone to the next scheduled release any remaining open issue and merge
    request whose milestone is the version you've just released:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo \
-            VERSION="${VERSION:?}" \
-            NEXT_PLANNED_VERSION="${NEXT_PLANNED_VERSION:?}" \
-            ./bin/gitlab-triage-post-release \
-                --host-url "$(bin/gitlab-url TailsRM)" \
-                --token "$(bin/gitlab-api-token TailsRM)"
+        ./bin/gitlab-triage-post-release \
+            --host-url "$(bin/gitlab-url TailsRM)" \
+            --token "$(bin/gitlab-api-token TailsRM)"
 
 4. Finally, submit a MR against [[!tails_gitlab tails/gitlab-config]] to:
 
@@ -1468,7 +1482,7 @@ Skip this part if preparing a release candidate.
       2 releases
 
    Assign the MR to the on-duty sysadmin (see link to "Semi-public
-   calendar" in `summit.git:Teams.md`).
+   calendar" in <https://gitlab.tails.boum.org/tails/summit/-/wikis/Teams#sysadmins>).
 
 ### Issues linked from the website
 
@@ -1698,7 +1712,7 @@ If you just released a final release
    * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
    * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
 
-   If the upcoming release date in the Mozilla calendar does not match
+   If the upcoming release dates in the Mozilla calendar does not match
    what we have in [[contribute/calendar]], then alert
    <tails-dev@boum.org>, <tails-rm@boum.org>, and explicitly Cc the
    designated RM for that upcoming release.
@@ -1707,7 +1721,7 @@ If you just released a final release
    <tails-l10n@boum.org>.
    - Cc <tails-manual-testers@boum.org>,
      asking them to privately tell the RM for that release
-     whether they can do manual testing on release day.
+     _how much_ manual testing they can do on release day.
 
 1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the

@@ -6,7 +6,7 @@
 browser based on [Mozilla Firefox](http://getfirefox.com) but configured
 to protect your privacy.
 
-[[!img Tor_Browser/tor-browser.png link=no alt=""]]
+[[!img lib/apps/tor-browser.png link=no alt=""]]
 
 Sending your connections to websites through the Tor network is not
 enough to totally protect you while browsing the web:
@@ -21,6 +21,18 @@ inside the browser as well.
 
 Some frequently asked questions about <span class="application">Tor Browser</span> can be found in
 [[the FAQ|support/faq#browser]].
+
+<h1 id="proxy">Proxy server refusing connections</h1>
+
+The following error message in *Tor Browser* means that Tails is not yet
+connected to the Tor network:
+
+    The proxy server is refusing connections
+
+Make sure that you are:
+
+1. [[Connected to a local network|anonymous_internet/networkmanager]]
+1. [[Connected to the Tor network|anonymous_internet/tor]]
 
 <h1 id="confinement">AppArmor confinement, downloading, and uploading files</h1>
 
@@ -59,6 +71,57 @@ working sessions.
 very big files to the <em>Persistent/Tor Browser</em> folder.
 All the files that you download outside of the Persistent Storage are
 stored in memory (RAM), which is more limited.</p>
+
+</div>
+
+<h1 id="fingerprint">Hiding that you are using <i>Tor Browser</i></h1>
+
+It is impossible to hide to the websites that you visit that you are using Tor,
+because the [list of exit nodes of the Tor network is
+public](https://metrics.torproject.org/exonerator.html).
+
+[[!img doc/about/warning/htw2-tails.png link="no"]]
+
+That is why many more websites ask you to solve a CAPTCHA when using *Tor
+Browser*.
+
+The anonymity provided by *Tor Browser* works by making all users look the same
+to make it impossible to know who is who among the millions of users of *Tor
+Browser*.
+
+Tails tries to make it as difficult as possible for websites to distinguish
+Tails users from other users of *Tor Browser*. If it was possible for a website
+to determine whether you are a user of *Tor Browser* inside or outside of
+Tails, this would provide a little bit more information about you and reduce
+your anonymity.
+
+The websites that you visit can retrieve a lot of information about your
+browser, whether it's *Tor Browser* or a regular browser. This information is
+called the *fingerprint* of the browser and includes the name and version of
+the browser, the size of the window, the time zone, the available fonts, etc.
+
+To make it difficult to distinguish Tails users from other users of *Tor
+Browser*, *Tor Browser* in Tails tries to provide the same information as *Tor
+Browser* on other operating systems.
+
+<!--
+
+Refer to the [[fingerprint section of our list of known issues
+|support/known_issues#fingerprint]] to know if there are differences
+between the fingerprints of <span class="application">Tor Browser</span> inside and outside of Tails.
+
+-->
+
+A difference is that Tails includes the *uBlock Origin* extension, which
+removes advertisements. If an attacker can determine that you are not
+downloading the advertisements that are included in a webpage, that could
+reveal that you are a Tails user.
+
+<div class="next">
+
+<p>To hide to someone monitoring your Internet connection that you are
+connecting to Tor, see our documentation about [[connecting to the Tor
+network|tor]].</p>
 
 </div>
 
@@ -173,7 +236,7 @@ Click on the
 to use a different circuit.
 
 You can use
-<span class="application">[[Onion Circuits|doc/anonymous_internet/tor_status]]</span>
+<span class="application">[[Onion Circuits|doc/anonymous_internet/tor/circuits]]</span>
 to get more detailed information about the circuits being used.
 
 <h1 id="new-identity"><span class="guilabel">New Identity</span> feature</h1>
