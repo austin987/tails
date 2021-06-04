@@ -4,7 +4,7 @@ set -e
 set -u
 set -x
 
-SPECFILE=spec.vmdb
+SPECFILE="$(mktemp)"
 OUTPUT=vm_test.img
 
 DEBIAN_SERIAL=2020120601
