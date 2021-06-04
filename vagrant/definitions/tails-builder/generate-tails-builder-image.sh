@@ -28,7 +28,7 @@ DEBIAN_SERIAL="$(get_serial debian)"
 DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
 TAILS_SERIAL="$(get_serial tails)"
 
-DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
+DEBOOTSTRAP_GNUPG_HOMEDIR="$(mktemp -d)"
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
     --no-tty \
     --import config/chroot_sources/tails.chroot.gpg
@@ -39,7 +39,7 @@ fi
 
 
 # Create specification file for vmdb2
-cat > $SPECFILE <<EOF
+cat > "${SPECFILE}" <<EOF
 steps:
   - mkimg: "{{ output }}"
     size: 2G
@@ -258,10 +258,10 @@ steps:
         /var/lib/dhcp/*
 EOF
 
-cat $SPECFILE
+cat "${SPECFILE}"
 
 rm -f "${TARGET_NAME}"*
-sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output "${TARGET_IMG}" -v --log vmdb2.log
+sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" --output "${TARGET_IMG}" -v --log vmdb2.log
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 
-rm -f $SPECFILE "${TARGET_IMG}" vmdb2.log
+rm -f "${SPECFILE}" "${TARGET_IMG}" vmdb2.log
