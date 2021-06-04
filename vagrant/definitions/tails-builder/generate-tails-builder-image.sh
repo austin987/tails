@@ -21,6 +21,7 @@ get_serial() {
 
 SPECFILE="$(mktemp)"
 TARGET_NAME="$(build_setting box_name)"
+TARGET_FS_TAR="${TARGET_NAME}.tar"
 TARGET_IMG="${TARGET_NAME}.img"
 TARGET_QCOW2="${TARGET_NAME}.qcow2"
 DISTRIBUTION="$(build_setting DISTRIBUTION)"
@@ -264,7 +265,7 @@ EOF
 cat "${SPECFILE}"
 
 rm -f "${TARGET_NAME}"*
-sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" --output "${TARGET_IMG}" -v --log vmdb2.log
+sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" --output "${TARGET_IMG}" -v --log vmdb2.log --rootfs-tarball "${TARGET_FS_TAR}"
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 
-rm -f "${SPECFILE}" "${TARGET_IMG}" vmdb2.log
+rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_FS_TAR}" vmdb2.log
