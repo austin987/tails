@@ -163,7 +163,6 @@ steps:
       - dpkg-dev
       - gdisk
       - gettext
-      - gir1.2-udisks-2.0
       - git
       - grub2
       - ikiwiki
@@ -185,11 +184,27 @@ steps:
       - ruby
       - sudo
       - time
-      - udisks2
       - wget
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
     unless: rootfs_unpacked
+
+  - create-file: /usr/sbin/policy-rc.d
+    perm: 0755
+    contents: |
+      #!/bin/sh
+      exit 101
+
+  - apt: install
+    packages:
+      - gir1.2-udisks-2.0
+      - udisks2
+    mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
+    tag: rootfs
+    unless: rootfs_unpacked
+
+  - chroot: rootfs
+    shell: rm /usr/sbin/policy-rc.d
 
   - chroot: rootfs
     shell: apt-get -y dist-upgrade
