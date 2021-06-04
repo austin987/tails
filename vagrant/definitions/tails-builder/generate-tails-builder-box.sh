@@ -271,5 +271,5 @@ sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" \
      --rootfs-tarball "${TARGET_FS_TAR}"
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 bash -e -x "${GIT_DIR}/vagrant/definitions/tails-builder/create_box.sh" \
-     "${TARGET_IMG}" "${TARGET_BOX}"
+     "${TARGET_QCOW2}" "${TARGET_BOX}"
 rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}" vmdb2.log
