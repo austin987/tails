@@ -163,6 +163,7 @@ steps:
       - dpkg-dev
       - gdisk
       - gettext
+      - gir1.2-udisks-2.0
       - git
       - grub2
       - ikiwiki
@@ -184,6 +185,7 @@ steps:
       - ruby
       - sudo
       - time
+      - udisks2
       - wget
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
