@@ -24,6 +24,7 @@ TARGET_NAME="$(build_setting box_name)"
 TARGET_FS_TAR="${TARGET_NAME}.tar"
 TARGET_IMG="${TARGET_NAME}.img"
 TARGET_QCOW2="${TARGET_NAME}.qcow2"
+TARGET_BOX="${TARGET_NAME}.box"
 DISTRIBUTION="$(build_setting DISTRIBUTION)"
 HOSTNAME="vagrant-${DISTRIBUTION}"
 USERNAME="vagrant"
@@ -267,5 +268,6 @@ cat "${SPECFILE}"
 rm -f "${TARGET_NAME}"*
 sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" --output "${TARGET_IMG}" -v --log vmdb2.log --rootfs-tarball "${TARGET_FS_TAR}"
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
-
+bash -e -x "${GIT_DIR}/vagrant/definitions/tails-builder/create_box.sh" \
+     "${TARGET_IMG}" "${TARGET_BOX}"
 rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_FS_TAR}" vmdb2.log
