@@ -186,9 +186,9 @@ method fatal_run_cmd (Str :$error_msg, ArrayRef :$cmd, Maybe[Str] :$as = undef, 
     }
 
     my ($stdout, $stderr);
-    my $success = 1;
+    my $success = 0;
     my $exit_code;
-    IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr or $success = 0;
+    $success = 1 if IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr;
     $exit_code = $?;
     $success or $self->fatal(
         errf("<b>%{error_msg}s</b>\n\n%{details}s",
@@ -306,10 +306,9 @@ method refresh_signing_key () {
         );
     };
     my ($stdout, $stderr, $exit_code);
-    my $success = 1;
-    IPC::Run::run ['gpg', '--import'],
-          '<', \$new_key_content, '>', \$stdout, '2>', \$stderr
-          or $success = 0;
+    my $success = 0;
+    $success = 1 if IPC::Run::run ['gpg', '--import'],
+          '<', \$new_key_content, '>', \$stdout, '2>', \$stderr;
     $exit_code = $?;
     $success or $self->fatal(
         $error_msg,
@@ -861,9 +860,9 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
     }
 
     my ($exit_code, $stdout, $stderr);
-    my $success = 1;
+    my $success = 0;
 
-    IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr or $success = 0;
+    $success = 1 if IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr;
     $exit_code = $?;
     $zenity_h->kill_kill unless $self->batch;
 
