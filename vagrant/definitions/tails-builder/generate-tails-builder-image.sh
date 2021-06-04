@@ -39,7 +39,6 @@ fi
 
 
 # Create specification file for vmdb2
-touch $SPECFILE
 cat > $SPECFILE <<EOF
 steps:
   - mkimg: "{{ output }}"
