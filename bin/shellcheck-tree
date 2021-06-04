@@ -1,0 +1,32 @@
+#!/usr/bin/python3
+
+import glob
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+
+def is_excluded(f):
+    return re.match(r"^([.]git|config/chroot_local-includes/usr/share/doc/tails/website|submodules|tmp|wiki/src)/",
+                    f) or Path(f).is_dir()
+
+
+def mimetype(f):
+    return subprocess.run(['file', '--brief', '--mime-type', f],
+                          stdout=subprocess.PIPE,
+                          universal_newlines=True,
+                          check=True).stdout.rstrip()
+
+
+def is_shell_script(f):
+    return mimetype(f) == "text/x-shellscript"
+
+
+shell_scripts = [
+    f for f in glob.glob("**/*", recursive=True)
+    if not is_excluded(f) and is_shell_script(f)
+]
+
+sys.exit(
+    subprocess.run(['shellcheck'] + sys.argv[1:] + shell_scripts).returncode)

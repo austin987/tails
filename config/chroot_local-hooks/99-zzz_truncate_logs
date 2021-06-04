@@ -3,6 +3,4 @@
 set -e
 
 echo "Truncating log files"
-for file in $(find /var/log/ -type f); do
-	: > "${file}"
-done
+find /var/log/ -type f -exec truncate --size=0 '{}' \;

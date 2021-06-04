@@ -24,7 +24,8 @@ try_cleanup_browser_chroot () {
     # findmnt sorts submounts so we just have to revert the list to
     # have the proper umount order. We use `tail` to suppress the
     # "TARGET" column header.
-    local chroot_mounts="$(
+    local chroot_mounts
+    chroot_mounts="$(
         findmnt --output TARGET --list --submounts "${chroot}" | tail -n+2 | tac
     )"
     for mnt in ${chroot_mounts} "${cow}"; do
@@ -43,6 +44,7 @@ setup_chroot_for_browser () {
     # for creating isolated jails, the chroot can be used as its rootfs.
 
     local cleanup_cmd="try_cleanup_browser_chroot \"${chroot}\" \"${cow}\" \"${user}\""
+    # shellcheck disable=SC2064
     trap "${cleanup_cmd}" INT EXIT
 
     local rootfs_dir
@@ -53,7 +55,7 @@ setup_chroot_for_browser () {
     # We have to pay attention to the order we stack the filesystems;
     # newest must be first, and remember that the .module file lists
     # oldest first, newest last.
-    while read rootfs_dir; do
+    while read -r rootfs_dir; do
         rootfs_dir="${rootfs_dirs_path}/${rootfs_dir}"
         mountpoint -q "${rootfs_dir}" && \
         lowerdirs="${rootfs_dir}:${lowerdirs}"
@@ -79,7 +81,8 @@ browser_conf_dir () {
 }
 
 browser_profile_dir () {
-    local conf_dir="$(browser_conf_dir "${@}")"
+    local conf_dir
+    conf_dir="$(browser_conf_dir "${@}")"
     echo "${conf_dir}/profile.default"
 }
 
@@ -89,7 +92,8 @@ chroot_browser_conf_dir () {
 }
 
 chroot_browser_profile_dir () {
-    local conf_dir="$(chroot_browser_conf_dir "${@}")"
+    local conf_dir
+    conf_dir="$(chroot_browser_conf_dir "${@}")"
     echo "${conf_dir}/profile.default"
 }
 
@@ -97,7 +101,8 @@ set_chroot_browser_permissions () {
     local chroot="${1}"
     local browser_name="${2}"
     local browser_user="${3}"
-    local browser_conf="$(chroot_browser_conf_dir "${chroot}" "${browser_name}" "${browser_user}")"
+    local browser_conf
+    browser_conf="$(chroot_browser_conf_dir "${chroot}" "${browser_name}" "${browser_user}")"
     chown -R "${browser_user}:${browser_user}" "${browser_conf}"
 }
 
@@ -113,7 +118,8 @@ configure_chroot_browser_profile () {
     echo "127.0.0.1 localhost amnesia" > "${chroot}/etc/hosts"
 
     # Create a fresh browser profile for the clearnet user
-    local browser_profile="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")"
+    local browser_profile
+    browser_profile="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")"
     local browser_ext="${browser_profile}/extensions"
     mkdir -p "${browser_profile}" "${browser_ext}"
 
@@ -159,7 +165,8 @@ set_chroot_browser_locale () {
     local browser_name="${2}"
     local browser_user="${3}"
     local locale="${4}"
-    local browser_profile="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")"
+    local browser_profile
+    browser_profile="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")"
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
@@ -169,13 +176,12 @@ set_chroot_browser_name () {
     local browser_name="${3}"
     local browser_user="${4}"
     local locale="${5}"
-    local ext_dir="${chroot}/${TBB_EXT}"
-    local browser_profile_ext_dir="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")/extensions"
 
     # Torbutton is installed in the browser's omni.ja and it decides
     # the browser name.
     local pack="${chroot}/${TBB_INSTALL}/omni.ja"
-    local tmp="$(mktemp -d)"
+    local tmp
+    tmp="$(mktemp -d)"
     (
        cd "${tmp}"
        7z x -o"${tmp}" "${pack}" chrome/torbutton/locale
@@ -192,12 +198,12 @@ set_chroot_browser_name () {
 
 delete_chroot_browser_searchplugins() {
     local chroot="${1}"
-    local ext_dir="${chroot}/${TBB_EXT}"
 
     pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
     local searchplugins_dir="chrome/browser/search-extensions"
     local searchplugins_list="${searchplugins_dir}/list.json"
-    local tmp="$(mktemp -d)"
+    local tmp
+    tmp="$(mktemp -d)"
     (
         cd "${tmp}"
         7z d -tzip "${pack}" "${searchplugins_dir}/*/manifest.json"
@@ -214,7 +220,6 @@ delete_chroot_browser_searchplugins() {
 # shown in the tab of a "New Tab" page.
 delete_chroot_browser_icons() {
     local chroot="${1}"
-    local ext_dir="${chroot}/${TBB_EXT}"
 
     pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
     7z d -tzip "${pack}" "chrome/browser/content/branding/icon*.png"
@@ -242,7 +247,8 @@ configure_chroot_browser () {
     local home_page="${1}" ; shift
     # Now $@ is a list of paths (that must be valid after chrooting)
     # to extensions to enable.
-    local best_locale="$(guess_best_tor_browser_locale)"
+    local best_locale
+    best_locale="$(guess_best_tor_browser_locale)"
 
     configure_chroot_browser_profile "${chroot}" "${browser_name}" \
         "${browser_user}" "${home_page}" "${@}"
@@ -266,7 +272,8 @@ run_browser_in_chroot () {
     local chroot_user="${3}"
     local local_user="${4}"
     local wm_class="${5}"
-    local profile="$(browser_profile_dir ${browser_name} ${chroot_user})"
+    local profile
+    profile="$(browser_profile_dir "${browser_name}" "${chroot_user}")"
 
     sudo -u "${local_user}" xhost "+SI:localuser:${chroot_user}"
     chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \

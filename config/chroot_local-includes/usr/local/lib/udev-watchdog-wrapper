@@ -24,6 +24,7 @@ boot_device() {
 	# was run => we cannot get the boot device from there either.
 	# Instead, we parse fromiso='s argument the same way live-boot does
 	# in order to extract the device path (/dev/sdx3)
+	        # shellcheck disable=SC2013
 		for ARGUMENT in $(cat /proc/cmdline) ; do
 			case "${ARGUMENT}" in
 				isofrom=*|fromiso=*)
@@ -31,7 +32,7 @@ boot_device() {
 					;;
 			esac
 		done
-		echo $(dirname "$FROMISO")
+		dirname "$FROMISO"
 	else
 	# Refactorer, beware: the rest of this script depends on the fact that
 	# the path returned in this case is suitable to be passed as an argument
@@ -78,8 +79,10 @@ else
 	QUERY_SELECTOR="--path $BOOT_DEVICE"
 fi
 
+# shellcheck disable=SC2086
 DEV_UDEV_PATH=$(udevadm info --query path     $QUERY_SELECTOR)
 # SD in SDIO has no ID_TYPE, let's pretend it's a disk just like USB sticks
+# shellcheck disable=SC2086
 DEV_TYPE_LINE=$(udevadm info --query property $QUERY_SELECTOR | grep -w '^ID_TYPE') \
 	|| DEV_TYPE_LINE='ID_TYPE=disk'
 DEV_TYPE="${DEV_TYPE_LINE#*=}"

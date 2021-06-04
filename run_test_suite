@@ -29,7 +29,6 @@ python3-pil
 python3-potr
 python3-slixmpp
 qemu-system-x86
-redir
 ruby-guestfs
 ruby-json
 ruby-libvirt
@@ -256,15 +255,18 @@ while [ $# -gt 0 ]; do
             ;;
         --tmpdir)
             shift
-            export TMPDIR="$(readlink -f "$1")"
+            TMPDIR="$(readlink -f "$1")"
+            export TMPDIR
             ;;
         --iso)
             shift
-	    export TAILS_ISO="$(realpath -s "$1")"
+            TAILS_ISO="$(realpath -s "$1")"
+            export TAILS_ISO
             ;;
         --old-iso)
             shift
-	    export OLD_TAILS_ISO="$(realpath -s "$1")"
+            OLD_TAILS_ISO="$(realpath -s "$1")"
+            export OLD_TAILS_ISO
             ;;
         --help)
 	    usage
@@ -285,6 +287,7 @@ if [ "${EUID}" -ne 0 ] && [ -z "${ALLOW_NON_ROOT}" ]; then
           "doing, see the --allow-non-root option"
 fi
 
+# shellcheck disable=SC2086
 check_dependencies ${GENERAL_DEPENDENCIES}
 
 TARGET_DISPLAY=$(next_free_display)
@@ -323,4 +326,5 @@ fi
 export USER_DISPLAY="${DISPLAY:-}"
 export DISPLAY=${TARGET_DISPLAY}
 
+# shellcheck disable=SC2086
 cucumber --expand ${TAGS_ARGS} "${@}"

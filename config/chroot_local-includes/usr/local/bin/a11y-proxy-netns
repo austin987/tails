@@ -13,6 +13,7 @@ log = getLogger(os.path.basename(__file__))
 
 def get_parser():
     p = ArgumentParser()
+    p.add_argument("--component", default="a11y", choices=["a11y", "ibus"])
     p.add_argument(
         "--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="DEBUG"
     )
@@ -20,12 +21,18 @@ def get_parser():
     return p
 
 
-def get_bus() -> str:
+def get_a11y_bus() -> str:
     bus = dbus.SessionBus()
     obj = bus.get_object("org.a11y.Bus", "/org/a11y/bus")
     iface = dbus.Interface(obj, dbus_interface="org.a11y.Bus")
     response = iface.GetAddress()
     return str(response)
+
+
+def get_ibus_bus() -> str:
+    address = subprocess.check_output(["/usr/bin/ibus", "address"]).decode('utf-8')
+    path, guid = address.split(",")
+    return path
 
 
 def netns_exists(name: str) -> bool:
@@ -56,17 +63,21 @@ def main():
     basicConfig(level=args.log_level)
     wait_netns(args.netns)
     log.debug("get address")
-    at_bus_address = get_bus()
-    log.debug("address got! %s", at_bus_address)
+    if args.component == "a11y":
+        backend_address = get_a11y_bus()
+    else:
+        backend_address = get_ibus_bus()
+    log.debug("address got! %s", backend_address)
 
     dirname = os.path.join("/tmp/netns-specific/", args.netns)
     os.makedirs(dirname, exist_ok=True)
-    dest_bus_path = os.path.join(dirname, "at.sock")
+    dest_basename = 'at.sock' if args.component == 'a11y' else 'ibus.sock'
+    dest_bus_path = os.path.join(dirname, dest_basename)
     log.debug("Binding at %s", dest_bus_path)
     if os.path.exists(dest_bus_path):
         os.unlink(dest_bus_path)
 
-    args = ["xdg-dbus-proxy", at_bus_address, dest_bus_path]
+    args = ["xdg-dbus-proxy", backend_address, dest_bus_path]
     log.debug("Running %r", args)
     # we fork-exec to handle systemd notifications. though not strictly needed, they are nice!
     p = subprocess.Popen(args)

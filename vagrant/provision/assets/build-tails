@@ -13,6 +13,7 @@ if [ "${TAILS_WEBSITE_CACHE}" = 1 ]; then
 fi
 
 as_root_do() {
+	# shellcheck disable=SC2154
 	sudo \
 		${RSYNC_PROXY:+RSYNC_PROXY="${RSYNC_PROXY}"} \
 		${http_proxy:+http_proxy="${http_proxy}"} \
@@ -43,7 +44,7 @@ remove_build_dirs() {
 		while ! sudo umount -f --verbose "${mountpoint}" && [ $tries -lt 12 ]; do
 			sudo fuser --ismountpoint --mount "${mountpoint}" --kill || true
 			sleep 5
-			tries=$(expr $tries + 1)
+			tries=$((tries + 1))
 		done
 		sudo rm -rf "${mountpoint}"
 	done
@@ -101,7 +102,9 @@ git clone --shared --local /amnesia.git/.git "${TAILS_GIT_DIR}"
 # same way we do the main repo.
 (
 	cd "${TAILS_GIT_DIR}/submodules"
-	for submodule in $(ls -1); do
+	for submodule in *; do
+		# handle the case when there is no submodule
+		[[ -e "$submodule" ]] || break
 		rm -rf "${submodule}"
 		git clone --shared \
 		    "/amnesia.git/.git/modules/submodules/${submodule}"

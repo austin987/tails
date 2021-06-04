@@ -6,9 +6,12 @@ set -e
 . "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
 
 # Setting static variables
-DESCRIPTION="$(Echo 'including syslinux in the ISO filesystem')"
-HELP=""
-USAGE="${PROGRAM}"
+# shellcheck disable=SC2034
+{
+   DESCRIPTION="$(Echo 'including syslinux in the ISO filesystem')"
+   HELP=""
+   USAGE="${PROGRAM}"
+}
 
 # Reading configuration files
 Read_conffiles config/all config/bootstrap config/common config/binary
@@ -24,6 +27,7 @@ Echo_message 'including syslinux in the ISO filesystem'
 ### Functions
 
 syslinux_deb_version_in_chroot () {
+   # shellcheck disable=SC2016
    chroot chroot dpkg-query -W -f='${Version}\n' syslinux
 }
 
@@ -33,7 +37,6 @@ WIN32_BINARY_UTILS_DIR='binary/utils/win32'
 BINARY_MBR_DIR='binary/utils/mbr'
 CHROOT_SYSLINUX_BIN='chroot/usr/bin/syslinux'
 CHROOT_SYSLINUX_MBR='chroot/usr/lib/SYSLINUX/gptmbr.bin'
-CHROOT_TEMP_APT_SOURCES='chroot/etc/apt/sources.list.d/tmp-deb-src.list'
 
 ### Main
 mkdir -p "$LINUX_BINARY_UTILS_DIR" "$WIN32_BINARY_UTILS_DIR" "$BINARY_MBR_DIR"

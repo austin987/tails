@@ -64,7 +64,7 @@ module Dogtail
 
     def initialize(app_name, **opts)
       @var = "node#{@@node_counter += 1}"
-      @app_name = app_name
+      @app_name = translate(app_name)
       @opts = opts
       @opts[:user] ||= LIVE_USER
       @find_code = "dogtail.tree.root.application('#{@app_name}')"
@@ -111,16 +111,20 @@ module Dogtail
     end
 
     def self.value_to_s(value)
-      if value == true
+      if value.nil?
+        'None'
+      elsif value == true
         'True'
       elsif value == false
         'False'
       elsif value.class == String
-        "'#{value}'"
+        # Since we use single-quote the string we have to escape any
+        # occurrences inside.
+        "'#{value.gsub("'", "\\\\'")}'"
       elsif [Integer, Float].include?(value.class)
         v.to_s
       else
-        raise "#{self.class.name} does not know how to handle argument type " \
+        raise "#{self.name} does not know how to handle argument type " \
               "'#{value.class}'"
       end
     end
@@ -170,8 +174,7 @@ module Dogtail
       end
       findChildren_opts = ''
       unless findChildren_opts_hash.empty?
-        findChildren_opts = ', '
-        + self.class.args_to_s([findChildren_opts_hash])
+        findChildren_opts = ', ' + self.class.args_to_s([findChildren_opts_hash])
       end
       predicate_opts = self.class.args_to_s(args)
       nodes_var = "nodes#{@@node_counter += 1}"
@@ -193,6 +196,10 @@ module Dogtail
 
     def set_field(key, value)
       run("#{@var}.#{key} = #{self.class.value_to_s(value)}")
+    end
+
+    def checked
+      get_field('checked') == 'True'
     end
 
     def text
@@ -232,6 +239,7 @@ module Dogtail
 
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
+        args[0] = translate(args[0]) if args[0].class == String
         args_str = self.class.args_to_s(args)
         method_call = "#{method}(#{args_str})"
         Node.new("#{@var}.#{method_call}", **@opts)
@@ -243,6 +251,40 @@ module Dogtail
         Node.new("#{@var}.#{field}", **@opts)
       end
     end
+
+    # Override the `child` method to add support for regex matching of
+    # node names, which offers much greater flexibility.
+    def override_child(pattern, **opts)
+      # Ruby < 2.7 handles arguments vs option hash differently, so we
+      # need a workaround.
+      # XXX:Bullseye: drop this workaround once we run on Ruby >=2.7.
+      if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.7")
+        if pattern.class == Hash
+          opts.merge!(pattern)
+          pattern = nil
+        end
+      end
+      if pattern.instance_of?(Regexp)
+        retries = 20
+        if opts.key?(:retry)
+          retries = 1 unless opts[:retry]
+          opts.delete(:retry)
+        end
+        child = nil
+        retry_action(retries, delay: 1, exception: Failure, msg: "Found no child matching /#{pattern.source}/") do
+          child = self.children(**opts).find do |c|
+            pattern.match(c.name)
+          end
+          assert_not_nil(child)
+        end
+        child
+      else
+        self.original_child_method(pattern, **opts)
+      end
+    end
+
+    alias original_child_method child
+    alias child override_child
   end
 
   class Node < Application
@@ -253,14 +295,6 @@ module Dogtail
       @find_code = expr
       @var = "node#{@@node_counter += 1}"
       run("#{@var} = #{@find_code}")
-    end
-
-    TREE_API_NODE_SEARCHES.each do |method|
-      define_method(method) do |*args|
-        args_str = self.class.args_to_s(args)
-        method_call = "#{method}(#{args_str})"
-        Node.new("#{@var}.#{method_call}", **@opts)
-      end
     end
 
     TREE_API_NODE_ACTIONS.each do |method|

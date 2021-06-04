@@ -22,6 +22,7 @@ git_commit_from_ref() {
 	git rev-parse --verify "${@}" 2>/dev/null || :
 }
 
+# shellcheck disable=SC2120
 git_current_commit() {
 	git_commit_from_ref "${@}" HEAD
 }
@@ -33,7 +34,7 @@ git_tag_from_commit() {
 
 # Returns "" if not on a tag
 git_current_tag() {
-	git_tag_from_commit $(git_current_commit)
+	git_tag_from_commit "$(git_current_commit)"
 }
 
 # Try to describe what currently is checked out. Returns "" if we are
@@ -54,9 +55,9 @@ git_on_a_tag() {
 
 git_only_doc_changes_since() {
 	local commit non_doc_diff
-	commit="$(git_commit_from_ref ${1})"
+	commit="$(git_commit_from_ref "${1}")"
 	non_doc_diff="$(git diff \
-		${commit}... \
+		"${commit}"... \
 		-- \
 		'*' \
 		':!/wiki' \
@@ -68,10 +69,11 @@ git_only_doc_changes_since() {
 }
 
 base_branch() {
-	cat config/base_branch | head -n1
+	head -n1 config/base_branch
 }
 
 base_branches() {
+	# shellcheck disable=SC2086
 	echo ${BASE_BRANCHES}
 }
 
@@ -93,7 +95,7 @@ git_base_branch_head() {
 branch_name_to_suite() {
 	local branch="$1"
 
-	echo "$branch" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[A-Z]' '[a-z]'
+	echo "$branch" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[:upper:]' '[:lower:]'
 }
 
 fatal() {

@@ -41,7 +41,7 @@ usage ()
 List (on stdout) all GPT partitions with names among LABEL(s) that are
 compatible with live-boot's overlay persistence, and that are adhering to
 live-boot's persistence filters (e.g. persistent-media). If no LABEL is given
-the default in live-boot is used ('${custom_overlay_label}').
+the default in live-boot is used ('\${custom_overlay_label}').
    or: ${cmd} [OPTION]... activate VOLUME...
 Activates persistence on the given VOLUME(s). Successes and failures are
 written to stdout. There are no checks for whether the given volumes adhere
@@ -101,7 +101,7 @@ is_preset_enabled() {
 	local PRESET_SOURCE="${2}"
 	local CONFIG="${3}"
 	grep --extended-regexp --line-regex --quiet --no-messages \
-	     -e "$(escape_dots ${PRESET})\s+source=${PRESET_SOURCE}" "$CONFIG"
+	     -e "$(escape_dots "${PRESET}")\s+source=${PRESET_SOURCE}" "$CONFIG"
 }
 
 migrate_persistence_preset()
@@ -124,7 +124,8 @@ maybe_restore_gnupg_pubring()
 {
 	local KEYRING="/home/amnesia/.gnupg/pubring.kbx"
 	local KEYRING_BAK="${KEYRING}~"
-	local KEYRING_SIZE="$(stat -c %s ${KEYRING} || echo 0)"
+	local KEYRING_SIZE
+	KEYRING_SIZE="$(stat -c %s ${KEYRING} || echo 0)"
 
 	if [ ! -f "${KEYRING}" ] || [ "${KEYRING_SIZE}" -le 32 ]; then
 		warning "It seems the GnuPG keyring is corrupt"
@@ -177,18 +178,19 @@ list_gpt_volumes ()
 
 	for dev in $(storage_devices "" "${whitelistdev}")
 	do
-		if ( is_luks_partition ${dev} >/dev/null 2>&1 && \
-		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<luks\>" ) || \
+		if ( is_luks_partition "${dev}" >/dev/null 2>&1 && \
+		     echo "${PERSISTENCE_ENCRYPTION}" | grep -qve "\<luks\>" ) || \
 
-		   ( ! is_luks_partition ${dev} >/dev/null 2>&1 && \
-		     echo ${PERSISTENCE_ENCRYPTION} | grep -qve "\<none\>" )
+		   ( ! is_luks_partition "${dev}" >/dev/null 2>&1 && \
+		     echo "${PERSISTENCE_ENCRYPTION}" | grep -qve "\<none\>" )
 		then
 			continue
 		fi
-		local result="$(probe_for_gpt_name "${labels}" ${dev})"
+		local result
+		result="$(probe_for_gpt_name "${labels}" "${dev}")"
 		if [ -n "${result}" ]
 		then
-			echo ${result#*=}
+			echo "${result#*=}"
 		fi
 	done
 
@@ -208,17 +210,17 @@ group::rwx
 mask::rwx
 other::---"
 
-	if [ $(stat -c %U "$mountpoint") != "$expected_user" ]
+	if [ "$(stat -c %U "$mountpoint")" != "$expected_user" ]
 	then
 		warning "'$mountpoint' is not owned by the '$expected_user' user"
 		return 1
 	fi
-	if [ $(stat -c %G "$mountpoint") != "$expected_group" ]
+	if [ "$(stat -c %G "$mountpoint")" != "$expected_group" ]
 	then
 		warning "'$mountpoint' is not owned by the '$expected_group' group"
 		return 2
 	fi
-	if [ $(stat -c %a "$mountpoint") != "$expected_perms" ]
+	if [ "$(stat -c %a "$mountpoint")" != "$expected_perms" ]
 	then
 		warning "'$mountpoint' permissions are not $expected_perms"
 		return 4
@@ -240,17 +242,17 @@ persistence_conf_file_has_correct_access_rights ()
 	local expected_group=tails-persistence-setup
 	local expected_acl=""
 
-	if [ $(stat -c %U "$conf") != "$expected_user" ]
+	if [ "$(stat -c %U "$conf")" != "$expected_user" ]
 	then
 		warning "'$conf' is not owned by the '$expected_user' user"
 		return 1
 	fi
-	if [ $(stat -c %G "$conf") != "$expected_group" ]
+	if [ "$(stat -c %G "$conf")" != "$expected_group" ]
 	then
 		warning "'$conf' is not owned by the '$expected_group' group"
 		return 2
 	fi
-	if [ $(stat -c %a "$conf") != "$expected_perms" ]
+	if [ "$(stat -c %a "$conf")" != "$expected_perms" ]
 	then
 		warning "'$conf' permissions are not $expected_perms"
 		return 4
@@ -316,7 +318,7 @@ activate_volumes ()
 			ret=1
 			continue
 		fi
-		if [ -n "$(what_is_mounted_on ${dev})" ]
+		if [ -n "$(what_is_mounted_on "${dev}")" ]
 		then
 			warning "${vol} is already mounted"
 			failures="${failures} ${vol}"
@@ -324,7 +326,7 @@ activate_volumes ()
 			continue
 		fi
 		local luks_vol=""
-		if /sbin/cryptsetup isLuks ${vol} >/dev/null 2>&1 
+		if /sbin/cryptsetup isLuks "${vol}" >/dev/null 2>&1
 		then
 			if luks_vol=$(open_luks_device "${vol}")
 			then
@@ -338,7 +340,8 @@ activate_volumes ()
 	done
 
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
-	get_custom_mounts ${custom_mounts} ${open_volumes}
+	# shellcheck disable=SC2086
+	get_custom_mounts "${custom_mounts}" ${open_volumes}
 	# ... and now the persistent volumes should be mounted.
 
 	# Enable the acl mount option on all persistent filesystems.
@@ -430,8 +433,8 @@ activate_volumes ()
 			# a system directory. This e.g. avoids setting wrong
 			# permissions on the APT, CUPS and NetworkManager
 			# persistent directories.
-			[ $(stat -c '%U' "$subdir") = 'amnesia' ] || continue
-			[ $(stat -c '%G' "$subdir") = 'amnesia' ] || continue
+			[ "$(stat -c '%U' "$subdir")" = 'amnesia' ] || continue
+			[ "$(stat -c '%G' "$subdir")" = 'amnesia' ] || continue
 			chmod go= "$subdir"
 		done
 	done
@@ -443,9 +446,22 @@ activate_volumes ()
 		chown amnesia:amnesia "${persistent_fs}/dont-ask-again"
 	done
 
+	# Migrate obsolete network setting to offline mode setting
+	for persistent_fs in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		conf="${persistent_fs}/greeter-settings/tails.network"
+		if [ -e "${conf}" ]; then
+			. "${conf}"
+			if [ "${TAILS_NETCONF:-}" = disabled ]; then
+				echo 'TAILS_NETWORK=false' > "${conf}"
+			fi
+		fi
+	done
+
 	# Load the new persistence.conf.
 	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
-	get_custom_mounts ${custom_mounts} ${open_volumes}
+	# shellcheck disable=SC2086
+	get_custom_mounts "${custom_mounts}" ${open_volumes}
 
 	if [ -s "${custom_mounts}" ]
 	then
@@ -453,10 +469,10 @@ activate_volumes ()
 		# Have activate_custom_mounts create new directories
 		# with safe permissions (#7443)
 		umask 0077
-		activate_custom_mounts ${custom_mounts} &> /dev/null
+		activate_custom_mounts "${custom_mounts}" &> /dev/null
 		umask "$OLD_UMASK"
 	fi
-	rm -f ${custom_mounts} 2> /dev/null
+	rm -f "${custom_mounts}" 2> /dev/null
 
 	for vol in ${open_volumes}
 	do
@@ -497,20 +513,24 @@ activate_volumes ()
 close_volumes ()
 {
 	local volumes=${@}
-	local custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
-	get_custom_mounts ${custom_mounts} ${volumes}
-	while read device source dest options # < ${custom_mounts}
+	local custom_mounts
+	custom_mounts="$(mktemp /tmp/custom_mounts-XXXXXX.list)"
+	# shellcheck disable=SC2086
+	get_custom_mounts "${custom_mounts}" ${volumes}
+	# shellcheck disable=SC2034
+	while read -r device source dest options # < ${custom_mounts}
 	do
 		if [ "${options}" != linkfiles ]
 		then
-			umount ${dest} 2> /dev/null
+			umount "${dest}" 2> /dev/null
 		fi
-	done < ${custom_mounts}
-	rm -f ${custom_mounts} 2> /dev/null
+	done < "${custom_mounts}"
+	rm -f "${custom_mounts}" 2> /dev/null
 	for vol in ${volumes}
 	do
-		local backing=$(where_is_mounted ${vol})
-		umount ${backing}
+		local backing
+		backing=$(where_is_mounted "${vol}")
+		umount "${backing}"
 	done
 }
 
@@ -571,8 +591,10 @@ main ()
 			if ! echo ${labels} | grep -qe "[^[:space:]]"
 			then
 				# use default from live-helpers
+				# shellcheck disable=SC2154
 				labels=${custom_overlay_label}
 			fi
+			# shellcheck disable=SC2086
 			list_gpt_volumes ${labels}
 			;;
 		activate|close)
@@ -580,7 +602,7 @@ main ()
 			then
 				error "you must specify at least one volume"
 			fi
-			${action}_volumes "${@}"
+			"${action}_volumes" "${@}"
 			;;
 		"")
 			error "no action specified"

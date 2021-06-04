@@ -53,9 +53,9 @@ notify_panic_success() {
     local nic_name
     nic="${1}"
     nic_name="${2}"
-    show_notification "`eval_gettext \"Network card \\\${nic} disabled\"`" \
-"`eval_gettext \"MAC spoofing failed for network card \\\${nic_name} (\\\${nic}) so it is temporarily disabled.
-You might prefer to restart Tails and disable MAC spoofing.\"`"
+    show_notification "$(eval_gettext "Network card \${nic} disabled")" \
+"$(eval_gettext "MAC address anonymization failed for network card \${nic_name} (\${nic}) so it is temporarily disabled.
+You might prefer to restart Tails and disable MAC address anonymization.")"
 }
 
 notify_panic_failure() {
@@ -63,22 +63,21 @@ notify_panic_failure() {
     local nic_name
     nic="${1}"
     nic_name="${2}"
-    show_notification "`gettext \"All networking disabled\"`" \
-"`eval_gettext \"MAC spoofing failed for network card \\\${nic_name} (\\\${nic}). The error recovery also failed so all networking is disabled.
-You might prefer to restart Tails and disable MAC spoofing.\"`"
+    show_notification "$(gettext "All networking disabled")" \
+"$(eval_gettext "MAC address anonymization failed for network card \${nic_name} (\${nic}). The error recovery also failed so all networking is disabled.
+You might prefer to restart Tails and disable MAC address anonymization.")"
 }
 
 mac_spoof_panic() {
     local nic
     local module
     local nic_name
-    local unload_success
     nic=${1}
     if ! /sbin/ip link set dev "${nic}" down; then
         log "Failed to down NIC ${nic} in panic mode."
     fi
     module=$(get_module_used_by_nic "${nic}")
-    nic_name="$(get_name_of_nic ${nic})"
+    nic_name="$(get_name_of_nic "${nic}")"
     echo "install ${module} /bin/true" >> \
          /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :
@@ -132,6 +131,7 @@ OLD_MAC="$(get_current_mac_of_nic "${NIC}")"
 # three times. Theoretically speaking this leaks information about the
 # real MAC address at each occasion but actually leaking the real MAC
 # address will be more serious in practice.
+# shellcheck disable=SC2034
 for i in 1 2 3; do
     if ! spoof_mac "${NIC}"; then
         # If our MAC spoofing primitive fails, we fail safe by forcing

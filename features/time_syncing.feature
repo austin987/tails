@@ -12,22 +12,22 @@ Feature: Time syncing
 
   #11589
   @fragile
-  Scenario: Clock with host's time in bridge mode
-    Given I have started Tails from DVD without network and logged in with bridge mode enabled
+  Scenario: Clock with host's time while using bridges
+    Given I have started Tails from DVD without network and logged in
     When the network is plugged
-    And the Tor Launcher autostarts
-    And I configure some bridge pluggable transports in Tor Launcher
+    And the Tor Connection Assistant autostarts
+    And I configure some normal bridges in the Tor Connection Assistant
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
   #11589
   @fragile
-  Scenario: Clock is one day in the future in bridge mode
-    Given I have started Tails from DVD without network and logged in with bridge mode enabled
+  Scenario: Clock is one day in the future while using bridges
+    Given I have started Tails from DVD without network and logged in
     When I bump the system time with "+1 day"
     And the network is plugged
-    And the Tor Launcher autostarts
-    And I configure some bridge pluggable transports in Tor Launcher
+    And the Tor Connection Assistant autostarts
+    And I configure some normal bridges in the Tor Connection Assistant
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
