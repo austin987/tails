@@ -1,6 +1,8 @@
 #!/bin/sh
 
-set -ex
+set -e
+set -u
+set -x
 
 SPECFILE=spec.vmdb
 OUTPUT=vm_test.img
