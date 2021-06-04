@@ -23,6 +23,10 @@ SPECFILE="$(mktemp)"
 TARGET_NAME="$(build_setting box_name)"
 TARGET_IMG="${TARGET_NAME}.img"
 TARGET_QCOW2="${TARGET_NAME}.qcow2"
+DISTRIBUTION="$(build_setting DISTRIBUTION)"
+HOSTNAME="vagrant-${DISTRIBUTION}"
+USERNAME="vagrant"
+PASSWORD="vagrant"
 
 DEBIAN_SERIAL="$(get_serial debian)"
 DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
@@ -36,7 +40,6 @@ DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.kbx"
 if [ ! -e "${DEBOOTSTRAP_GNUPG_PUBRING}" ]; then
     DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg"
 fi
-
 
 # Create specification file for vmdb2
 cat > "${SPECFILE}" <<EOF
@@ -69,7 +72,7 @@ steps:
 
   - unpack-rootfs: rootfs
 
-  - debootstrap: buster
+  - debootstrap: ${DISTRIBUTION}
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     keyring: ${DEBOOTSTRAP_GNUPG_PUBRING}
     target: rootfs
@@ -85,7 +88,7 @@ steps:
       iface eth0 inet6 auto
 
   - chroot: rootfs
-    shell: echo vagrant > /etc/hostname
+    shell: echo ${HOSTNAME} > /etc/hostname
 
   - copy-file: /tmp/tails.binary.gpg
     src: config/chroot_sources/tails.binary.gpg
@@ -115,12 +118,12 @@ steps:
 
   - chroot: rootfs
     shell: |
-      sed -e 's/buster/buster-updates/' /etc/apt/sources.list \
-        > "/etc/apt/sources.list.d/buster-updates.list"
+      sed -e 's/${DISTRIBUTION}/${DISTRIBUTION}-updates/' /etc/apt/sources.list \
+        > "/etc/apt/sources.list.d/${DISTRIBUTION}-updates.list"
 
-  - create-file: /etc/apt/sources.list.d/buster-security.list
+  - create-file: /etc/apt/sources.list.d/${DISTRIBUTION}-security.list
     contents: |
-      deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ buster/updates main
+      deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ ${DISTRIBUTION}/updates main
 
   - create-file: /etc/apt/sources.list.d/tails.list
     contents: |
@@ -138,10 +141,10 @@ steps:
       Pin: release o=Tails,n=builder-jessie
       Pin-Priority: 999
 
-  - create-file: /etc/apt/preferences.d/buster-backports
+  - create-file: /etc/apt/preferences.d/${DISTRIBUTION}-backports
     contents: |
       Package: *
-      Pin: release n=buster-backports
+      Pin: release n=${DISTRIBUTION}-backports
       Pin-Priority: 100
 
   - chroot: rootfs
@@ -233,17 +236,17 @@ steps:
 
   - chroot: rootfs
     shell: |
-      adduser --gecos '' --disabled-password vagrant
-      echo "vagrant:vagrant" | chpasswd
-      echo "vagrant ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/vagrant
-      mkdir -p /home/vagrant/.ssh
-      chmod 0700 /home/vagrant/.ssh
-      chown -R vagrant:vagrant /home/vagrant
+      adduser --gecos '' --disabled-password ${USERNAME}
+      echo "${USERNAME}:${PASSWORD}" | chpasswd
+      echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USERNAME}
+      mkdir -p /home/${USERNAME}/.ssh
+      chmod 0700 /home/${USERNAME}/.ssh
+      chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
   - chroot: rootfs
     shell: |
-      install -o 1000 -g 1000 -m 0700 /dev/null /home/vagrant/.ssh/authorized_keys
-      echo "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key" > /home/vagrant/.ssh/authorized_keys
+      install -o 1000 -g 1000 -m 0700 /dev/null /home/${USERNAME}/.ssh/authorized_keys
+      echo "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key" > /home/${USERNAME}/.ssh/authorized_keys
 
   - chroot: rootfs
     shell: |
