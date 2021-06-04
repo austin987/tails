@@ -4,12 +4,22 @@ set -e
 set -u
 set -x
 
+GIT_DIR="$(git rev-parse --show-toplevel)"
+
+get_serial() {
+    (
+        cd "${GIT_DIR}/vagrant/definitions/tails-builder/"
+        "${GIT_DIR}"/auto/scripts/apt-snapshots-serials \
+            cat --print-serials-only "${1}"
+    )
+}
+
 SPECFILE="$(mktemp)"
 OUTPUT=vm_test.img
 
-DEBIAN_SERIAL=2020120601
-DEBIAN_SECURITY_SERIAL=2020090701
-TAILS_SERIAL=2020090701
+DEBIAN_SERIAL="$(get_serial debian)"
+DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
+TAILS_SERIAL="$(get_serial tails)"
 
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
