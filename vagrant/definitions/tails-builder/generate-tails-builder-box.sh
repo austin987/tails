@@ -152,9 +152,6 @@ steps:
   - chroot: rootfs
     shell: apt update
 
-  - chroot: rootfs
-    shell: for x in /etc/apt/preferences /etc/apt/preferences.d/* /etc/apt/sources.list  /etc/apt/sources.list.d/*; do [ ! -e "\$x" ] && continue; echo; echo \$x; echo ==========================================================; cat \$x; done
-
   - apt: install
     packages:
       - apt-cacher-ng
@@ -262,8 +259,6 @@ steps:
         /var/log/installer \
         /var/lib/dhcp/*
 EOF
-
-cat "${SPECFILE}"
 
 rm -f "${TARGET_NAME}"*
 sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" \
