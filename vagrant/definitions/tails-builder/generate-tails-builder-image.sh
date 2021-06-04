@@ -6,8 +6,6 @@ set -x
 
 SPECFILE=spec.vmdb
 OUTPUT=vm_test.img
-TARF=vmroot.tar.gz
-CTR_NAME=vm_dock
 
 DEBIAN_SERIAL=2020120601
 DEBIAN_SECURITY_SERIAL=2020090701
@@ -250,24 +248,9 @@ if [ -f $OUTPUT ]; then
     echo "File already exists"
 else
     echo "Creating file"
-    sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output $OUTPUT -v --log vmdb2.log --rootfs-tarball $TARF
+    sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output $OUTPUT -v --log vmdb2.log
 fi
 qemu-img convert -O qcow2 $OUTPUT vm_test.qcow2
 
 
 rm -f $SPECFILE
-
-CONVERT_TO_DOCKER=0
-while getopts 'd' opt; do
-    case $opt in
-	d)
-	    CONVERT_TO_DOCKER=1
-	    ;;
-    esac
-done
-
-if [ $CONVERT_TO_DOCKER -eq 1 ]; then
-    echo "converting to container"
-    podman import $TARF $CTR_NAME
-    podman run -it --rm $CTR_NAME bash
-fi
