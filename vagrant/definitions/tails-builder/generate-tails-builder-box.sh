@@ -47,7 +47,7 @@ fi
 cat > "${SPECFILE}" <<EOF
 steps:
   - mkimg: "{{ output }}"
-    size: 2G
+    size: 20G
 
   - mklabel: msdos
     device: "{{ output }}"
