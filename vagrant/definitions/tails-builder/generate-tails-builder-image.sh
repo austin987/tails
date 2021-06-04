@@ -261,13 +261,8 @@ EOF
 
 cat $SPECFILE
 
-if [ -f "${TARGET_IMG}" ]; then
-    echo "File already exists"
-else
-    echo "Creating file"
-    sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output "${TARGET_IMG}" -v --log vmdb2.log
-fi
+rm -f "${TARGET_NAME}"*
+sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output "${TARGET_IMG}" -v --log vmdb2.log
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 
-
-rm -f $SPECFILE
+rm -f $SPECFILE "${TARGET_IMG}" vmdb2.log
