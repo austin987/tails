@@ -6,6 +6,11 @@ set -x
 
 GIT_DIR="$(git rev-parse --show-toplevel)"
 
+build_setting() {
+    ruby -I "${GIT_DIR}/vagrant/lib" \
+         -e "require 'tails_build_settings.rb'; print ${1}"
+}
+
 get_serial() {
     (
         cd "${GIT_DIR}/vagrant/definitions/tails-builder/"
@@ -15,7 +20,9 @@ get_serial() {
 }
 
 SPECFILE="$(mktemp)"
-OUTPUT=vm_test.img
+TARGET_NAME="$(build_setting box_name)"
+TARGET_IMG="${TARGET_NAME}.img"
+TARGET_QCOW2="${TARGET_NAME}.qcow2"
 
 DEBIAN_SERIAL="$(get_serial debian)"
 DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
@@ -254,13 +261,13 @@ EOF
 
 cat $SPECFILE
 
-if [ -f $OUTPUT ]; then
+if [ -f "${TARGET_IMG}" ]; then
     echo "File already exists"
 else
     echo "Creating file"
-    sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output $OUTPUT -v --log vmdb2.log
+    sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output "${TARGET_IMG}" -v --log vmdb2.log
 fi
-qemu-img convert -O qcow2 $OUTPUT vm_test.qcow2
+qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 
 
 rm -f $SPECFILE
