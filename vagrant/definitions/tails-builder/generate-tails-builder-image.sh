@@ -250,7 +250,7 @@ if [ -f $OUTPUT ]; then
     echo "File already exists"
 else
     echo "Creating file"
-    sudo vmdb2 $SPECFILE --output $OUTPUT -v --log vmdb2.log --rootfs-tarball $TARF
+    sudo ${http_proxy:+http_proxy="$http_proxy"} vmdb2 $SPECFILE --output $OUTPUT -v --log vmdb2.log --rootfs-tarball $TARF
 fi
 qemu-img convert -O qcow2 $OUTPUT vm_test.qcow2
 
