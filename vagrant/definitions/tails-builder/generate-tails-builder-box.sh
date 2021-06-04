@@ -13,7 +13,7 @@ build_setting() {
 
 get_serial() {
     (
-        cd "${GIT_DIR}/vagrant/definitions/tails-builder/"
+        cd "${GIT_DIR}/vagrant/definitions/tails-builder/" && \
         "${GIT_DIR}"/auto/scripts/apt-snapshots-serials \
             cat --print-serials-only "${1}"
     )
