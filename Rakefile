@@ -747,8 +747,8 @@ namespace :basebox do
       time needed for downloading around 250 MiB of Debian packages.
 
     END_OF_MESSAGE
-    box_dir = VAGRANT_PATH + '/definitions/tails-builder'
-    run_command("#{box_dir}/generate-tails-builder-box.sh")
+    run_command("#{VAGRANT_PATH}/definitions/tails-builder/generate-tails-builder-box.sh")
+    box_dir = Dir.pwd
     # Let's use an absolute path since run_vagrant changes the working
     # directory but File.delete doesn't
     box_path = "#{box_dir}/#{box_name}.box"
