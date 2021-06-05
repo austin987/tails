@@ -156,16 +156,6 @@ Then /^MAT can clean some sample PNG file$/ do
   end
 end
 
-Then /^AppArmor is enabled$/ do
-  assert_vmcommand_success($vm.execute('aa-status'),
-                           'AppArmor is not enabled')
-end
-
-Then /^some AppArmor profiles are enforced$/ do
-  assert($vm.execute('aa-status --enforced').stdout.chomp.to_i.positive?,
-         'No AppArmor profile is enforced')
-end
-
 def get_seccomp_status(process)
   assert($vm.process_running?(process), "Process #{process} not running.")
   pid = $vm.pidof(process)[0]
