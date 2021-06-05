@@ -1,4 +1,4 @@
-@product
+@product @not_release_blocker
 Feature: Using VeraCrypt encrypted volumes
   In order to collaborate with non-Tails users
   As a Tails user

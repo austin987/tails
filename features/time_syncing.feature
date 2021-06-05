@@ -31,6 +31,7 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
+  @not_release_blocker
   Scenario: The system time is not synced to the hardware clock
     Given I have started Tails from DVD without network and logged in
     When I bump the system time with "-15 days"
@@ -38,6 +39,7 @@ Feature: Time syncing
     And the computer reboots Tails
     Then Tails' hardware clock is close to the host system's time
 
+  @not_release_blocker
   Scenario: Anti-test: Changes to the hardware clock are kept when rebooting
     Given I have started Tails from DVD without network and logged in
     When I bump the hardware clock's time with "-15 days"

@@ -21,6 +21,7 @@ Feature: Using Evince
     Then I see "CupsTestPage.png" after at most 40 seconds
     And I can print the current document to "/home/amnesia/output.pdf"
 
+  @not_release_blocker
   Scenario: I cannot view a PDF file stored in non-persistent /home/amnesia/.gnupg
     Given I have started Tails from DVD without network and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
@@ -54,6 +55,7 @@ Feature: Using Evince
     Then I see "CupsTestPage.png" after at most 40 seconds
     And I can print the current document to "/home/amnesia/Persistent/output.pdf"
 
+  @not_release_blocker
   Scenario: I cannot view a PDF file stored in persistent /home/amnesia/.gnupg
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"

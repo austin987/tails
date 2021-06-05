@@ -17,6 +17,7 @@ Feature: Installing Tails to a USB drive
     And I plug USB drive "big-enough"
     Then the "big-enough" USB drive is selected
 
+  @not_release_blocker
   Scenario: Try installing Tails to a too small USB drive with GPT and a FAT partition
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "gptfat"

@@ -1,4 +1,4 @@
-@product @doc
+@product @doc @not_release_blocker
 Feature: Tails documentation
 
   Scenario: The Tails documentation launcher on the desktop works when offline

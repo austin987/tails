@@ -6,6 +6,7 @@ Feature: Shutdown applet
     When I request a shutdown using the emergency shutdown applet
     Then Tails eventually shuts down
 
+  @not_release_blocker
   Scenario: The shutdown applet can reboot Tails
     Given I have started Tails from DVD and logged in and the network is connected
     When I request a reboot using the emergency shutdown applet

@@ -4,7 +4,7 @@ Feature: Localization
   I want Tails to be localized in my native language
   And various Tails features should still work
 
-  @doc
+  @doc @not_release_blocker
   Scenario: The Report an Error launcher opens the support documentation in supported non-English locales
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I log in to a new session in German
@@ -16,9 +16,7 @@ Feature: Localization
     And I magically allow the Unsafe Browser to be started
     Then the Unsafe Browser works in all supported languages
 
-  # Not necessarily fragile, but not worth making every single test
-  # suite run 20+ minutes longer
-  @fragile
+  @slow @not_release_blocker
   Scenario Outline: Tails is localized for every tier-1 language
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     When I log in to a new session in <language>

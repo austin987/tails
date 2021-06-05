@@ -20,7 +20,7 @@ Feature: Logging in via SSH
     When I connect to an SSH server on the LAN
     Then I am prompted to verify the SSH fingerprint for the SSH server
 
-  @check_tor_leaks
+  @check_tor_leaks @not_release_blocker
   Scenario: Connecting to an SFTP server on the Internet using the GNOME "Connect to Server" feature
     Given I have the SSH key pair for an SFTP server
     When I connect to an SFTP server on the Internet
