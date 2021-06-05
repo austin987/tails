@@ -120,7 +120,7 @@ steps:
 
   - chroot: rootfs
     shell: |
-      sed -e 's/${DISTRIBUTION}/${DISTRIBUTION}-updates/' /etc/apt/sources.list \
+      sed -e 's/${DISTRIBUTION}/${DISTRIBUTION}-updates/' /etc/apt/sources.list \\
         > "/etc/apt/sources.list.d/${DISTRIBUTION}-updates.list"
 
   - create-file: /etc/apt/sources.list.d/${DISTRIBUTION}-security.list
@@ -275,12 +275,12 @@ steps:
     shell: |
       apt-get -y autoremove
       apt-get clean
-      rm -rf \
-        /var/lib/apt/lists/* \
-        /var/lib/apt/lists/partial/* \
-        /var/cache/apt/*.bin \
-        /var/cache/apt/archives/*.deb \
-        /var/log/installer \
+      rm -rf \\
+        /var/lib/apt/lists/* \\
+        /var/lib/apt/lists/partial/* \\
+        /var/cache/apt/*.bin \\
+        /var/cache/apt/archives/*.deb \\
+        /var/log/installer \\
         /var/lib/dhcp/*
 EOF
 
