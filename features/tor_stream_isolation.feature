@@ -31,11 +31,6 @@ Feature: Tor stream isolation is effective
     And the Tor Browser loads the startup page
     Then I see that Tor Browser is properly stream isolated
 
-  Scenario: SSH is using the default SocksPort
-    When I monitor the network connections of SSH
-    And I connect to an SSH server on the Internet
-    Then I see that SSH is properly stream isolated
-
   Scenario: whois lookups use the default SocksPort
     When I monitor the network connections of whois
     And I query the whois directory service for "boum.org"

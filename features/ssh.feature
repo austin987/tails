@@ -9,9 +9,11 @@ Feature: Logging in via SSH
 
   @check_tor_leaks
   Scenario: Connecting to an SSH server on the Internet works and uses the default SocksPort
-    Given I have the SSH key pair for an SSH server
+    Given I monitor the network connections of SSH
+    And I have the SSH key pair for an SSH server
     When I connect to an SSH server on the Internet
     Then I have sucessfully logged into the SSH server
+    And I see that SSH is properly stream isolated
 
   @check_tor_leaks
   Scenario: Connecting to an SSH server on the LAN
