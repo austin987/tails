@@ -3,20 +3,6 @@ Feature: Installing Tails to a USB drive
   As a Tails user
   I want to install Tails to a suitable USB drive
 
-  Scenario: Try installing Tails to a too small USB drive without partition table
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 4500 MiB disk named "too-small-device"
-    And I start Tails Installer
-    But a suitable USB device is not found
-    And no USB drive is selected
-    When I plug USB drive "too-small-device"
-    Then I am told by Tails Installer that the destination device "is too small"
-    And no USB drive is selected
-    When I unplug USB drive "too-small-device"
-    And I temporarily create a 7200 MiB disk named "big-enough"
-    And I plug USB drive "big-enough"
-    Then the "big-enough" USB drive is selected
-
   @not_release_blocker
   Scenario: Try installing Tails to a too small USB drive with GPT and a FAT partition
     Given I have started Tails from DVD without network and logged in
@@ -66,18 +52,6 @@ Feature: Installing Tails to a USB drive
     When I reinstall Tails to USB drive "install" by cloning
     Then the running Tails is installed on USB drive "install"
     And there is no persistence partition on USB drive "install"
-
-  Scenario: Booting Tails from a USB drive without a persistent partition and creating one
-    Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
-    And I log in to a new session
-    When I create a persistent partition
-    Then a Tails persistence partition exists on USB drive "__internal"
-
-  Scenario: Booting Tails from a USB drive without a persistent partition
-    Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
-    When I log in to a new session
-    And the persistent Tor Browser directory does not exist
-    And there is no persistence partition on USB drive "__internal"
 
   @uefi
   Scenario: Booting Tails from a USB drive in UEFI mode
