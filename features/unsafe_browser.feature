@@ -26,7 +26,7 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has only Firefox's default bookmarks configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
-  Scenario: The Unsafe Browser can load a web page
+  Scenario: The Unsafe Browser can load a web page from the Internet
     Given I have started Tails from DVD and logged in with the Unsafe Browser enabled and the network is connected
     When I successfully start the Unsafe Browser
     When I open the Tails homepage in the Unsafe Browser

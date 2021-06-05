@@ -8,7 +8,7 @@ Feature: Logging in via SSH
     Given I have started Tails from DVD and logged in and the network is connected
 
   @check_tor_leaks
-  Scenario: Connecting to an SSH server on the Internet
+  Scenario: Connecting to an SSH server on the Internet works and uses the default SocksPort
     Given I have the SSH key pair for an SSH server
     When I connect to an SSH server on the Internet
     Then I have sucessfully logged into the SSH server

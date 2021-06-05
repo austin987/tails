@@ -69,7 +69,7 @@ Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
                "live user not in expected groups #{missing}")
 end
 
-Then /^the live user owns its home dir and it has normal permissions$/ do
+Then /^the live user owns its home directory which has strict permissions$/ do
   home = "/home/#{LIVE_USER}"
   assert_vmcommand_success(
     $vm.execute("test -d #{home}"),

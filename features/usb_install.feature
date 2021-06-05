@@ -59,7 +59,7 @@ Feature: Installing Tails to a USB drive
     # Note: the "__internal" disk will keep its state across scenarios
     # and features until one of its snapshots is restored.
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    Given I have started Tails from DVD without network and logged in
+    And I have started Tails from DVD without network and logged in
     And I clone USB drive "__internal" to a temporary USB drive "install"
     And I plug USB drive "install"
     # This second part is done with Tails Installer, that's what this scenario is about
