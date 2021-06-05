@@ -102,11 +102,6 @@ Then /^no unexpected services are listening for network connections$/ do
   end
 end
 
-When /^Tails has booted a 64-bit kernel$/ do
-  assert_vmcommand_success($vm.execute("uname -r | grep -qs 'amd64$'"),
-                           'Tails has not booted a 64-bit kernel.')
-end
-
 Then /^the support documentation page opens in Tor Browser$/ do
   if $language == 'German'
     expected_title = 'Tails - Hilfe & Support'
