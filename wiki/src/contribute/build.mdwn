@@ -24,6 +24,23 @@ To build Tails you need:
 
 Then:
 
+* If you are running Debian Buster:
+
+   1. Ensure `vmdb2` is installed from Debian Bullseye:
+
+        sudo tee /etc/apt/sources.list.d/stretch.list <<EOF
+        deb http://ftp.us.debian.org/debian/ bullseye main
+        EOF
+        sudo tee /etc/apt/preferences.d/vagrant-libvirt-from-stretch.pref <<EOF
+        Package: *
+        Pin: release o=Debian,n=bullseye
+        Pin-Priority: 100
+        
+        Package: vmdb2
+        Pin: release o=Debian,n=bullseye
+        Pin-Priority: 990
+        EOF
+
 * If you are using Debian Bullseye or newer:
 
    1. Make APT trust `deb.tails.boum.org`'s signing key:
@@ -34,8 +51,6 @@ Then:
            sudo tee /etc/apt/trusted.gpg.d/deb.tails.boum.org.gpg >/dev/null
 
    2. Add an extra APT source: `deb http://deb.tails.boum.org/ builder-bullseye main`
-
-   3. Enable the Buster APT sources, to install `vmdebootstrap` and its dependencies.
 
 # Setup the build environment
 
@@ -55,7 +70,7 @@ Then:
            qemu-utils \
            vagrant \
            vagrant-libvirt \
-           vmdebootstrap && \
+           vmdb2 && \
        sudo systemctl restart libvirtd
 
 2. Ensure your user can run commands as root with `sudo`.
