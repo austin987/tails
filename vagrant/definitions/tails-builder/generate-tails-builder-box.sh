@@ -189,11 +189,15 @@ steps:
     tag: rootfs
     unless: rootfs_unpacked
 
-  - create-file: /usr/sbin/policy-rc.d
+  # <Work around Debian#951257>
+  - chroot: rootfs
+    shell: mv /bin/udevadm /bin/udevadm.orig
+
+  - create-file: /bin/udevadm
     perm: 0755
     contents: |
       #!/bin/sh
-      exit 101
+      exit 0
 
   - apt: install
     packages:
@@ -204,7 +208,10 @@ steps:
     unless: rootfs_unpacked
 
   - chroot: rootfs
-    shell: rm /usr/sbin/policy-rc.d
+    shell: |
+      rm /bin/udevadm
+      mv /bin/udevadm.orig /bin/udevadm
+  # </Work around Debian#951257>
 
   - chroot: rootfs
     shell: apt-get -y dist-upgrade
