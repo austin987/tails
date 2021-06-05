@@ -30,9 +30,3 @@ Feature: Tor stream isolation is effective
     And I start the Tor Browser
     And the Tor Browser loads the startup page
     Then I see that Tor Browser is properly stream isolated
-
-  Scenario: whois lookups use the default SocksPort
-    When I monitor the network connections of whois
-    And I query the whois directory service for "boum.org"
-    And the whois command is successful
-    Then I see that whois is properly stream isolated
