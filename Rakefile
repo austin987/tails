@@ -52,7 +52,7 @@ ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
 # In-VM proxy URL
-INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142".freeze
+INTERNAL_HTTP_PROXY = "http://127.0.0.1:3142".freeze
 
 ENV['ARTIFACTS'] ||= '.'
 
@@ -376,13 +376,16 @@ task :validate_http_proxy do
       return
     end
 
-    if ['localhost', '[::1]'].include?(proxy_host) \
-       || proxy_host.start_with?('127.0.0.')
-      abort 'Using an HTTP proxy listening on the loopback is doomed ' \
-            'to fail. Aborting.'
+    if ENV['TAILS_PROXY_TYPE'] == 'vmproxy'
+      warn 'Using the internal VM proxy'
+    else
+      if ['localhost', '[::1]'].include?(proxy_host) \
+         || proxy_host.start_with?('127.0.0.')
+        abort 'Using an HTTP proxy listening on the host\'s loopback ' \
+              'is doomed to fail. Aborting.'
+      end
+      warn "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
     end
-
-    warn "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
   else
     warn 'No HTTP proxy set.'
   end
