@@ -372,7 +372,7 @@ task :validate_http_proxy do
 
     if proxy_host.nil?
       ENV['TAILS_PROXY'] = nil
-      warn 'Ignoring invalid HTTP proxy.'
+      abort "Invalid HTTP proxy: #{ENV['TAILS_PROXY']}"
       return
     end
 
