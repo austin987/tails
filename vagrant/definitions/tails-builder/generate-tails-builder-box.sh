@@ -95,6 +95,9 @@ steps:
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
 
+  # Until here, vmdb2.log will contain some warning about missing
+  # APT keys since several steps above runs `apt-get update` before
+  # this key imported.
   - chroot: rootfs
     shell: apt-key add /tmp/tails.binary.gpg
 
@@ -107,6 +110,9 @@ steps:
     contents: |
       APT::Acquire::Retries "20";
 
+  # This effectively disables apt-daily*.{timer,service}, which might
+  # interfere with an ongoing build. We run apt-get
+  # {update,dist-upgrade,clean} ourselves in setup-tails-builder.
   - create-file: /etc/apt/apt.conf.d/99periodic
     contents: |
       APT::Periodic::Enable "0";
@@ -150,6 +156,7 @@ steps:
       - apt-cacher-ng
       - ca-certificates
       - curl
+      # Install dbus to ensure we can use timedatectl
       - dbus
       - debootstrap
       - dosfstools
@@ -209,7 +216,12 @@ steps:
 
   - chroot: rootfs
     shell: |
+      # Disable DNS checks to speed-up SSH logins
       echo "UseDNS no" >>/etc/ssh/sshd_config
+      # By default, Debian's ssh client forwards the locale env vars, and
+      # by default, Debian's sshd accepts them. The locale used while
+      # building could have effects on the resulting image, so let's fix
+      # on a single locale for all (namely the one we won't purge below).
       sed -i 's/^AcceptEnv/#AcceptEnv/' /etc/ssh/sshd_config
 
   - create-file: /tmp/localepurge.txt
@@ -232,9 +244,14 @@ steps:
       apt-get -y remove localepurge
       rm -f /tmp/localepurge.txt
 
+  # By default we reboot the system between each build, which makes this
+  # timer useless. Besides, it is started 15 minutes after boot, which
+  # has potential to interfere with an ongoing build.
   - chroot: rootfs
     shell: systemctl mask systemd-tmpfiles-clean.timer
 
+  # We will start apt-cacher-ng inside the VM only if the vmproxy is to
+  # be used.
   - chroot: rootfs
     shell: systemctl disable apt-cacher-ng.service
 
@@ -255,6 +272,7 @@ steps:
       chmod 0700 /home/${USERNAME}/.ssh
       chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
+  # Add the unsafe public key for Vagrant that will be replaced on boot.
   - chroot: rootfs
     shell: |
       install -o 1000 -g 1000 -m 0700 /dev/null /home/${USERNAME}/.ssh/authorized_keys
