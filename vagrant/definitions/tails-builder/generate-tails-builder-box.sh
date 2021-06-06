@@ -247,10 +247,9 @@ steps:
   - chroot: rootfs
     shell: systemctl disable apt-cacher-ng.service
 
-  - chroot: rootfs
-    shell: |
-      perl -pi -E 's/^GRUB_CMDLINE_LINUX_DEFAULT="([^"]*)"$/GRUB_CMDLINE_LINUX_DEFAULT="\\1 mitigations=off"/' \
-        /etc/default/grub
+  - create-file: /etc/default/grub.d/cmdline.cfg
+    contents: |
+      GRUB_CMDLINE_LINUX_DEFAULT="\$GRUB_CMDLINE_LINUX_DEFAULT mitigations=off"
 
   - grub: bios
     tag: rootfs
