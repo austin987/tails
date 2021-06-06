@@ -72,16 +72,10 @@ steps:
 
   - mount: rootfs
 
-  - unpack-rootfs: rootfs
-
   - debootstrap: ${DISTRIBUTION}
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     keyring: ${DEBOOTSTRAP_GNUPG_PUBRING}
     target: rootfs
-    unless: rootfs_unpacked
-
-  - cache-rootfs: rootfs
-    unless: rootfs_unpacked
 
   - create-file: /etc/network/interfaces.d/wired
     contents: |
@@ -100,7 +94,6 @@ steps:
       - gnupg
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
-    unless: rootfs_unpacked
 
   - chroot: rootfs
     shell: apt-key add /tmp/tails.binary.gpg
@@ -187,7 +180,6 @@ steps:
       - wget
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
-    unless: rootfs_unpacked
 
   # <Work around Debian#951257>
   - chroot: rootfs
@@ -205,7 +197,6 @@ steps:
       - udisks2
     mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
-    unless: rootfs_unpacked
 
   - chroot: rootfs
     shell: |
