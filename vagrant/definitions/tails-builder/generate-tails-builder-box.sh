@@ -95,7 +95,7 @@ steps:
     tag: rootfs
 
   # Until here, vmdb2.log will contain some warning about missing
-  # APT keys since several steps above runs `apt-get update` before
+  # APT keys since several steps above runs apt-get update before
   # this key imported.
   - chroot: rootfs
     shell: apt-key add /tmp/tails.binary.gpg
