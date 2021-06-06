@@ -249,7 +249,6 @@ steps:
 
   - chroot: rootfs
     shell: |
-      sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
       perl -pi -E 's/^GRUB_CMDLINE_LINUX_DEFAULT="([^"]*)"$/GRUB_CMDLINE_LINUX_DEFAULT="\\1 mitigations=off"/' \
         /etc/default/grub
 
