@@ -289,6 +289,7 @@ steps:
 EOF
 
 rm -f "${TARGET_NAME}"*
+# shellcheck disable=SC2154
 sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" \
      --output "${TARGET_IMG}" -v --log vmdb2.log \
      --rootfs-tarball "${TARGET_FS_TAR}"
