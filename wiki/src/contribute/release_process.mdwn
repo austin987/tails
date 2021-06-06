@@ -741,6 +741,25 @@ files metadata:
 
     ./bin/generate-images-signatures-and-torrents
 
+Get the internal manual testing started
+=======================================
+
+Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
+may start:
+
+ - reply to the email you've sent them earlier
+
+ - point them to the images that Jenkins has built:
+
+        echo "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/"
+
+   - if any of the expectations set in your initial email are outdated,
+     update them now
+
+   - attach the Torrents
+
+   - attach the `.packages` file
+
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
@@ -1199,29 +1218,34 @@ Testing
             --url-prefix https://mirrors.edge.kernel.org/tails/ \
             tails-amd64-${VERSION:?}
 
-   If there's none, you may point <tails-manual-testers@boum.org>
-   to the images that Jenkins has built:
-
-        echo "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/"
-
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
    This is a public list, don't point to the pad.
 
-1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
-   may start:
-   - reply to the email you've sent them earlier
-   - point them to the up-to-date mirror you've found previously
-   - if any of the expectations set in your initial email are outdated,
-     update them now
-   - attach the Torrents
-   - attach the `.packages` file
+Lead the internal manual testing to conclusion
+==============================================
+
+1. Manual testers can now do the "Reproducibility" part of the manual test suite.
+
+   To communicate this to them, delete "⚠ Wait until the Release Manager […]" in
+   the "Reproducibility" section on the pad.
 
 1. Make sure someone is committed to run the automated test suite.
 
 1. Make sure that enough people are here to run the tests, that they
    report their results in due time, and that they make it clear when
    they're leaving for good.
+
+1. Ensure the "Incremental upgrades" part of the manual test suite
+   is done:
+
+   1. Wait until most mirrors in the pool have the new version:
+
+        ./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
+            tails-amd64-${VERSION:?}
+
+   1. Delete "⚠ Wait until the Release Manager […]" in the "Incremental
+      upgrades" section on the pad.
 
 1. Fill the holes and make sure that the automated and manual test
    suites are done in due time. Clock and report this work along with
