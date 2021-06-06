@@ -92,7 +92,6 @@ steps:
   - apt: install
     packages:
       - gnupg
-    mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
 
   - chroot: rootfs
@@ -178,7 +177,6 @@ steps:
       - sudo
       - time
       - wget
-    mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
 
   # <Work around Debian#951257>
@@ -195,7 +193,6 @@ steps:
     packages:
       - gir1.2-udisks-2.0
       - udisks2
-    mirror: http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}
     tag: rootfs
 
   - chroot: rootfs
