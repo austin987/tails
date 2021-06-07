@@ -50,7 +50,7 @@ class ActiveBranches (Git):
                 'project_name':   self.project_name(branch),
                 'recipients':     self.recipients(branch),
                 'is_base_branch': self.is_base_branch(branch),
-                'ticket_number':  self.ticket_number(branch)}
+                'ticket_number':  self.__class__.ticket_number(branch)}
 
     def active_branches(self):
         since = int(
@@ -80,8 +80,21 @@ class ActiveBranches (Git):
         else:
             return 'whoever_broke_the_build'
 
-    def ticket_number(self, branch):
-        ticket_re_match = re.search(r'/(\d{4,6})+', branch)
+    @staticmethod
+    def ticket_number(branch):
+        '''
+        >>> ActiveBranches.ticket_number("bugfix/12345-foo")
+        '12345'
+        >>> ActiveBranches.ticket_number('bugfix/fix-this-and-that')
+        0
+        >>> ActiveBranches.ticket_number('bugfix/fix-this-and-that-42')
+        0
+    
+        GitLab style
+        >>> ActiveBranches.ticket_number('12345-do-that')
+        '12345'
+        '''
+        ticket_re_match = re.search(r'(?:^|/)(\d{4,6})+', branch)
         if ticket_re_match:
             return ticket_re_match.group(1)
         else:
