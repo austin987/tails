@@ -10,7 +10,7 @@ import sys
 import stat
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import socketserver
-import logging
+from logging import getLogger
 import socket
 import time
 from subprocess import Popen
@@ -21,11 +21,12 @@ from tinyrpc.exc import InvalidRequestError
 
 import systemd.daemon
 
+from tailslib.logutils import configure_logging
 from tailslib.systemd import systemd_ready
 from tailslib.gnome import gnome_env_vars
 from tailslib import LIVE_USERNAME
 
-log = logging.getLogger("tca-portal")
+log = getLogger("tca-portal")
 
 
 class FDUnixStreamServer(socketserver.UnixStreamServer):
@@ -62,11 +63,13 @@ class Command:
         return cmd
 
     def run(self, request: RPCRequest):
-        Popen(self.full_command(request))
+        cmd = self.full_command(request)
+        log.debug("Running %s", cmd)
+        Popen(cmd)
 
 
 class UserCommand(Command):
-    def full_command(self, request: RPCRequest):
+    def full_command(self, request: RPCRequest) -> list:
         drop = ["runuser", "-u", LIVE_USERNAME]
         env = ["env", *gnome_env_vars()]
 
@@ -96,6 +99,7 @@ class Handler(socketserver.StreamRequestHandler):
         ),
         "open-onioncircuits": UserCommand(["gtk-launch", "onioncircuits"], False),
         "open-documentation": UserCommand(["tails-documentation"], True),
+        "open-wifi-config": UserCommand(['gnome-control-center', 'network'], False),
     }
     valid_commands = set(spawn_commands.keys())
 
@@ -125,7 +129,7 @@ class Handler(socketserver.StreamRequestHandler):
         return req.error_respond(error="Method not implemented")
 
     def handle(self):
-        log = logging.getLogger("traffic")
+        log = getLogger("traffic")
 
         while True:
             peek_ahead = self.request.recv(self.MAX_LINESIZE, socket.MSG_PEEK)
@@ -171,7 +175,8 @@ def main():
     )
     args = p.parse_args()
 
-    logging.basicConfig(level=args.log_level)
+    log_conf = {'level': args.log_level}
+    configure_logging(hint='syslog', ident='tca-portal', **log_conf)
 
     if not args.systemd_socket:
         if os.path.exists(args.listen) and stat.S_ISSOCK(os.stat(args.listen).st_mode):
