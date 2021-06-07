@@ -234,7 +234,7 @@ Reset the release branch's `config/base_branch`:
            git commit config/base_branch \
                -m "Restore ${RELEASE_BRANCH:?}'s base branch."
 
-Bootstrap manual testing coordination:
+Bootstrap internal manual testing coordination:
 
 1. Create a pad.
 2. Set the `PAD` environment variable to the URL of this pad.
@@ -741,6 +741,25 @@ files metadata:
 
     ./bin/generate-images-signatures-and-torrents
 
+Get the internal manual testing started
+=======================================
+
+Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
+may start:
+
+ - reply to the email you've sent them earlier
+
+ - point them to the images that Jenkins has built:
+
+        echo "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/"
+
+   - if any of the expectations set in your initial email are outdated,
+     update them now
+
+   - attach the Torrents
+
+   - attach the `.packages` file
+
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
@@ -1183,8 +1202,8 @@ Now you can announce and seed the Torrents for the release you're preparing:
 Test that you can start downloading the ISO and USB images with a BitTorrent client.
 It can take a few dozen minutes before this works.
 
-Testing
-=======
+Public testing
+==============
 
 1. Using [[!tails_gitlab desc="`check-mirrors`" tails/check-mirrors]],
    choose a fast mirror that already has the
@@ -1199,29 +1218,34 @@ Testing
             --url-prefix https://mirrors.edge.kernel.org/tails/ \
             tails-amd64-${VERSION:?}
 
-   If there's none, you may point <tails-manual-testers@boum.org>
-   to the images that Jenkins has built:
-
-        echo "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/"
-
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
    This is a public list, don't point to the pad.
 
-1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
-   may start:
-   - reply to the email you've sent them earlier
-   - point them to the up-to-date mirror you've found previously
-   - if any of the expectations set in your initial email are outdated,
-     update them now
-   - attach the Torrents
-   - attach the `.packages` file
+Lead the internal manual testing to conclusion
+==============================================
+
+1. Manual testers can now do the "Reproducibility" part of the manual test suite.
+
+   To communicate this to them, delete "⚠ Wait until the Release Manager […]" in
+   the "Reproducibility" section on the pad.
 
 1. Make sure someone is committed to run the automated test suite.
 
 1. Make sure that enough people are here to run the tests, that they
    report their results in due time, and that they make it clear when
    they're leaving for good.
+
+1. Ensure the "Incremental upgrades" part of the manual test suite
+   is done:
+
+   1. Wait until most mirrors in the pool have the new version:
+
+        ./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
+            tails-amd64-${VERSION:?}
+
+   1. Delete "⚠ Wait until the Release Manager […]" in the "Incremental
+      upgrades" section on the pad.
 
 1. Fill the holes and make sure that the automated and manual test
    suites are done in due time. Clock and report this work along with
@@ -1444,8 +1468,10 @@ website:
       git push origin master:master \
     )
 
-Once the [[Recent changes|recentchanges]] page has been refreshed,
-the website is up-to-date, and the release is now public! Woo!
+Wait for the release to be fully published, that is for the website to have been
+fully refreshed. To do so, wait until our Weblate integration mechanisms
+have created `wiki/src/news/version_${VERSION:?}.*.po`, on the `master` branch,
+for the languages enabled on Weblate but not on our website.
 
 Bug tracker
 -----------
@@ -1711,7 +1737,7 @@ If you just released a final release
    * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
    * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
 
-   If the upcoming release date in the Mozilla calendar does not match
+   If the upcoming release dates in the Mozilla calendar does not match
    what we have in [[contribute/calendar]], then alert
    <tails-dev@boum.org>, <tails-rm@boum.org>, and explicitly Cc the
    designated RM for that upcoming release.
