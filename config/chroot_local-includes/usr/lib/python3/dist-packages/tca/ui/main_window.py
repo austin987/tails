@@ -580,7 +580,7 @@ class TCAMainWindow(
             "bridge": {},
             "proxy": {},
             "progress": {},
-            "step": "",
+            "step": "hide",
             "offline": {},
         }
         if self.app.args.debug_statefile is not None:
@@ -630,8 +630,7 @@ class TCAMainWindow(
         GLib.timeout_add(1000, self.connection_progress.tick)
         self.add(self.main_container)
         self.show()
-        log.info("At the end of init, let's call _decide_right_step")
-        self._decide_right_step()
+        self.change_box(self.state["step"])
 
     def todo_dialog(self, msg=""):
         print("TODO:", msg)
@@ -672,13 +671,6 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
-        if (
-            self.state["step"] == name
-            # transition from progress to itself is allowed because success screen is mostly a sub-step
-            and name != "progress"
-        ):
-            log.info("State was already %s, not changed", name)
-            return
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
         self.stack.set_visible_child_name(name)
@@ -737,7 +729,7 @@ class TCAMainWindow(
     def on_link_help_clicked(self, label, uri: str):
         self.app.portal.call_async("open-documentation", ["--force-local", uri])
 
-    # Called from parent Application {{{
+    # Called from parent application
 
     def _decide_right_step(self):
         disable_network = self.app.tor_info["DisableNetwork"] == '1'

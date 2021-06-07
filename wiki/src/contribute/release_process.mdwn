@@ -360,9 +360,6 @@ Update more included files
 Changelog
 ---------
 
-If `debian/changelog` on `$RELEASE_BRANCH` has an `UNRELEASED` entry
-for a version lower than `$VERSION`, remove it.
-
 Update the Changelog entry for the release you're preparing:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
@@ -750,11 +747,7 @@ files metadata:
 Prepare incremental upgrades
 ============================
 
-Since Tails 4.2, we use a new upgrade scheme, which fundamentally
-changes what the source version number of an upgrade means: it's now
-the version that was *initially installed* and *not* the currently
-running version. For details, see the corresponding
-[[design documentation|contribute/design/incremental_upgrades]].
+Reference: [[design documentation|contribute/design/incremental_upgrades]]
 
 Sanity checks
 -------------
@@ -773,6 +766,11 @@ that is not present locally yet):
         echo "ERROR! Add a section for iso-history.tails.boum.org' to your ~/.netrc"
         echo "The corresponding login and password are in the RMs' keyringer."
     fi
+
+Add to `$IGNORED_TAGS`, in `./bin/iuk-source-versions`, any recent alpha or beta
+release that gets no security support, and as such, shall not get automatic
+upgrades. Here is a useful heuristics: if we did not do our manual test suite on
+a release, it does not get security support.
 
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
@@ -1484,7 +1482,7 @@ Skip this part if preparing a release candidate.
       2 releases
 
    Assign the MR to the on-duty sysadmin (see link to "Semi-public
-   calendar" in `summit.git:Teams.md`).
+   calendar" in <https://gitlab.tails.boum.org/tails/summit/-/wikis/Teams#sysadmins>).
 
 ### Issues linked from the website
 
@@ -1714,7 +1712,7 @@ If you just released a final release
    * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
    * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
 
-   If the upcoming release date in the Mozilla calendar does not match
+   If the upcoming release dates in the Mozilla calendar does not match
    what we have in [[contribute/calendar]], then alert
    <tails-dev@boum.org>, <tails-rm@boum.org>, and explicitly Cc the
    designated RM for that upcoming release.
@@ -1723,7 +1721,7 @@ If you just released a final release
    <tails-l10n@boum.org>.
    - Cc <tails-manual-testers@boum.org>,
      asking them to privately tell the RM for that release
-     whether they can do manual testing on release day.
+     _how much_ manual testing they can do on release day.
 
 1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
