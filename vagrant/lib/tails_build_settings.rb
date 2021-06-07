@@ -1,9 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Hostname of the virtual machine (must be in /etc/hosts)
-VIRTUAL_MACHINE_HOSTNAME = 'vagrant-buster'.freeze
-
 # Approximate amount of RAM needed to run the builder's base system
 # and perform a build
 VM_MEMORY_BASE = 1.5 * 1024
