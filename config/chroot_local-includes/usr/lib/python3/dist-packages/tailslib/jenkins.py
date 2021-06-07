@@ -81,7 +81,7 @@ class ActiveBranches (Git):
             return 'whoever_broke_the_build'
 
     def ticket_number(self, branch):
-        ticket_re_match = re.search(r'/(\d{4,6})+', branch)
+        ticket_re_match = re.search(r'(?:^|/)(\d{4,6})+', branch)
         if ticket_re_match:
             return ticket_re_match.group(1)
         else:
