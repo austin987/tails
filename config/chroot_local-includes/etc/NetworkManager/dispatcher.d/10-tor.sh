@@ -36,7 +36,7 @@ rm -f "${TOR_LOG}"
 # To work around this we restart Tor.
 systemctl restart tor@default.service
 
-/usr/local/sbin/tails-tor-launcher &
+/usr/local/lib/systemctl-user amnesia start tca.service
 
 # Wait until the user has done the Tor Launcher configuration.
 until [ "$(tor_control_getconf DisableNetwork)" = 0 ]; do
