@@ -30,7 +30,7 @@ def main():
             if var in os.environ:
                 env_vars.append("%s=%s" % (var, os.environ[var]))
         cmd = ["sudo", "-n", *env_vars, __file__] + sys.argv[1:]
-        log.debug('Running %s', cmd)
+        log.debug("Running %s", cmd)
         os.execvpe(cmd[0], cmd, env=os.environ)
         return
 
@@ -88,10 +88,17 @@ def main():
     ]
     # hide data not for us
     bwrap += ["--tmpfs", "/tmp/netns-specific/"]
+    inherit_vars = [
+        "DESKTOP_STARTUP_ID",
+        "NOTIFY_SOCKET",
+        "WATCHDOG_USEC",
+        "WATCHDOG_PID",
+    ]
+    inherit_env = ["{}={}".format(var, os.environ.get(var, "")) for var in inherit_vars]
     envcmd = [
         "env",
         *gnome_env_vars(),
-        'DESKTOP_STARTUP_ID=%s' % os.environ.get('DESKTOP_STARTUP_ID', ''),
+        *inherit_env,
         "AT_SPI_BUS_ADDRESS=unix:path=/tmp/shared-with-me/at.sock",
         "IBUS_ADDRESS=unix:path=/tmp/shared-with-me/ibus.sock",
         # uncomment this if you want to tweak the UI

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import sys
 import logging
 import gettext
@@ -11,6 +12,7 @@ import prctl
 import gi
 import dbus
 import dbus.mainloop.glib
+import systemd.daemon
 
 from tca.ui.main_window import TCAMainWindow
 import tca.config
@@ -30,7 +32,8 @@ from gi.repository import GLib, Gtk, Gio  # noqa: E402
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-TOR_HAS_BOOTSTRAPPED_PATH = Path('/run/tor-has-bootstrapped/done')
+TOR_HAS_BOOTSTRAPPED_PATH = Path("/run/tor-has-bootstrapped/done")
+
 
 class TCAApplication(Gtk.Application):
     """main controller for TCA."""
@@ -89,6 +92,7 @@ class TCAApplication(Gtk.Application):
 
     def on_portal_response(self, portal, unique_id, result):
         self.log.debug("response<%d> from portal : %s", unique_id, result)
+
     def on_portal_error(self, portal, unique_id, error):
         self.log.error("response-error<%d> from portal : %s", unique_id, error)
 
@@ -122,6 +126,16 @@ class TCAApplication(Gtk.Application):
         GLib.timeout_add(1, self.do_fetch_nm_state)
         GLib.timeout_add(1, self.do_monitor_tor_is_working)
 
+        systemd.daemon.notify("READY=1")
+        if "WATCHDOG_USEC" in os.environ:
+            GLib.timeout_add(
+                int(os.environ["WATCHDOG_USEC"]) // 1e6, self.do_systemd_watchdog
+            )
+
+    def do_systemd_watchdog(self):
+        systemd.daemon.notify("WATCHDOG=1")
+        return True
+
     def do_fetch_nm_state(self):
         def handle_hello_error(*args, **kwargs):
             self.log.warn("Error getting information from NetworkManager")
@@ -149,6 +163,10 @@ class TCAApplication(Gtk.Application):
         self.window.show()
 
     def on_quit(self, action, param):
+        self.full_quit()
+
+    def full_quit(self):
+        systemd.daemon.notify("STOPPING=1")
         self.quit()
 
 

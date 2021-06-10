@@ -718,6 +718,7 @@ class TCAMainWindow(
         def on_dialog_response(dialog, response):
             dialog.destroy()
             if response == Gtk.ResponseType.YES:
+                self.app.full_quit()
                 self.destroy()
                 # Gtk.main_quit()
 
