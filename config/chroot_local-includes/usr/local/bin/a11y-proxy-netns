@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import sys
 import os.path
 import time
 import subprocess
@@ -81,9 +82,19 @@ def main():
     log.debug("Running %r", args)
     # we fork-exec to handle systemd notifications. though not strictly needed, they are nice!
     p = subprocess.Popen(args)
-    log.debug("Started!")
-    # XXX: we could wait for dest_bus_path to appear, before signaling us ready.
-    systemd_ready()
+    log.debug("process started; waiting for socket to become available")
+    for i in range(30):
+        if os.path.exists(dest_bus_path + 'foo'):
+            log.debug("Ready (after %d seconds)", i)
+            systemd_ready()
+            break
+        else:
+            time.sleep(1)
+    else:
+        print("Error: the destination socket didn't show up", file=sys.stderr)
+        p.terminate()
+        sys.exit(1)
+
     try:
         p.communicate()
     except KeyboardInterrupt:
