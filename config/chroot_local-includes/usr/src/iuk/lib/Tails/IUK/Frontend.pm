@@ -395,12 +395,12 @@ method no_incremental_explanation (Str $no_incremental_reason) {
 method run () {
     $self->refresh_signing_key;
     my ($upgrade_description_text) = $self->get_upgrade_description;
-    my $upgrade_description = Tails::IUK::UpgradeDescriptionFile->new_from_text(
+    my ($upgrade_description, $upgrade_path, $upgrade_type, $no_incremental_reason);
+    try {
+        $upgrade_description = Tails::IUK::UpgradeDescriptionFile->new_from_text(
         text            => $upgrade_description_text,
         product_version => $self->running_system->product_version,
-    );
-    my ($upgrade_path, $upgrade_type, $no_incremental_reason);
-    try {
+       );
         assert_isa($upgrade_description, 'Tails::IUK::UpgradeDescriptionFile');
 
         $self->checked_upgrades_file->touch;
