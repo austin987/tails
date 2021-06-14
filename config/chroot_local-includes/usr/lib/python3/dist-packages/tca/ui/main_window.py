@@ -699,20 +699,22 @@ class TCAMainWindow(
         d = Gtk.MessageDialog(
             transient_for=self,
             modal=True,
-            buttons=Gtk.ButtonsType.YES_NO,
-            text=_("Are you sure you want to quit?"),
+            buttons=Gtk.ButtonsType.NONE,
+            text=_("Are you sure you want to lose progress?"),
         )
         secondary = [
-            # XXX: we should explain better that closing the window and opening it again could have a bad
-            # UX in case of errors connecting.
             _(
-                "Quitting while connecting will <i>not</i> stop the connection to Tor"
-                " and will make it harder for you to notice errors."
+                "Tails will continue connecting to Tor after you close the Tor Connection assistant.\n\n"
+                "If connecting to Tor fails, you will have to wait again until the end of the progress bar to be able to troubleshoot your connection."
             )
         ]
         d.format_secondary_markup(
             "\n".join(secondary)
         )
+        d.add_buttons(
+            "Close and Lose Progress", Gtk.ResponseType.YES, "Wait", Gtk.ResponseType.NO
+        )
+        d.set_default_response(Gtk.ResponseType.NO)
 
         def on_dialog_response(dialog, response):
             dialog.destroy()
