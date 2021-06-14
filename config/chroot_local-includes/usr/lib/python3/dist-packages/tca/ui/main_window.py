@@ -71,7 +71,7 @@ class StepChooseHideMixin:
     Here, the user can choose between an easier configuration and going unnoticed.
     """
 
-    def before_show_hide(self):
+    def before_show_hide(self, coming_from):
         self.state.setdefault("hide", {})
         self.builder.get_object("radio_unnoticed_none").set_active(True)
         self.builder.get_object("radio_unnoticed_yes").set_active(False)
@@ -147,7 +147,7 @@ class StepChooseHideMixin:
 
 
 class StepChooseBridgeMixin:
-    def before_show_bridge(self):
+    def before_show_bridge(self, coming_from):
         self.state["bridge"]: Dict[str, Any] = {}
         self.builder.get_object("step_bridge_box").show()
         self.builder.get_object("step_bridge_radio_none").set_active(True)
@@ -183,12 +183,13 @@ class StepChooseBridgeMixin:
             self.get_object("radio_type").set_active(True)
             self.get_object("text").get_property("buffer").set_text("\n".join(bridges))
 
-    def _step_bridge_is_text_valid(self) -> bool:
+    def _step_bridge_is_text_valid(self, text: Optional[str] = None) -> bool:
         def set_warning(msg):
             self.get_object("label_warning").set_label(msg)
             self.get_object("box_warning").show()
 
-        text = self.get_object("text").get_property("buffer").get_property("text")
+        if text is None:
+            text = self.get_object("text").get_property("buffer").get_property("text")
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
         except InvalidBridgeException as exc:
@@ -255,7 +256,7 @@ class StepChooseBridgeMixin:
 
 
 class StepConnectProgressMixin:
-    def before_show_progress(self):
+    def before_show_progress(self, coming_from):
         self.save_conf()
         self.state["progress"]["error"] = None
         self.builder.get_object("step_progress_box").show()
@@ -450,8 +451,13 @@ class StepConnectProgressMixin:
 
 
 class StepErrorMixin:
-    def before_show_error(self):
+    def before_show_error(self, coming_from):
         self.state["error"] = {}
+        self.get_object("text").get_property("buffer").connect(
+            "changed", self.cb_step_error_text_changed
+        )
+        if coming_from in ["proxy"]:
+            self.get_object("btn_submit").set_sensitive(True)
         # XXX: fetch data from self.state['progress']['error'] and self.state['progress']['error_data']
 
     def cb_step_error_btn_proxy_clicked(self, *args):
@@ -459,13 +465,41 @@ class StepErrorMixin:
 
     def cb_step_error_btn_captive_clicked(self, *args):
         self.app.portal.call_async("open-unsafebrowser")
+        # XXX: for proper handling of the btn_submit, we'd better wait for unsafebrowser to be closed
 
     def cb_step_error_btn_bridge_clicked(self, *args):
         self.change_box("bridge")
 
+    def _step_error_submit_allowed(self):
+        def set_warning(msg):
+            self.get_object("label_warning").set_label(msg)
+            self.get_object("box_warning").show()
+
+        def is_allowed(self):
+            text = self.get_object("text").get_property("buffer").get_property("text")
+            try:
+                bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
+            except InvalidBridgeException as exc:
+                set_warning(_("Invalid: {exception}").format(exception=str(exc)))
+                return False
+            except (ValueError, IndexError):
+                self.get_object("box_warning").hide()
+                return False
+            else:
+                self.get_object("box_warning").hide()
+
+            if bridges:
+                return True
+            return self.get_object("btn_submit").get_sensitive()
+
+        self.get_object("btn_submit").set_sensitive(is_allowed())
+
+    def cb_step_error_text_changed(self):
+        self._step_error_submit_allowed()
+
 
 class StepProxyMixin:
-    def before_show_proxy(self):
+    def before_show_proxy(self, coming_from):
         self.state["proxy"].setdefault("proxy_type", "no")
         self.builder.get_object("step_proxy_combo").set_active_id(
             self.state["proxy"]["proxy_type"]
@@ -672,12 +706,13 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
+        coming_from = self.state["step"]
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
         self.stack.set_visible_child_name(name)
 
         if hasattr(self, "before_show_%s" % name):
-            getattr(self, "before_show_%s" % name)(**kwargs)
+            getattr(self, "before_show_%s" % name)(coming_from=coming_from, **kwargs)
         log.debug("Step changed, state is now %s", str(self.state))
 
         # # resize, just to be sure that everything is properly shown
@@ -711,9 +746,7 @@ class TCAMainWindow(
                 " and will make it harder for you to notice errors."
             )
         ]
-        d.format_secondary_markup(
-            "\n".join(secondary)
-        )
+        d.format_secondary_markup("\n".join(secondary))
 
         def on_dialog_response(dialog, response):
             dialog.destroy()
@@ -747,14 +780,14 @@ class TCAMainWindow(
                 self.change_box(prev)
 
     def on_tor_working_changed(self, working: bool):
-        step = self.state['step']
+        step = self.state["step"]
         if not working and step not in {"progress", "offline"}:
             # that's expected
             return
-        if not working and step == 'progress' and self.state['progress']['success']:
+        if not working and step == "progress" and self.state["progress"]["success"]:
             # TODO: what should we do? go to 0? go to consent question? go to error page?
             log.warn("We are not connected to Tor anymore!")
-            self.change_box('error')
+            self.change_box("error")
         if working:
             self.state["progress"]["success"] = True
             self.change_box("progress")
