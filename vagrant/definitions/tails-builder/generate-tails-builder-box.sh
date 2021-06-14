@@ -30,7 +30,7 @@ HOSTNAME="vagrant-${DISTRIBUTION}"
 USERNAME="vagrant"
 PASSWORD="vagrant"
 
-trap 'rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}" vmdb2.log' EXIT
+trap 'rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}"' EXIT
 
 DEBIAN_SERIAL="$(get_serial debian)"
 DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
@@ -298,3 +298,4 @@ sudo ${http_proxy:+http_proxy=$http_proxy} vmdb2 "${SPECFILE}" \
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 bash -e -x "${GIT_DIR}/vagrant/definitions/tails-builder/create_box.sh" \
      "${TARGET_QCOW2}" "${TARGET_BOX}"
+rm -f vmdb2.log
