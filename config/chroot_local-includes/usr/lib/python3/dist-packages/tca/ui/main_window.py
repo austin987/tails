@@ -259,9 +259,8 @@ class StepConnectProgressMixin:
         self.save_conf()
         self.state["progress"]["error"] = None
         self.builder.get_object("step_progress_box").show()
-        self.builder.get_object("step_progress_box_internettest").hide()
-        self.builder.get_object("step_progress_box_internetok").hide()
-        self.get_object("box_tor_direct_fail").hide()
+        for obj in ['box_start', 'box_tortestok', 'box_internetok', 'box_internettest', 'box_tor_direct_fail']:
+            self.get_object(obj).hide()
         self.connection_progress.set_fraction(0.0, allow_going_back=True)
         if not self.state["progress"]["success"]:
             self.spawn_tor_connect()
@@ -732,32 +731,59 @@ class TCAMainWindow(
 
     # Called from parent application
 
-    def on_network_changed(self):
+    def _decide_right_step(self):
+        disable_network = self.app.tor_info["DisableNetwork"] == '1'
         up = self.app.is_network_link_ok
+        tor_working = self.app.is_tor_working
+        step = self.state["step"]
+        log.info(f"Status: up={up} disable_network={disable_network}, working={tor_working}, step={step}")
         if not up:
-            if self.state["step"] == "progress":
+            if self.state["step"] != "offline":
                 self.state["offline"]["previous"] = self.state["step"]
                 self.change_box("offline")
-            elif self.state["step"] in ["error", "hide"]:
-                self.state["offline"]["previous"] = self.state["step"]
-                self.change_box("offline")
-        else:
-            prev = self.state["offline"].get("previous", False)
-            if prev:
-                self.change_box(prev)
-
-    def on_tor_working_changed(self, working: bool):
-        step = self.state['step']
-        if not working and step not in {"progress", "offline"}:
-            # that's expected
             return
-        if not working and step == 'progress' and self.state['progress']['success']:
-            # TODO: what should we do? go to 0? go to consent question? go to error page?
-            log.warn("We are not connected to Tor anymore!")
-            self.change_box('error')
-        if working:
+
+        # local network is ok
+
+        if disable_network:
+            self.change_box("hide")
+            return
+
+        # tor network is enabled
+
+        if not tor_working:
+            log.info("Tor not working")
+            if step != 'progress':
+                log.info("Not in progress, going there")
+                self.state["progress"]["success"] = False
+                self.change_box("progress")
+            elif self.state["progress"]["success"]:
+                log.warn("We are not connected to Tor anymore!")
+                # TODO: what should we do? go to 0? go to consent question? go to error page?
+                self.change_box("error")
+        else:
             self.state["progress"]["success"] = True
             self.change_box("progress")
+
+        self.state["progress"]["success"] = tor_working
+
+    def on_network_changed(self):
+        log.info("Local network changed %s", self.app.is_network_link_ok)
+        self._decide_right_step()
+        log.debug(self.state["step"])
+
+    def on_tor_working_changed(self, working: bool):
+        log.info("Tor working changed %s", working)
+        self._decide_right_step()
+        log.debug(self.state["step"])
+
+    def on_tor_state_changed(self, tor_info: dict, changed: set):
+        """Reacts to DisableNetwork changes."""
+        log.info("DisableNetwork changed %s", tor_info["DisableNetwork"])
+        self._decide_right_step()
+        log.debug(self.state["step"])
+
+    # called from parent Application }}}
 
 
 class ConnectionProgress:
