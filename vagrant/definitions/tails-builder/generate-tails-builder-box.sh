@@ -19,16 +19,19 @@ get_serial() {
     )
 }
 
-SPECFILE="$(mktemp)"
+SPECFILE="$(mktemp tmp.tails-builder-spec-XXXXXXXXX.yml --tmpdir)"
 TARGET_NAME="$(build_setting box_name)"
 TARGET_FS_TAR="${TARGET_NAME}.tar"
 TARGET_IMG="${TARGET_NAME}.img"
 TARGET_QCOW2="${TARGET_NAME}.qcow2"
 TARGET_BOX="${TARGET_NAME}.box"
+LOG_VMDB2="vmdb2.log"
 DISTRIBUTION="$(build_setting DISTRIBUTION)"
 HOSTNAME="vagrant-${DISTRIBUTION}"
 USERNAME="vagrant"
 PASSWORD="vagrant"
+
+trap 'rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}"' EXIT
 
 DEBIAN_SERIAL="$(get_serial debian)"
 DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
@@ -290,10 +293,10 @@ EOF
 
 rm -f "${TARGET_NAME}"*
 # shellcheck disable=SC2154
-sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" \
-     --output "${TARGET_IMG}" -v --log vmdb2.log \
+sudo ${http_proxy:+http_proxy=$http_proxy} vmdb2 "${SPECFILE}" \
+     --output "${TARGET_IMG}" -v --log "${LOG_VMDB2}" \
      --rootfs-tarball "${TARGET_FS_TAR}"
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 bash -e -x "${GIT_DIR}/vagrant/definitions/tails-builder/create_box.sh" \
      "${TARGET_QCOW2}" "${TARGET_BOX}"
-rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}" vmdb2.log
+rm -f "${LOG_VMDB2}"
