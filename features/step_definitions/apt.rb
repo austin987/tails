@@ -21,8 +21,8 @@ Then /^no proposed-updates APT suite is enabled$/ do
 end
 
 Then /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
-  # sdscoq7snqtznauu.onion == deb.torproject.org
-  assert_no_match(/sdscoq7snqtznauu[.]onion.*experimental/, apt_sources)
+  # apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion == deb.torproject.org
+  assert_no_match(/apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd[.]onion.*experimental/, apt_sources)
 end
 
 Then /^if releasing, the tagged Tails APT source is enabled$/ do
@@ -47,7 +47,7 @@ When /^I configure APT to use non-onion sources$/ do
   script = <<-SCRIPT
   use strict;
   use warnings FATAL => "all";
-  s{sdscoq7snqtznauu[.]onion}{deb.torproject.org};
+  s{apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd[.]onion}{deb.torproject.org};
   s{umjqavufhoix3smyq6az2sx4istmuvsgmz4bq5u5x56rnayejoo6l2qd[.]onion}{deb.tails.boum.org};
   SCRIPT
   # VMCommand:s cannot handle newlines, and they're irrelevant in the

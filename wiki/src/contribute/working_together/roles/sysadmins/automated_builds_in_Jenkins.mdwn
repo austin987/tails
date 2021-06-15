@@ -1,4 +1,5 @@
 [[!meta title="Automated ISO/IMG builds on Jenkins"]]
+[[!meta robots="noindex"]]
 
 We re-use the [[Vagrant-based build system|contribute/build/vagrant-setup]] we
 have created for developers.
@@ -21,8 +22,10 @@ of the garbage collection mechanisms provided by the Tails
 
 The [[!tails_gitweb_puppet_tails files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers desc="cleanup_build_job_leftovers"]]
 script ensures a failed basebox generation process
-does not break the following builds due to leftovers
-such as filesystems temporarily mounted by `vmdebootstrap`.
+does not break the following builds due to leftovers.
+However, now that we have moved from `vmdebootstrap` to `vmdb2`, which
+seems way better at cleaning up after itself, we might need less clean
+up, or maybe none at all.
 
 For security reasons we use nested virtualization:
 Vagrant starts the desired ISO build environment in a virtual

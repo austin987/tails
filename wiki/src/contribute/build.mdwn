@@ -13,7 +13,7 @@ Tails USB and ISO image with [Rake], [Vagrant] and [vagrant-libvirt].
 
 To build Tails you need:
 
- * Debian 9 (Stretch) or newer
+ * Debian 10 (Buster) or newer
  * the KVM virtual machine hypervisor
  * at least 1.5 GiB of free RAM
  * storage:
@@ -24,18 +24,22 @@ To build Tails you need:
 
 Then:
 
-* If you are using Debian Bullseye or newer:
+* If you are running Debian Buster:
 
-   1. Make APT trust `deb.tails.boum.org`'s signing key:
+   1. Ensure `vmdb2` is installed from Debian Bullseye:
 
-        curl https://gitlab.tails.boum.org/tails/tails/-/raw/stable/config/chroot_sources/tails.chroot.gpg?inline=false | \
-           gpg --import && \
-        gpg --export '221F 9A3C 6FA3 E09E 182E  060B C798 8EA7 A358 D82E' | \
-           sudo tee /etc/apt/trusted.gpg.d/deb.tails.boum.org.gpg >/dev/null
-
-   2. Add an extra APT source: `deb http://deb.tails.boum.org/ builder-bullseye main`
-
-   3. Enable the Buster APT sources, to install `vmdebootstrap` and its dependencies.
+        sudo tee /etc/apt/sources.list.d/bullseye.list <<EOF
+        deb http://ftp.us.debian.org/debian/ bullseye main
+        EOF
+        sudo tee /etc/apt/preferences.d/vmdb2.pref <<EOF
+        Package: *
+        Pin: release o=Debian,n=bullseye
+        Pin-Priority: 100
+        
+        Package: vmdb2
+        Pin: release o=Debian,n=bullseye
+        Pin-Priority: 990
+        EOF
 
 # Setup the build environment
 
@@ -55,7 +59,7 @@ Then:
            qemu-utils \
            vagrant \
            vagrant-libvirt \
-           vmdebootstrap && \
+           vmdb2 && \
        sudo systemctl restart libvirtd
 
 2. Ensure your user can run commands as root with `sudo`.

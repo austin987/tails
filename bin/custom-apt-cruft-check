@@ -68,7 +68,7 @@ class Parser
 end
 options = Parser.parse(ARGV)
 
-allowed_suites = ['stable', 'devel']
+allowed_suites = ['stable', 'devel', 'testing']
 unless allowed_suites.include?(options.suite)
   raise "we only support checking the following' " \
         "custom APT suites: #{allowed_suites.join(', ')}"
@@ -109,6 +109,7 @@ end
 all_source_packages = []
 used_source_packages = []
 binary_cruft_candidates = []
+no_source_packages = []
 
 custom_packages = `ssh reprepro@incoming.deb.tails.boum.org reprepro list #{options.suite}`
 custom_packages.each_line(chomp: true) do |line|
@@ -120,7 +121,11 @@ custom_packages.each_line(chomp: true) do |line|
     if installed.nil? || version != installed['version']
       binary_cruft_candidates << name
     else
-      used_source_packages << source_package(name)
+      begin
+        used_source_packages << source_package(name)
+      rescue NoSource
+        no_source_packages << name
+      end
     end
   end
 end
@@ -145,6 +150,17 @@ unless binary_cruft.empty?
        '  ssh reprepro@incoming.deb.tails.boum.org ' \
        "reprepro remove #{options.suite} #{binary_cruft.join(' ')}"
   puts
+end
+
+unless no_source_packages.empty?
+  puts 'Binary packages that are used but lack source:'
+  no_source_packages.each { |p| puts " - #{p}" }
+  puts
+  puts '  Please investigate! Most likely you want to just upload the ' \
+       'missing source packages, or these binary packages are installed ' \
+       "by mistake and should be considered as cruft and removed with:\n" \
+       '  ssh reprepro@incoming.deb.tails.boum.org ' \
+       "reprepro remove #{options.suite} #{no_source_packages.join(' ')}"
 end
 
 unless source_cruft.empty?
