@@ -36,6 +36,13 @@ rm -f "${TOR_LOG}"
 # To work around this we restart Tor.
 systemctl restart tor@default.service
 
+while ! pgrep --euid amnesia -x gnome-shell; do
+    sleep 1
+done
+while ! systemctl is-active -q user@1000.service; do
+    sleep 1
+done
+
 /usr/local/lib/systemctl-user amnesia start tca.service
 
 # Wait until the user has done the Tor Launcher configuration.
