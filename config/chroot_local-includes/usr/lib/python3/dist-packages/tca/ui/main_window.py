@@ -2,7 +2,7 @@ import logging
 import os.path
 import json
 import gettext
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 
 import gi
 import stem
@@ -12,6 +12,8 @@ from tca.torutils import (
     TorConnectionProxy,
     TorConnectionConfig,
     InvalidBridgeException,
+    InvalidBridgeTypeException,
+    MalformedBridgeException,
     VALID_BRIDGE_TYPES,
 )
 import tca.config
@@ -192,7 +194,7 @@ class StepChooseBridgeMixin:
             text = self.get_object("text").get_property("buffer").get_property("text")
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
-        except InvalidBridgeException as exc:
+        except InvalidBridgeTypeException as exc:
             set_warning(_("Invalid: {exception}").format(exception=str(exc)))
             return False
         except (ValueError, IndexError):
@@ -239,7 +241,7 @@ class StepChooseBridgeMixin:
         elif manual:
             self.state["bridge"]["kind"] = "manual"
             text = (
-                self.builder.get_object("step_bridge_text")
+                self.get_object("text")
                 .get_property("buffer")
                 .get_property("text")
             )
@@ -452,49 +454,53 @@ class StepConnectProgressMixin:
 
 class StepErrorMixin:
     def before_show_error(self, coming_from):
-        self.state["error"] = {}
+        self.state["error"] = {
+                "fix_attempt": False,  # has the user done something to fix it?
+                }
         self.get_object("text").get_property("buffer").connect(
             "changed", self.cb_step_error_text_changed
         )
         if coming_from in ["proxy"]:
-            self.get_object("btn_submit").set_sensitive(True)
-        # XXX: fetch data from self.state['progress']['error'] and self.state['progress']['error_data']
+            self.state['error']['fix_attempt'] = True
+        self._step_error_submit_allowed()
 
     def cb_step_error_btn_proxy_clicked(self, *args):
         self.change_box("proxy")
 
     def cb_step_error_btn_captive_clicked(self, *args):
         self.app.portal.call_async("open-unsafebrowser")
-        # XXX: for proper handling of the btn_submit, we'd better wait for unsafebrowser to be closed
 
-    def cb_step_error_btn_bridge_clicked(self, *args):
-        self.change_box("bridge")
+        # XXX: for proper handling of the btn_submit, we'd better wait for the unsafe-browser to be closed
+        # XXX: this is considered a "fix attempt" even if the unsafe-browser was not enabled, which is clearly
+        #      not true
+        self.state['error']['fix_attempt'] = True
+        self._step_error_submit_allowed()
 
     def _step_error_submit_allowed(self):
         def set_warning(msg):
             self.get_object("label_warning").set_label(msg)
             self.get_object("box_warning").show()
 
-        def is_allowed(self):
+        def is_allowed():
             text = self.get_object("text").get_property("buffer").get_property("text")
             try:
                 bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
-            except InvalidBridgeException as exc:
+            except InvalidBridgeTypeException as exc:
                 set_warning(_("Invalid: {exception}").format(exception=str(exc)))
                 return False
-            except (ValueError, IndexError):
-                self.get_object("box_warning").hide()
+            except (MalformedBridgeException, ValueError, IndexError):
+                set_warning(_("Bridge address malformed"))
                 return False
             else:
                 self.get_object("box_warning").hide()
 
             if bridges:
                 return True
-            return self.get_object("btn_submit").get_sensitive()
+            return self.state['error']['fix_attempt']
 
         self.get_object("btn_submit").set_sensitive(is_allowed())
 
-    def cb_step_error_text_changed(self):
+    def cb_step_error_text_changed(self, *args):
         self._step_error_submit_allowed()
 
 

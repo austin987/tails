@@ -392,6 +392,11 @@ To request obfs4 bridges, you can send an empty email to
       <class name="step-box"/>
     </style>
   </object>
+  <object class="GtkAdjustment" id="step_error_adjustment">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkBox" id="step_error_box">
     <property name="name">step_error_box</property>
     <property name="visible">True</property>
@@ -589,6 +594,7 @@ To request obfs4 bridges, you can send an empty email to
             <property name="label" translatable="yes">To request new Tor bridges, you can also:
 
 1. Send an empty email to &lt;tt&gt;bridges@torproject.org&lt;/tt&gt; from a Gmail or Riseup email address.
+
 2. Type below the bridges that you received by email.</property>
             <property name="use_markup">True</property>
             <style>
@@ -602,7 +608,8 @@ To request obfs4 bridges, you can send an empty email to
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow">
+          <object class="GtkScrolledWindow" id="step_error_text_scroll">
+            <property name="name">step_error_text_scroll</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="margin_left">30</property>
@@ -613,9 +620,8 @@ To request obfs4 bridges, you can send an empty email to
               <object class="GtkTextView" id="step_error_text">
                 <property name="name">step_error_text</property>
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
-                <property name="vadjustment">step_bridge_adjustment</property>
+                <property name="vadjustment">step_error_adjustment</property>
                 <property name="vscroll_policy">natural</property>
                 <property name="pixels_above_lines">5</property>
                 <property name="pixels_below_lines">5</property>
@@ -623,6 +629,7 @@ To request obfs4 bridges, you can send an empty email to
                 <property name="accepts_tab">False</property>
                 <property name="input_hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
                 <property name="monospace">True</property>
+                <signal name="backspace" handler="cb_step_error_text_changed" swapped="no"/>
               </object>
             </child>
           </object>
@@ -649,7 +656,7 @@ To request obfs4 bridges, you can send an empty email to
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="step_bridge_label_warning1">
+              <object class="GtkLabel" id="step_error_label_warning">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
@@ -703,6 +710,7 @@ To request obfs4 bridges, you can send an empty email to
       </packing>
     </child>
   </object>
+  <object class="GtkTextBuffer" id="step_error_text_buffer"/>
   <object class="GtkBox" id="step_hide_box">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
