@@ -31,13 +31,12 @@ HOSTNAME="vagrant-${DISTRIBUTION}"
 USERNAME="vagrant"
 PASSWORD="vagrant"
 
-trap 'rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}"' EXIT
 
 DEBIAN_SERIAL="$(get_serial debian)"
 DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
 TAILS_SERIAL="$(get_serial tails)"
 
-DEBOOTSTRAP_GNUPG_HOMEDIR="$(mktemp -d)"
+DEBOOTSTRAP_GNUPG_HOMEDIR="$(mktemp -d --tmpdir tmp.debootstrap-gnupg-XXXXXXXX)"
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
     --no-tty \
     --import config/chroot_sources/tails.chroot.gpg
@@ -45,6 +44,8 @@ DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.kbx"
 if [ ! -e "${DEBOOTSTRAP_GNUPG_PUBRING}" ]; then
     DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg"
 fi
+
+trap 'rm --preserve-root=all -rf "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}" "${DEBOOTSTRAP_GNUPG_HOMEDIR}"' EXIT
 
 # Create specification file for vmdb2
 cat > "${SPECFILE}" <<EOF

@@ -6,6 +6,7 @@ import logging
 import gettext
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
+from typing import Optional, Dict, Any
 
 from stem.control import Controller
 import prctl
@@ -45,7 +46,7 @@ class TCAApplication(Gtk.Application):
         )
         self.log = logging.getLogger(self.__class__.__name__)
         self.config_buf, portal_sock = recover_fd_from_parent()
-        controller = Controller.from_port(port=9051)
+        self.controller = controller = Controller.from_port(port=9051)
         controller.authenticate(password=None)
         self.configurator = TorLauncherUtils(controller, self.config_buf)
         self.configurator.load_conf()
@@ -59,16 +60,15 @@ class TCAApplication(Gtk.Application):
         self.window = None
         self.sys_dbus = dbus.SystemBus()
         self.last_nm_state = None
-        self._tor_is_working = TOR_HAS_BOOTSTRAPPED_PATH.exists()
+        self._tor_is_working: bool = TOR_HAS_BOOTSTRAPPED_PATH.exists()
+        self.tor_info: Dict[str, Any] = {"DisableNetwork": None}
 
     def do_monitor_tor_is_working(self):
         # init tor-ready monitoring
-        print('MONITORO')
         f = Gio.File.new_for_path(str(TOR_HAS_BOOTSTRAPPED_PATH))
         monitor = f.monitor(Gio.FileMonitorFlags.NONE, None)
         self._tor_is_working_monitor = monitor  # otherwise it will get GC'ed
-        monitor_id = monitor.connect('changed', self.check_tor_is_working)
-        print(monitor_id)
+        monitor.connect("changed", self.check_tor_is_working)
 
         return False
 
@@ -81,6 +81,26 @@ class TCAApplication(Gtk.Application):
             return
         self.log.info("tor_is_working = %s", self._tor_is_working)
         GLib.idle_add(self.window.on_tor_working_changed, self.is_tor_working)
+
+    def check_tor_state(self, repeat: bool):
+        # this is called periodically
+        # XXX: change with proper notification handling from tor daemon itself
+        changed = set()
+        for infokey in ["DisableNetwork"]:
+            resp = self.controller.get_conf(infokey)
+            if resp is None:
+                self.log.warn("No response from tor (asking %s)", infokey)
+            else:
+                if self.tor_info[infokey] != resp:
+                    changed.add(infokey)
+                self.tor_info[infokey] = resp
+
+        if changed:
+            self.log.info("tor state changed: %s", ",".join(changed))
+            if hasattr(self.window, 'on_tor_state_changed'):
+                GLib.idle_add(self.window.on_tor_state_changed, self.tor_info, changed)
+
+        return repeat
 
     @property
     def is_tor_working(self) -> bool:
@@ -123,8 +143,13 @@ class TCAApplication(Gtk.Application):
         action.connect("activate", self.on_quit)
         self.add_action(action)
 
+        # one time only
         GLib.timeout_add(1, self.do_fetch_nm_state)
         GLib.timeout_add(1, self.do_monitor_tor_is_working)
+        GLib.timeout_add(1, self.check_tor_state, False)
+
+        # timers
+        GLib.timeout_add(1000, self.check_tor_state, True)
 
         systemd.daemon.notify("READY=1")
         if "WATCHDOG_USEC" in os.environ:
@@ -204,8 +229,8 @@ if __name__ == "__main__":
 
     log_conf = {"level": logging.DEBUG if args.debug else args.log_level}
     configure_logging(hint=args.log_target, ident="tca", **log_conf)
-    # translatable is a really really noisy logger. set it to debug only if really needed
-    logging.getLogger("translatable").setLevel(logging.INFO)
+    # stem is a really really noisy logger. set it to debug only if really needed
+    logging.getLogger("stem").setLevel(logging.DEBUG)
 
     _ = gettext.gettext
     GLib.set_prgname(tca.config.APPLICATION_TITLE)
