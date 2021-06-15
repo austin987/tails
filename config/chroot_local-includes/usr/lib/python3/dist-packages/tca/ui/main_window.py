@@ -249,7 +249,6 @@ class StepChooseBridgeMixin:
                 text.split("\n")
             )
             log.info("Bridges parsed: %s", self.state["bridge"]["bridges"])
-            print("Bridges parsed:", self.state["bridge"]["bridges"])
 
         self.change_box("progress")
 
@@ -502,6 +501,19 @@ class StepErrorMixin:
 
     def cb_step_error_text_changed(self, *args):
         self._step_error_submit_allowed()
+
+    def cb_step_error_btn_submit_clicked(self, *args):
+        self.state["bridge"]["kind"] = "manual"
+        text = (
+            self.get_object("text")
+            .get_property("buffer")
+            .get_property("text")
+        )
+        self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(
+            text.split("\n")
+        )
+
+        self.change_box("progress")
 
 
 class StepProxyMixin:
