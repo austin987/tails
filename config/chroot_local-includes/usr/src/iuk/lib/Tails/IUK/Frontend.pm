@@ -284,11 +284,27 @@ method checked_upgrades_file () {
 }
 
 method refresh_signing_key () {
-    my $new_key_content = Tails::Download::HTTPS->new(
-        max_download_size => 128 * 2**10,
-    )->get_url(
-        $self->running_system->baseurl . '/tails-signing-minimal.key'
-    );
+    my ($error_msg, $new_key_content);
+    $error_msg =
+        __(
+            q{<b>An error occured while updating the signing key.</b>\n\n}.
+            q{<b>This prevents determining whether an upgrade is available from our website.</b>\n\n}.
+            q{Check your network connection, and restart Tails to try upgrading again.\n\n}.
+            q{If the problem persists, go to file:///usr/share/doc/tails/website/doc/upgrade/error/check.en.html},
+        );
+    try {
+        $new_key_content = Tails::Download::HTTPS->new(
+            max_download_size => 128 * 2**10,
+            )->get_url(
+                $self->running_system->baseurl . '/tails-signing-minimal.key'
+            );
+    } catch {
+        $self->fatal(
+            $error_msg,
+            title => __(q{Error while downloading the signing key}),
+            debugging_info => $self->encoding->decode($_),
+        );
+    };
     my ($stdout, $stderr, $exit_code);
     my $success = 1;
     IPC::Run::run ['gpg', '--import'],
@@ -296,12 +312,7 @@ method refresh_signing_key () {
           or $success = 0;
     $exit_code = $?;
     $success or $self->fatal(
-        __(
-            q{<b>An error occured while updating the signing key.</b>\n\n}.
-            q{<b>This prevents determining whether an upgrade is available from our website.</b>\n\n}.
-            q{Check your network connection, and restart Tails to try upgrading again.\n\n}.
-            q{If the problem persists, go to file:///usr/share/doc/tails/website/doc/upgrade/error/check.en.html},
-        ),
+        $error_msg,
         title => __(q{Error while updating the signing key}),
         debugging_info => $self->encoding->decode(errf(
             "exit code: %{exit_code}i\n\n".

@@ -25,7 +25,10 @@ Packages
 
 To release Tails you'll need some packages installed:
 
-* `docker.io gitlab-cli jq tidy mktorrent python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+* `gitlab-cli jq tidy mktorrent podman python3-bs4 python3-debian python3-gitlab python3-jinja2 python3-voluptuous transmission-cli`
+  - Note: if the Debian version you are running does not include all required
+    Go packages, such as [[!debpts podman]], you should be able to install
+    them from a more recent Debian release with APT pinning.
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
@@ -37,6 +40,18 @@ To release Tails you'll need some packages installed:
      are not supported by _i18nspector_ yet.
 * `i18nspector` 0.26 or newer
 * packages to [[build a local version of the website|contribute/build/website/]]
+
+System configuration
+--------------------
+
+- Enable unprivileged user namespaces
+
+  If you're running a Debian kernel older than 5.10.1-1~exp1,
+  set the `kernel.unprivileged_userns_clone` sysctl to 1:
+
+        echo 'kernel.unprivileged_userns_clone=1' \
+           | sudo tee /etc/sysctl.d/unprivileged-user-namespaces.conf && \
+        && sudo sysctl -p
 
 Configuration files
 -------------------
@@ -219,7 +234,7 @@ Reset the release branch's `config/base_branch`:
            git commit config/base_branch \
                -m "Restore ${RELEASE_BRANCH:?}'s base branch."
 
-Bootstrap manual testing coordination:
+Bootstrap internal manual testing coordination:
 
 1. Create a pad.
 2. Set the `PAD` environment variable to the URL of this pad.
@@ -343,9 +358,6 @@ Update more included files
 
 Changelog
 ---------
-
-If `debian/changelog` on `$RELEASE_BRANCH` has an `UNRELEASED` entry
-for a version lower than `$VERSION`, remove it.
 
 Update the Changelog entry for the release you're preparing:
 
@@ -584,6 +596,9 @@ suite should be ready, so it is time to:
 
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
 
+1. Take note of the value of `$SOURCE_DATE_EPOCH`: you'll need it to "Build the
+   Incremental Upgrade Kits on Jenkins" until [[!tails_ticket 18318]] is solved.
+
 1. tag the release *again*, with all included files in:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
@@ -726,16 +741,31 @@ files metadata:
 
     ./bin/generate-images-signatures-and-torrents
 
+Get the internal manual testing started
+=======================================
+
+Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
+may start:
+
+ - reply to the email you've sent them earlier
+
+ - point them to the images that Jenkins has built:
+
+        echo "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/"
+
+   - if any of the expectations set in your initial email are outdated,
+     update them now
+
+   - attach the Torrents
+
+   - attach the `.packages` file
+
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
 ============================
 
-Since Tails 4.2, we use a new upgrade scheme, which fundamentally
-changes what the source version number of an upgrade means: it's now
-the version that was *initially installed* and *not* the currently
-running version. For details, see the corresponding
-[[design documentation|contribute/design/incremental_upgrades]].
+Reference: [[design documentation|contribute/design/incremental_upgrades]]
 
 Sanity checks
 -------------
@@ -754,6 +784,11 @@ that is not present locally yet):
         echo "ERROR! Add a section for iso-history.tails.boum.org' to your ~/.netrc"
         echo "The corresponding login and password are in the RMs' keyringer."
     fi
+
+Add to `$IGNORED_TAGS`, in `./bin/iuk-source-versions`, any recent alpha or beta
+release that gets no security support, and as such, shall not get automatic
+upgrades. Here is a useful heuristics: if we did not do our manual test suite on
+a release, it does not get security support.
 
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
@@ -805,7 +840,7 @@ you can follow the next steps:
 ISO history
 -----------
 
-Push the released ISO and USB images and their artifacts (`.buildlog`,
+In this section, you will push the released ISO and USB images and their artifacts (`.buildlog`,
 `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
 repo, so that:
 
@@ -847,7 +882,8 @@ Build the Incremental Upgrade Kits on Jenkins
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
     - `SOURCE_DATE_EPOCH`: the value of `$SOURCE_DATE_EPOCH` in your
-      release environment
+      release environment, i.e. the same value you are using to
+      "Build the Incremental Upgrade Kits locally"
     - `NEW_VERSION`: the value of `$VERSION` in your release environment
     - `EXTRA_ARGS`: leave it blank
 
@@ -1166,8 +1202,8 @@ Now you can announce and seed the Torrents for the release you're preparing:
 Test that you can start downloading the ISO and USB images with a BitTorrent client.
 It can take a few dozen minutes before this works.
 
-Testing
-=======
+Public testing
+==============
 
 1. Using [[!tails_gitlab desc="`check-mirrors`" tails/check-mirrors]],
    choose a fast mirror that already has the
@@ -1182,29 +1218,34 @@ Testing
             --url-prefix https://mirrors.edge.kernel.org/tails/ \
             tails-amd64-${VERSION:?}
 
-   If there's none, you may point <tails-manual-testers@boum.org>
-   to the images that Jenkins has built:
-
-        echo "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/"
-
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
    This is a public list, don't point to the pad.
 
-1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
-   may start:
-   - reply to the email you've sent them earlier
-   - point them to the up-to-date mirror you've found previously
-   - if any of the expectations set in your initial email are outdated,
-     update them now
-   - attach the Torrents
-   - attach the `.packages` file
+Lead the internal manual testing to conclusion
+==============================================
+
+1. Manual testers can now do the "Reproducibility" part of the manual test suite.
+
+   To communicate this to them, delete "⚠ Wait until the Release Manager […]" in
+   the "Reproducibility" section on the pad.
 
 1. Make sure someone is committed to run the automated test suite.
 
 1. Make sure that enough people are here to run the tests, that they
    report their results in due time, and that they make it clear when
    they're leaving for good.
+
+1. Ensure the "Incremental upgrades" part of the manual test suite
+   is done:
+
+   1. Wait until most mirrors in the pool have the new version:
+
+        ./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
+            tails-amd64-${VERSION:?}
+
+   1. Delete "⚠ Wait until the Release Manager […]" in the "Incremental
+      upgrades" section on the pad.
 
 1. Fill the holes and make sure that the automated and manual test
    suites are done in due time. Clock and report this work along with
@@ -1381,11 +1422,14 @@ Check if every active mirror in the pool has the new version:
 	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
-Ask the mirrors team to disable mirrors that are lagging behind:
+To disable mirrors that are lagging behind:
 
- - either over email: <tails-mirrors@boum.org>
- - or by creating a merge request that modifies the
-   [mirrors pool](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json)
+1. Set their weight to 0 in the
+   [mirrors pool](https://gitlab.tails.boum.org/tails/mirror-pool/-/blob/master/mirrors.json).
+2. Push to the [[!tails_gitlab tails/mirror-pool]] `master` branch.
+3. Verify that the CI pipeline passed on [[!tails_gitlab tails/mirror-pool/-/pipelines]].
+4. Notify <tails-mirrors@boum.org>, so they communicate with the operators of the
+   outdated mirrors.
 
 Sanity checks
 -------------
@@ -1424,8 +1468,10 @@ website:
       git push origin master:master \
     )
 
-Once the [[Recent changes|recentchanges]] page has been refreshed,
-the website is up-to-date, and the release is now public! Woo!
+Wait for the release to be fully published, that is for the website to have been
+fully refreshed. To do so, wait until our Weblate integration mechanisms
+have created `wiki/src/news/version_${VERSION:?}.*.po`, on the `master` branch,
+for the languages enabled on Weblate but not on our website.
 
 Bug tracker
 -----------
@@ -1437,23 +1483,20 @@ Skip this part if preparing a release candidate.
    submit a MR against [[!tails_gitlab tails/gitlab-config]]
    to create one.
 
-2. Ensure you have an up-to-date `tails:gitlab-triage-stable` Docker image:
+2. Ensure you have an up-to-date `tails:gitlab-triage-stable` container image:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo ./config/gitlab-triage/bin/ensure-up-to-date-Docker-image
+        ./config/gitlab-triage/bin/ensure-up-to-date-container-image
 
 3. Postpone to the next scheduled release any remaining open issue and merge
    request whose milestone is the version you've just released:
 
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
-        sudo \
-            VERSION="${VERSION:?}" \
-            NEXT_PLANNED_VERSION="${NEXT_PLANNED_VERSION:?}" \
-            ./bin/gitlab-triage-post-release \
-                --host-url "$(bin/gitlab-url TailsRM)" \
-                --token "$(bin/gitlab-api-token TailsRM)"
+        ./bin/gitlab-triage-post-release \
+            --host-url "$(bin/gitlab-url TailsRM)" \
+            --token "$(bin/gitlab-api-token TailsRM)"
 
 4. Finally, submit a MR against [[!tails_gitlab tails/gitlab-config]] to:
 
@@ -1464,7 +1507,7 @@ Skip this part if preparing a release candidate.
       2 releases
 
    Assign the MR to the on-duty sysadmin (see link to "Semi-public
-   calendar" in `summit.git:Teams.md`).
+   calendar" in <https://gitlab.tails.boum.org/tails/summit/-/wikis/Teams#sysadmins>).
 
 ### Issues linked from the website
 
@@ -1694,7 +1737,7 @@ If you just released a final release
    * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
    * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
 
-   If the upcoming release date in the Mozilla calendar does not match
+   If the upcoming release dates in the Mozilla calendar does not match
    what we have in [[contribute/calendar]], then alert
    <tails-dev@boum.org>, <tails-rm@boum.org>, and explicitly Cc the
    designated RM for that upcoming release.
@@ -1703,7 +1746,7 @@ If you just released a final release
    <tails-l10n@boum.org>.
    - Cc <tails-manual-testers@boum.org>,
      asking them to privately tell the RM for that release
-     whether they can do manual testing on release day.
+     _how much_ manual testing they can do on release day.
 
 1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the

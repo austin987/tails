@@ -1,15 +1,44 @@
 [[!meta title="Error while checking for upgrades"]]
 
 Tails could not determine whether an upgrade is available from our website.
-
 This is most likely caused by a network connection problem.
 
-Check your network connection and restart Tails to check for upgrades again.
+To solve it:
 
-If the problem persists, you can either:
+1. Check your network connection and restart Tails to check for upgrades again.
 
-- [[Report an error|support]]
+1. Read our [[release notes|doc/upgrade/release_notes]] to see if
+   there are known issues with automatically upgrading to the latest version of
+   Tails.
 
-  Include in your report the debugging information that appears in the error message.
+1. If the problem persists, do a [[manual upgrade|doc/upgrade#manual]].
 
-- [[Do a manual upgrade|doc/upgrade#manual]]
+Automatic upgrades are broken from Tails 4.14 and earlier
+=========================================================
+
+To upgrade from Tails 4.14 or earlier, you can either:
+
+- Do a [[manual upgrade|doc/upgrade#manual]].
+
+- Fix the automatic upgrade from a terminal. To do so:
+
+  1. Start Tails and set up an
+     [[administration password|doc/first_steps/welcome_screen/administration_password]].
+
+  1. In a terminal, execute the following command:
+
+         torsocks curl --silent https://letsencrypt.org/certs/lets-encrypt-r3.pem \
+         | sudo tee --append /usr/local/etc/ssl/certs/tails.boum.org-CA.pem \
+         && systemctl --user restart tails-upgrade-frontend
+
+     <div class="note">
+
+     <p>This command is a single command that wraps across several lines.
+     Copy and paste the entire block at once and make sure that it executes
+     as a single command.</p>
+
+     </div>
+
+  1. Approximately 30 seconds later, you should be prompted to upgrade to the latest
+     version of Tails. If no prompt appears, you might already be running the
+     latest version of Tails.
