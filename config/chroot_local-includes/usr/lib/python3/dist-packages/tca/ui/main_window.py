@@ -307,7 +307,7 @@ class StepConnectProgressMixin:
                 self.get_object("label_status").set_text(
                     _("Connecting to Tor without bridges…")
                 )
-            elif self.state["bridge"]["kind"] == "default":
+            elif self.state["bridge"].get("kind", "") == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
                 )
@@ -660,7 +660,8 @@ class TCAMainWindow(
         else:
             data = self.app.configurator.read_conf()
             if data and data.get("ui"):
-                self.state["hide"].update(data["ui"].get("hide", {}))
+                for key in ['hide', 'bridge']:
+                    self.state[key].update(data["ui"].get(key, {}))
                 self.state["progress"]["started"] = (
                     data["ui"].get("progress", {}).get("started", False)
                 )
@@ -716,7 +717,7 @@ class TCAMainWindow(
     def save_conf(self, successful_connect=False):
         log.info("Saving configuration (success=%s)", successful_connect)
         if not successful_connect:
-            data = {"ui": {"hide": self.state["hide"]}}
+            data = {"ui": {"hide": self.state["hide"], "bridge": self.state["bridge"]}}
         else:
             data = {"ui": self.state}
         self.app.configurator.save_conf(data, save_torrc=successful_connect)
