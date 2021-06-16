@@ -458,6 +458,11 @@ class StepErrorMixin:
         self.state["error"] = {
             "fix_attempt": False  # has the user done something to fix it?
         }
+        if coming_from == "progress":
+            if self.state['hide']['bridge'] and self.state["bridge"].get("kind") == "manual":
+                self.get_object("text").get_property("buffer").set_property(
+                    "text", "\n".join(self.state["bridge"]["bridges"])
+                )
         self.get_object("text").get_property("buffer").connect(
             "changed", self.cb_step_error_text_changed
         )
@@ -660,7 +665,7 @@ class TCAMainWindow(
         else:
             data = self.app.configurator.read_conf()
             if data and data.get("ui"):
-                for key in ['hide', 'bridge']:
+                for key in ["hide", "bridge"]:
                     self.state[key].update(data["ui"].get(key, {}))
                 self.state["progress"]["started"] = (
                     data["ui"].get("progress", {}).get("started", False)
