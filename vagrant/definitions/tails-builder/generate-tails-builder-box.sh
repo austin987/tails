@@ -19,22 +19,24 @@ get_serial() {
     )
 }
 
-SPECFILE="$(mktemp)"
+SPECFILE="$(mktemp tmp.tails-builder-spec-XXXXXXXXX.yml --tmpdir)"
 TARGET_NAME="$(build_setting box_name)"
 TARGET_FS_TAR="${TARGET_NAME}.tar"
 TARGET_IMG="${TARGET_NAME}.img"
 TARGET_QCOW2="${TARGET_NAME}.qcow2"
 TARGET_BOX="${TARGET_NAME}.box"
+LOG_VMDB2="vmdb2.log"
 DISTRIBUTION="$(build_setting DISTRIBUTION)"
 HOSTNAME="vagrant-${DISTRIBUTION}"
 USERNAME="vagrant"
 PASSWORD="vagrant"
 
+
 DEBIAN_SERIAL="$(get_serial debian)"
 DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
 TAILS_SERIAL="$(get_serial tails)"
 
-DEBOOTSTRAP_GNUPG_HOMEDIR="$(mktemp -d)"
+DEBOOTSTRAP_GNUPG_HOMEDIR="$(mktemp -d --tmpdir tmp.debootstrap-gnupg-XXXXXXXX)"
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
     --no-tty \
     --import config/chroot_sources/tails.chroot.gpg
@@ -42,6 +44,8 @@ DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.kbx"
 if [ ! -e "${DEBOOTSTRAP_GNUPG_PUBRING}" ]; then
     DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg"
 fi
+
+trap 'rm --preserve-root=all -rf "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}" "${DEBOOTSTRAP_GNUPG_HOMEDIR}"' EXIT
 
 # Create specification file for vmdb2
 cat > "${SPECFILE}" <<EOF
@@ -290,10 +294,10 @@ EOF
 
 rm -f "${TARGET_NAME}"*
 # shellcheck disable=SC2154
-sudo "${http_proxy:+http_proxy=$http_proxy}" vmdb2 "${SPECFILE}" \
-     --output "${TARGET_IMG}" -v --log vmdb2.log \
+sudo ${http_proxy:+http_proxy=$http_proxy} vmdb2 "${SPECFILE}" \
+     --output "${TARGET_IMG}" -v --log "${LOG_VMDB2}" \
      --rootfs-tarball "${TARGET_FS_TAR}"
 qemu-img convert -O qcow2 "${TARGET_IMG}" "${TARGET_QCOW2}"
 bash -e -x "${GIT_DIR}/vagrant/definitions/tails-builder/create_box.sh" \
      "${TARGET_QCOW2}" "${TARGET_BOX}"
-rm -f "${SPECFILE}" "${TARGET_IMG}" "${TARGET_QCOW2}" "${TARGET_FS_TAR}" vmdb2.log
+rm -f "${LOG_VMDB2}"
