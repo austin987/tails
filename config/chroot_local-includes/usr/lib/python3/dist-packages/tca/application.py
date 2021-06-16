@@ -152,17 +152,6 @@ class TCAApplication(Gtk.Application):
         GLib.timeout_add(1000, self.check_tor_state, True)
 
         systemd.daemon.notify("READY=1")
-        if "WATCHDOG_USEC" in os.environ:
-            GLib.timeout_add(
-                # let's have a faster tick than systemd really wants: otherwise, small glitches
-                # in responsiveness will cause systemd to kill us
-                int(os.environ["WATCHDOG_USEC"]) // 1e6 / 3,
-                self.do_systemd_watchdog,
-            )
-
-    def do_systemd_watchdog(self):
-        systemd.daemon.notify("WATCHDOG=1")
-        return True
 
     def do_fetch_nm_state(self):
         def handle_hello_error(*args, **kwargs):
