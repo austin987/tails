@@ -154,7 +154,10 @@ class TCAApplication(Gtk.Application):
         systemd.daemon.notify("READY=1")
         if "WATCHDOG_USEC" in os.environ:
             GLib.timeout_add(
-                int(os.environ["WATCHDOG_USEC"]) // 1e6, self.do_systemd_watchdog
+                # let's have a faster tick than systemd really wants: otherwise, small glitches
+                # in responsiveness will cause systemd to kill us
+                int(os.environ["WATCHDOG_USEC"]) // 1e6 / 3,
+                self.do_systemd_watchdog,
             )
 
     def do_systemd_watchdog(self):
