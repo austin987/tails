@@ -12,7 +12,7 @@ export_gnome_env() {
     # Get LIVE_USERNAME
     . /etc/live/config.d/username.conf
     local gnome_shell_pid
-    gnome_shell_pid="$(pgrep --newest --euid "${LIVE_USERNAME}" gnome-shell)"
+    gnome_shell_pid="$(pgrep --newest --euid "${LIVE_USERNAME}" --exact gnome-shell)"
     if [ -z "${gnome_shell_pid}" ]; then
         return
     fi
