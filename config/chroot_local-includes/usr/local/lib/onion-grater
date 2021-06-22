@@ -320,9 +320,10 @@ class FilteredControlPortProxySession:
             if event.id not in self.client_streams:
                 if event.status in [stem.StreamStatus.NEW,
                                     stem.StreamStatus.NEWRESOLVE] and \
-                   self.client_pid == pid_of_laddr((event.source_address,
-                                                    event.source_port)):
-                    self.client_streams.add(event.id)
+                   (self.client_address == event.source_address or \
+                    self.client_pid == pid_of_laddr((event.source_address,
+                                                     event.source_port))):
+                        self.client_streams.add(event.id)
                 else:
                     return
             elif event.status in [stem.StreamStatus.FAILED,
@@ -666,8 +667,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         client_host = self.client_address[0]
-        local_connection = ipaddress.ip_address(client_host).is_loopback
-        if local_connection:
+        pid_based_connection = ipaddress.ip_address(client_host).is_loopback
+        if pid_based_connection:
             self.client_pid = pid_of_laddr(self.client_address)
             # Deal with the race between looking up the PID, and the
             # client being killed before we find the PID.
@@ -685,7 +686,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 ('hosts', client_host),
             ]
         self.match_and_parse_filter(matchers)
-        if local_connection:
+        if pid_based_connection:
             self.client_desc = '{aa_profile} (pid: {pid}, user: {user}, ' \
                                'port: {port}, filter: {filter_name})'.format(
                                    aa_profile=client_apparmor_profile,
@@ -698,7 +699,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             self.client_desc = '{1}:{2} (filter: {0})'.format(
                 self.filter_name, *self.client_address
             )
-        if self.restrict_stream_events and not local_connection:
+        remote_connection = not ipaddress.ip_address(client_host).is_private
+        if self.restrict_stream_events and remote_connection:
             self.debug_log(
                 "filter '{}' has `restrict-stream-events` set "
                 "and we are remote so the option was disabled"
