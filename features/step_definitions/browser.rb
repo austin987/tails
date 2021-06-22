@@ -184,6 +184,7 @@ Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
   pid = $vm.execute_successfully(
     "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
   ).stdout.chomp
+  pid = pid.scan(/\d+/).first
   assert_match(/\A\d+\z/, pid, "It seems like #{application} is not running")
   xul_app_shared_lib_check(pid, info[:chroot], info[:unused_tbb_libs])
 end

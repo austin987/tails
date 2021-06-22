@@ -53,10 +53,18 @@ if (-e $extra_packages_file) {
 my $data;
 foreach my $type (keys %package_type) {
     my $path = "$debootstrap/$type";
-    if (! -f $path ) {
-        print "E: $path is missing, wrong debootstrap-dir parameter? (got: $debootstrap)\n";
-        usage;
+    if (! -f "$path" ) {
+        if ($type eq 'srcuris') {
+            # We don't always use source packages during the build
+            print "W: $path is missing, ignoring\n";
+            next;
+        } else {
+            # OTOH, the lack of binuris or deburis indicates there's a problem
+            print "E: $path is missing, wrong debootstrap-dir parameter? (got: $debootstrap)\n";
+            usage;
+        }
     }
+
     print "I: processing $path\n";
     foreach my $line (read_file($path)) {
         chomp $line;
@@ -101,7 +109,16 @@ while (my $origin_dir = glob('tmp/APT_snapshots.d/*')) {
 
 ### Deduplicate:
 foreach my $type (uniq values %package_type) {
-    foreach my $entry (uniq sort @{ $data->{ packages_tmp }->{ $type } }) {
+    my $packages_tmp_type = $data->{ packages_tmp }->{ $type };
+    if (! defined $packages_tmp_type) {
+        if ($type eq 'source') {
+            print "I: No data for $type\n";
+            next;
+        } else {
+            die "E: No data for $type";
+        }
+    }
+    foreach my $entry (uniq sort @{ $packages_tmp_type }) {
         if ($entry =~ m{^(.+)_(.+)_(.+)$}) {
             my ($package, $version, $arch) = ($1, $2, $3);
             my $item = { package => $package, version => $version, arch => $arch, };
