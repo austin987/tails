@@ -318,12 +318,13 @@ class FilteredControlPortProxySession:
            isinstance(event, stem.response.events.StreamEvent) and \
            not global_args.disable_filtering:
             if event.id not in self.client_streams:
-                if event.status in [stem.StreamStatus.NEW,
-                                    stem.StreamStatus.NEWRESOLVE] and \
-                   (self.client_address == event.source_address or \
-                    self.client_pid == pid_of_laddr((event.source_address,
-                                                     event.source_port))):
-                        self.client_streams.add(event.id)
+                if event.status not in [stem.StreamStatus.NEW,
+                                        stem.StreamStatus.NEWRESOLVE]:
+                    return
+                if self.client_address == event.source_address or \
+                   self.client_pid == pid_of_laddr((event.source_address,
+                                                    event.source_port)):
+                    self.client_streams.add(event.id)
                 else:
                     return
             elif event.status in [stem.StreamStatus.FAILED,
