@@ -530,8 +530,7 @@ class StepErrorMixin:
         self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(
             text.split("\n")
         )
-        if not self.state['bridge']['bridges']:
-            self.state['hide']['bridge'] = False
+        self.state['hide']['bridge'] = bool(self.state['bridge']['bridges'])
         self.change_box("progress")
 
 
