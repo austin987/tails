@@ -469,7 +469,8 @@ def drop_markup(str)
   done + drop_markup(rest)
 end
 
-def translate(str, translation_domain: nil, drop_accelerator: true, drop_markup: true)
+# We discard unused keyword parameters by adding `**_` to the definition
+def translate(str, translation_domain: nil, drop_accelerator: true, drop_markup: true, **_)
   if $language.empty? || translation_domain.nil? || translation_domain.empty?
     rv = str
   else
