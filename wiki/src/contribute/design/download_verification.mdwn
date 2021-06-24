@@ -8,19 +8,20 @@ Usual solutions are:
 
 - HTTPS
 
-  HTTPS is not enough in the case of Tails because we rely on [[mirrors
-  hosted by third parties|contribute/design/mirrors]].
+  All our download mirrors use HTTPS, which is a good starting point.
 
-  Note that all these mirrors already use HTTPS.
+  But HTTPS is not enough because we rely on [[mirrors
+  hosted by third parties|contribute/design/mirrors]]. They could serve
+  malicious downloads to our users.
 
-  HTTPS also doesn't protect from interrupted downloads leading to
+  HTTPS also doesn't protect from interrupted downloads that can lead to
   broken Tails installations.
 
 - OpenPGP signatures
 
   Unless the user knows how to verify the signing key through the
-  OpenPGP Web-of-Trust, this technique ultimately relies on a correct
-  download of the signing key.
+  OpenPGP Web of Trust, this technique ultimately relies on a correct
+  download of the signing key and signature, and thus on HTTPS.
 
 Tails provides 3 mechanisms for users to verify the image downloaded
 through a third party mirror, while relying on cryptographic information
@@ -39,19 +40,7 @@ fetched from our website through HTTPS.
 
 1. OpenPGP signature
 
-   We advertise OpenPGP as an optional verification technique, possibly
-   done on top of the other 2 techniques and ideally through the OpenPGP
-   Web-of-Trust. We assume that this technique is only relevant for
-   people who are already knowledgeable about OpenPGP. As a consequence:
-
-   - We only provide simplified instructions on how to perform the
-     verification, insisting on aspects that might still be relevant for
-     this public: verification of the date, command line options,
-     warning when the signing key is not trusted, etc.
-
-   - We take more time to develop the verification of the signing key
-     through the OpenPGP Web of Trust because it is the only technique
-     that is really stronger than HTTPS.
+   We provide an OpenPGP signature of our downloads.
 
 [[!toc levels=2]]
 
@@ -59,6 +48,27 @@ Related documents
 =================
 
 - [[Design document of the installation assistant, including the download page|installation_assistant]]
+
+OpenPGP verification instructions
+=================================
+
+We removed the instructions to verify downloads with OpenPGP because:
+
+- Without advanced knowledge of OpenPGP, verifying with OpenPGP provides the
+  same level of security as the JavaScript verification on the download page,
+  while being much more complicated and error-prone.
+
+- None of our [[personas|contribute/personas]] would have enough knowledge of
+  OpenPGP to use the OpenPGP Web of Trust with confidence.
+
+- Providing basic (and never exhaustive) instructions has proven to be very
+  time consuming to our help desk and technical writers. See [[!tails_ticket
+  17900]].
+
+We still explain how to verify our signing key using the OpenPGP Web of Trust
+in the [[installation instructions from Debian, Ubuntu, or Mint using the
+command line and GnuPG|install/expert/usb]] because Debian derivatives come
+with trusted OpenPGP keys that can be used to create a path to our signing key.
 
 Scope of the JavaScript verification
 ====================================
