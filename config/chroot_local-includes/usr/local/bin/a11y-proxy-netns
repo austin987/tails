@@ -8,6 +8,7 @@ from logging import getLogger, basicConfig
 from argparse import ArgumentParser
 
 import dbus
+import systemd.daemon
 
 log = getLogger(os.path.basename(__file__))
 
@@ -50,11 +51,9 @@ def wait_netns(name: str, sleep_time=1):
 
 def systemd_ready():
     try:
-        # XXX: discard stdout/stderr
-        subprocess.Popen(["systemd-notify", "--ready"])
-    except FileNotFoundError:
-        # systemd not installed
-        pass
+        systemd.daemon.notify('READY=1')
+    except OSError:
+        log.error("error notifying systemd of readiness")
     else:
         log.info("systemd was notified")
 
