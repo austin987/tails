@@ -469,11 +469,11 @@ def drop_markup(str)
   done + drop_markup(rest)
 end
 
-def translate(str, drop_accelerator: true, drop_markup: true)
-  if $language.empty?
+def translate(str, translation_domain: nil, drop_accelerator: true, drop_markup: true)
+  if $language.empty? || translation_domain.nil? || translation_domain.empty?
     rv = str
   else
-    rv = $vm.execute_successfully("gettext tails '#{str}'").stdout
+    rv = $vm.execute_successfully("gettext '#{translation_domain}' '#{str}'").stdout
   end
   if drop_accelerator
     assert(str.count('_') <= 1, 'translate() are supposed to drop the ' \
