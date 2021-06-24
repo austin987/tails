@@ -149,10 +149,6 @@ class TCAApplication(Gtk.Application):
         # timers
         GLib.timeout_add(1000, self.check_tor_state, True)
 
-        try:
-            systemd.daemon.notify("READY=1")
-        except OSError:  # not run as a systemd service
-            pass
     def do_fetch_nm_state(self):
         def handle_hello_error(*args, **kwargs):
             self.log.warn("Error getting information from NetworkManager")
@@ -180,10 +176,6 @@ class TCAApplication(Gtk.Application):
         self.window.show()
 
     def on_quit(self, action, param):
-        try:
-            systemd.daemon.notify("STOPPING=1")
-        except OSError:  # not run as a systemd service
-            pass
         self.quit()
 
 
