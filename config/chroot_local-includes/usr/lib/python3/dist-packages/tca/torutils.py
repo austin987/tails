@@ -42,7 +42,7 @@ class StemFDSocket(stem.socket.ControlSocket):
 
 
 def recover_fd_from_parent() -> tuple:
-    fds = [int(fd) for fd in os.getenv("INHERIT_FD", '').split(",")]
+    fds = [int(fd) for fd in os.getenv("INHERIT_FD", "").split(",")]
     # fds[0] must be a rw fd for settings file
     # fds[1] must be a socket to tca-portal
 
@@ -161,6 +161,14 @@ class InvalidBridgeException(ValueError):
     pass
 
 
+class MalformedBridgeException(InvalidBridgeException):
+    pass
+
+
+class InvalidBridgeTypeException(InvalidBridgeException):
+    pass
+
+
 VALID_BRIDGE_TYPES = {"bridge", "obfs4"}
 
 
@@ -232,7 +240,9 @@ class TorConnectionConfig:
         bridge_ip_port = parts[1]
         bridge_parts = bridge_ip_port.rsplit(":", 1)
         if len(bridge_parts) != 2:
-            raise ValueError("Bridge address is malformed: '%s'" % bridge_ip_port)
+            raise MalformedBridgeException(
+                "Bridge address is malformed: '%s'" % bridge_ip_port
+            )
         bridge_ip, bridge_port = bridge_parts
         get_ip = ipaddress.ip_address
         if bridge_ip.startswith("[") and bridge_ip.endswith("]"):
@@ -251,7 +261,9 @@ class TorConnectionConfig:
             raise ValueError("invalid port number")
 
         if parts[0] not in VALID_BRIDGE_TYPES:
-            raise InvalidBridgeException("Bridge type '%s' not supported" % parts[0])
+            raise InvalidBridgeTypeException(
+                "Bridge type '%s' not supported" % parts[0]
+            )
         if parts[0] == "bridge":  # normal can be omitted
             del parts[0]
         return " ".join(parts)
@@ -423,7 +435,7 @@ class TorLauncherUtils:
             log.warn("No response from ControlPort")
             return False
         parts = resp.split(" ")
-        if parts[0] not in("NOTICE", "WARN"):
+        if parts[0] not in ("NOTICE", "WARN"):
             log.warn("Invalid response: %s", resp)
             return False
         progress = int(parts[2].split("=")[1])

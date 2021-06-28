@@ -5,13 +5,13 @@
   <object class="GtkBox" id="box_main_container_image_step">
     <property name="name">box_main_container_image_step</property>
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="baseline_position">bottom</property>
+    <property name="can-focus">False</property>
+    <property name="baseline-position">bottom</property>
     <child>
       <object class="GtkImage" id="main_img_side">
         <property name="name">main_img_side</property>
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="stock">gtk-missing-image</property>
@@ -26,7 +26,7 @@
       <object class="GtkStack" id="box_main_container_stack">
         <property name="name">box_main_container_stack</property>
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <child>
           <placeholder/>
         </child>
@@ -40,12 +40,12 @@
   </object>
   <object class="GtkAdjustment" id="step_bridge_adjustment">
     <property name="upper">100</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">10</property>
   </object>
   <object class="GtkBox" id="step_bridge_box">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
+    <property name="can-focus">False</property>
     <property name="orientation">vertical</property>
     <child>
       <object class="GtkLabel">
@@ -261,22 +261,22 @@ To request obfs4 bridges, you can send an empty email to
             <child>
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="margin_start">30</property>
-                <property name="shadow_type">in</property>
-                <property name="min_content_height">60</property>
+                <property name="can-focus">True</property>
+                <property name="margin-start">30</property>
+                <property name="shadow-type">in</property>
+                <property name="min-content-height">60</property>
                 <child>
                   <object class="GtkTextView" id="step_bridge_text">
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="vadjustment">step_bridge_adjustment</property>
-                    <property name="vscroll_policy">natural</property>
-                    <property name="pixels_above_lines">5</property>
-                    <property name="pixels_below_lines">5</property>
-                    <property name="pixels_inside_wrap">20</property>
-                    <property name="accepts_tab">False</property>
-                    <property name="input_hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
+                    <property name="vscroll-policy">natural</property>
+                    <property name="pixels-above-lines">5</property>
+                    <property name="pixels-below-lines">5</property>
+                    <property name="pixels-inside-wrap">20</property>
+                    <property name="accepts-tab">False</property>
+                    <property name="input-hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
                     <property name="monospace">True</property>
                     <signal name="backspace" handler="cb_step_bridge_text_changed" swapped="no"/>
                   </object>
@@ -589,7 +589,8 @@ To request obfs4 bridges, you can send an empty email to
             <property name="label" translatable="yes">To request new Tor bridges, you can also:
 
 1. Send an empty email to &lt;tt&gt;bridges@torproject.org&lt;/tt&gt; from a Gmail or Riseup email address.
-2. Click the &lt;b&gt;Configure a Bridge&lt;/b&gt; button to type in the bridges received by email.</property>
+
+2. Type below the bridges that you received by email.</property>
             <property name="use_markup">True</property>
             <style>
               <class name="step-error-section-description"/>
@@ -602,19 +603,81 @@ To request obfs4 bridges, you can send an empty email to
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="step_error_btn_bridge">
-            <property name="label" translatable="yes">Configure a _Bridge</property>
+          <object class="GtkBox" id="step_error_box_bridges">
+            <property name="name">step_error_box_bridges</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="halign">end</property>
-            <property name="margin_top">6</property>
-            <property name="use_underline">True</property>
-            <signal name="activate" handler="cb_step_error_btn_bridge_clicked" swapped="no"/>
-            <signal name="clicked" handler="cb_step_error_btn_bridge_clicked" swapped="no"/>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkScrolledWindow" id="step_error_text_scroll">
+                <property name="name">step_error_text_scroll</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="shadow_type">in</property>
+                <property name="min_content_height">60</property>
+                <child>
+                  <object class="GtkTextView" id="step_error_text">
+                    <property name="name">step_error_text</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="vadjustment">step_error_adjustment</property>
+                    <property name="vscroll_policy">natural</property>
+                    <property name="pixels_above_lines">5</property>
+                    <property name="pixels_below_lines">5</property>
+                    <property name="pixels_inside_wrap">20</property>
+                    <property name="accepts_tab">False</property>
+                    <property name="input_hints">GTK_INPUT_HINT_NO_SPELLCHECK | GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
+                    <property name="monospace">True</property>
+                    <signal name="backspace" handler="cb_step_error_text_changed" swapped="no"/>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="step_error_box_warning">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">gtk-dialog-warning</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="step_error_label_warning">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="hexpand">True</property>
+                    <property name="label" translatable="yes">Error</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
-            <property name="expand">False</property>
+            <property name="expand">True</property>
             <property name="fill">True</property>
             <property name="position">2</property>
           </packing>
@@ -629,19 +692,44 @@ To request obfs4 bridges, you can send an empty email to
         <property name="position">3</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkButton" id="step_error_btn_submit">
+        <property name="label" translatable="yes">Connect to _Tor</property>
+        <property name="name">step_error_btn_submit</property>
+        <property name="visible">True</property>
+        <property name="sensitive">False</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">end</property>
+        <property name="valign">end</property>
+        <property name="vexpand">True</property>
+        <property name="use_underline">True</property>
+        <signal name="clicked" handler="cb_step_error_btn_submit_clicked" swapped="no"/>
+        <style>
+          <class name="suggested-action"/>
+          <class name="suggested-action-box"/>
+        </style>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">False</property>
+        <property name="position">4</property>
+      </packing>
+    </child>
   </object>
+  <object class="GtkTextBuffer" id="step_error_text_buffer"/>
   <object class="GtkBox" id="step_hide_box">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
+    <property name="can-focus">False</property>
     <property name="valign">baseline</property>
     <property name="vexpand">False</property>
     <property name="orientation">vertical</property>
     <property name="spacing">12</property>
-    <property name="baseline_position">top</property>
+    <property name="baseline-position">top</property>
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <property name="halign">start</property>
         <property name="valign">start</property>
         <property name="label" translatable="yes">Everything you do on the Internet from Tails goes through the Tor network.</property>
@@ -656,7 +744,7 @@ To request obfs4 bridges, you can send an empty email to
     <child>
       <object class="GtkLabel">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <property name="halign">start</property>
         <property name="valign">start</property>
         <property name="label" translatable="yes">Tor encrypts and anonymizes your connection by passing it through 3 relays.
