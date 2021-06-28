@@ -37,7 +37,10 @@ systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 
-for netns in onioncircs torlaunch tbb; do
+# OnionCircuits has no text input area so it does not need an IBus proxy
+systemctl --global enable "tails-a11y-proxy-netns@onioncircs.service"
+
+for netns in torlaunch tbb; do
     for bus in a11y ibus; do
         systemctl --global enable "tails-$bus-proxy-netns@$netns.service"
     done
