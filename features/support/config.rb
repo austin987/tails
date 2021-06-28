@@ -70,8 +70,6 @@ OPENCV_IMAGE_PATH = "#{Dir.pwd}/features/images/".freeze
 OPENCV_MIN_SIMILARITY = 0.9
 
 # Constants that are statically initialized.
-CONFIGURED_KEYSERVER_HOSTNAME = 'zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion'.freeze # rubocop:disable Layout/LineLength
-TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME = 'keys.openpgp.org'.freeze
 LIBVIRT_DOMAIN_NAME = 'TailsToaster'.freeze
 LIBVIRT_DOMAIN_UUID = '203552d5-819c-41f3-800e-2c8ef2545404'.freeze
 LIBVIRT_NETWORK_NAME = 'TailsToasterNet'.freeze

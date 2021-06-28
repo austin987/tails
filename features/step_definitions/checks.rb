@@ -69,7 +69,7 @@ Then /^the live user is a member of only its own group and "(.*?)"$/ do |groups|
                "live user not in expected groups #{missing}")
 end
 
-Then /^the live user owns its home dir and it has normal permissions$/ do
+Then /^the live user owns its home directory which has strict permissions$/ do
   home = "/home/#{LIVE_USER}"
   assert_vmcommand_success(
     $vm.execute("test -d #{home}"),
@@ -100,16 +100,6 @@ Then /^no unexpected services are listening for network connections$/ do
       end
     end
   end
-end
-
-When /^Tails has booted a 64-bit kernel$/ do
-  assert_vmcommand_success($vm.execute("uname -r | grep -qs 'amd64$'"),
-                           'Tails has not booted a 64-bit kernel.')
-end
-
-Then /^the VirtualBox guest modules are available$/ do
-  assert_vmcommand_success($vm.execute('modinfo vboxguest'),
-                           'The vboxguest module is not available.')
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
@@ -164,16 +154,6 @@ Then /^MAT can clean some sample PNG file$/ do
            'The comment is still present in the PNG')
     $vm.execute_successfully("rm '#{png_on_guest}'")
   end
-end
-
-Then /^AppArmor is enabled$/ do
-  assert_vmcommand_success($vm.execute('aa-status'),
-                           'AppArmor is not enabled')
-end
-
-Then /^some AppArmor profiles are enforced$/ do
-  assert($vm.execute('aa-status --enforced').stdout.chomp.to_i.positive?,
-         'No AppArmor profile is enforced')
 end
 
 def get_seccomp_status(process)

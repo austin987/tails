@@ -1,4 +1,4 @@
-@product
+@product @not_release_blocker
 Feature: Encryption and verification using GnuPG
   As a Tails user
   I want to be able to easily encrypt and sign messages using GnuPG
