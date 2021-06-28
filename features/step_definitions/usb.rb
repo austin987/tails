@@ -1127,7 +1127,9 @@ Given /^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/ do 
   try_for(10) do
     !select_disk_image_dialog.showing
   end
-  restore_dialog.child('Start Restoring…', roleName: 'push button').click
+  restore_dialog.child('Start Restoring…',
+                       roleName:    'push button',
+                       showingOnly: true).click
   disks.child('Information', roleName: 'alert', showingOnly: true)
        .child('Restore', roleName: 'push button', showingOnly: true)
        .click

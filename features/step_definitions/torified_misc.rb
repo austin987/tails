@@ -1,16 +1,5 @@
 require 'resolv'
 
-When /^I query the whois directory service for "([^"]+)"$/ do |domain|
-  retry_tor do
-    @vm_execute_res = $vm.execute("whois '#{domain}'", user: LIVE_USER)
-    if @vm_execute_res.failure? || @vm_execute_res.stdout['LIMIT EXCEEDED']
-      raise "Looking up whois info for #{domain} failed with:\n" \
-            "#{@vm_execute_res.stdout}\n" +
-            @vm_execute_res.stderr.to_s
-    end
-  end
-end
-
 When /^I wget "([^"]+)" to stdout(?:| with the '([^']+)' options)$/ do |target, options|
   retry_tor do
     if target == 'some Tails mirror'
@@ -32,19 +21,19 @@ When /^I wget "([^"]+)" to stdout(?:| with the '([^']+)' options)$/ do |target, 
   end
 end
 
-Then /^the (wget|whois) command is successful$/ do |command|
+Then /^the wget command is successful$/ do
   assert(
     @vm_execute_res.success?,
-    "#{command} failed:\n" \
+    "wget failed:\n" \
     "#{@vm_execute_res.stdout}\n" +
     @vm_execute_res.stderr.to_s
   )
 end
 
-Then /^the (wget|whois) standard output contains "([^"]+)"$/ do |command, text|
+Then /^the wget standard output contains "([^"]+)"$/ do |text|
   assert(
     @vm_execute_res.stdout[text],
-    "The #{command} standard output does not contain #{text}:\n" \
+    "The wget standard output does not contain #{text}:\n" \
     "#{@vm_execute_res.stdout}\n" +
     @vm_execute_res.stderr.to_s
   )

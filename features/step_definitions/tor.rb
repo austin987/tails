@@ -274,10 +274,6 @@ STREAM_ISOLATION_INFO = {
     grep_monitor_expr: 'users:(("\(nc\|ssh\)"',
     socksport:         9050,
   },
-  'whois'                          => {
-    grep_monitor_expr: 'users:(("whois"',
-    socksport:         9050,
-  },
 }.freeze
 
 def stream_isolation_info(application)
