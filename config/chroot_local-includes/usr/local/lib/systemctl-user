@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+"""
+Allows running systemctl as a different user
+"""
+
+import sys
+import os
+from tailslib.gnome import gnome_env_vars
+
+
+def main():
+    if os.getuid() != 0:
+        print("Error: {} must be run as root".format(sys.argv[0]), file=sys.stderr)
+        sys.exit(1)
+
+    user = sys.argv[1]
+    systemctl_args = sys.argv[2:]
+    if systemctl_args[0] == "--":
+        systemctl_args = systemctl_args[1:]
+
+    runuser = ["runuser", "-u", user, "--"]
+    env = ["env", *gnome_env_vars()]
+    cmd = [*runuser, *env, '/bin/systemctl', '--user', *systemctl_args]
+    os.execvp(cmd[0], cmd)
+
+
+if __name__ == "__main__":
+    main()
