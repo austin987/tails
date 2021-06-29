@@ -153,7 +153,7 @@ maybe_set_time_from_tor_consensus() {
 
 	if ! date_points_are_sane "${vstart}" "${vend}"; then
 		log "Unexpected valid-until: [${vend}] is not [${vstart} + 3h]"
-		return
+		return 1
 	fi
 
 	curdate=$(date -u +'%F %T')
@@ -161,7 +161,7 @@ maybe_set_time_from_tor_consensus() {
 
 	if time_is_in_valid_tor_range "${curdate}" "${vstart}"; then
 		log "Current time is in valid Tor range"
-		return
+		return 0
 	fi
 
 	log "Current time is not in valid Tor range, setting to middle of this range: [${vmid}]"
