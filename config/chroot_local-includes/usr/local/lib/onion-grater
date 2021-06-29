@@ -147,6 +147,8 @@ DEFAULT_COOKIE_PATH = '/run/tor/control.authcookie'
 # How often (in seconds) we check whether we've lost the tor
 # controller connection.
 TOR_CONTROLLER_PING_INTERVAL = 1.0
+LOCAL_VETH_NETWORK = "10.200.1.0/24"
+
 
 class NoRewriteMatch(RuntimeError):
     """
@@ -700,7 +702,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             self.client_desc = '{1}:{2} (filter: {0})'.format(
                 self.filter_name, *self.client_address
             )
-        remote_connection = not pid_based_connection and ipaddress.ip_address(client_host) not in ipaddress.ip_network("10.200.1.0/24")
+        remote_connection = not pid_based_connection and ipaddress.ip_address(client_host) not in ipaddress.ip_network(LOCAL_VETH_NETWORK)
         if self.restrict_stream_events and remote_connection:
             self.debug_log(
                 "filter '{}' has `restrict-stream-events` set "
