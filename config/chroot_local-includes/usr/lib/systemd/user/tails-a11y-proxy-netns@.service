@@ -2,11 +2,11 @@
 Description=Proxy AT-SPI bus inside %i netns
 After=at-spi-dbus-bus.service
 Requires=at-spi-dbus-bus.service
+StopWhenUnneeded=true
 ConditionUser=1000
 
 [Service]
 Type=notify
-NotifyAccess=all
 ExecStart=/usr/local/bin/a11y-proxy-netns --component=a11y --log-level DEBUG %i
 ExecStop=/bin/kill -INT $MAINPID
 
