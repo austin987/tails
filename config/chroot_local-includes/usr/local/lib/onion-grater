@@ -147,6 +147,8 @@ DEFAULT_COOKIE_PATH = '/run/tor/control.authcookie'
 # How often (in seconds) we check whether we've lost the tor
 # controller connection.
 TOR_CONTROLLER_PING_INTERVAL = 1.0
+LOCAL_VETH_NETWORK = "10.200.1.0/24"
+
 
 class NoRewriteMatch(RuntimeError):
     """
@@ -223,7 +225,6 @@ class FilteredControlPortProxySession:
         self.wfile = handler.wfile
         self.client_streams = set()
         self.subscribed_event_listeners = []
-
 
     def debug_log_send(self, line):
         if global_args.print_responses:
@@ -318,8 +319,10 @@ class FilteredControlPortProxySession:
            isinstance(event, stem.response.events.StreamEvent) and \
            not global_args.disable_filtering:
             if event.id not in self.client_streams:
-                if event.status in [stem.StreamStatus.NEW,
-                                    stem.StreamStatus.NEWRESOLVE] and \
+                if event.status not in [stem.StreamStatus.NEW,
+                                        stem.StreamStatus.NEWRESOLVE]:
+                    return
+                if self.client_address == event.source_address or \
                    self.client_pid == pid_of_laddr((event.source_address,
                                                     event.source_port)):
                     self.client_streams.add(event.id)
@@ -367,11 +370,14 @@ class FilteredControlPortProxySession:
                 event_rewriter = None
                 if 'response' in rule:
                     replacers = rule['response']
+
                     def _event_rewriter(line):
                         return self.rewrite_matched_line(replacers, line)
                     event_rewriter = _event_rewriter
+
                 def _event_cb(event):
                     self.event_cb(event, event_rewriter=event_rewriter)
+
                 self.subscribed_event_listeners.append((_event_cb, event))
                 if global_args.print_responses:
                     self.debug_log("subscribed to event '{}'".format(event))
@@ -439,9 +445,9 @@ class FilteredControlPortProxySession:
                 # Hopefully the next line is ok...
                 continue
             self.debug_log_recv(line)
-            cmd         = match.group('cmd')
+            cmd = match.group('cmd')
             cmd_arg_sep = match.group('cmd_arg_sep')
-            arg_str     = match.group('arg_str')
+            arg_str = match.group('arg_str')
             args = arg_str.split()
             cmd = cmd.upper()
 
@@ -666,8 +672,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         client_host = self.client_address[0]
-        local_connection = ipaddress.ip_address(client_host).is_loopback
-        if local_connection:
+        pid_based_connection = ipaddress.ip_address(client_host).is_loopback
+        if pid_based_connection:
             self.client_pid = pid_of_laddr(self.client_address)
             # Deal with the race between looking up the PID, and the
             # client being killed before we find the PID.
@@ -685,7 +691,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 ('hosts', client_host),
             ]
         self.match_and_parse_filter(matchers)
-        if local_connection:
+        if pid_based_connection:
             self.client_desc = '{aa_profile} (pid: {pid}, user: {user}, ' \
                                'port: {port}, filter: {filter_name})'.format(
                                    aa_profile=client_apparmor_profile,
@@ -698,7 +704,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             self.client_desc = '{1}:{2} (filter: {0})'.format(
                 self.filter_name, *self.client_address
             )
-        if self.restrict_stream_events and not local_connection:
+        remote_connection = not pid_based_connection and ipaddress.ip_address(
+            client_host
+        ) not in ipaddress.ip_network(LOCAL_VETH_NETWORK)
+        if self.restrict_stream_events and remote_connection:
             self.debug_log(
                 "filter '{}' has `restrict-stream-events` set "
                 "and we are remote so the option was disabled"
@@ -791,13 +800,13 @@ def main():
     # Deal with overlapping functionality between arguments
     global_args.__dict__['disable_filtering'] = global_args.complain
     global_args.__dict__['print_requests'] = global_args.complain or \
-                                             global_args.debug
+        global_args.debug
     global_args.__dict__['print_responses'] = global_args.debug
     if global_args.listen_interface:
         ip_address = get_ip_address(global_args.listen_interface)
         if global_args.debug:
             log("IP address for interface {} : {}".format(
-                global_args.listen_interface,ip_address))
+                global_args.listen_interface, ip_address))
     else:
         ip_address = global_args.listen_address
     address = (ip_address, global_args.listen_port)
