@@ -234,7 +234,7 @@ fi
 
 wait_for_working_tor
 
-touch $TORDATE_DONE_FILE
+touch "$TORDATE_DONE_FILE"
 
 log "Restarting htpdate"
 systemctl restart htpdate.service
