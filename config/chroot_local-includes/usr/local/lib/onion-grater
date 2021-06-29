@@ -700,7 +700,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             self.client_desc = '{1}:{2} (filter: {0})'.format(
                 self.filter_name, *self.client_address
             )
-        remote_connection = not ipaddress.ip_address(client_host).is_private
+        remote_connection = not pid_based_connection and ipaddress.ip_address(client_host) not in ipaddress.ip_network("10.200.1.0/24")
         if self.restrict_stream_events and remote_connection:
             self.debug_log(
                 "filter '{}' has `restrict-stream-events` set "
