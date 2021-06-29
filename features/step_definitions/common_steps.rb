@@ -714,7 +714,7 @@ Given /^I shutdown Tails and wait for the computer to power off$/ do
   step 'Tails eventually shuts down'
 end
 
-When /^I request a shutdown using the emergency shutdown applet$/ do
+When /^I request a shutdown using the system menu$/ do
   @screen.hide_cursor
   @screen.wait('TailsEmergencyShutdownButton.png', 10).click
   # Sometimes the next button too fast, before the menu has settled
@@ -729,10 +729,10 @@ When /^I warm reboot the computer$/ do
   $vm.spawn('reboot')
 end
 
-When /^I request a reboot using the emergency shutdown applet$/ do
+When /^I request a reboot using the system menu$/ do
   @screen.hide_cursor
   @screen.wait('TailsEmergencyShutdownButton.png', 10).click
-  # See comment on /^I request a shutdown using the emergency shutdown applet$/
+  # See comment on /^I request a shutdown using the system menu$/
   # that explains why we need to wait.
   step 'I wait 5 seconds'
   @screen.wait('TailsEmergencyShutdownReboot.png', 10).click

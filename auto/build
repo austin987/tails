@@ -156,6 +156,13 @@ mkdir -p "$SUBMODULES_DST"
 # shellcheck disable=SC2086
 cp -a $SUBMODULES_SRC "$SUBMODULES_DST"/
 
+# Inject the Tor Browser AppArmor policy into the chroot
+APPARMOR_D="config/chroot_local-includes/etc/apparmor.d"
+cp submodules/torbrowser-launcher/apparmor/torbrowser.Browser.firefox \
+   "$APPARMOR_D"/
+cp submodules/torbrowser-launcher/apparmor/tunables/* \
+   "$APPARMOR_D"/tunables/
+
 echo "I: Building ISO image ${BUILD_ISO_FILENAME}..."
 time lb build noauto "${@}"
 [ -e binary.iso ] || fatal "lb build failed ($?)."

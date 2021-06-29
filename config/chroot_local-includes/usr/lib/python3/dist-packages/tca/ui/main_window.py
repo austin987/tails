@@ -2,7 +2,8 @@ import logging
 import os.path
 import json
 import gettext
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
+import copy
 
 import gi
 import stem
@@ -12,6 +13,8 @@ from tca.torutils import (
     TorConnectionProxy,
     TorConnectionConfig,
     InvalidBridgeException,
+    InvalidBridgeTypeException,
+    MalformedBridgeException,
     VALID_BRIDGE_TYPES,
 )
 import tca.config
@@ -75,7 +78,7 @@ class StepChooseHideMixin:
     Here, the user can choose between an easier configuration and going unnoticed.
     """
 
-    def before_show_hide(self):
+    def before_show_hide(self, coming_from):
         self.state.setdefault("hide", {})
         self.builder.get_object("radio_unnoticed_none").set_active(True)
         self.builder.get_object("radio_unnoticed_yes").set_active(False)
@@ -151,7 +154,7 @@ class StepChooseHideMixin:
 
 
 class StepChooseBridgeMixin:
-    def before_show_bridge(self):
+    def before_show_bridge(self, coming_from):
         self.state["bridge"]: Dict[str, Any] = {}
         self.builder.get_object("step_bridge_box").show()
         self.builder.get_object("step_bridge_radio_none").set_active(True)
@@ -187,15 +190,16 @@ class StepChooseBridgeMixin:
             self.get_object("radio_type").set_active(True)
             self.get_object("text").get_property("buffer").set_text("\n".join(bridges))
 
-    def _step_bridge_is_text_valid(self) -> bool:
+    def _step_bridge_is_text_valid(self, text: Optional[str] = None) -> bool:
         def set_warning(msg):
             self.get_object("label_warning").set_label(msg)
             self.get_object("box_warning").show()
 
-        text = self.get_object("text").get_property("buffer").get_property("text")
+        if text is None:
+            text = self.get_object("text").get_property("buffer").get_property("text")
         try:
             bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
-        except InvalidBridgeException as exc:
+        except InvalidBridgeTypeException as exc:
             set_warning(_("Invalid: {exception}").format(exception=str(exc)))
             return False
         except (ValueError, IndexError):
@@ -241,16 +245,11 @@ class StepChooseBridgeMixin:
             ).get_active_id()
         elif manual:
             self.state["bridge"]["kind"] = "manual"
-            text = (
-                self.builder.get_object("step_bridge_text")
-                .get_property("buffer")
-                .get_property("text")
-            )
+            text = self.get_object("text").get_property("buffer").get_property("text")
             self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(
                 text.split("\n")
             )
             log.info("Bridges parsed: %s", self.state["bridge"]["bridges"])
-            print("Bridges parsed:", self.state["bridge"]["bridges"])
 
         self.change_box("progress")
 
@@ -259,7 +258,7 @@ class StepChooseBridgeMixin:
 
 
 class StepConnectProgressMixin:
-    def before_show_progress(self):
+    def before_show_progress(self, coming_from):
         self.save_conf()
         self.state["progress"]["error"] = None
         self.builder.get_object("step_progress_box").show()
@@ -295,9 +294,11 @@ class StepConnectProgressMixin:
                 if proxy_conf["proxy_type"] != "Socks5":
                     del proxy_conf["username"]
                     del proxy_conf["password"]
-                proxy_conf["proxy_type"] += "Proxy"
+                conf_obj = copy.copy(proxy_conf)
+                conf_obj["proxy_type"] += "Proxy"
+                assert proxy_conf["proxy_type"] != conf_obj["proxy_type"]
                 self.app.configurator.tor_connection_config.proxy = TorConnectionProxy.from_obj(
-                    proxy_conf
+                    conf_obj
                 )
 
         def do_tor_connect_config():
@@ -306,7 +307,7 @@ class StepConnectProgressMixin:
                 self.get_object("label_status").set_text(
                     _("Connecting to Tor without bridges…")
                 )
-            elif self.state["bridge"]["kind"] == "default":
+            elif self.state["bridge"].get("kind", "") == "default":
                 self.app.configurator.tor_connection_config.default_bridges(
                     only_type=self.state["bridge"]["default_method"]
                 )
@@ -453,9 +454,21 @@ class StepConnectProgressMixin:
 
 
 class StepErrorMixin:
-    def before_show_error(self):
-        self.state["error"] = {}
-        # XXX: fetch data from self.state['progress']['error'] and self.state['progress']['error_data']
+    def before_show_error(self, coming_from):
+        self.state["error"] = {
+            "fix_attempt": False  # has the user done something to fix it?
+        }
+        if coming_from == "progress":
+            if self.state['hide']['bridge'] and self.state["bridge"].get("kind") == "manual":
+                self.get_object("text").get_property("buffer").set_property(
+                    "text", "\n".join(self.state["bridge"]["bridges"])
+                )
+        self.get_object("text").get_property("buffer").connect(
+            "changed", self.cb_step_error_text_changed
+        )
+        if coming_from in ["proxy"]:
+            self.state["error"]["fix_attempt"] = True
+        self._step_error_submit_allowed()
 
     def cb_step_error_btn_proxy_clicked(self, *args):
         self.change_box("proxy")
@@ -463,12 +476,66 @@ class StepErrorMixin:
     def cb_step_error_btn_captive_clicked(self, *args):
         self.app.portal.call_async("open-unsafebrowser")
 
-    def cb_step_error_btn_bridge_clicked(self, *args):
-        self.change_box("bridge")
+        # XXX: for proper handling of the btn_submit, we'd better wait for the unsafe-browser to be closed
+        # XXX: this is considered a "fix attempt" even if the unsafe-browser was not enabled, which is clearly
+        #      not true
+        self.state["error"]["fix_attempt"] = True
+        self._step_error_submit_allowed()
+
+    def _step_error_submit_allowed(self):
+        def set_warning(msg):
+            self.get_object("label_warning").set_label(msg)
+            self.get_object("box_warning").show()
+
+        def is_allowed():
+            text = self.get_object("text").get_property("buffer").get_property("text")
+            try:
+                bridges = TorConnectionConfig.parse_bridge_lines(text.split("\n"))
+            except InvalidBridgeTypeException as exc:
+                set_warning(_("Invalid: {exception}").format(exception=str(exc)))
+                return False
+            except (MalformedBridgeException, ValueError, IndexError):
+                set_warning(_("Bridge address malformed"))
+                return False
+            else:
+                self.get_object("box_warning").hide()
+
+            if self.state["hide"]["hide"]:
+                for br in bridges:
+                    if br.split()[0] not in (VALID_BRIDGE_TYPES - {"bridge"}):
+                        set_warning(
+                            _(
+                                "You need to configure an obfs4 bridge to hide that you are using Tor"
+                            )
+                        )
+                        return False
+
+            if not bridges and self.state['hide']['hide']:
+                set_warning(_("Setting a bridge is needed if you want to hide that you are using Tor"))
+                return False
+
+            if bridges:
+                return True
+
+            return self.state["error"]["fix_attempt"]
+
+        self.get_object("btn_submit").set_sensitive(is_allowed())
+
+    def cb_step_error_text_changed(self, *args):
+        self._step_error_submit_allowed()
+
+    def cb_step_error_btn_submit_clicked(self, *args):
+        self.state["bridge"]["kind"] = "manual"
+        text = self.get_object("text").get_property("buffer").get_property("text")
+        self.state["bridge"]["bridges"] = TorConnectionConfig.parse_bridge_lines(
+            text.split("\n")
+        )
+        self.state['hide']['bridge'] = bool(self.state['bridge']['bridges'])
+        self.change_box("progress")
 
 
 class StepProxyMixin:
-    def before_show_proxy(self):
+    def before_show_proxy(self, coming_from):
         self.state["proxy"].setdefault("proxy_type", "no")
         self.builder.get_object("step_proxy_combo").set_active_id(
             self.state["proxy"]["proxy_type"]
@@ -548,7 +615,7 @@ class StepProxyMixin:
         for entry in ("address", "port", "username", "password"):
             self.state["proxy"][entry] = self.get_object("entry_%s" % entry).get_text()
 
-        self.change_box("progress")
+        self.change_box("error")
 
 
 class TCAMainWindow(
@@ -597,7 +664,8 @@ class TCAMainWindow(
         else:
             data = self.app.configurator.read_conf()
             if data and data.get("ui"):
-                self.state["hide"].update(data["ui"].get("hide", {}))
+                for key in ["hide", "bridge"]:
+                    self.state[key].update(data["ui"].get(key, {}))
                 self.state["progress"]["started"] = (
                     data["ui"].get("progress", {}).get("started", False)
                 )
@@ -653,7 +721,7 @@ class TCAMainWindow(
     def save_conf(self, successful_connect=False):
         log.info("Saving configuration (success=%s)", successful_connect)
         if not successful_connect:
-            data = {"ui": {"hide": self.state["hide"]}}
+            data = {"ui": {"hide": self.state["hide"], "bridge": self.state["bridge"]}}
         else:
             data = {"ui": self.state}
         self.app.configurator.save_conf(data, save_torrc=successful_connect)
@@ -676,12 +744,13 @@ class TCAMainWindow(
         self.builder.get_object("main_img_side").set_from_pixbuf(pixbuf)
 
     def change_box(self, name: str, **kwargs):
+        coming_from = self.state["step"]
         self.state["step"] = name
         self.set_image(IMG_SIDE[self.state["step"]])
         self.stack.set_visible_child_name(name)
 
         if hasattr(self, "before_show_%s" % name):
-            getattr(self, "before_show_%s" % name)(**kwargs)
+            getattr(self, "before_show_%s" % name)(coming_from=coming_from, **kwargs)
         log.debug("Step changed, state is now %s", str(self.state))
 
         # # resize, just to be sure that everything is properly shown
@@ -713,9 +782,7 @@ class TCAMainWindow(
                 "If connecting to Tor fails, you will have to wait again until the end of the progress bar to be able to troubleshoot your connection."
             )
         ]
-        d.format_secondary_markup(
-            "\n".join(secondary)
-        )
+        d.format_secondary_markup("\n".join(secondary))
         d.add_buttons(
             "Close and Lose Progress", Gtk.ResponseType.YES, "Wait", Gtk.ResponseType.NO
         )
@@ -724,6 +791,7 @@ class TCAMainWindow(
         def on_dialog_response(dialog, response):
             dialog.destroy()
             if response == Gtk.ResponseType.YES:
+                self.app.full_quit()
                 self.destroy()
                 # Gtk.main_quit()
 

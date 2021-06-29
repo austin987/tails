@@ -11,6 +11,7 @@ Feature: Networking
     And all notifications have disappeared
     And the time has synced
 
+  @not_release_blocker
   Scenario: The Tails Greeter "disable all networking" option disables networking within Tails
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I disable networking in Tails Greeter

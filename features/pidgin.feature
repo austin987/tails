@@ -72,26 +72,6 @@ Feature: Chatting anonymously using Pidgin
     Then Pidgin automatically enables my XMPP account
     And I can join the "tails" channel on "conference.riseup.net"
 
-  Scenario: Adding a certificate to Pidgin
-    Given I have started Tails from DVD and logged in and the network is connected
-    And I start "Pidgin Internet Messenger" via GNOME Activities Overview
-    And I see Pidgin's account manager window
-    And I close Pidgin's account manager window
-    Then I can add a certificate from the "/home/amnesia" directory to Pidgin
-
-  Scenario: Failing to add a certificate to Pidgin
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I start "Pidgin Internet Messenger" via GNOME Activities Overview
-    And I see Pidgin's account manager window
-    And I close Pidgin's account manager window
-    Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
-    When I close Pidgin's certificate import failure dialog
-    And I close Pidgin's certificate manager
-    Then I cannot add a certificate from the "/lib/live/mount/overlay/rw/home/amnesia/.gnupg" directory to Pidgin
-    When I close Pidgin's certificate import failure dialog
-    And I close Pidgin's certificate manager
-    Then I cannot add a certificate from the "/live/overlay/rw/home/amnesia/.gnupg" directory to Pidgin
-
   @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in

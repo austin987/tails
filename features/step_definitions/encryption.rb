@@ -9,7 +9,7 @@ def gedit_text_buffer
     .child(roleName: 'text',        showingOnly: true)
 end
 
-def seahorse_menu_click_helper(main, sub, verify = nil)
+def menu_click_helper(main, sub, verify = nil)
   try_for(60) do
     step "process \"#{verify}\" is running" if verify
     @screen.hide_cursor
@@ -77,8 +77,8 @@ end
 
 def encrypt_sign_helper
   gedit_copy_all_text
-  seahorse_menu_click_helper('GpgAppletIconNormal.png',
-                             'GpgAppletSignEncrypt.png')
+  menu_click_helper('GpgAppletIconNormal.png',
+                    'GpgAppletSignEncrypt.png')
   @screen.wait('GpgAppletChooseKeyWindow.png', 30).click
   # We don't have a good visual indicator for when we can continue without
   # keystrokes being lost.
@@ -90,7 +90,7 @@ end
 
 def decrypt_verify_helper(icon)
   gedit_copy_all_text
-  seahorse_menu_click_helper(icon, 'GpgAppletDecryptVerify.png')
+  menu_click_helper(icon, 'GpgAppletDecryptVerify.png')
   maybe_deal_with_pinentry
   @screen.wait('GpgAppletResults.png', 20)
   @screen.wait('GpgAppletResultsMsg.png', 20)
@@ -143,8 +143,8 @@ end
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   gedit_copy_all_text
-  seahorse_menu_click_helper('GpgAppletIconNormal.png',
-                             'GpgAppletEncryptPassphrase.png')
+  menu_click_helper('GpgAppletIconNormal.png',
+                    'GpgAppletEncryptPassphrase.png')
   deal_with_pinentry # enter password
   deal_with_pinentry # confirm password
   gedit_paste_into_a_new_tab

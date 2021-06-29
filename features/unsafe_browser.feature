@@ -22,17 +22,17 @@ Feature: Browsing the web using the Unsafe Browser
     Then the Unsafe Browser runs as the expected user
     And the Unsafe Browser has a red theme
     And the Unsafe Browser shows a warning as its start page
-    And the Unsafe Browser has no plugins installed
     And the Unsafe Browser has no add-ons installed
     And the Unsafe Browser has only Firefox's default bookmarks configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
-  Scenario: The Unsafe Browser can load a web page
+  Scenario: The Unsafe Browser can load a web page from the Internet
     Given I have started Tails from DVD and logged in with the Unsafe Browser enabled and the network is connected
     When I successfully start the Unsafe Browser
     When I open the Tails homepage in the Unsafe Browser
     Then the Tails homepage loads in the Unsafe Browser
 
+  @not_release_blocker
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot
     Given I have started Tails from DVD and logged in with the Unsafe Browser enabled and the network is connected
     When I successfully start the Unsafe Browser
@@ -40,6 +40,7 @@ Feature: Browsing the web using the Unsafe Browser
     Then I see the "Shutting down the Unsafe Browser..." notification after at most 60 seconds
     And the Unsafe Browser chroot is torn down
 
+  @not_release_blocker
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown
     Given I have started Tails from DVD and logged in with the Unsafe Browser enabled and the network is connected
     When I successfully start the Unsafe Browser
@@ -58,6 +59,7 @@ Feature: Browsing the web using the Unsafe Browser
     And I open the Tails homepage in the Unsafe Browser
     Then I see "BrowserProxyRefused.png" after at most 60 seconds
 
+  @not_release_blocker
   Scenario: The Unsafe Browser only makes user-initiated connections to the Internet
     Given I have started Tails from DVD and logged in with the Unsafe Browser enabled and the network is connected
     And I capture all network traffic
@@ -70,6 +72,7 @@ Feature: Browsing the web using the Unsafe Browser
     And the clearnet user has not sent packets out to the Internet
     And all Internet traffic has only flowed through Tor
 
+  @not_release_blocker
   Scenario: The Unsafe Browser cannot be started when I am offline
     Given I have started Tails from DVD without network and logged in with the Unsafe Browser enabled
     When I start the Unsafe Browser

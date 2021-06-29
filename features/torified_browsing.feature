@@ -103,12 +103,6 @@ Feature: Browsing the web using the Tor Browser
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page
 
-  Scenario: The Tor Browser should not have any plugins enabled
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I start the Tor Browser
-    And the Tor Browser loads the startup page
-    Then the Tor Browser has no plugins installed
-
   Scenario: WebRTC is disabled in Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser

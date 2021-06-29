@@ -5,8 +5,9 @@ Feature: Tails has a sane default configuration
     Given I have started Tails from DVD without network and logged in
     Then the live user has been setup by live-boot
     And the live user is a member of only its own group and "cdrom dialout floppy video plugdev netdev scanner lp lpadmin vboxsf"
-    And the live user owns its home dir and it has normal permissions
+    And the live user owns its home directory which has strict permissions
 
+  @not_release_blocker
   Scenario: No unexpected network services
     Given I have started Tails from DVD without network and logged in
     When the network is plugged

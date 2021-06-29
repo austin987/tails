@@ -2,11 +2,11 @@
 Description=Proxy IBUS bus inside %i netns
 After=dbus.service
 Requires=dbus.service
+StopWhenUnneeded=true
 ConditionUser=1000
 
 [Service]
 Type=notify
-NotifyAccess=all
 ExecStart=/usr/local/bin/a11y-proxy-netns --component=ibus --log-level DEBUG %i
 ExecStop=/bin/kill -INT $MAINPID
 

@@ -148,11 +148,6 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   page_has_loaded_in_the_tor_browser(title)
 end
 
-Then /^the (.*) has no plugins installed$/ do |browser|
-  step "I open the address \"about:plugins\" in the #{browser}"
-  step 'I see "TorBrowserNoPlugins.png" after at most 30 seconds'
-end
-
 def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
   absent_tbb_libs = []
   unwanted_native_libs = []
@@ -184,6 +179,7 @@ Then /^the (.*) uses all expected TBB shared libraries$/ do |application|
   pid = $vm.execute_successfully(
     "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"
   ).stdout.chomp
+  pid = pid.scan(/\d+/).first
   assert_match(/\A\d+\z/, pid, "It seems like #{application} is not running")
   xul_app_shared_lib_check(pid, info[:chroot], info[:unused_tbb_libs])
 end

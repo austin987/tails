@@ -10,14 +10,6 @@ Feature: Upgrading an old Tails USB installation
   # other. When editing this feature, make sure you understand these
   # dependencies (which are documented below).
 
-  Scenario: Try cloning Tails to a too small partition
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 7200 MiB disk named "too-small-partition"
-    And I create a 500 MiB gpt partition labeled "Tails" with a vfat filesystem on disk "too-small-partition"
-    And I plug USB drive "too-small-partition"
-    When I start Tails Installer
-    Then I am told by Tails Installer that I "need to use a downloaded Tails ISO image"
-
   # Installation method inspired by the usb-install-tails-greeter
   # checkpoint, variations are using the old Tails USB image and a
   # different device name ("old" instead of "__internal")

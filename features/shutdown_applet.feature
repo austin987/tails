@@ -1,12 +1,13 @@
 @product
-Feature: Shutdown applet
+Feature: Shutdown buttons in the system menu
 
-  Scenario: The shutdown applet can shutdown Tails
+  Scenario: I can shutdown Tails via the system menu
     Given I have started Tails from DVD and logged in and the network is connected
-    When I request a shutdown using the emergency shutdown applet
+    When I request a shutdown using the system menu
     Then Tails eventually shuts down
 
-  Scenario: The shutdown applet can reboot Tails
+  @not_release_blocker
+  Scenario: I can reboot Tails via the system menu
     Given I have started Tails from DVD and logged in and the network is connected
-    When I request a reboot using the emergency shutdown applet
+    When I request a reboot using the system menu
     Then Tails eventually restarts
