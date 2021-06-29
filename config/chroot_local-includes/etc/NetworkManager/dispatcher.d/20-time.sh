@@ -7,6 +7,9 @@
 # In any case, we use HTP to ask more accurate time information to
 # a few authenticated HTTPS servers.
 
+set -e
+set -u
+
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
