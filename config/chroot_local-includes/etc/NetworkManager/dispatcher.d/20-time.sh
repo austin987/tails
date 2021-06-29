@@ -80,17 +80,15 @@ wait_for_tor_consensus_helper() {
 
 wait_for_tor_consensus() {
 	log "Waiting for a Tor consensus file to contain a valid time interval"
-	if ! has_consensus && ! wait_for_tor_consensus_helper; then
-		log "Unsuccessfully retried waiting for Tor consensus, aborting."
-	fi
-	if has_consensus; then
+	if has_consensus || wait_for_tor_consensus_helper; then
 		log "A Tor consensus file now contains a valid time interval."
+		return 0
 	else
 		log "Waited for too long, let's stop waiting for Tor consensus."
 		# FIXME: gettext-ize
 		/usr/local/sbin/tails-notify-user "Synchronizing the system's clock" \
 			"Could not fetch Tor consensus."
-		exit 2
+		return 2
 	fi
 }
 
