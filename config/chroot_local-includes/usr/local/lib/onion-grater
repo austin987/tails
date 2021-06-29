@@ -226,7 +226,6 @@ class FilteredControlPortProxySession:
         self.client_streams = set()
         self.subscribed_event_listeners = []
 
-
     def debug_log_send(self, line):
         if global_args.print_responses:
             self.debug_log(line, format_multiline=True, sep=': <- ')
@@ -371,11 +370,14 @@ class FilteredControlPortProxySession:
                 event_rewriter = None
                 if 'response' in rule:
                     replacers = rule['response']
+
                     def _event_rewriter(line):
                         return self.rewrite_matched_line(replacers, line)
                     event_rewriter = _event_rewriter
+
                 def _event_cb(event):
                     self.event_cb(event, event_rewriter=event_rewriter)
+
                 self.subscribed_event_listeners.append((_event_cb, event))
                 if global_args.print_responses:
                     self.debug_log("subscribed to event '{}'".format(event))
@@ -443,9 +445,9 @@ class FilteredControlPortProxySession:
                 # Hopefully the next line is ok...
                 continue
             self.debug_log_recv(line)
-            cmd         = match.group('cmd')
+            cmd = match.group('cmd')
             cmd_arg_sep = match.group('cmd_arg_sep')
-            arg_str     = match.group('arg_str')
+            arg_str = match.group('arg_str')
             args = arg_str.split()
             cmd = cmd.upper()
 
@@ -702,7 +704,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             self.client_desc = '{1}:{2} (filter: {0})'.format(
                 self.filter_name, *self.client_address
             )
-        remote_connection = not pid_based_connection and ipaddress.ip_address(client_host) not in ipaddress.ip_network(LOCAL_VETH_NETWORK)
+        remote_connection = not pid_based_connection and ipaddress.ip_address(
+            client_host
+        ) not in ipaddress.ip_network(LOCAL_VETH_NETWORK)
         if self.restrict_stream_events and remote_connection:
             self.debug_log(
                 "filter '{}' has `restrict-stream-events` set "
@@ -796,13 +800,13 @@ def main():
     # Deal with overlapping functionality between arguments
     global_args.__dict__['disable_filtering'] = global_args.complain
     global_args.__dict__['print_requests'] = global_args.complain or \
-                                             global_args.debug
+        global_args.debug
     global_args.__dict__['print_responses'] = global_args.debug
     if global_args.listen_interface:
         ip_address = get_ip_address(global_args.listen_interface)
         if global_args.debug:
             log("IP address for interface {} : {}".format(
-                global_args.listen_interface,ip_address))
+                global_args.listen_interface, ip_address))
     else:
         ip_address = global_args.listen_address
     address = (ip_address, global_args.listen_port)
