@@ -404,7 +404,22 @@ end
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{$language}.png"
   @screen.wait(desktop_started_picture, 180)
-  @screen.wait('DesktopTailsDocumentation.png', 30)
+  # We want to ensure the Tails Documentation desktop icon is visible,
+  # but it might be obscured by TCA or other windows depending on the
+  # order of steps run before this one.
+  # XXX: Once #18407 is fixed we may be able to remove this.
+  try_for(30) do
+    begin
+      @screen.find('DesktopTailsDocumentation.png')
+    rescue FindFailed
+      # Switch to new workspace
+      @screen.press('super', 'page_down')
+      next
+    end
+    true
+  end
+  # Switch back to initial workspace, in case we changed it above
+  @screen.press('super', 'home')
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can cause problems when we are
   # waiting for an image for a very long time.
