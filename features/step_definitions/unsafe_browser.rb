@@ -7,21 +7,16 @@ def supported_torbrowser_languages
   localization_descriptions =
     "#{Dir.pwd}/config/chroot_local-includes/" \
     'usr/share/tails/browser-localization/descriptions'
-  supported_locales = $vm.execute_successfully(
-    'localedef --list-archive /usr/lib/locale/locale-archive'
-  ).stdout.split
+  supported_locales = $vm.file_content(
+    '/usr/share/tails/greeter/supported_languages'
+  ).split
   File.read(localization_descriptions).split("\n").map do |line|
-    # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
-    first, second = line.sub('-', '_').split(':')
-    candidates = ["#{first}_#{second}.utf8",
-                  "#{first}.utf8",
-                  "#{first}_#{second}",
-                  first,]
-    when_not_found = proc { raise "Could not find a locale for '#{line}'" }
-    candidates.find(when_not_found) do |candidate|
-      supported_locales.include?(candidate)
-    end
-  end
+    # The line will be of the form "xx:YY" or "xx-YY:YY"
+    locale = line.split(':').first.sub('-', '_')
+    language = locale.split('_').first
+    next unless supported_locales.include?(language)
+    "#{locale}.utf8"
+  end.compact
 end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
