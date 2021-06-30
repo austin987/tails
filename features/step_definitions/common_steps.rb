@@ -526,8 +526,19 @@ Given /^available upgrades have been checked$/ do
   end
 end
 
+def tor_browser_is_alpha
+  tbb_dist_url_file = "#{GIT_DIR}/config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt"
+  tbb_version = File.read(tbb_dist_url_file).chomp.split('/').last
+  /^[0-9.]+a[0-9]+(?:-build[0-9]+)?$/ =~ tbb_version
+end
+
 When /^I start the Tor Browser( in offline mode)?$/ do |offline|
-  step 'I start "TorBrowserOverviewIcon.png" via GNOME Activities Overview'
+  overview_icon = if tor_browser_is_alpha
+                    'TorBrowserOverviewIconAlpha.png'
+                  else
+                    'TorBrowserOverviewIcon.png'
+                  end
+  step "I start \"#{overview_icon}\" via GNOME Activities Overview"
   if offline
     start_button = Dogtail::Application
                    .new('zenity')
