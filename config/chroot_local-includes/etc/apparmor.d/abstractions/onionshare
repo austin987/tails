@@ -3,6 +3,8 @@
   #include <abstractions/private-files-strict>
   #include <abstractions/python>
 
+  /usr/bin/python3.[0-9] mr,
+
   # Why are these not in abstractions/python?
   /usr/lib{,32,64}/python{2,3}.[0-9]/__pycache__/ rw,
   /usr/lib{,32,64}/python{2,3}.[0-9]/__pycache__/* rw,
@@ -12,11 +14,13 @@
   /usr/lib{,32,64}/python{2,3}/**/__pycache__/* rw,
 
   /bin/dash rix,
+  /{usr/,}bin/file rix,
   /proc/*/mounts r,
   /proc/*/fd/ r,
   /sbin/ldconfig rix,
   /sbin/ldconfig.real rix,
   /bin/uname rix,
+  /etc/magic r,
   /etc/mime.types r,
   /usr/share/onionshare/ r,
   /usr/share/onionshare/** r,
@@ -33,3 +37,6 @@
 
   # Temporary files
   owner @{HOME}/.config/#[0-9]*[0-9] rw,
+
+  # Directory for received files
+  owner @{HOME}/Downloads/{,**} rw,

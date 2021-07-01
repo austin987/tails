@@ -347,7 +347,7 @@ When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
 end
 
 def tor_connection_assistant
-  Dogtail::Application.new('Tor Connection')
+  Dogtail::Application.new('Tor Connection', translation_domain: 'tails')
 end
 
 class TCAConnectionFailure < StandardError

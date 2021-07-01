@@ -7,6 +7,9 @@
 # In any case, we use HTP to ask more accurate time information to
 # a few authenticated HTTPS servers.
 
+set -e
+set -u
+
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
@@ -77,17 +80,15 @@ wait_for_tor_consensus_helper() {
 
 wait_for_tor_consensus() {
 	log "Waiting for a Tor consensus file to contain a valid time interval"
-	if ! has_consensus && ! wait_for_tor_consensus_helper; then
-		log "Unsuccessfully retried waiting for Tor consensus, aborting."
-	fi
-	if has_consensus; then
+	if has_consensus || wait_for_tor_consensus_helper; then
 		log "A Tor consensus file now contains a valid time interval."
+		return 0
 	else
 		log "Waited for too long, let's stop waiting for Tor consensus."
 		# FIXME: gettext-ize
 		/usr/local/sbin/tails-notify-user "Synchronizing the system's clock" \
 			"Could not fetch Tor consensus."
-		exit 2
+		return 2
 	fi
 }
 
@@ -150,9 +151,11 @@ maybe_set_time_from_tor_consensus() {
 	vmid=$(date -ud "${vstart} -0130" +'%F %T')
 	log "Tor: valid-after=${vstart} | valid-until=${vend}"
 
+	# XXX: this check will always fail in our test suite:
+	# https://gitlab.tails.boum.org/tails/tails/-/issues/18367#note_172586
 	if ! date_points_are_sane "${vstart}" "${vend}"; then
 		log "Unexpected valid-until: [${vend}] is not [${vstart} + 3h]"
-		return
+		return 0
 	fi
 
 	curdate=$(date -u +'%F %T')
@@ -160,7 +163,7 @@ maybe_set_time_from_tor_consensus() {
 
 	if time_is_in_valid_tor_range "${curdate}" "${vstart}"; then
 		log "Current time is in valid Tor range"
-		return
+		return 0
 	fi
 
 	log "Current time is not in valid Tor range, setting to middle of this range: [${vmid}]"
@@ -231,7 +234,7 @@ fi
 
 wait_for_working_tor
 
-touch $TORDATE_DONE_FILE
+touch "$TORDATE_DONE_FILE"
 
 log "Restarting htpdate"
 systemctl restart htpdate.service

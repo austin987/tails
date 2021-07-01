@@ -3,25 +3,20 @@ When /^I see and accept the Unsafe Browser start verification$/ do
   @screen.type(['Tab'], ['Return'])
 end
 
-def supported_torbrowser_languages
+def supported_torbrowser_locales
   localization_descriptions =
     "#{Dir.pwd}/config/chroot_local-includes/" \
     'usr/share/tails/browser-localization/descriptions'
-  supported_locales = $vm.execute_successfully(
-    'localedef --list-archive /usr/lib/locale/locale-archive'
-  ).stdout.split
+  supported_locales = $vm.file_content(
+    '/usr/share/tails/greeter/supported_languages'
+  ).split
   File.read(localization_descriptions).split("\n").map do |line|
-    # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
-    first, second = line.sub('-', '_').split(':')
-    candidates = ["#{first}_#{second}.utf8",
-                  "#{first}.utf8",
-                  "#{first}_#{second}",
-                  first,]
-    when_not_found = proc { raise "Could not find a locale for '#{line}'" }
-    candidates.find(when_not_found) do |candidate|
-      supported_locales.include?(candidate)
-    end
-  end
+    # The line will be of the form "xx:YY" or "xx-YY:YY"
+    locale = line.split(':').first.sub('-', '_')
+    language = locale.split('_').first
+    next unless supported_locales.include?(language)
+    "#{locale}.utf8"
+  end.compact
 end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
@@ -34,11 +29,11 @@ Then /^the Unsafe Browser works in all supported languages$/ do
   failed = []
   # We always want the locale which we verify the startup page warning
   # for, and one RTL locale ...
-  languages = ['fr_FR.UTF-8', 'fa_IR.UTF-8']
+  locales = ['fr_FR.UTF-8', 'fa_IR.UTF-8']
   # ... then we just pick one *other* random non-English locale.
-  languages += (supported_torbrowser_languages - languages - ['en_US.utf8'])
+  locales += (supported_torbrowser_locales - locales - ['en_US.utf8'])
                .sample(1)
-  languages.each do |lang|
+  locales.each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
       step "the Unsafe Browser has started in the \"#{lang}\" locale"
