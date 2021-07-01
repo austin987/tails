@@ -231,6 +231,7 @@ def wait_until_tor_is_working
     ).success?
   end
 rescue Timeout::Error
+  save_tor_journal
   raise TorBootstrapFailure, 'Tor failed to bootstrap'
 end
 

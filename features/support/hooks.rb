@@ -285,12 +285,13 @@ After('@product') do |scenario|
       $vm.display.screenshot(screenshot_path)
       save_failure_artifact('Screenshot', screenshot_path)
     end
-    if scenario.exception.is_a?(FirewallAssertionFailedError)
+    exception_name = scenario.exception.class.name
+    case exception_name
+    when 'FirewallAssertionFailedError'
       Dir.glob("#{$config['TMPDIR']}/*.pcap").each do |pcap_file|
         save_failure_artifact('Network capture', pcap_file)
       end
-    elsif [TorBootstrapFailure, TimeSyncingError].any? { |c| scenario.exception.is_a?(c) }
-      save_tor_journal
+    when 'TorBootstrapFailure'
       save_failure_artifact('Tor logs', "#{$config['TMPDIR']}/log.tor")
       chutney_logs = sanitize_filename(
         "#{elapsed}_#{scenario.name}_chutney-data"
@@ -306,12 +307,8 @@ After('@product') do |scenario|
         'Chutney logs',
         "#{ARTIFACTS_DIR}/#{chutney_logs}"
       )
-      if scenario.exception.instance_of?(HtpdateError)
-        File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |f|
-          f.write($vm.file_content('/var/log/htpdate.log'))
-        end
-        save_failure_artifact('Htpdate logs', "#{$config['TMPDIR']}/log.htpdate")
-      end
+    when 'HtpdateError'
+      save_failure_artifact('Htpdate logs', "#{$config['TMPDIR']}/log.htpdate")
     end
     # Note that the remote shell isn't necessarily running at all
     # times a scenario can fail (and a scenario failure could very

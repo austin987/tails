@@ -341,6 +341,7 @@ When /^the Tor Connection Assistant (?:autostarts|is running)$/ do
       tor_connection_assistant
     end
   rescue Timeout::Error
+    save_tor_journal
     raise TorBootstrapFailure, 'TCA did not start'
   end
 end
@@ -349,7 +350,7 @@ def tor_connection_assistant
   Dogtail::Application.new('Tor Connection', translation_domain: 'tails')
 end
 
-class TCAConnectionFailure < TorBootstrapFailure
+class TCAConnectionFailure < StandardError
 end
 
 def tca_configure(mode, &block)
