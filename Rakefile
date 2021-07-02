@@ -435,6 +435,7 @@ task merge_base_branch: ['parse_build_options', 'setup_environment'] do
   # If we actually merged anything we'll re-run rake in the new Git
   # state in order to avoid subtle build errors due to mixed state.
   next if commit_before_merge == git_helper('git_current_commit')
+  ENV['GIT_COMMIT'] = git_helper('git_current_commit')
   ENV['TAILS_BUILD_OPTIONS'] = (ENV['TAILS_BUILD_OPTIONS'] || '') + \
                                ' nomergebasebranch'
   Kernel.exec('rake', *ARGV)
