@@ -357,9 +357,9 @@ def tca_configure(mode, &block)
   step 'the Tor Connection Assistant is running'
   case mode
   when :easy
-    radio_button_label = 'Connect to Tor automatically (easier)'
+    radio_button_label = '<b>Connect to Tor automatically (easier)</b>'
   when :hide
-    radio_button_label = "Hide to my local network that I'm connecting to Tor (safer)"
+    radio_button_label = '<b>Hide to my local network that I\'m connecting to Tor (safer)</b>'
   else
     raise "bad TCA configuration mode '#{mode}'"
   end
