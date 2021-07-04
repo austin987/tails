@@ -215,7 +215,6 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
         self.opts = opts
         self.args = args
-        self.in_process = False
         self.signals_connected = []
         self.source_available = False
         self.target_available = False
@@ -351,6 +350,7 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         # get selected device
         drive = self.get_selected_drive()
         if drive is None:
+            self.enable_widgets(False)
             return
 
         device = self.live.drives[drive]
@@ -427,7 +427,7 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             self.__button_start.set_sensitive(False)
 
     def populate_devices(self, *args, **kw):
-        if self.in_process or self.target_selected:
+        if self.target_selected:
             return
 
         def add_devices():
@@ -548,9 +548,8 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         else:
             self.__button_start.set_sensitive(False)
             self.__button_force_reinstall.set_visible(False)
-        self.__box_source.set_sensitive(enabled)
+        self.__box_source.set_sensitive(not self.target_selected)
         self.__combobox_target.set_sensitive(enabled and not self.target_selected)
-        self.in_process = not enabled
 
     def get_selected_drive(self):
         drive = None
