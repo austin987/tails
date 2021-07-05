@@ -682,6 +682,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             }
             catch {
                 $stderr = $_;
+                $self->cancel_download;
             }
             finally {
                 $zenity_h->kill_kill;
