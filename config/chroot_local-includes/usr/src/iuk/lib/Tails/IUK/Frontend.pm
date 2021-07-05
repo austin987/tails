@@ -186,9 +186,9 @@ method fatal_run_cmd (Str :$error_msg, ArrayRef :$cmd, Maybe[Str] :$as = undef, 
     }
 
     my ($stdout, $stderr);
-    my $success = 1;
+    my $success = 0;
     my $exit_code;
-    IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr or $success = 0;
+    $success = 1 if IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr;
     $exit_code = $?;
     $success or $self->fatal(
         errf("<b>%{error_msg}s</b>\n\n%{details}s",
@@ -306,10 +306,9 @@ method refresh_signing_key () {
         );
     };
     my ($stdout, $stderr, $exit_code);
-    my $success = 1;
-    IPC::Run::run ['gpg', '--import'],
-          '<', \$new_key_content, '>', \$stdout, '2>', \$stderr
-          or $success = 0;
+    my $success = 0;
+    $success = 1 if IPC::Run::run ['gpg', '--import'],
+          '<', \$new_key_content, '>', \$stdout, '2>', \$stderr;
     $exit_code = $?;
     $success or $self->fatal(
         $error_msg,
@@ -631,10 +630,10 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
             @cmd = ('sudo', '-n', '-u', 'tails-iuk-get-target-file', @cmd);
         }
         my ($exit_code, $stderr);
-        my $success = 1;
+        my $success = 0;
 
         if ($self->batch) {
-            IPC::Run::run \@cmd, '2>', \$stderr or $success = 0;
+            $success = 1 if IPC::Run::run \@cmd, '2>', \$stderr;
             $exit_code = $?;
         }
         else {
@@ -696,7 +695,7 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
                 }
             };
         }
-        $success or $self->fatal(
+        $success and defined $exit_code and $exit_code == 0 or $self->fatal(
             errf("<b>%{error_msg}s</b>\n\n%{details}s",
                  {
                      error_msg => __(
@@ -872,9 +871,9 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
     }
 
     my ($exit_code, $stdout, $stderr);
-    my $success = 1;
+    my $success = 0;
 
-    IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr or $success = 0;
+    $success = 1 if IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr;
     $exit_code = $?;
     $zenity_h->kill_kill unless $self->batch;
 
