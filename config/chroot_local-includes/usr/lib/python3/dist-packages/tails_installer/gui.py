@@ -215,13 +215,13 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
 
         self.opts = opts
         self.args = args
-        self.in_process = False
         self.signals_connected = []
         self.source_available = False
         self.target_available = False
         self.target_selected = False
         self.devices_with_persistence = []
         self.force_reinstall = False
+        self.force_reinstall_button_available = False
 
         self._build_ui()
 
@@ -341,7 +341,6 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             return
         self.force_reinstall = True
         self.opts.partition = True
-        self.__button_force_reinstall.set_visible(False)
         self.on_start_clicked(button)
 
     def on_source_file_set(self, filechooserbutton):
@@ -351,6 +350,7 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
         # get selected device
         drive = self.get_selected_drive()
         if drive is None:
+            self.enable_widgets(False)
             return
 
         device = self.live.drives[drive]
@@ -362,13 +362,16 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             self.__help_link.set_label(_('Manual Upgrade Instructions'))
             self.__help_link.set_uri('https://tails.boum.org/upgrade/')
             if device['is_device_big_enough_for_reinstall']:
+                self.force_reinstall_button_available = True
                 self.__button_force_reinstall.set_visible(True)
             else:
+                self.force_reinstall_button_available = False
                 self.__button_force_reinstall.set_visible(False)
         else:
             self.opts.partition = True
             self.force_reinstall = True
             self.__button_start.set_label(_('Install'))
+            self.force_reinstall_button_available = False
             self.__button_force_reinstall.set_visible(False)
             self.__help_link.set_label(_('Installation Instructions'))
             self.__help_link.set_uri('https://tails.boum.org/install/')
@@ -424,7 +427,7 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
             self.__button_start.set_sensitive(False)
 
     def populate_devices(self, *args, **kw):
-        if self.in_process or self.target_selected:
+        if self.target_selected:
             return
 
         def add_devices():
@@ -540,12 +543,13 @@ class TailsInstallerWindow(Gtk.ApplicationWindow):
     def enable_widgets(self, enabled=True):
         if enabled:
             self.update_start_button()
+            if self.force_reinstall_button_available:
+                self.__button_force_reinstall.set_visible(True)
         else:
             self.__button_start.set_sensitive(False)
             self.__button_force_reinstall.set_visible(False)
-        self.__box_source.set_sensitive(enabled)
+        self.__box_source.set_sensitive(not self.target_selected)
         self.__combobox_target.set_sensitive(enabled and not self.target_selected)
-        self.in_process = not enabled
 
     def get_selected_drive(self):
         drive = None
