@@ -64,7 +64,7 @@ Browser, and `TBB_IMPORT_BRANCH` to the branch we'll work on, which
 must include the `+force-all-tests` suffix:
 
     TBB_TAILS_TICKET=123456
-    TBB_IMPORT_BRANCH=feature/${TBB_TAILS_TICKET}-tor-browser-${TBB_VERSION%%-*}+force-all-tests
+    TBB_IMPORT_BRANCH=${TBB_TAILS_TICKET}-tor-browser-${TBB_VERSION%%-*}+force-all-tests
 
 Check out the new branch:
 
@@ -106,7 +106,7 @@ we verify the checksum file.
 Lastly, commit:
 
     git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
-        -m "Upgrade Tor Browser to ${TBB_VERSION:?}." && \
+        -m "Upgrade Tor Browser to ${TBB_VERSION:?}" && \
     git show
 
 <div class="caution">
@@ -220,7 +220,7 @@ Commit and push your changes
 ----------------------------
 
 	cd "${TBB_ARCHIVE:?}" && \
-	git commit -m "Add Tor Browser ${TBB_VERSION:?}." && \
+	git commit -m "Add Tor Browser ${TBB_VERSION:?}" && \
 	git annex sync && \
 	git annex copy --to origin -- "${TBB_VERSION:?}" && \
 	git annex sync
@@ -243,7 +243,7 @@ Adjust the URL in the main Git repository
        echo "http://torbrowser-archive.tails.boum.org/${TBB_VERSION:?}/" > \
             config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
        git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
-           -m "Fetch Tor Browser from our own archive." && \
+           -m "Fetch Tor Browser from our own archive" && \
        git show
     done
 
