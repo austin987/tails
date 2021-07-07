@@ -220,7 +220,11 @@ def save_tor_journal
       'journalctl --no-pager -u tor@default.service > /tmp/tor.journal'
     )
     file.write($vm.file_content('/tmp/tor.journal'))
-    file.write($vm.file_content('/var/log/tor/log'))
+    if $vm.file_exist?('/var/log/tor/log')
+      file.write($vm.file_content('/var/log/tor/log'))
+    else
+      file.write("The Tor logs (/var/log/tor/log) did not exist\n")
+    end
   end
 end
 
