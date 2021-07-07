@@ -308,7 +308,11 @@ After('@product') do |scenario|
       )
       if scenario.exception.instance_of?(HtpdateError)
         File.open("#{$config['TMPDIR']}/log.htpdate", 'w') do |f|
-          f.write($vm.file_content('/var/log/htpdate.log'))
+          if $vm.file_exist?('/var/log/htpdate.log')
+            f.write($vm.file_content('/var/log/htpdate.log'))
+          else
+            f.write("The htpdate logs did not exist\n"))
+          end
         end
         save_failure_artifact('Htpdate logs', "#{$config['TMPDIR']}/log.htpdate")
       end
