@@ -219,8 +219,16 @@ def save_tor_journal
     $vm.execute(
       'journalctl --no-pager -u tor@default.service > /tmp/tor.journal'
     )
-    file.write($vm.file_content('/tmp/tor.journal'))
-    file.write($vm.file_content('/var/log/tor/log'))
+    file.write("Tor Journal\n")
+    file.write("===========\n")
+    file.write($vm.file_content('/tmp/tor.journal') + "\n")
+    file.write("Tor logs (/var/log/tor/log)\n")
+    file.write("===========================\n")
+    if $vm.file_exist?('/var/log/tor/log')
+      file.write($vm.file_content('/var/log/tor/log'))
+    else
+      file.write("The Tor logs did not exist\n")
+    end
   end
 end
 
@@ -231,7 +239,6 @@ def wait_until_tor_is_working
     ).success?
   end
 rescue Timeout::Error
-  save_tor_journal
   raise TorBootstrapFailure, 'Tor failed to bootstrap'
 end
 
