@@ -46,6 +46,7 @@ EXPORTED_VARIABLES = [
   'GIT_COMMIT',
   'GIT_REF',
   'BASE_BRANCH_GIT_COMMIT',
+  'FEATURE_BRANCH_GIT_COMMIT',
 ].freeze
 ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
@@ -439,6 +440,7 @@ task merge_base_branch: ['parse_build_options', 'setup_environment'] do
   # state in order to avoid subtle build errors due to mixed state.
   next if commit_before_merge == git_helper('git_current_commit')
   ENV['GIT_COMMIT'] = git_helper('git_current_commit')
+  ENV['FEATURE_BRANCH_GIT_COMMIT'] = commit_before_merge
   ENV['TAILS_BUILD_OPTIONS'] = (ENV['TAILS_BUILD_OPTIONS'] || '') + \
                                ' nomergebasebranch'
   Kernel.exec('rake', *ARGV)
