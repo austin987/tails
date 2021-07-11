@@ -70,11 +70,17 @@ Check out the new branch:
 
     git checkout -b ${TBB_IMPORT_BRANCH} origin/stable
 
+Set `TBB_SIGNER` to the nickname of the Tor Browser developer who signed the
+`sha256sums-unsigned-build.txt` file; the detached signature at `$TBB_DIST_URL`
+is named `sha256sums-unsigned-build.txt.asc-${TBB_SIGNER}`:
+
+    TBB_SIGNER=XXX
+
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
 
-    wget ${TBB_DIST_URL:?}/sha256sums-unsigned-build.txt{.asc,} && \
-    gpg --verify sha256sums-unsigned-build.txt{.asc,}
+    wget ${TBB_DIST_URL:?}/sha256sums-unsigned-build.txt{.asc-${TBB_SIGNER},} && \
+    gpg --verify sha256sums-unsigned-build.txt{.asc-${TBB_SIGNER},}
 
 Build the list of tarballs we want and their hashes,
 so this information is available at build time,
