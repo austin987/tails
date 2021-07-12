@@ -22,7 +22,7 @@ for overlay in config/APT_overlays.d/* ; do
     [[ -e "$overlay" ]] || break
     # shellcheck disable=SC2029
     if ! ssh reprepro@incoming.deb.tails.boum.org \
-         tails-merge-suite "$overlay" "$BRANCH" ; then
+         tails-merge-suite "$(basename "${overlay}")" "$BRANCH" ; then
         error "Failed to merge '$overlay' into '$BRANCH': $?"
     fi
 done
