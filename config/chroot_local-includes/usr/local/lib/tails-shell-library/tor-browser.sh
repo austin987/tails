@@ -32,6 +32,9 @@ exec_firefox_helper() {
     if [ -z "${TOR_SKIP_LAUNCH:-}" ]; then
         export TOR_SKIP_LAUNCH=1
     fi
+    # Since Tor Browser 10.5 it use an integrated alternative to Tor
+    # Launcher (and TCA) that we disable.
+    export TOR_USE_LEGACY_LAUNCHER='yes'
 
     # New in 9.5: Avoid overwriting user's dconf values. Fixes #27903.
     export GSETTINGS_BACKEND=memory
