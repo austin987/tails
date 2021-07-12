@@ -1,10 +1,4 @@
-tails (4.20) UNRELEASED; urgency=medium
-
-  * Dummy entry for next release.
-
- -- anonym <anonym@riseup.net>  Fri, 02 Jul 2021 13:04:12 +0200
-
-tails (4.20~rc1) unstable; urgency=medium
+tails (4.20) unstable; urgency=medium
 
   * Upgrade Thunderbird to 78.11.0-1~deb10u1
 
@@ -79,6 +73,12 @@ tails (4.20~rc1) unstable; urgency=medium
     Commits:
       - change documentation wrt to tca.conf
       - tca.conf path changed to /var/lib/tca/
+
+  * Install Linux 5.10.46 and upgrade shim (tails/tails!521)
+
+    Commits:
+      - Update shim* to the version from sid
+      - Update Linux to 5.10.46
 
   * Don't run a useless IBus proxy for OnionCircuits (tails/tails!510)
 
@@ -314,6 +314,54 @@ tails (4.20~rc1) unstable; urgency=medium
       - Improve check by verifying at least one "nameserver" line.
       - Drop unused imports.
 
+  * Upgrade Tor Browser to 10.5.2 (tails/tails!524)
+
+    Commits:
+      - Fetch Tor Browser from our own archive
+      - Tor Browser upgrade process: adjust branch name
+      - Upgrade Tor Browser to 10.5.2-build1
+      - Tor Browser upgrade process: adjust instructions to new file names
+      - Factorize export of TOR_USE_LEGACY_LAUNCHER (fixes: #18459)
+
+  * Fix feature branch commit encoded into the artifacts' names (fixes: #18468)
+    (tails/tails!522)
+
+    Closes issues:
+      - Built images encode incorrect topic branch commit (tails/tails#18468)
+
+    Commits:
+      - Fix feature branch commit encoded into the artifacts' names (fixes: #18468)
+
+  * Update the jenkins-tools submodule, to fix po.feature (tails/tails!520)
+
+    Commits:
+      - Update the jenkins-tools submodule, to fix po.feature
+
+  * Upgrader: more robust upgrade download and verification failure detection
+    (tails/tails!519)
+
+    Closes issues:
+      - Upgrader: confusing download failure but upgrade still applied
+        (tails/tails#18162)
+
+    Commits:
+      - tails-iuk-cancel-download: return exit code as-is if it's neither 0 nor 1
+      - tails-iuk-cancel-download: fix shell syntax errors
+      -  Avoid that the Upgrader breaks if pgrep won't match any process
+      - Upgrader: cancell the IUK download if an error appears
+      - Upgrader: more defensive programming
+      - Upgrader: ensure we fail closed on download and verification errors
+
+  * Test suite: consistently save artifacts for various Tor connection failures
+    (tails/tails!517)
+
+    Commits:
+      - Test suite: handle case where the htpdate logs do not exist.
+      - Test suite: add headings to output in Tor failure artifacts.
+      - Test suite: make save_tor_journal() possible to run without Tor logs.
+      - Revert "Revert "Test suite: consistently save artifacts for various Tor
+        connection failures.""
+
   * Upgrade to OnionShare 2.2 (tails/tails!515)
 
     Commits:
@@ -399,6 +447,19 @@ tails (4.20~rc1) unstable; urgency=medium
     Commits:
       - build-tails: fix resetting the submodules' origin
       - build-tails: fix syntax error
+
+  * Installer: Make "Reinstall" option not disappear when coming back from
+    confirmation dialog (tails/tails!502)
+
+    Closes issues:
+      - "Reinstall" option disappears when coming back from Upgrade confirmation
+        (tails/tails#18300)
+      - Disable Tails Installer options when there is no target USB stick available
+        (tails/tails#18346)
+
+    Commits:
+      - Installer: disable widgets when there is no target available
+      - Make "Reinstall" option not disappear when coming back from confirmation dialog
 
   * always start tor (except offline mode) (tails/tails!497)
 
@@ -795,7 +856,7 @@ tails (4.20~rc1) unstable; urgency=medium
       - ShellCheck: disable false positive
       - ShellCheck: disable following included source files
 
- -- Tails developers <tails@boum.org>  Thu, 01 Jul 2021 12:56:02 +0200
+ -- Tails developers <tails@boum.org>  Mon, 12 Jul 2021 09:27:02 +0000
 
 tails (4.19) unstable; urgency=medium
 
