@@ -319,9 +319,32 @@ echo "[5/6] Building custom [anitails-local] packages for profile '${SELECTED_PR
 BUILD_WORK="/var/tmp/anitails-pkgbuild-work"
 rm -rf "${BUILD_WORK}"
 install -d -m 0755 -o builder -g builder "${BUILD_WORK}"
+PKG_CACHE_ROOT=""
+if [[ -n "${CACHE_ROOT}" ]]; then
+    PKG_CACHE_ROOT="${CACHE_ROOT}/pkgs"
+    install -d -m 0755 "${PKG_CACHE_ROOT}"
+fi
 
 for pkg_dir in "${PKGBUILDS_TO_BUILD[@]}"; do
     echo "=== Building ${pkg_dir} ==="
+    pkg_hash="$(find "${REPO_ROOT}/pkgbuilds/${pkg_dir}" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')"
+    pkg_cache_slot="${PKG_CACHE_ROOT}/${pkg_dir}-${pkg_hash}"
+
+    # Non-kernel packages (and base-profile linux-anitails, which has no out-of-tree NVIDIA modules)
+    # can safely reuse exact content-addressed unsigned .pkg.tar.zst builds from CI cache and get
+    # freshly signed by the ephemeral [anitails-local] key in Step [6/6].
+    can_reuse_cache="true"
+    if [[ "${SELECTED_PROFILE}" != "base" && ( "${pkg_dir}" == "linux-anitails" || "${pkg_dir}" == nvidia-* ) ]]; then
+        can_reuse_cache="false"
+    fi
+
+    if [[ -n "${PKG_CACHE_ROOT}" && "${can_reuse_cache}" == "true" && -d "${pkg_cache_slot}" ]] \
+       && compgen -G "${pkg_cache_slot}/*.pkg.tar.zst" >/dev/null; then
+        echo "  -> Cache HIT for ${pkg_dir} (${pkg_hash:0:12}); copying prebuilt unsigned package(s) to re-sign..."
+        cp -f "${pkg_cache_slot}"/*.pkg.tar.zst "${LOCAL_REPO_DIR}/"
+        continue
+    fi
+
     cp -a "${REPO_ROOT}/pkgbuilds/${pkg_dir}" "${BUILD_WORK}/${pkg_dir}"
     chown -R builder:builder "${BUILD_WORK}/${pkg_dir}"
 
@@ -336,6 +359,11 @@ for pkg_dir in "${PKGBUILDS_TO_BUILD[@]}"; do
     "
 
     cp -f "${BUILD_WORK}/${pkg_dir}"/*.pkg.tar.zst "${LOCAL_REPO_DIR}/"
+    if [[ -n "${PKG_CACHE_ROOT}" && "${can_reuse_cache}" == "true" ]]; then
+        rm -rf "${pkg_cache_slot}"
+        install -d -m 0755 "${pkg_cache_slot}"
+        cp -f "${BUILD_WORK}/${pkg_dir}"/*.pkg.tar.zst "${pkg_cache_slot}/"
+    fi
 
     # If building an NVIDIA profile, install linux-anitails + linux-anitails-headers onto the
     # ephemeral builder container so nvidia-open-anitails / nvidia-580xx-anitails can compile

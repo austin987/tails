@@ -55,6 +55,16 @@ class TestSupplyChainAndArchiso(unittest.TestCase):
         self.assertNotIn("synaptic", pkgs)
         self.assertNotIn("pidgin", pkgs)
 
+        # 4. Every path in profiledef.sh file_permissions MUST exist in archiso/airootfs/
+        #    because mkarchiso >= 92-1 runs `realpath -q` BEFORE pacstrap!
+        prof_txt = (REPO_ROOT / "archiso/profiledef.sh").read_text(encoding="utf-8")
+        for perm_path in re.findall(r'\["([^"]+)"\]="[^"]+"', prof_txt):
+            airootfs_target = REPO_ROOT / ("archiso/airootfs" + perm_path)
+            self.assertTrue(
+                airootfs_target.exists() or airootfs_target.is_symlink(),
+                f"profiledef.sh file_permissions path missing from archiso/airootfs before pacstrap: {perm_path}",
+            )
+
     def test_all_pkgbuilds_pin_exact_sha256_and_validpgpkeys(self) -> None:
         pkgbuilds = sorted((REPO_ROOT / "pkgbuilds").glob("*/PKGBUILD"))
         self.assertEqual(len(pkgbuilds), 7)

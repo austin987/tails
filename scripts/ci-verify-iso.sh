@@ -63,7 +63,7 @@ for iso in "${ISO_FILES[@]}"; do
         "/arch/boot/x86_64/vmlinuz-linux-anitails" \
         "/arch/boot/x86_64/initramfs-linux-anitails.img" \
         "/arch/x86_64/airootfs.sfs"; do
-        if ! grep -Fxq "${required_path}" <<<"${iso_listing}"; then
+        if ! grep -Fixq "${required_path}" <<<"${iso_listing}"; then
             echo "FAIL: Missing required boot/live file '${required_path}' inside ${iso}!" >&2
             exit 1
         fi
