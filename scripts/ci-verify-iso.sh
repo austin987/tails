@@ -54,18 +54,23 @@ for iso in "${ISO_FILES[@]}"; do
     fi
 
     echo "[verify-iso] Auditing ISO 9660 structure & El Torito boot catalog: $(basename "${iso}") (${size_bytes} bytes)"
-    # GNU xorriso returns exit code 5 when libisofs emits benign WARNINGs on hybrid MBR+GPT El Torito ISOs;
-    # exit codes 1..4 indicate actual SORRY/FAILURE/FATAL/ABORT errors.
     xorriso_err="$(mktemp)"
-    xorriso_rc=0
-    iso_listing="$(env -u SOURCE_DATE_EPOCH xorriso -indev "${iso}" -find / -print 2>"${xorriso_err}")" || xorriso_rc=$?
-    if (( xorriso_rc != 0 && xorriso_rc != 5 )) || [[ -z "${iso_listing}" ]]; then
+    if ! env -u SOURCE_DATE_EPOCH xorriso -indev "${iso}" -report_el_torito plain >/dev/null 2>"${xorriso_err}"; then
         cat "${xorriso_err}" >&2 || true
         rm -f "${xorriso_err}"
-        echo "FAIL: xorriso failed to read ISO 9660 tree of ${iso} (exit ${xorriso_rc})!" >&2
+        echo "FAIL: xorriso failed to verify El Torito boot catalog of ${iso}!" >&2
         exit 1
     fi
+    if command -v bsdtar >/dev/null 2>&1; then
+        iso_listing="$(bsdtar -tf "${iso}" | sed 's|^/*|/|; s|/$||')"
+    else
+        iso_listing="$(env -u SOURCE_DATE_EPOCH xorriso -indev "${iso}" -find / -exec echo -- 2>"${xorriso_err}")"
+    fi
     rm -f "${xorriso_err}"
+    if [[ -z "${iso_listing}" ]]; then
+        echo "FAIL: Empty ISO 9660 file listing for ${iso}!" >&2
+        exit 1
+    fi
 
     for required_path in \
         "/EFI/BOOT/BOOTX64.EFI" \
