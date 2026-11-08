@@ -1,0 +1,341 @@
+name: Build AniTails Live ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Profile ISO cần build (cô lập xung đột driver)"
+        required: true
+        default: "base"
+        type: choice
+        options:
+          - base
+          - nvidia-modern
+          - nvidia-legacy-580xx
+          - nvidia-cuda-optional
+          - all
+      snapshot_mode:
+        description: "Chế độ khóa Arch Linux Archive snapshot"
+        required: true
+        default: "pinned-or-latest-archive"
+        type: choice
+        options:
+          - pinned-or-latest-archive
+          - pinned
+      snapshot_date:
+        description: "Ghi đè ngày Arch Archive (YYYY/MM/DD, để trống dùng mirrorlist.snapshot)"
+        required: false
+        default: ""
+        type: string
+      create_draft_release:
+        description: "Tạo bản nháp GitHub Release (chờ ký HSM ngoại tuyến SHA256SUMS.asc)"
+        required: false
+        default: false
+        type: boolean
+
+  push:
+    branches:
+      - main
+      - devel
+    paths:
+      - "archiso/**"
+      - "archiso-profiles/**"
+      - "pkgbuilds/**"
+      - "scripts/**"
+      - ".github/workflows/build-iso.yml"
+    tags:
+      - "v*"
+
+  pull_request:
+    branches:
+      - main
+      - devel
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anitails-iso-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+
+env:
+  SOURCE_DATE_EPOCH: "1794096000"
+
+jobs:
+  validate-and-security-tests:
+    name: Security Gates & Profile Lockstep Audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      should_build_iso: ${{ steps.plan.outputs.should_build_iso }}
+      profiles_json: ${{ steps.plan.outputs.profiles_json }}
+      snapshot_mode: ${{ steps.plan.outputs.snapshot_mode }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install host validation dependencies (nftables + Python YAML)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends nftables python3 python3-yaml shellcheck
+
+      - name: Audit shell syntax across build & live runtime scripts
+        run: |
+          for sh_script in \
+            scripts/build-iso.sh \
+            scripts/ci-build-local-repo.sh \
+            scripts/ci-verify-iso.sh \
+            scripts/sign-release.sh \
+            archiso/profiledef.sh \
+            archiso/airootfs/usr/local/lib/anitails-alpm-finalize \
+            archiso/airootfs/usr/local/lib/anitails-unblock-network \
+            archiso/airootfs/usr/local/lib/anitails-spoof-mac \
+            archiso/airootfs/usr/local/bin/anitails-gpu-select; do
+            bash -n "${sh_script}"
+          done
+
+      - name: Validate nftables default-drop Tor firewall via kernel Netlink
+        run: |
+          sudo nft -c -f archiso/airootfs/etc/nftables.conf
+
+      - name: Validate all 4 isolated Archiso & NVIDIA profiles
+        run: |
+          for prof in base nvidia-modern nvidia-legacy-580xx nvidia-cuda-optional; do
+            ./scripts/build-iso.sh --profile "${prof}" --validate-config-only
+            ./scripts/ci-build-local-repo.sh --profile "${prof}" --validate-only
+          done
+
+      - name: Execute AniTails P0 security & GPU test suite
+        run: |
+          python3 tests/run_all_tests.py
+
+      - name: Upload structured security test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anitails-test-results-${{ github.sha }}
+          path: tests/results/latest_results.json
+          retention-days: 14
+
+      - name: Compute ISO build matrix plan
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref }}
+          INPUT_PROFILE: ${{ inputs.profile }}
+          INPUT_SNAPSHOT_MODE: ${{ inputs.snapshot_mode }}
+          PR_LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+
+          event = os.environ["EVENT_NAME"]
+          ref = os.environ["REF_NAME"]
+          inp_prof = os.environ.get("INPUT_PROFILE") or "base"
+          inp_snap = os.environ.get("INPUT_SNAPSHOT_MODE") or ""
+
+          should_build = "true"
+          profiles = ["base"]
+          snap_mode = inp_snap or "pinned-or-latest-archive"
+
+          if event == "workflow_dispatch":
+              if inp_prof == "all":
+                  profiles = ["base", "nvidia-modern", "nvidia-legacy-580xx", "nvidia-cuda-optional"]
+              else:
+                  profiles = [inp_prof]
+          elif ref.startswith("refs/tags/v"):
+              profiles = ["base", "nvidia-modern", "nvidia-legacy-580xx"]
+              snap_mode = inp_snap or "pinned"
+          elif event == "pull_request":
+              labels = json.loads(os.environ.get("PR_LABELS_JSON") or "[]")
+              if "build-iso" not in labels:
+                  should_build = "false"
+                  profiles = []
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"should_build_iso={should_build}\n")
+              fh.write(f"profiles_json={json.dumps(profiles)}\n")
+              fh.write(f"snapshot_mode={snap_mode}\n")
+          PY
+
+  build-iso:
+    name: Build ISO (${{ matrix.profile }})
+    needs: validate-and-security-tests
+    if: needs.validate-and-security-tests.outputs.should_build_iso == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: ${{ fromJson(needs.validate-and-security-tests.outputs.profiles_json) }}
+    steps:
+      - name: Reclaim runner disk space (~70+ GB free for Linux 7.3.3 + SquashFS zstd-19)
+        run: |
+          echo "=== Disk usage before cleanup ==="
+          df -h /
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /opt/hostedtoolcache/CodeQL \
+            /usr/local/share/boost
+          sudo docker image prune -af || true
+          echo "=== Disk usage after cleanup ==="
+          df -h /
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore ccache & verified upstream tarball cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/anitails-ci-cache/ccache
+            /tmp/anitails-ci-cache/sources
+          key: anitails-pkgcache-v1-${{ matrix.profile }}-${{ hashFiles('pkgbuilds/**/PKGBUILD', 'pkgbuilds/linux-anitails/config.anitails.fragment', 'archiso/snapshot.lock.json') }}
+          restore-keys: |
+            anitails-pkgcache-v1-${{ matrix.profile }}-
+            anitails-pkgcache-v1-
+
+      - name: Build signed [anitails-local] packages & assemble Hybrid BIOS/UEFI Live ISO
+        env:
+          PROFILE: ${{ matrix.profile }}
+          SNAPSHOT_MODE: ${{ needs.validate-and-security-tests.outputs.snapshot_mode }}
+          SNAPSHOT_DATE: ${{ inputs.snapshot_date }}
+        run: |
+          mkdir -p /tmp/anitails-ci-cache/ccache /tmp/anitails-ci-cache/sources out
+          HOST_UID="$(id -u)"
+          HOST_GID="$(id -g)"
+
+          docker run --rm --privileged \
+            --shm-size=2g \
+            -e SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}" \
+            -e PROFILE="${PROFILE}" \
+            -e SNAPSHOT_MODE="${SNAPSHOT_MODE}" \
+            -e SNAPSHOT_DATE="${SNAPSHOT_DATE}" \
+            -e HOST_UID="${HOST_UID}" \
+            -e HOST_GID="${HOST_GID}" \
+            -v "${GITHUB_WORKSPACE}:/workspace" \
+            -v "/tmp/anitails-ci-cache:/var/cache/anitails-ci" \
+            archlinux:base-devel \
+            /bin/bash -euxo pipefail -c '
+              cd /workspace
+              SNAP_ARGS=()
+              if [[ -n "${SNAPSHOT_DATE}" ]]; then
+                SNAP_ARGS+=(--snapshot-date "${SNAPSHOT_DATE}")
+              fi
+
+              ./scripts/ci-build-local-repo.sh \
+                --profile "${PROFILE}" \
+                --snapshot-mode "${SNAPSHOT_MODE}" \
+                "${SNAP_ARGS[@]}" \
+                --cache-dir /var/cache/anitails-ci
+
+              ANITAILS_OUT_DIR=/workspace/out \
+              ANITAILS_WORK_DIR=/var/tmp/anitails-archiso-work \
+                ./scripts/build-iso.sh --profile "${PROFILE}"
+
+              ./scripts/ci-verify-iso.sh --out-dir /workspace/out
+
+              chown -R "${HOST_UID}:${HOST_GID}" /workspace/out /var/cache/anitails-ci
+            '
+
+      - name: Publish ISO checksums & offline HSM signing instructions to Job Summary
+        run: |
+          {
+            echo "## AniTails ISO Build Summary (\`${{ matrix.profile }}\`)"
+            echo ""
+            echo "- **Commit:** \`${GITHUB_SHA}\`"
+            echo "- **SOURCE_DATE_EPOCH:** \`${SOURCE_DATE_EPOCH}\`"
+            echo "- **Profile:** \`${{ matrix.profile }}\`"
+            echo ""
+            echo "### Built Artifacts"
+            ls -lh out/*.iso
+            echo ""
+            echo "### SHA-256 Digest (\`SHA256SUMS\`)"
+            echo '```text'
+            cat out/SHA256SUMS
+            echo '```'
+            echo ""
+            echo "### BLAKE2b-512 Digest (\`B2SUMS\`)"
+            echo '```text'
+            cat out/B2SUMS
+            echo '```'
+            echo ""
+            echo "> **Lưu ý bảo mật (HSM Release Policy):** Khóa riêng ký module nhân tạm thời và khóa ALPM repo nội bộ đã bị hủy (\`shred -u\`) trước khi đóng gói SquashFS. Để phát hành chính thức, tải thư mục \`out/\` về máy trạm ngoại tuyến có cắm HSM/YubiKey và chạy \`ANITAILS_RELEASE_GPG_FPR=<40_HEX_FPR> ./scripts/sign-release.sh ./out\` để tạo \`SHA256SUMS.asc\`, \`B2SUMS.asc\` và \`sbom.cdx.json.asc\`."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload AniTails ISO + SBOM + SHA256SUMS + B2SUMS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anitails-iso-${{ matrix.profile }}-${{ github.sha }}
+          path: |
+            out/*.iso
+            out/SHA256SUMS
+            out/B2SUMS
+            out/sbom.cdx.json
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+
+  draft-github-release:
+    name: Create Draft Release (Pending Offline HSM Signature)
+    needs: build-iso
+    if: >-
+      always() &&
+      needs.build-iso.result == 'success' &&
+      (startsWith(github.ref, 'refs/tags/v') || inputs.create_draft_release == true)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all built ISO profile artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: anitails-iso-*-${{ github.sha }}
+          path: release-staging
+
+      - name: Consolidate multi-profile ISOs & regenerate unified SBOM + checksums
+        run: |
+          mkdir -p release-bundle
+          find release-staging -maxdepth 3 -name "*.iso" -exec cp -v {} release-bundle/ \;
+          python3 scripts/generate-sbom-and-checksums.py generate \
+            --target release-bundle \
+            --out-dir release-manifests
+          python3 scripts/generate-sbom-and-checksums.py verify \
+            --manifest-dir release-manifests \
+            --base-dir release-bundle
+          cp -f release-manifests/SHA256SUMS release-manifests/B2SUMS release-manifests/sbom.cdx.json release-bundle/
+
+      - name: Create Draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('ci-{0}', github.run_number) }}
+        run: |
+          NOTES_FILE="$(mktemp)"
+          cat > "${NOTES_FILE}" <<EOF
+          ## AniTails Live ISO Build (${TAG_NAME}) — Bản phân phối độc lập dựa trên Arch Linux
+
+          > **CẢNH BÁO PHÁT HÀNH:** Bản Release này đang ở trạng thái **DRAFT (Chưa ký phát hành HSM)**.
+          > Trước khi công bố công khai, quản trị viên phải tải các tệp manifest về máy trạm ngoại tuyến có cắm phần cứng HSM (\`ANITAILS_RELEASE_GPG_FPR=<40_HEX_FPR> ./scripts/sign-release.sh ./release-bundle\`), đính kèm \`SHA256SUMS.asc\`, \`B2SUMS.asc\`, \`sbom.cdx.json.asc\` lên Release này, và kiểm chứng bằng \`gpg --verify\`.
+
+          ### SHA256SUMS
+          \`\`\`text
+          $(cat release-bundle/SHA256SUMS)
+          \`\`\`
+          EOF
+
+          gh release create "${TAG_NAME}" \
+            release-bundle/*.iso \
+            release-bundle/SHA256SUMS \
+            release-bundle/B2SUMS \
+            release-bundle/sbom.cdx.json \
+            --draft \
+            --title "AniTails ${TAG_NAME} (Draft — Pending Offline HSM Signature)" \
+            --notes-file "${NOTES_FILE}"
