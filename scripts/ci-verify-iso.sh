@@ -9,6 +9,7 @@
 #   3. Zero private signing keys (`*.key`, `signing_key.pem`, `secring.gpg`) leaked into the ISO.
 #   4. Generates & cryptographically self-verifies `sbom.cdx.json`, `SHA256SUMS`, and `B2SUMS`.
 set -euo pipefail
+trap 'echo "::error title=ci-verify-iso.sh failed::Exit $? at ${BASH_SOURCE[0]}:${LINENO} running: ${BASH_COMMAND}"' ERR
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${REPO_ROOT}/out"

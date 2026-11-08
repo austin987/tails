@@ -106,7 +106,7 @@ class TestGitHubActionsIsoWorkflow(unittest.TestCase):
 
         ci_repo_txt = (REPO_ROOT / "scripts/ci-build-local-repo.sh").read_text(encoding="utf-8")
         self.assertIn("shred -u", ci_repo_txt)
-        self.assertIn("repo-add --verify --sign", ci_repo_txt)
+        self.assertIn("repo-add --include-sigs --verify --sign", ci_repo_txt)
         self.assertNotIn("SigLevel = Never", ci_repo_txt)
 
         for prof in ("base", "nvidia-modern", "nvidia-legacy-580xx", "nvidia-cuda-optional"):

@@ -37,6 +37,7 @@ on:
     branches:
       - main
       - devel
+      - "arena/**"
     paths:
       - "archiso/**"
       - "archiso-profiles/**"
@@ -216,6 +217,7 @@ jobs:
           HOST_UID="$(id -u)"
           HOST_GID="$(id -g)"
 
+          set -o pipefail
           docker run --rm --privileged \
             --shm-size=2g \
             -e SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}" \
@@ -247,7 +249,12 @@ jobs:
               ./scripts/ci-verify-iso.sh --out-dir /workspace/out
 
               chown -R "${HOST_UID}:${HOST_GID}" /workspace/out /var/cache/anitails-ci
-            '
+            ' 2>&1 | tee /tmp/anitails-docker-build.log || {
+              rc=$?
+              tail_msg="$(tail -n 35 /tmp/anitails-docker-build.log | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
+              echo "::error title=ISO Build Log Tail::${tail_msg}"
+              exit "${rc}"
+            }
 
       - name: Publish ISO checksums & offline HSM signing instructions to Job Summary
         run: |

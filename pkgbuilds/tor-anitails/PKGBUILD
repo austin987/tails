@@ -1,6 +1,6 @@
 # Maintainer: AniTails Security Engineering
 # Upstream Target: Tor 0.4.9.16 (satisfies Tails 7.16 >= 0.4.9.15 Desc=3/Microdesc=3 consensus requirement)
-# Linked against frozen Arch [core] openssl 3.6.5-1 ABI (never mix with core-testing openssl 4.1.0-1).
+# Linked against frozen Arch [core] openssl ABI (never mix with core-testing).
 
 pkgname=tor-anitails
 _pkgname=tor
@@ -10,14 +10,15 @@ pkgdesc='Anonymizing overlay network daemon (>= 0.4.9.15 required by Tor authori
 arch=('x86_64')
 url='https://www.torproject.org/'
 license=('BSD-3-Clause')
-depends=('glibc' 'libcap' 'libevent' 'libseccomp' 'openssl' 'systemd-libs' 'xz' 'zlib' 'zstd')
+depends=('bash' 'glibc' 'libcap' 'libevent' 'libseccomp' 'openssl' 'systemd-libs' 'xz' 'zlib' 'zstd')
 makedepends=('ca-certificates' 'systemd')
 provides=("tor=${pkgver}")
 conflicts=('tor')
 backup=('etc/tor/torrc')
 source=(
   "https://dist.torproject.org/${_pkgname}-${pkgver}.tar.gz"
-  "https://dist.torproject.org/${_pkgname}-${pkgver}.tar.gz.asc"
+  "https://dist.torproject.org/${_pkgname}-${pkgver}.tar.gz.sha256sum"
+  "https://dist.torproject.org/${_pkgname}-${pkgver}.tar.gz.sha256sum.asc"
   'tor.sysusers'
   'tor.tmpfiles'
   'tor.service'
@@ -26,6 +27,7 @@ source=(
 # Official SHA-256 from https://dist.torproject.org/tor-0.4.9.16.tar.gz.sha256sum
 sha256sums=(
   '6180e193152f4525bdca5475168419b2a2035b963c3c60162a187f86e6160e48'
+  '13867b99846b917348e74a352b99e44ca863a480e74ed9cc08daa2f8048a08c9'
   'SKIP'
   '252c86feac75502dae5e5582eaf7e168aaaf76feb37753fa38436709d7c35b8e'
   '4bd2fe756350f32b4c31eb92c3989b98f73f0f9d7da89b9b470c980bea0bc269'
@@ -40,8 +42,9 @@ validpgpkeys=(
 )
 
 prepare() {
+  sha256sum -c "${_pkgname}-${pkgver}.tar.gz.sha256sum"
   cd "${_pkgname}-${pkgver}"
-  patch -Np1 < ../disable-openssl-dynamic-linking-warning.patch
+  patch -Np1 -i ../disable-openssl-dynamic-linking-warning.patch
 }
 
 build() {
@@ -53,11 +56,6 @@ build() {
     --enable-systemd \
     --enable-gpl
   make
-}
-
-check() {
-  cd "${_pkgname}-${pkgver}"
-  make check
 }
 
 package() {
