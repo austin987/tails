@@ -1,0 +1,32 @@
+#include <tunables/global>
+
+# Arch Linux merged-/usr AppArmor profile for system Tor + lyrebird PT
+# Includes attach_disconnected for Archiso SquashFS + tmpfs overlayfs compatibility.
+profile system_tor /usr/bin/tor flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+  #include <abstractions/ssl_certs>
+
+  capability chown,
+  capability dac_read_search,
+  capability fowner,
+  capability setgid,
+  capability setuid,
+  capability net_bind_service,
+
+  network inet stream,
+  deny network inet dgram,
+  deny network inet6,
+
+  /usr/bin/tor mr,
+  /usr/bin/lyrebird ixr,
+
+  /etc/tor/** r,
+  /usr/share/tor/** r,
+  owner /var/lib/tor/** rwk,
+  owner /run/tor/ rw,
+  owner /run/tor/** rwk,
+
+  deny /home/** rwx,
+  deny /root/** rwx,
+}

@@ -1,0 +1,31 @@
+# Maintainer: AniTails Security Engineering
+# Rationale: Neither `lyrebird` nor `obfs4proxy` exists in official Arch [core]/[extra] repositories.
+# Extracts the official PGP-signed `lyrebird` Pluggable Transport binary (supporting obfs4,
+# webtunnel, meek_lite, scramblesuit) from Tor Project's `tor-expert-bundle-linux-x86_64-16.0.tar.gz`.
+
+pkgname=lyrebird-anitails
+pkgver=16.0
+pkgrel=1
+pkgdesc='Official Tor Pluggable Transport binary (obfs4, webtunnel, meek_lite) from Tor Expert Bundle 16.0'
+arch=('x86_64')
+url='https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird'
+license=('BSD-3-Clause' 'GPL-3.0-only')
+depends=('glibc')
+provides=('lyrebird' 'obfs4proxy')
+conflicts=('lyrebird' 'obfs4proxy')
+options=('!strip')
+source=(
+  "https://dist.torproject.org/torbrowser/${pkgver}/tor-expert-bundle-linux-x86_64-${pkgver}.tar.gz"
+  "https://dist.torproject.org/torbrowser/${pkgver}/tor-expert-bundle-linux-x86_64-${pkgver}.tar.gz.asc"
+)
+# Official SHA-256 from https://dist.torproject.org/torbrowser/16.0/sha256sums-signed-build.txt
+sha256sums=(
+  'cc950ebe9acb80188325c3a2cd8817def7dd7237d6fdcd861bb87b234a0cb2fd'
+  'SKIP'
+)
+validpgpkeys=('EF6E286DDA85EA2A4BA7DE684E2C6E8793298290')
+
+package() {
+  install -Dm0755 "${srcdir}/tor/pluggable_transports/lyrebird" "${pkgdir}/usr/bin/lyrebird"
+  ln -s /usr/bin/lyrebird "${pkgdir}/usr/bin/obfs4proxy"
+}

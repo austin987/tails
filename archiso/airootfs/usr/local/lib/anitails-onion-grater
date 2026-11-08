@@ -1,0 +1,354 @@
+#!/usr/bin/env python3
+"""
+AniTails Onion-Grater: Strict Least-Privilege Tor ControlPort Filter Proxy.
+
+Ported cleanly for Arch Linux from Tails' onion-grater security model:
+- Applications NEVER connect directly to Tor's raw ControlPort (127.0.0.1:9052).
+- Listens on 9051 (bound to 127.0.0.1 and veth host addresses 10.200.1.{1,5,9,13}).
+- Matches connecting client IP against YAML profiles in /etc/onion-grater.d/*.yml.
+- Authenticates upstream to Tor ControlPort using CookieAuthFile (never exposes cookie to client).
+- Enforces strict regex allowlists on commands (GETINFO, GETCONF, SETCONF, SAVECONF,
+  SIGNAL, ADD_ONION, DEL_ONION, SETEVENTS) and filters asynchronous 650 event lines.
+"""
+
+from __future__ import annotations
+
+import argparse
+import glob
+import hmac
+import json
+import logging
+import os
+import re
+import socket
+import socketserver
+import threading
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
+
+try:
+    import yaml  # type: ignore
+except ImportError:  # Fallback parser for JSON-compatible YAML subset in minimal test envs
+    yaml = None
+
+
+LOG = logging.getLogger("anitails-onion-grater")
+
+
+@dataclass
+class FilterProfile:
+    name: str
+    hosts: Set[str] = field(default_factory=set)
+    commands: Dict[str, List[re.Pattern[str]]] = field(default_factory=dict)
+    confs: Dict[str, List[re.Pattern[str]]] = field(default_factory=dict)
+    allowed_events: Set[str] = field(default_factory=set)
+    suppressed_events: Set[str] = field(default_factory=set)
+    restrict_stream_events: bool = False
+
+
+def _load_structured_file(path: Path) -> list:
+    raw = path.read_text(encoding="utf-8")
+    if yaml is not None:
+        data = yaml.safe_load(raw)
+    else:
+        data = json.loads(raw)
+    if not isinstance(data, list):
+        raise ValueError(f"Profile {path} must contain a top-level list")
+    return data
+
+
+def load_profiles(profile_dir: Path) -> List[FilterProfile]:
+    profiles: List[FilterProfile] = []
+    for file_path in sorted(glob.glob(str(profile_dir / "*.yml")) + glob.glob(str(profile_dir / "*.json"))):
+        p = Path(file_path)
+        entries = _load_structured_file(p)
+        for idx, entry in enumerate(entries):
+            prof = FilterProfile(name=f"{p.stem}[{idx}]")
+            for h in entry.get("hosts", []) or []:
+                prof.hosts.add(str(h))
+            for cmd, patterns in (entry.get("commands", {}) or {}).items():
+                cmd_up = str(cmd).upper()
+                compiled = [re.compile(f"^(?:{pat})$") for pat in (patterns or [])]
+                prof.commands[cmd_up] = compiled
+            for conf_key, val_patterns in (entry.get("confs", {}) or {}).items():
+                key_low = str(conf_key).lower()
+                if val_patterns is None:
+                    prof.confs[key_low] = []
+                else:
+                    prof.confs[key_low] = [re.compile(f"^(?:{pat})$") for pat in val_patterns]
+            for ev_name, ev_cfg in (entry.get("events", {}) or {}).items():
+                ev_up = str(ev_name).upper()
+                if isinstance(ev_cfg, dict) and ev_cfg.get("suppress") is True:
+                    prof.suppressed_events.add(ev_up)
+                else:
+                    prof.allowed_events.add(ev_up)
+            prof.restrict_stream_events = bool(entry.get("restrict-stream-events", False))
+            profiles.append(prof)
+    return profiles
+
+
+def match_profile_for_ip(profiles: List[FilterProfile], client_ip: str) -> Optional[FilterProfile]:
+    for prof in profiles:
+        if client_ip in prof.hosts:
+            return prof
+    return None
+
+
+def validate_client_command(profile: FilterProfile, line: str) -> Tuple[bool, Optional[str], str]:
+    """
+    Returns (is_allowed, synthetic_reply_or_None, normalized_upstream_command).
+    """
+    stripped = line.strip("\r\n")
+    if not stripped or "\x00" in stripped or "\n" in stripped or "\r" in stripped:
+        return False, "510 Invalid empty or multiline control command\r\n", ""
+
+    parts = stripped.split(" ", 1)
+    verb = parts[0].upper()
+    arg = parts[1].strip() if len(parts) > 1 else ""
+
+    # Authentication and session lifecycle are handled locally by proxy
+    if verb == "PROTOCOLINFO":
+        return True, (
+            '250-PROTOCOLINFO 1\r\n'
+            '250-AUTH METHODS=NULL,SAFECOOKIE,HASHEDPASSWORD\r\n'
+            '250-VERSION Tor="0.4.9.16"\r\n'
+            '250 OK\r\n'
+        ), ""
+    if verb == "AUTHENTICATE":
+        return True, "250 OK\r\n", ""
+    if verb == "QUIT":
+        return True, "250 closing connection\r\n", "QUIT"
+
+    # Never allow dangerous raw ownership or filesystem commands
+    if verb in {"TAKEOWNERSHIP", "DROPOWNERSHIP", "LOADCONF", "EXTENDCIRCUIT", "ATTACHSTREAM", "REDIRECTSTREAM"}:
+        return False, f"510 Command {verb} forbidden by onion-grater policy\r\n", ""
+
+    if verb == "SETEVENTS":
+        tokens = [t.upper() for t in arg.split() if t and not t.startswith("EXTENDED")]
+        forward_tokens: List[str] = []
+        for tok in tokens:
+            if tok in profile.allowed_events:
+                forward_tokens.append(tok)
+            elif tok in profile.suppressed_events:
+                continue
+            else:
+                return False, f"510 Event {tok} forbidden by profile {profile.name}\r\n", ""
+        return True, None, ("SETEVENTS " + " ".join(forward_tokens)).strip()
+
+    if verb in {"GETCONF", "RESETCONF"}:
+        keys = [k.lower() for k in arg.split() if k]
+        if not keys:
+            return False, f"510 {verb} requires configuration key\r\n", ""
+        for k in keys:
+            if k not in profile.confs:
+                return False, f"510 {verb} {k} forbidden by profile {profile.name}\r\n", ""
+        if verb == "RESETCONF":
+            # Only allow RESETCONF if writable patterns exist
+            for k in keys:
+                if not profile.confs[k]:
+                    return False, f"510 RESETCONF {k} read-only in profile {profile.name}\r\n", ""
+        return True, None, f"{verb} {arg}"
+
+    if verb == "SETCONF":
+        if not arg:
+            return False, "510 SETCONF requires key=value\r\n", ""
+        # Parse whitespace-separated key=value tokens (respecting simple double quotes)
+        tokens = re.findall(r'[A-Za-z0-9_]+=(?:"[^"]*"|\S*)|[A-Za-z0-9_]+', arg)
+        if " ".join(tokens).strip() != re.sub(r"\s+", " ", arg).strip():
+            return False, "510 Malformed SETCONF syntax\r\n", ""
+        for tok in tokens:
+            if "=" in tok:
+                k, v = tok.split("=", 1)
+            else:
+                k, v = tok, ""
+            k_low = k.lower()
+            allowed_val_pats = profile.confs.get(k_low)
+            if not allowed_val_pats:
+                return False, f"510 SETCONF {k} forbidden by profile {profile.name}\r\n", ""
+            if not any(p.match(v) for p in allowed_val_pats):
+                return False, f"510 SETCONF value for {k} rejected by profile {profile.name}\r\n", ""
+        return True, None, f"SETCONF {arg}"
+
+    if verb == "GETINFO":
+        allowed_pats = profile.commands.get("GETINFO")
+        if allowed_pats is None or not arg:
+            return False, f"510 GETINFO forbidden by profile {profile.name}\r\n", ""
+        for item in arg.split():
+            if not any(p.match(item) for p in allowed_pats):
+                return False, f"510 GETINFO {item} forbidden by profile {profile.name}\r\n", ""
+        return True, None, f"GETINFO {arg}"
+
+    # Generic command check (SIGNAL, SAVECONF, ADD_ONION, DEL_ONION, etc.)
+    allowed_pats = profile.commands.get(verb)
+    if allowed_pats is None:
+        return False, f"510 Command {verb} forbidden by profile {profile.name}\r\n", ""
+    if not any(p.match(arg) for p in allowed_pats):
+        return False, f"510 Argument to {verb} forbidden by profile {profile.name}\r\n", ""
+
+    return True, None, f"{verb} {arg}".strip()
+
+
+def should_forward_async_event(profile: FilterProfile, line: str, client_ip: str) -> bool:
+    """
+    Filters 650 asynchronous Tor control events (especially STREAM events when restrict-stream-events is true).
+    """
+    if not line.startswith("650"):
+        return True
+    body = line[4:].strip()
+    ev_type = body.split(" ", 1)[0].upper() if body else ""
+    if ev_type not in profile.allowed_events:
+        return False
+    if ev_type == "STREAM" and profile.restrict_stream_events:
+        # Only expose STREAM events originating from this client's IP (e.g., 10.200.1.2 for Tor Browser)
+        m = re.search(r"\bSOURCE_ADDR=([0-9.]+):\d+", body)
+        if not m or not hmac.compare_digest(m.group(1), client_ip):
+            return False
+    return True
+
+
+class TorUpstreamConnection:
+    def __init__(self, control_host: str, control_port: int, cookie_path: Optional[Path]) -> None:
+        self.sock = socket.create_connection((control_host, control_port), timeout=10.0)
+        self.reader = self.sock.makefile("r", encoding="utf-8", errors="replace", newline="\n")
+        self._lock = threading.Lock()
+        self._authenticate(cookie_path)
+
+    def _authenticate(self, cookie_path: Optional[Path]) -> None:
+        if cookie_path and cookie_path.exists():
+            cookie_hex = cookie_path.read_bytes().hex()
+            cmd = f"AUTHENTICATE {cookie_hex}\r\n"
+        else:
+            cmd = "AUTHENTICATE\r\n"
+        self.sock.sendall(cmd.encode("ascii"))
+        resp = self.reader.readline()
+        if not resp.startswith("250"):
+            raise RuntimeError(f"Upstream Tor ControlPort authentication failed: {resp.strip()}")
+
+    def send_line(self, cmd: str) -> None:
+        with self._lock:
+            self.sock.sendall((cmd + "\r\n").encode("utf-8"))
+
+    def close(self) -> None:
+        try:
+            self.sock.close()
+        except OSError:
+            pass
+
+
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
+def make_handler(
+    profiles: List[FilterProfile],
+    control_host: str,
+    control_port: int,
+    cookie_path: Optional[Path],
+):
+    class OnionGraterHandler(socketserver.StreamRequestHandler):
+        def handle(self) -> None:
+            client_ip = self.client_address[0]
+            profile = match_profile_for_ip(profiles, client_ip)
+            if profile is None:
+                LOG.warning("Rejected connection from unauthorized host %s", client_ip)
+                self.wfile.write(b"510 Unauthorized source address\r\n")
+                return
+
+            authenticated = False
+            upstream: Optional[TorUpstreamConnection] = None
+            stop_event = threading.Event()
+            write_lock = threading.Lock()
+
+            def write_client(data: str) -> None:
+                with write_lock:
+                    try:
+                        self.wfile.write(data.encode("utf-8"))
+                        self.wfile.flush()
+                    except OSError:
+                        stop_event.set()
+
+            def upstream_pump(up: TorUpstreamConnection) -> None:
+                try:
+                    while not stop_event.is_set():
+                        line = up.reader.readline()
+                        if not line:
+                            break
+                        norm = line.rstrip("\r\n") + "\r\n"
+                        if norm.startswith("650"):
+                            if should_forward_async_event(profile, norm, client_ip):
+                                write_client(norm)
+                        else:
+                            write_client(norm)
+                except OSError:
+                    pass
+                finally:
+                    stop_event.set()
+
+            try:
+                while not stop_event.is_set():
+                    raw = self.rfile.readline(8192)
+                    if not raw:
+                        break
+                    line = raw.decode("utf-8", errors="replace")
+                    ok, synthetic, forward_cmd = validate_client_command(profile, line)
+                    if not ok:
+                        LOG.warning("Blocked command from %s (%s): %r", client_ip, profile.name, line.strip())
+                        write_client(synthetic or "510 Command filtered\r\n")
+                        continue
+
+                    verb = line.strip().split(" ", 1)[0].upper()
+                    if verb == "AUTHENTICATE":
+                        if upstream is None:
+                            upstream = TorUpstreamConnection(control_host, control_port, cookie_path)
+                            t = threading.Thread(target=upstream_pump, args=(upstream,), daemon=True)
+                            t.start()
+                        authenticated = True
+                        write_client(synthetic or "250 OK\r\n")
+                        continue
+
+                    if verb == "PROTOCOLINFO":
+                        write_client(synthetic or "250 OK\r\n")
+                        continue
+
+                    if verb == "QUIT":
+                        write_client(synthetic or "250 closing connection\r\n")
+                        break
+
+                    if not authenticated or upstream is None:
+                        write_client("514 Authentication required\r\n")
+                        continue
+
+                    if forward_cmd:
+                        upstream.send_line(forward_cmd)
+            finally:
+                stop_event.set()
+                if upstream is not None:
+                    upstream.close()
+
+    return OnionGraterHandler
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="AniTails Tor ControlPort Filter Proxy")
+    parser.add_argument("--listen-host", default="0.0.0.0")
+    parser.add_argument("--listen-port", type=int, default=9051)
+    parser.add_argument("--control-host", default="127.0.0.1")
+    parser.add_argument("--control-port", type=int, default=9052)
+    parser.add_argument("--cookie-file", default="/run/tor/control.authcookie")
+    parser.add_argument("--profile-dir", default="/etc/onion-grater.d")
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    profiles = load_profiles(Path(args.profile_dir))
+    cookie_path = Path(args.cookie_file) if args.cookie_file else None
+    handler_cls = make_handler(profiles, args.control_host, args.control_port, cookie_path)
+    with ThreadedTCPServer((args.listen_host, args.listen_port), handler_cls) as srv:
+        LOG.info("Listening on %s:%d with %d filter profiles", args.listen_host, args.listen_port, len(profiles))
+        srv.serve_forever()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""
+AniTails Safe Pre-Bootstrap UTC Clock Helper.
+Tor requires a reasonably accurate UTC clock to verify directory consensus lifetimes,
+especially on hardware with a dead CMOS battery or local-time BIOS clock skew.
+
+Security design:
+- NEVER sends clearnet UDP/123 NTP packets (systemd-timesyncd is masked).
+- Never writes back to hardware RTC (hwclock --systohc is forbidden to avoid leaving host traces).
+- Enforces monotonic minimum release floor (>= 2026-10-30T00:00:00Z, Tails 7.16 release baseline)
+  so an attacker or dead battery cannot roll TLS/Tor validation back into expired certificate windows.
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import subprocess
+import sys
+
+RELEASE_FLOOR_UTC = dt.datetime(2026, 10, 30, 0, 0, 0, tzinfo=dt.timezone.utc)
+
+
+def parse_utc_timestamp(raw: str) -> dt.datetime:
+    cleaned = raw.strip().replace("T", " ").rstrip("Z")
+    parsed = dt.datetime.strptime(cleaned, "%Y-%m-%d %H:%M:%S").replace(tzinfo=dt.timezone.utc)
+    if parsed < RELEASE_FLOOR_UTC:
+        raise ValueError(
+            f"Refusing timestamp {parsed.isoformat()} earlier than release floor {RELEASE_FLOOR_UTC.isoformat()} "
+            "(prevents TLS/Tor consensus rollback attacks)"
+        )
+    return parsed
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Set system UTC clock in RAM only (never modifies hardware RTC)")
+    parser.add_argument("--set-utc", required=True, help="UTC timestamp in 'YYYY-MM-DD HH:MM:SS' format")
+    parser.add_argument("--dry-run", action="store_true", help="Validate timestamp without calling date -u -s")
+    args = parser.parse_args()
+
+    target = parse_utc_timestamp(args.set_utc)
+    formatted = target.strftime("%Y-%m-%d %H:%M:%S")
+    if args.dry_run:
+        print(f"VALID_UTC={formatted}")
+        return 0
+
+    subprocess.run(["/usr/bin/date", "-u", "-s", formatted], check=True)
+    print(f"System RAM clock set to {formatted} UTC (hardware RTC untouched).")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

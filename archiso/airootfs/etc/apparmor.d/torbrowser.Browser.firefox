@@ -1,0 +1,33 @@
+#include <tunables/global>
+
+# Arch Linux AppArmor confinement for Official Tor Browser 16.0 in /opt/tor-browser
+profile torbrowser_firefox /opt/tor-browser/Browser/firefox.real flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/audio>
+  #include <abstractions/fonts>
+  #include <abstractions/gnome>
+  #include <abstractions/ssl_certs>
+
+  network inet stream,
+  deny network inet dgram,
+  deny network inet6,
+  deny network raw,
+
+  /opt/tor-browser/Browser/** mr,
+  /opt/tor-browser/Browser/firefox.real ixr,
+  deny /opt/tor-browser/Browser/TorBrowser/Tor/** rwx,
+
+  owner @{HOME}/.tor-browser/** rwk,
+  owner @{HOME}/Tor\ Browser/ rw,
+  owner @{HOME}/Tor\ Browser/** rwk,
+
+  # Prevent reading GnuPG, SSH, KeePassXC, Electrum, or Persistent secrets
+  deny @{HOME}/.gnupg/** rwx,
+  deny @{HOME}/.ssh/** rwx,
+  deny @{HOME}/.electrum/** rwx,
+  deny @{HOME}/.config/keepassxc/** rwx,
+  deny /var/lib/anitails-persistence/** rwx,
+  deny /etc/shadow r,
+  deny /usr/bin/sudo rwx,
+  deny /usr/bin/pkexec rwx,
+}

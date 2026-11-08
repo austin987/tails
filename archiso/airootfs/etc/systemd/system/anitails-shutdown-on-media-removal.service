@@ -1,0 +1,14 @@
+[Unit]
+Description=Emergency Session Termination & Memory Wipe on Live Boot Media Removal
+After=anitails-initramfs-restore.service
+ConditionKernelCommandLine=!copytoram=y
+
+[Service]
+Type=simple
+ExecStart=/usr/local/lib/anitails-udev-watchdog-wrapper
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

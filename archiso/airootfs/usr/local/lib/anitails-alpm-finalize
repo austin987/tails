@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# AniTails Post-Pacstrap Deterministic Finalization Script
+#
+# WHY THIS EXISTS (Critical Archiso 92-1 vs Debian live-build difference):
+# In Debian live-build, `config/chroot_local-includes` is copied AFTER package installation.
+# In Arch `mkarchiso` (92-1), `airootfs/` is copied BEFORE `pacstrap`! Consequently,
+# packages installed during `pacstrap` may write `.pacnew` files, regenerate CA bundles,
+# install `/usr/bin/swapon`, or reset systemd presets.
+# This idempotent ALPM PostTransaction hook runs last (`zz-99-*`) to enforce every
+# security invariant deterministically before SquashFS creation.
+set -euo pipefail
+
+# 1. Neutralize swapon binary (defense-in-depth alongside masked swap.target)
+if [[ -x /usr/bin/swapon && ! -f /usr/bin/swapon.util-linux.disabled ]]; then
+    mv /usr/bin/swapon /usr/bin/swapon.util-linux.disabled
+    install -m 0755 /usr/local/lib/anitails-swapon-disabled /usr/bin/swapon
+fi
+
+# 2. Rebuild CA trust store with AniTails p11-kit eMudhra + Sectigo AAA cross-sign blacklist,
+#    then audit `/etc/ssl/certs/ca-certificates.crt` (fail build immediately on any leak!)
+if [[ -x /usr/bin/update-ca-trust ]]; then
+    /usr/bin/update-ca-trust
+fi
+if [[ -x /usr/local/bin/anitails-verify-truststore && -f /etc/ssl/certs/ca-certificates.crt ]]; then
+    /usr/local/bin/anitails-verify-truststore --bundle /etc/ssl/certs/ca-certificates.crt
+fi
+
+# 3. Generate kernel module NIC blocklist across Arch compressed *.ko.zst drivers
+if [[ -x /usr/local/lib/anitails-unblock-network ]]; then
+    /usr/local/lib/anitails-unblock-network generate-blacklist
+fi
+
+# 4. Compile GNOME dconf system database (disables automount, location, telemetry)
+if [[ -x /usr/bin/dconf ]]; then
+    /usr/bin/dconf update
+fi
+
+# 5. Mask forbidden services (swap, sshd, clearnet NTP/DNS resolvers)
+ln -sf /dev/null /etc/systemd/system/swap.target
+ln -sf /dev/null /etc/systemd/system/sshd.service
+ln -sf /dev/null /etc/systemd/system/sshd.socket
+ln -sf /dev/null /etc/systemd/system/systemd-timesyncd.service
+ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
+
+# 6. Enable mandatory security & desktop units
+mkdir -p /etc/systemd/system/multi-user.target.wants \
+         /etc/systemd/system/sysinit.target.wants \
+         /etc/systemd/system/local-fs.target.wants
+ln -sf /usr/lib/systemd/system/nftables.service /etc/systemd/system/multi-user.target.wants/nftables.service
+ln -sf /usr/lib/systemd/system/apparmor.service /etc/systemd/system/multi-user.target.wants/apparmor.service
+ln -sf /usr/lib/systemd/system/NetworkManager.service /etc/systemd/system/multi-user.target.wants/NetworkManager.service
+ln -sf /usr/lib/systemd/system/gdm.service /etc/systemd/system/display-manager.service
+ln -sf /etc/systemd/system/anitails-create-netns.service /etc/systemd/system/sysinit.target.wants/anitails-create-netns.service
+ln -sf /etc/systemd/system/anitails-onion-grater.service /etc/systemd/system/multi-user.target.wants/anitails-onion-grater.service
+ln -sf /etc/systemd/system/run-initramfs.mount /etc/systemd/system/local-fs.target.wants/run-initramfs.mount
+ln -sf /etc/systemd/system/anitails-initramfs-restore.service /etc/systemd/system/multi-user.target.wants/anitails-initramfs-restore.service
+ln -sf /etc/systemd/system/anitails-remove-overlayfs-dirs.service /etc/systemd/system/multi-user.target.wants/anitails-remove-overlayfs-dirs.service
+ln -sf /etc/systemd/system/anitails-shutdown-on-media-removal.service /etc/systemd/system/multi-user.target.wants/anitails-shutdown-on-media-removal.service
+
+# 7. Ensure reproducible empty /etc/machine-id (populated in RAM at boot without re-running systemd preset)
+: > /etc/machine-id
+
+# 8. Remove any stray .pacnew files so image contents remain clean and deterministic
+find /etc -name "*.pacnew" -delete 2>/dev/null || true

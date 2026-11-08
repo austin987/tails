@@ -1,0 +1,47 @@
+## AniTails System Tor Configuration (Tor >= 0.4.9.15 / 0.4.9.16)
+## Implements Tor Proposal 171 Stream Isolation, Automap .onion resolution,
+## Pluggable Transports via lyrebird, and strict zero-disk-write operation.
+
+User tor
+DataDirectory /var/lib/tor
+AvoidDiskWrites 1
+
+## Start with network disabled until user confirms settings / bridges / clock
+DisableNetwork 1
+
+## --- Proposal 171 Stream-Isolated SOCKSPorts ---
+## 1. Default SocksPort for CLI/desktop apps (Thunderbird, Git, SSH, curl):
+SocksPort 127.0.0.1:9050 IsolateDestAddr IsolateDestPort SessionGroup=1
+
+## 2. Dedicated SocksPort for AniTails system utilities (time check / advisory check):
+SocksPort 127.0.0.1:9062 IsolateDestAddr IsolateDestPort SessionGroup=2
+
+## 3. Dedicated SocksPort for high-sensitivity tools (Electrum / OnionShare):
+SocksPort 127.0.0.1:9065 IsolateDestAddr IsolateDestPort SessionGroup=4
+
+## 4. Dedicated SocksPort on veth-tbb for Tor Browser (isolated netns 'tbb'):
+##    Tor Browser sets first-party URL domain in SOCKS5 username/password.
+SocksPort 10.200.1.1:9050 IsolateSOCKSAuth KeepAliveIsolateSOCKSAuth SessionGroup=3
+
+## --- Raw ControlPort (root-only; applications MUST connect via anitails-onion-grater on 9051) ---
+ControlPort 127.0.0.1:9052
+CookieAuthentication 1
+CookieAuthFile /run/tor/control.authcookie
+CookieAuthFileGroupReadable 0
+
+## --- Torified DNS & .onion Automapping ---
+DNSPort 127.0.0.1:5353
+VirtualAddrNetworkIPv4 127.192.0.0/10
+AutomapHostsOnResolve 1
+AutomapHostsSuffixes .onion
+
+## --- Transparent Proxy for Automapped .onion Addresses ONLY ---
+TransPort 127.0.0.1:9040 IsolateDestAddr IsolateDestPort SessionGroup=5
+
+## --- Pluggable Transports (extracted from PGP-verified Tor Expert Bundle 16.0) ---
+ClientTransportPlugin meek_lite,obfs2,obfs3,obfs4,scramblesuit,webtunnel exec /usr/bin/lyrebird
+
+## --- Hardening & Logging ---
+SafeLogging 1
+WarnPlaintextPorts 23,109
+Log notice syslog

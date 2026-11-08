@@ -1,0 +1,15 @@
+[Unit]
+Description=Create AniTails Isolated Application Network Namespaces (tbb, torlaunch, onioncircs, onionshare)
+DefaultDependencies=no
+After=systemd-sysctl.service
+Before=network-pre.target nftables.service NetworkManager.service anitails-onion-grater.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/anitails-create-netns start
+ExecStop=/usr/local/lib/anitails-create-netns stop
+
+[Install]
+WantedBy=sysinit.target

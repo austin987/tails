@@ -1,0 +1,8 @@
+[Unit]
+Description=AniTails Fail-Closed Network Lockdown Panic Handler
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/bash -c 'for dev in /sys/class/net/*; do n=$(basename "$dev"); [ "$n" = "lo" ] || /usr/bin/ip link set dev "$n" down 2>/dev/null || true; done; /usr/bin/systemctl stop NetworkManager.service 2>/dev/null || true; /usr/bin/systemctl mask NetworkManager.service 2>/dev/null || true'

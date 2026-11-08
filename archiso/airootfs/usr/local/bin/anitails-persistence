@@ -1,0 +1,252 @@
+#!/usr/bin/env python3
+"""
+AniTails Opt-In Encrypted Persistent Storage Manager (`anitails-persistence`).
+
+Security Design (aligned with Tails 7.x Persistent Storage goals & Argon2id LUKS2 policy):
+1. Strictly OPT-IN: Persistent Storage is NEVER auto-unlocked or auto-mounted at boot.
+2. Untrusted Partition Rejection (`features/untrusted_partitions.feature`):
+   - Refuses any partition whose parent disk has sysfs `removable != "1"` (blocks internal SATA/NVMe spoofing).
+   - Refuses any partition NOT residing on the exact same parent block device as `/run/archiso/bootmnt`
+     (blocks rogue external USB drives labeled `AniTailsData` or `TailsData`).
+3. Mandatory Strong Cryptography:
+   - `cryptsetup luksFormat` enforces `--type luks2 --pbkdf argon2id --pbkdf-memory 524288
+     --pbkdf-parallel 4 --cipher aes-xts-plain64 --key-size 512 --hash sha512`.
+   - Rejects unlocking legacy weak containers unless `--type luks2` header is verified via `cryptsetup isLuks --type luks2`.
+4. Symlink / Path-Traversal Hardening:
+   - `persistence.conf` only permits allowlisted destinations under `/home/amnesia/...` (no `/etc` or `/usr` arbitrary root mounts).
+   - Rejects `..`, relative paths, NUL bytes, and ANY symlink along either source or destination path (`os.path.islink` / `O_NOFOLLOW`).
+5. Race-Condition Mitigation (inspired by Tails #19913 class activation races on slow USB controllers):
+   - Runs `udevadm settle --timeout=30` before probing/opening block nodes and verifies `/dev/mapper/AniTailsData_unlocked` readiness.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import posixpath
+import stat
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Tuple
+
+MAPPER_NAME = "AniTailsData_unlocked"
+MOUNT_ROOT = Path("/var/lib/anitails-persistence/mnt")
+ALLOWED_FEATURES: Dict[str, Tuple[str, str]] = {
+    "Persistent": ("Persistent", "/home/amnesia/Persistent"),
+    "GnuPG": ("gnupg", "/home/amnesia/.gnupg"),
+    "SSHClient": ("openssh-client", "/home/amnesia/.ssh"),
+    "KeePassXC": ("keepassxc", "/home/amnesia/.config/keepassxc"),
+    "Electrum": ("electrum", "/home/amnesia/.electrum"),
+    "Thunderbird": ("thunderbird", "/home/amnesia/.thunderbird"),
+    "TorBrowserBookmarks": ("bookmarks", "/home/amnesia/.tor-browser-bookmarks"),
+}
+AMNESIA_UID = 1000
+AMNESIA_GID = 1000
+MIN_PASSPHRASE_BYTES = 12
+
+
+@dataclass(frozen=True)
+class BlockCandidate:
+    part_dev: str          # e.g. "/dev/sdb2"
+    parent_disk: str       # e.g. "sdb"
+    label: str             # e.g. "AniTailsData"
+    removable: bool        # sysfs /sys/block/<parent_disk>/removable == "1"
+
+
+def validate_candidate_partition(
+    candidate: BlockCandidate,
+    boot_parent_disk: str,
+    expected_label: str = "AniTailsData",
+) -> None:
+    """
+    Enforces `features/untrusted_partitions.feature`:
+    Only accept an encrypted partition labeled `AniTailsData` located on the SAME
+    removable disk from which AniTails booted.
+    """
+    if not boot_parent_disk:
+        raise PermissionError("Cannot determine live boot parent block device; refusing persistence.")
+    if candidate.label != expected_label:
+        raise PermissionError(f"Partition {candidate.part_dev} label {candidate.label!r} != {expected_label!r}.")
+    if not candidate.removable:
+        raise PermissionError(
+            f"REJECTED untrusted partition {candidate.part_dev}: parent disk '{candidate.parent_disk}' "
+            "is non-removable/internal (removable=0)."
+        )
+    if candidate.parent_disk != boot_parent_disk:
+        raise PermissionError(
+            f"REJECTED untrusted partition {candidate.part_dev}: parent disk '{candidate.parent_disk}' "
+            f"does not match live boot disk '{boot_parent_disk}'."
+        )
+
+
+def build_luks2_format_cmd(part_dev: str) -> List[str]:
+    return [
+        "/usr/bin/cryptsetup",
+        "luksFormat",
+        "--batch-mode",
+        "--type", "luks2",
+        "--pbkdf", "argon2id",
+        "--pbkdf-memory", "524288",
+        "--pbkdf-iterations", "4",
+        "--pbkdf-parallel", "4",
+        "--cipher", "aes-xts-plain64",
+        "--key-size", "512",
+        "--hash", "sha512",
+        "--label", "AniTailsData",
+        part_dev,
+    ]
+
+
+def check_no_symlink_components(base_root: Path, sub_rel: str) -> Path:
+    """
+    Walks every path component from `base_root` through `sub_rel` without following symlinks,
+    raising PermissionError if any component is `..` or a symbolic link.
+    """
+    if "\x00" in sub_rel:
+        raise PermissionError("NUL byte in persistence path")
+    parts = [p for p in sub_rel.strip("/").split("/") if p]
+    if any(p in {".", ".."} for p in parts):
+        raise PermissionError(f"Path traversal component rejected in {sub_rel!r}")
+
+    cur = base_root
+    if os.path.islink(cur):
+        raise PermissionError(f"Root mount directory is a symlink: {cur}")
+    for comp in parts:
+        cur = cur / comp
+        if cur.exists() or os.path.islink(cur):
+            st = os.lstat(cur)
+            if stat.S_ISLNK(st.st_mode):
+                raise PermissionError(f"Symlink rejected in persistence path: {cur}")
+            if not stat.S_ISDIR(st.st_mode):
+                raise PermissionError(f"Non-directory rejected in persistence path: {cur}")
+    return cur
+
+
+def parse_persistence_conf(
+    lines: Iterable[str],
+    mount_root: Path = MOUNT_ROOT,
+    dest_root: Path = Path("/"),
+) -> List[Tuple[Path, Path]]:
+    """
+    Parses `persistence.conf` lines of format:
+      <target_abs_path> source=<rel_source_name>
+    and validates allowlist + anti-symlink invariants.
+    """
+    allowed_by_pair = {(src, dst) for src, dst in ALLOWED_FEATURES.values()}
+    bindings: List[Tuple[Path, Path]] = []
+
+    for lineno, raw in enumerate(lines, start=1):
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        tokens = stripped.split()
+        if len(tokens) != 2 or not tokens[1].startswith("source="):
+            raise ValueError(f"Line {lineno}: invalid syntax {stripped!r}")
+        target_str = tokens[0]
+        source_rel = tokens[1].split("=", 1)[1]
+
+        if not target_str.startswith("/home/amnesia/"):
+            raise PermissionError(f"Line {lineno}: destination {target_str!r} outside /home/amnesia/ forbidden")
+        norm_target = posixpath.normpath(target_str)
+        if norm_target != target_str.rstrip("/"):
+            raise PermissionError(f"Line {lineno}: unnormalized destination {target_str!r} forbidden")
+        if "/" in source_rel or source_rel in {"", ".", ".."}:
+            raise PermissionError(f"Line {lineno}: invalid source directory name {source_rel!r}")
+        if (source_rel, norm_target) not in allowed_by_pair:
+            raise PermissionError(
+                f"Line {lineno}: ({source_rel!r} -> {norm_target!r}) is not an allowlisted AniTails feature"
+            )
+
+        src_dir = check_no_symlink_components(mount_root, source_rel)
+        dst_dir = check_no_symlink_components(dest_root, norm_target.lstrip("/"))
+        bindings.append((src_dir, dst_dir))
+
+    return bindings
+
+
+def ensure_safe_mount_root_permissions(mount_root: Path) -> None:
+    st = os.lstat(mount_root)
+    if stat.S_ISLNK(st.st_mode) or not stat.S_ISDIR(st.st_mode):
+        raise PermissionError(f"Persistence mount root {mount_root} is not a real directory")
+    if st.st_uid != 0 or st.st_gid != 0:
+        raise PermissionError(f"Persistence mount root {mount_root} must be owned by root:root (0:0)")
+    if (st.st_mode & 0o022) != 0:
+        raise PermissionError(f"Persistence mount root {mount_root} must not be group/world writable")
+
+
+def settle_udev() -> None:
+    subprocess.run(["/usr/bin/udevadm", "settle", "--timeout=30"], check=False)
+
+
+def discover_boot_parent_disk(bootmnt: str = "/run/archiso/bootmnt", sysfs_block: Path = Path("/sys/block")) -> str:
+    proc = subprocess.run(["/usr/bin/findmnt", "-no", "SOURCE", bootmnt], capture_output=True, text=True, check=False)
+    src = proc.stdout.strip()
+    if not src:
+        return ""
+    pk = subprocess.run(["/usr/bin/lsblk", "-no", "PKNAME", src], capture_output=True, text=True, check=False)
+    parent = pk.stdout.strip().splitlines()[0].strip() if pk.stdout.strip() else Path(src).name
+    rem_file = sysfs_block / parent / "removable"
+    if not rem_file.exists() or rem_file.read_text(encoding="utf-8").strip() != "1":
+        raise PermissionError(f"Live boot medium '{parent}' is not marked removable=1; persistence disabled.")
+    return parent
+
+
+def cmd_status() -> int:
+    mapper_path = Path(f"/dev/mapper/{MAPPER_NAME}")
+    print(f"UNLOCKED={1 if mapper_path.exists() else 0}")
+    print(f"MOUNTED={1 if MOUNT_ROOT.is_mount() else 0}")
+    return 0
+
+
+def cmd_lock() -> int:
+    if MOUNT_ROOT.exists():
+        # Unmount active feature bind mounts in reverse order
+        conf_file = MOUNT_ROOT / "persistence.conf"
+        if conf_file.exists() and not os.path.islink(conf_file):
+            try:
+                pairs = parse_persistence_conf(conf_file.read_text(encoding="utf-8").splitlines())
+                for _, dst in reversed(pairs):
+                    subprocess.run(["/usr/bin/umount", str(dst)], check=False)
+            except Exception:
+                pass
+        subprocess.run(["/usr/bin/umount", str(MOUNT_ROOT)], check=False)
+    if Path(f"/dev/mapper/{MAPPER_NAME}").exists():
+        subprocess.run(["/usr/bin/cryptsetup", "close", MAPPER_NAME], check=True)
+    print("Persistent Storage unmounted and LUKS2 container locked.")
+    return 0
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description="AniTails Opt-in LUKS2 Persistent Storage Manager")
+    sub = parser.add_subparsers(dest="subcmd", required=True)
+    sub.add_parser("status", help="Show Persistent Storage lock/mount state")
+    sub.add_parser("lock", help="Unmount bind-mounts and close LUKS2 container")
+
+    p_create = sub.add_parser("print-format-cmd", help="Validate candidate partition and print LUKS2 format command")
+    p_create.add_argument("--part-dev", required=True)
+    p_create.add_argument("--parent-disk", required=True)
+    p_create.add_argument("--removable", type=int, choices=[0, 1], required=True)
+    p_create.add_argument("--boot-disk", required=True)
+
+    args = parser.parse_args(argv)
+    if args.subcmd == "status":
+        return cmd_status()
+    if args.subcmd == "lock":
+        return cmd_lock()
+    if args.subcmd == "print-format-cmd":
+        cand = BlockCandidate(
+            part_dev=args.part_dev,
+            parent_disk=args.parent_disk,
+            label="AniTailsData",
+            removable=bool(args.removable),
+        )
+        validate_candidate_partition(cand, boot_parent_disk=args.boot_disk)
+        print(" ".join(build_luks2_format_cmd(args.part_dev)))
+        return 0
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

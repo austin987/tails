@@ -1,0 +1,53 @@
+{
+  "executed_at_utc": "2026-11-08",
+  "duration_seconds": 8.771,
+  "unit_and_simulation_tests_total": 13,
+  "unit_and_simulation_tests_passed": 13,
+  "unit_and_simulation_tests_failed": 0,
+  "environment_gates": [
+    {
+      "id": "GATE-NFT-NETLINK",
+      "severity": "P0",
+      "status": "BLOCKED",
+      "command": "unshare -Urn /usr/sbin/nft -c -f archiso/airootfs/etc/nftables.conf",
+      "detail": "Host sandbox kernel (6.1.158+) does not compile CONFIG_NF_TABLES (/home/user/AniTails/archiso/airootfs/etc/nftables.conf:21:1-2: Error: Could not process rule: Operation not supported). Run `nft -c -f archiso/airootfs/etc/nftables.conf` on an Arch Linux 7.3.3 host/VM."
+    },
+    {
+      "id": "GATE-PKGBUILD-BUILD",
+      "severity": "P0",
+      "status": "BLOCKED",
+      "command": "pkgctl build (pkgbuilds/linux-anitails 7.3.3, tor-anitails 0.4.9.16, tor-browser-anitails 16.0, lyrebird-anitails 16.0)",
+      "detail": "Sandbox OS is Debian 12 without pacman/makepkg/devtools and restricted outbound mirror access."
+    },
+    {
+      "id": "GATE-MKARCHISO-ISO",
+      "severity": "P0",
+      "status": "BLOCKED",
+      "command": "./scripts/build-iso.sh",
+      "detail": "BLOCKED: missing required Arch Linux build tool 'mkarchiso' on current host (Linux 6.1.158+ x86_64).\nNext step: run './scripts/build-iso.sh' inside a clean x86_64 Arch Linux builder with archiso >= 92-1 installed."
+    },
+    {
+      "id": "GATE-QEMU-BOOT-BIOS-UEFI",
+      "severity": "P0",
+      "status": "BLOCKED",
+      "command": "qemu-system-x86_64 (BIOS + UEFI live boot, Tor bootstrap, Thunderbird #21841 & RAM wipe dump)",
+      "detail": "qemu-system-x86_64 and /dev/kvm are absent in this container environment."
+    },
+    {
+      "id": "GATE-UPSTREAM-GITLAB-DIFF",
+      "severity": "P1",
+      "status": "BLOCKED",
+      "command": "git ls-remote https://gitlab.tails.net/tails/tails.git",
+      "detail": "gitlab.tails.net denies unauthenticated HTTP/Git/API access; verified via public tails.net advisories & upstream tarballs instead."
+    },
+    {
+      "id": "GATE-EXTERNAL-RELEASE-KEY",
+      "severity": "P0",
+      "status": "BLOCKED",
+      "command": "ANITAILS_RELEASE_GPG_FPR=<HSM_KEY> ./scripts/sign-release.sh <manifest-dir>",
+      "detail": "No external offline/HSM release signing key provided; refusing to generate a fake release key."
+    }
+  ],
+  "release_ready": false,
+  "release_verdict_reason": "NOT_READY_FOR_RELEASE: P0 environment-gated build/boot/signing steps remain BLOCKED in Debian 12 sandbox."
+}
