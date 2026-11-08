@@ -54,7 +54,8 @@ for iso in "${ISO_FILES[@]}"; do
     fi
 
     echo "[verify-iso] Auditing ISO 9660 structure & El Torito boot catalog: $(basename "${iso}") (${size_bytes} bytes)"
-    iso_listing="$(xorriso -indev "${iso}" -find / -print 2>/dev/null)"
+    # Note: xorriso exits 5 on benign hybrid MBR/GPT/future-timestamp WARNINGs unless -return_with SORRY 32 is set
+    iso_listing="$(xorriso -report_about SORRY -return_with SORRY 32 -indev "${iso}" -find / -print 2>/dev/null)"
 
     for required_path in \
         "/EFI/BOOT/BOOTX64.EFI" \
