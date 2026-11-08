@@ -26,6 +26,12 @@ sha256sums=(
 validpgpkeys=('EF6E286DDA85EA2A4BA7DE684E2C6E8793298290')
 
 package() {
-  install -Dm0755 "${srcdir}/tor/pluggable_transports/lyrebird" "${pkgdir}/usr/bin/lyrebird"
+  local _bin
+  _bin="$(find "${srcdir}" -type f -name lyrebird | head -n 1)"
+  if [[ -z "${_bin}" ]]; then
+    echo "ERROR: lyrebird binary not found in extracted Tor Expert Bundle!" >&2
+    return 1
+  fi
+  install -Dm0755 "${_bin}" "${pkgdir}/usr/bin/lyrebird"
   ln -s /usr/bin/lyrebird "${pkgdir}/usr/bin/obfs4proxy"
 }

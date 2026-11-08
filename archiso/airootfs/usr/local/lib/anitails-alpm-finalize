@@ -82,8 +82,14 @@ ln -sf /etc/systemd/system/anitails-shutdown-on-media-removal.service /etc/syste
 # 7. Ensure reproducible empty /etc/machine-id (populated in RAM at boot without re-running systemd preset)
 : > /etc/machine-id
 
-# 8. Remove any stray .pacnew files so image contents remain clean and deterministic
+# 8. Remove any stray .pacnew files and enforce post-pacstrap directory/file permissions
 find /etc -name "*.pacnew" -delete 2>/dev/null || true
+install -d -m 0700 -o 43 -g 43 /var/lib/tor
+install -d -m 0750 -o 0 -g 0 /etc/polkit-1/rules.d
+if [[ -f /etc/tor/torrc ]]; then
+    chown 0:43 /etc/tor/torrc
+    chmod 0640 /etc/tor/torrc
+fi
 
 # 9. Rebuild initramfs after NIC blocklist generation and NVIDIA modprobe neutralization
 #    so early-boot `modconf`/`kms` hooks inside initramfs-linux-anitails.img match airootfs

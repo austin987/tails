@@ -102,15 +102,15 @@ if [[ -n "${SNAPSHOT_OVERRIDE}" ]] && ! [[ "${SNAPSHOT_OVERRIDE}" =~ ^[0-9]{4}/[
     exit 2
 fi
 
-# Upstream OpenPGP keys required across pkgbuilds/* (40-hex fingerprints + WKD identities)
+# Upstream OpenPGP keys required across pkgbuilds/* (40-hex fingerprints -> authoritative HTTPS key URL)
 declare -A UPSTREAM_PGP_KEYS=(
-    ["ABAF11C65A2970B130ABE3C479BE3E4300411886"]="torvalds@kernel.org"
-    ["647F28654894E3BD457199BE38DBBDC86092693E"]="gregkh@kernel.org"
-    ["E27E5D8A3403A2EF66873BBCDEA66FF797772CDC"]="sashal@kernel.org"
-    ["2133BC600AB133E1D826D173FE43009C4607B1FB"]="dgoulet@torproject.org"
-    ["B74417EDDF22AC9F9E90F49142E86A2A11F48D36"]="nickm@torproject.org"
-    ["1C1BC007A9F607AA8152C040BEA7B180B1491921"]="ahf@torproject.org"
-    ["EF6E286DDA85EA2A4BA7DE684E2C6E8793298290"]="torbrowser@torproject.org"
+    ["ABAF11C65A2970B130ABE3C479BE3E4300411886"]="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/main/keys/pgp/ABAF11C65A2970B130ABE3C479BE3E4300411886.asc"
+    ["647F28654894E3BD457199BE38DBBDC86092693E"]="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/main/keys/pgp/647F28654894E3BD457199BE38DBBDC86092693E.asc"
+    ["E27E5D8A3403A2EF66873BBCDEA66FF797772CDC"]="https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&search=0xE27E5D8A3403A2EF66873BBCDEA66FF797772CDC"
+    ["2133BC600AB133E1D826D173FE43009C4607B1FB"]="https://gitlab.archlinux.org/archlinux/packaging/packages/tor/-/raw/main/keys/pgp/2133BC600AB133E1D826D173FE43009C4607B1FB.asc"
+    ["B74417EDDF22AC9F9E90F49142E86A2A11F48D36"]="https://gitlab.archlinux.org/archlinux/packaging/packages/tor/-/raw/main/keys/pgp/B74417EDDF22AC9F9E90F49142E86A2A11F48D36.asc"
+    ["1C1BC007A9F607AA8152C040BEA7B180B1491921"]="https://gitlab.archlinux.org/archlinux/packaging/packages/tor/-/raw/main/keys/pgp/1C1BC007A9F607AA8152C040BEA7B180B1491921.asc"
+    ["EF6E286DDA85EA2A4BA7DE684E2C6E8793298290"]="https://openpgpkey.torproject.org/.well-known/openpgpkey/torproject.org/hu/kounek7zrdx745qydx6p59t9mqjpuhdf"
 )
 
 # Determine ordered PKGBUILD list for the selected profile (conflict-free isolation!)
@@ -167,6 +167,11 @@ cleanup_ephemeral_keys() {
         rm -rf "${EPHEMERAL_KEY_DIR}"
     fi
 }
+report_ci_error() {
+    local exit_code=$?
+    echo "::error title=ci-build-local-repo failed::Exit ${exit_code} at ${BASH_SOURCE[0]}:${1} while running: ${BASH_COMMAND}"
+}
+trap 'report_ci_error ${LINENO}' ERR
 trap cleanup_ephemeral_keys EXIT
 
 resolve_snapshot_mirrorlist() {
@@ -230,13 +235,13 @@ resolve_snapshot_mirrorlist
 cp -f "${REPO_ROOT}/archiso/mirrorlist.snapshot" /etc/pacman.d/mirrorlist.snapshot
 cp -f "${REPO_ROOT}/archiso/mirrorlist.snapshot" /etc/pacman.d/mirrorlist
 
-echo "[1/6] Initializingbuilder pacman keyring & installing Archiso / kernel build dependencies..."
+echo "[1/6] Initializing builder pacman keyring & installing Archiso / kernel build dependencies..."
 pacman-key --init
 pacman-key --populate archlinux
 pacman -Syu --noconfirm --needed \
-    archiso base-devel bc ccache cpio curl dosfstools edk2-ovmf gettext git \
+    archiso base-devel bc binutils ccache cpio curl dosfstools edk2-ovmf gettext git \
     gnupg kmod libelf libisoburn mtools nftables openssl pahole perl python \
-    python-yaml rsync rust rust-bindgen rust-src squashfs-tools syslinux tar xz zstd
+    python-yaml rsync squashfs-tools syslinux tar xz zstd
 
 echo "[2/6] Configuring unprivileged 'builder' account & parallel makepkg environment..."
 if ! id -u builder >/dev/null 2>&1; then
@@ -271,7 +276,7 @@ chmod 0600 "${EPHEMERAL_KEY_DIR}/kmod.key"
 chmod 0644 "${EPHEMERAL_KEY_DIR}/kmod.pem"
 
 # Key B: One-time OpenPGP key for [anitails-local] so `SigLevel = Required` is strictly honored
-su - builder -c "GNUPGHOME='${EPHEMERAL_KEY_DIR}/gnupg' gpg --batch --passphrase '' --quick-generate-key 'AniTails Ephemeral Local Repo <ci-ephemeral@anitails.invalid>' ed25519 cert,sign 1d"
+su - builder -c "GNUPGHOME='${EPHEMERAL_KEY_DIR}/gnupg' gpg --batch --passphrase '' --quick-generate-key 'AniTails Ephemeral Local Repo <ci-ephemeral@anitails.invalid>' rsa3072 default 1d"
 REPO_GPG_FPR="$(su - builder -c "GNUPGHOME='${EPHEMERAL_KEY_DIR}/gnupg' gpg --list-secret-keys --with-colons" | awk -F: '/^fpr:/{print $10; exit}')"
 su - builder -c "GNUPGHOME='${EPHEMERAL_KEY_DIR}/gnupg' gpg --armor --export '${REPO_GPG_FPR}'" > "${EPHEMERAL_KEY_DIR}/repo-signing.pub.asc"
 
@@ -280,30 +285,66 @@ pacman-key --lsign-key "${REPO_GPG_FPR}"
 
 echo "[4/6] Importing & fingerprint-verifying upstream OpenPGP release keys for builder..."
 su - builder -c "mkdir -p ~/.gnupg && chmod 0700 ~/.gnupg"
+KEY_TMP_DIR="$(mktemp -d)"
+chmod 0755 "${KEY_TMP_DIR}"
 for fpr in "${!UPSTREAM_PGP_KEYS[@]}"; do
-    wkd_email="${UPSTREAM_PGP_KEYS[${fpr}]}"
-    echo "  -> Importing ${fpr} (${wkd_email})..."
-    su - builder -c "gpg --batch --auto-key-locate nodefault,wkd --locate-keys '${wkd_email}'" >/dev/null 2>&1 || true
+    key_url="${UPSTREAM_PGP_KEYS[${fpr}]}"
+    echo "  -> Importing ${fpr} from ${key_url}..."
+    if curl -fsSL --retry 4 --max-time 30 "${key_url}" -o "${KEY_TMP_DIR}/${fpr}.key"; then
+        chmod 0644 "${KEY_TMP_DIR}/${fpr}.key"
+        su - builder -c "gpg --batch --import '${KEY_TMP_DIR}/${fpr}.key'" || true
+    fi
     if ! su - builder -c "gpg --list-keys --with-colons '${fpr}'" >/dev/null 2>&1; then
-        for ks in hkps://keyserver.ubuntu.com hkps://keys.openpgp.org hkps://pgp.mit.edu; do
+        if curl -fsSL --retry 3 --max-time 25 "https://keys.openpgp.org/vks/v1/by-fingerprint/${fpr}" -o "${KEY_TMP_DIR}/${fpr}.vks"; then
+            chmod 0644 "${KEY_TMP_DIR}/${fpr}.vks"
+            su - builder -c "gpg --batch --import-options restore --import '${KEY_TMP_DIR}/${fpr}.vks'" || true
+        fi
+    fi
+    if ! su - builder -c "gpg --list-keys --with-colons '${fpr}'" >/dev/null 2>&1; then
+        for ks in hkps://keyserver.ubuntu.com hkps://pgp.mit.edu; do
             if su - builder -c "gpg --batch --keyserver '${ks}' --recv-keys '${fpr}'" >/dev/null 2>&1; then
                 break
             fi
         done
     fi
     if ! su - builder -c "gpg --list-keys --with-colons '${fpr}'" | grep -Fq ":${fpr}:"; then
-        echo "CRITICAL PGP ERROR: Failed to import/verify exact fingerprint ${fpr} (${wkd_email})!" >&2
+        echo "::error title=PGP Import Failure::Failed to import/verify exact fingerprint ${fpr} (${key_url})"
+        rm -rf "${KEY_TMP_DIR}"
         exit 1
     fi
 done
+rm -rf "${KEY_TMP_DIR}"
 
 echo "[5/6] Building custom [anitails-local] packages for profile '${SELECTED_PROFILE}': ${PKGBUILDS_TO_BUILD[*]}"
 BUILD_WORK="/var/tmp/anitails-pkgbuild-work"
 rm -rf "${BUILD_WORK}"
 install -d -m 0755 -o builder -g builder "${BUILD_WORK}"
+PKG_CACHE_ROOT=""
+if [[ -n "${CACHE_ROOT}" ]]; then
+    PKG_CACHE_ROOT="${CACHE_ROOT}/pkgs"
+    install -d -m 0755 "${PKG_CACHE_ROOT}"
+fi
 
 for pkg_dir in "${PKGBUILDS_TO_BUILD[@]}"; do
     echo "=== Building ${pkg_dir} ==="
+    pkg_hash="$(find "${REPO_ROOT}/pkgbuilds/${pkg_dir}" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')"
+    pkg_cache_slot="${PKG_CACHE_ROOT}/${pkg_dir}-${pkg_hash}"
+
+    # Non-kernel packages (and base-profile linux-anitails, which has no out-of-tree NVIDIA modules)
+    # can safely reuse exact content-addressed unsigned .pkg.tar.zst builds from CI cache and get
+    # freshly signed by the ephemeral [anitails-local] key in Step [6/6].
+    can_reuse_cache="true"
+    if [[ "${SELECTED_PROFILE}" != "base" && ( "${pkg_dir}" == "linux-anitails" || "${pkg_dir}" == nvidia-* ) ]]; then
+        can_reuse_cache="false"
+    fi
+
+    if [[ -n "${PKG_CACHE_ROOT}" && "${can_reuse_cache}" == "true" && -d "${pkg_cache_slot}" ]] \
+       && compgen -G "${pkg_cache_slot}/*.pkg.tar.zst" >/dev/null; then
+        echo "  -> Cache HIT for ${pkg_dir} (${pkg_hash:0:12}); copying prebuilt unsigned package(s) to re-sign..."
+        cp -f "${pkg_cache_slot}"/*.pkg.tar.zst "${LOCAL_REPO_DIR}/"
+        continue
+    fi
+
     cp -a "${REPO_ROOT}/pkgbuilds/${pkg_dir}" "${BUILD_WORK}/${pkg_dir}"
     chown -R builder:builder "${BUILD_WORK}/${pkg_dir}"
 
@@ -314,10 +355,15 @@ for pkg_dir in "${PKGBUILDS_TO_BUILD[@]}"; do
         export ANITAILS_KMOD_CERT='${EPHEMERAL_KEY_DIR}/kmod.pem'
         export PATH='/usr/lib/ccache/bin:'\"\${PATH}\"
         cd '${BUILD_WORK}/${pkg_dir}'
-        makepkg -s --noconfirm --needed --cleanbuild
+        makepkg -s --noconfirm --needed --cleanbuild --nocheck
     "
 
     cp -f "${BUILD_WORK}/${pkg_dir}"/*.pkg.tar.zst "${LOCAL_REPO_DIR}/"
+    if [[ -n "${PKG_CACHE_ROOT}" && "${can_reuse_cache}" == "true" ]]; then
+        rm -rf "${pkg_cache_slot}"
+        install -d -m 0755 "${pkg_cache_slot}"
+        cp -f "${BUILD_WORK}/${pkg_dir}"/*.pkg.tar.zst "${pkg_cache_slot}/"
+    fi
 
     # If building an NVIDIA profile, install linux-anitails + linux-anitails-headers onto the
     # ephemeral builder container so nvidia-open-anitails / nvidia-580xx-anitails can compile
@@ -337,7 +383,7 @@ su - builder -c "
     for pkg in *.pkg.tar.zst; do
         gpg --batch --yes --default-key '${REPO_GPG_FPR}' --detach-sign --no-armor \"\${pkg}\"
     done
-    repo-add --verify --sign --key '${REPO_GPG_FPR}' anitails-local.db.tar.gz *.pkg.tar.zst
+    repo-add --include-sigs --verify --sign --key '${REPO_GPG_FPR}' anitails-local.db.tar.gz *.pkg.tar.zst
 "
 chown -R root:root "${LOCAL_REPO_DIR}"
 

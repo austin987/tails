@@ -1,0 +1,11 @@
+/* AniTails Polkit Rule: Deny unprivileged mounting of internal/system block devices.
+ * Complements 99-anitails-block-internal-disks.rules (UDISKS_IGNORE=1) as defense-in-depth.
+ */
+polkit.addRule(function(action, subject) {
+    if ((action.id == "org.freedesktop.udisks2.filesystem-mount-system" ||
+         action.id == "org.freedesktop.udisks2.encrypted-unlock-system" ||
+         action.id == "org.freedesktop.udisks2.modify-device-system") &&
+        subject.user == "amnesia") {
+        return polkit.Result.NO;
+    }
+});

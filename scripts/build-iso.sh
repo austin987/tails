@@ -9,6 +9,7 @@
 # Refuses partial upgrades, testing repos, runtime DKMS in live session, or disabled PGP verification.
 # Exits 77 (BLOCKED) with actionable diagnostics if executed on a non-Arch host.
 set -euo pipefail
+trap 'echo "::error title=build-iso.sh failed::Exit $? at ${BASH_SOURCE[0]}:${LINENO} running: ${BASH_COMMAND}"' ERR
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BASE_PROFILE_DIR="${REPO_ROOT}/archiso"

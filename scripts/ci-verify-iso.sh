@@ -9,6 +9,7 @@
 #   3. Zero private signing keys (`*.key`, `signing_key.pem`, `secring.gpg`) leaked into the ISO.
 #   4. Generates & cryptographically self-verifies `sbom.cdx.json`, `SHA256SUMS`, and `B2SUMS`.
 set -euo pipefail
+trap 'echo "::error title=ci-verify-iso.sh failed::Exit $? at ${BASH_SOURCE[0]}:${LINENO} running: ${BASH_COMMAND}"' ERR
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${REPO_ROOT}/out"
@@ -53,7 +54,23 @@ for iso in "${ISO_FILES[@]}"; do
     fi
 
     echo "[verify-iso] Auditing ISO 9660 structure & El Torito boot catalog: $(basename "${iso}") (${size_bytes} bytes)"
-    iso_listing="$(xorriso -indev "${iso}" -find / -print 2>/dev/null)"
+    xorriso_err="$(mktemp)"
+    if ! env -u SOURCE_DATE_EPOCH xorriso -indev "${iso}" -report_el_torito plain >/dev/null 2>"${xorriso_err}"; then
+        cat "${xorriso_err}" >&2 || true
+        rm -f "${xorriso_err}"
+        echo "FAIL: xorriso failed to verify El Torito boot catalog of ${iso}!" >&2
+        exit 1
+    fi
+    if command -v bsdtar >/dev/null 2>&1; then
+        iso_listing="$(bsdtar -tf "${iso}" | sed 's|^/*|/|; s|/$||')"
+    else
+        iso_listing="$(env -u SOURCE_DATE_EPOCH xorriso -indev "${iso}" -find / -exec echo -- 2>"${xorriso_err}")"
+    fi
+    rm -f "${xorriso_err}"
+    if [[ -z "${iso_listing}" ]]; then
+        echo "FAIL: Empty ISO 9660 file listing for ${iso}!" >&2
+        exit 1
+    fi
 
     for required_path in \
         "/EFI/BOOT/BOOTX64.EFI" \
@@ -62,7 +79,7 @@ for iso in "${ISO_FILES[@]}"; do
         "/arch/boot/x86_64/vmlinuz-linux-anitails" \
         "/arch/boot/x86_64/initramfs-linux-anitails.img" \
         "/arch/x86_64/airootfs.sfs"; do
-        if ! grep -Fxq "${required_path}" <<<"${iso_listing}"; then
+        if ! grep -Fixq "${required_path}" <<<"${iso_listing}"; then
             echo "FAIL: Missing required boot/live file '${required_path}' inside ${iso}!" >&2
             exit 1
         fi

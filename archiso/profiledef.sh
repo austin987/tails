@@ -19,13 +19,14 @@ arch="x86_64"
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
 # Tails 7.0+ switched from xz to zstd for faster boot while preserving read-only SquashFS integrity
-airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '19' '-b' '1M')
+airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '15' '-b' '1M')
 bootstrap_tarball_compression=('zstd' '-c' '-T0' '--auto-threads=logical' '--long' '-19')
 
 # IMPORTANT (archiso 92-1 order of operations):
-# mkarchiso copies airootfs/ BEFORE pacstrap (with 0:0 and 0755/0644),
-# installs packages, runs ALPM hooks (including zz-99-anitails-finalize.hook),
-# and THEN applies file_permissions below.
+# mkarchiso copies airootfs/ BEFORE pacstrap and immediately applies file_permissions
+# via `realpath -q` BEFORE packages are installed — every path listed here MUST exist
+# inside archiso/airootfs/ in Git. Post-pacstrap package directories (like /var/lib/tor)
+# are enforced by zz-99-anitails-finalize.hook (`anitails-alpm-finalize`).
 file_permissions=(
   ["/etc/shadow"]="0:0:0400"
   ["/etc/gshadow"]="0:0:0400"
@@ -34,7 +35,9 @@ file_permissions=(
   ["/etc/tor/torrc"]="0:43:0640"
   ["/etc/sudoers.d"]="0:0:0750"
   ["/etc/sudoers.d/00-anitails-hardening"]="0:0:0440"
+  ["/etc/polkit-1"]="0:0:0755"
   ["/etc/polkit-1/rules.d"]="0:0:0750"
+  ["/etc/polkit-1/rules.d/10-anitails-deny-internal-disks.rules"]="0:0:0644"
   ["/etc/NetworkManager/dispatcher.d/00-firewall.sh"]="0:0:0755"
   ["/etc/NetworkManager/dispatcher.d/10-tor.sh"]="0:0:0755"
   ["/usr/local/bin/anitails-clock-setup"]="0:0:0755"
@@ -55,6 +58,5 @@ file_permissions=(
   ["/usr/local/lib/anitails-swapon-disabled"]="0:0:0755"
   ["/usr/local/lib/anitails-udev-watchdog-wrapper"]="0:0:0755"
   ["/usr/local/lib/anitails-unblock-network"]="0:0:0755"
-  ["/var/lib/tor"]="43:43:0700"
   ["/home/amnesia"]="1000:1000:0700"
 )
