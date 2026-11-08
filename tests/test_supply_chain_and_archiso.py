@@ -57,7 +57,7 @@ class TestSupplyChainAndArchiso(unittest.TestCase):
 
     def test_all_pkgbuilds_pin_exact_sha256_and_validpgpkeys(self) -> None:
         pkgbuilds = sorted((REPO_ROOT / "pkgbuilds").glob("*/PKGBUILD"))
-        self.assertEqual(len(pkgbuilds), 5)
+        self.assertEqual(len(pkgbuilds), 7)
         for pb in pkgbuilds:
             txt = pb.read_text(encoding="utf-8")
             # Extract source=() and sha256sums=() entries
@@ -74,8 +74,14 @@ class TestSupplyChainAndArchiso(unittest.TestCase):
                 else:
                     self.assertRegex(digest, r"^[0-9a-f]{64}$", f"Non-pinned hash {digest!r} for {s_url} in {pb}")
                     self.assertNotEqual(digest, "0" * 64, f"Zero placeholder hash in {pb}")
-            if any(s.startswith("https://") for s in sources):
-                self.assertIn("validpgpkeys=(", txt, f"External source without validpgpkeys in {pb}")
+            # Upstream Tor / kernel.org publish detached OpenPGP signatures (`validpgpkeys`);
+            # NVIDIA upstream tarballs/.run installers do NOT publish detached .asc OpenPGP files,
+            # so they MUST pin exact 64-hex SHA-256 AND sign built .ko modules (`sign-file sha512`)!
+            if any(s.startswith("https://") or "::https://" in s for s in sources):
+                if pb.parent.name in ("nvidia-open-anitails", "nvidia-580xx-anitails"):
+                    self.assertIn("sign-file", txt, f"NVIDIA PKGBUILD must enforce X.509 kmod signing: {pb}")
+                else:
+                    self.assertIn("validpgpkeys=(", txt, f"External source without validpgpkeys in {pb}")
 
     def test_sbom_checksums_signature_tamper_rejection_and_external_key_policy(self) -> None:
         sbom_script = REPO_ROOT / "scripts/generate-sbom-and-checksums.py"

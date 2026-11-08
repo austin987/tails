@@ -1,0 +1,506 @@
+#!/usr/bin/env python3
+"""
+AniTails Conflict-Free GPU Driver Dispatcher & Pre-GDM Fallback Guard
+(`anitails-gpu-select`)
+=====================================================================
+Selects the safest compatible graphics path at boot WITHOUT:
+  - running DKMS or compiling kernel modules in the live session,
+  - making any network connection,
+  - disabling Secure Boot, kernel lockdown, `module.sig_enforce=1`, IOMMU, or IBT,
+  - globally blacklisting `nouveau` in a way that breaks fallback on pre-Turing GPUs,
+  - logging GPU UUIDs or serial numbers.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.machinery
+import importlib.util
+import json
+import os
+import platform
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+
+def _load_detect_module():
+    here = Path(__file__).resolve().parent / "anitails-gpu-detect"
+    loader = importlib.machinery.SourceFileLoader("anitails_gpu_detect", str(here))
+    spec = importlib.util.spec_from_loader("anitails_gpu_detect", loader)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+DETECT = _load_detect_module()
+MODSIG_MAGIC = b"~Module signature appended~\n"
+
+
+def parse_cmdline(cmdline: str) -> dict[str, Any]:
+    tokens = cmdline.strip().split()
+    gpu_mode = "auto"
+    egpu_opt_in = False
+    xorg_opt_in = False
+    offline = False
+    sig_enforce = False
+    nomodeset = False
+
+    for tok in tokens:
+        if tok == "nomodeset":
+            nomodeset = True
+        elif tok.startswith("anitails.gpu="):
+            val = tok.split("=", 1)[1].strip().lower()
+            if val in ("auto", "igpu", "nouveau", "nvidia", "safe"):
+                gpu_mode = val
+        elif tok == "anitails.egpu=1":
+            egpu_opt_in = True
+        elif tok == "anitails.xorg_fallback=1":
+            xorg_opt_in = True
+        elif tok == "anitails.offline=1":
+            offline = True
+        elif tok == "module.sig_enforce=1":
+            sig_enforce = True
+
+    if nomodeset:
+        gpu_mode = "safe"
+
+    return {
+        "gpu_mode": gpu_mode,
+        "nomodeset": nomodeset,
+        "egpu_opt_in": egpu_opt_in,
+        "xorg_opt_in": xorg_opt_in,
+        "offline": offline,
+        "sig_enforce": sig_enforce,
+    }
+
+
+def _read_ko_bytes(ko_path: Path) -> bytes:
+    raw = ko_path.read_bytes()
+    if ko_path.name.endswith(".zst"):
+        # Decompress via zstd CLI if available; otherwise inspect raw if uncompressed test fixture
+        res = subprocess.run(["zstd", "-dc", str(ko_path)], capture_output=True)
+        if res.returncode == 0 and res.stdout:
+            return res.stdout
+    return raw
+
+
+def inspect_installed_nvidia_stack(root: Path, kernver: str, sig_enforce: bool) -> dict[str, Any]:
+    """
+    Dynamically inspects the rootfs for pre-built NVIDIA kernel modules, module X.509
+    signatures, matching `libGLX_nvidia.so.<ver>`, and GSP firmware `<ver>`.
+    Never hardcodes a single driver version string!
+    """
+    mod_candidates = [
+        root / f"usr/lib/modules/{kernver}/extramodules/nvidia.ko.zst",
+        root / f"usr/lib/modules/{kernver}/extramodules/nvidia.ko",
+        root / f"usr/lib/modules/{kernver}/kernel/drivers/video/nvidia.ko.zst",
+        root / f"usr/lib/modules/{kernver}/kernel/drivers/video/nvidia.ko",
+    ]
+    ko_path = next((p for p in mod_candidates if p.is_file()), None)
+
+    usr_lib = root / "usr/lib"
+    userspace_vers: list[str] = []
+    if usr_lib.is_dir():
+        for p in sorted(usr_lib.glob("libGLX_nvidia.so.*.*")):
+            m = re.match(r"^libGLX_nvidia\.so\.(\d+\.\d+(?:\.\d+)?)$", p.name)
+            if m:
+                userspace_vers.append(m.group(1))
+
+    fw_root = root / "usr/lib/firmware/nvidia"
+    gsp_fw_vers: list[str] = []
+    if fw_root.is_dir():
+        for d in sorted(fw_root.iterdir()):
+            if d.is_dir() and ((d / "gsp_tu10x.bin").is_file() or (d / "gsp_ga10x.bin").is_file()):
+                gsp_fw_vers.append(d.name)
+
+    nouveau_gsp_present = (root / "usr/lib/firmware/nvidia/tu102/gsp").is_dir() or (
+        root / "usr/lib/firmware/nvidia/ga102/gsp"
+    ).is_dir()
+
+    if ko_path is None:
+        return {
+            "present": False,
+            "lockstep_valid": False,
+            "reason": f"No pre-compiled nvidia.ko(.zst) found for kernel {kernver}",
+            "module_version": None,
+            "module_license": None,
+            "module_signed": False,
+            "userspace_versions": userspace_vers,
+            "gsp_firmware_versions": gsp_fw_vers,
+            "nouveau_gsp_present": nouveau_gsp_present,
+        }
+
+    ko_bytes = _read_ko_bytes(ko_path)
+    is_signed = ko_bytes.endswith(MODSIG_MAGIC) or (MODSIG_MAGIC in ko_bytes[-4096:])
+
+    m_ver = re.search(rb"version=([0-9]+\.[0-9]+(?:\.[0-9]+)?)", ko_bytes)
+    mod_ver = m_ver.group(1).decode("ascii") if m_ver else None
+
+    m_lic = re.search(rb"license=([^\x00\n]+)", ko_bytes)
+    mod_lic = m_lic.group(1).decode("ascii", errors="replace") if m_lic else "unknown"
+
+    m_vm = re.search(rb"vermagic=([^\x00\n]+)", ko_bytes)
+    vermagic = m_vm.group(1).decode("ascii", errors="replace") if m_vm else ""
+    vermagic_ok = (not vermagic) or vermagic.startswith(kernver + " ") or (vermagic == kernver)
+
+    is_open_flavor = "MIT" in mod_lic or "GPL" in mod_lic
+    major_branch = int(mod_ver.split(".")[0]) if mod_ver and mod_ver.split(".")[0].isdigit() else 0
+
+    issues: list[str] = []
+    if sig_enforce and not is_signed:
+        issues.append(f"nvidia module {ko_path.name} lacks X.509 signature required by module.sig_enforce=1")
+    if not vermagic_ok:
+        issues.append(f"nvidia module vermagic '{vermagic}' does not match running kernel '{kernver}'")
+    if not mod_ver:
+        issues.append("Cannot extract version= metadata from nvidia kernel module")
+    elif mod_ver not in userspace_vers:
+        issues.append(f"ABI mismatch: kernel module version {mod_ver} != installed libGLX_nvidia.so versions {userspace_vers}")
+    if is_open_flavor and mod_ver and mod_ver not in gsp_fw_vers:
+        issues.append(f"Missing matching GSP firmware /usr/lib/firmware/nvidia/{mod_ver}/gsp_*.bin (found {gsp_fw_vers})")
+
+    return {
+        "present": True,
+        "ko_path": str(ko_path),
+        "module_version": mod_ver,
+        "major_branch": major_branch,
+        "module_license": mod_lic,
+        "is_open_flavor": is_open_flavor,
+        "module_signed": is_signed,
+        "vermagic_ok": vermagic_ok,
+        "userspace_versions": userspace_vers,
+        "gsp_firmware_versions": gsp_fw_vers,
+        "nouveau_gsp_present": nouveau_gsp_present,
+        "lockstep_valid": len(issues) == 0,
+        "issues": issues,
+    }
+
+
+def decide_gpu_policy(
+    scan: dict[str, Any],
+    stack: dict[str, Any],
+    boot_opts: dict[str, Any],
+    kernver: str,
+) -> dict[str, Any]:
+    nv_gpus = [g for g in scan["gpus"] if g["vendor_id"] == "10de"]
+    mode = boot_opts["gpu_mode"]
+    reasons: list[str] = []
+    selected_driver = "auto_kms"
+    acceleration_tier = "full_kms_3d"
+    force_software_gl = False
+    block_nvidia = False
+    block_nouveau = False
+    allow_egpu_thunderbolt = False
+    enable_prime_offload = False
+
+    # Check Thunderbolt eGPU DMA safety gate first
+    has_tb_egpu = any(g["is_thunderbolt_egpu"] for g in scan["gpus"])
+    if boot_opts["egpu_opt_in"]:
+        if scan["iommu_active"]:
+            allow_egpu_thunderbolt = True
+            reasons.append("Opt-in anitails.egpu=1 duoc chap nhan vi IOMMU DMA remapping dang hoat dong.")
+        else:
+            allow_egpu_thunderbolt = False
+            reasons.append("TU CHOI anitails.egpu=1: He thong KHONG bat IOMMU DMA remapping; giu chan thunderbolt de chong tan cong DMA!")
+    elif has_tb_egpu:
+        reasons.append("Phat hien eGPU Thunderbolt nhung anitails.egpu=1 chua duoc nguoi dung opt-in.")
+
+    # Case 1: Explicit Safe Mode / nomodeset
+    if mode == "safe":
+        selected_driver = "simpledrm_llvmpipe"
+        acceleration_tier = "basic_display_software_rendering"
+        force_software_gl = True
+        block_nvidia = True
+        block_nouveau = True
+        reasons.append("Che do Safe Graphics (nomodeset / anitails.gpu=safe): su dung simpledrm/UEFI GOP + Mesa llvmpipe.")
+
+    # Case 2: No NVIDIA GPU present
+    elif not nv_gpus:
+        selected_driver = "non_nvidia_kms" if scan["gpu_count"] > 0 else "headless_or_container"
+        if scan["topology"] == "virtual_gpu_only":
+            acceleration_tier = "virtual_gpu_unverified_for_nvidia"
+            reasons.append("Moi truong ao hoa (QEMU/Virtio): giu KMS mac dinh, danh dau SKIPPED cho phan cung NVIDIA.")
+        block_nvidia = True
+        block_nouveau = False
+
+    # Case 3: Hybrid Optimus Laptop iGPU-only mode (`anitails.gpu=igpu`)
+    elif mode == "igpu" and scan["topology"] == "hybrid_optimus_prime":
+        selected_driver = "igpu_only_dgpu_blocked"
+        acceleration_tier = "igpu_kms_3d"
+        block_nvidia = True
+        block_nouveau = True
+        reasons.append("Che do Hybrid Laptop iGPU-Only (anitails.gpu=igpu): tat KMS tren NVIDIA dGPU, dung iGPU Intel/AMD va tranh luu du lieu VRAM roi.")
+
+    # Case 4: Headless 3D-controller-only NVIDIA card with NO iGPU / BMC VGA
+    elif scan["topology"] == "nvidia_headless_3d_only_no_display":
+        acceleration_tier = "headless_compute_no_display_engine"
+        reasons.append(
+            "Card NVIDIA PCI class 0x0302 headless (Tesla/Data Center khong co cong xuat hinh) va khong co iGPU/BMC VGA: khong the khoi dong GDM hien thi man hinh."
+        )
+        if stack["present"] and stack["lockstep_valid"]:
+            selected_driver = "nvidia_headless"
+            block_nouveau = True
+        else:
+            selected_driver = "unbound_headless"
+            block_nvidia = True
+
+    # Case 5: Evaluate NVIDIA GPU(s) by exact PCI ID + architecture + installed stack
+    else:
+        primary_nv = nv_gpus[0]["nvidia"]
+        arch = primary_nv["architecture"]
+        pci_id = nv_gpus[0]["pci_id"]
+        model = primary_nv["resolved_model"]
+
+        # Did user explicitly force nouveau?
+        if mode == "nouveau":
+            block_nvidia = True
+            if arch in ("Blackwell", "Vera_Rubin"):
+                selected_driver = "simpledrm_llvmpipe"
+                acceleration_tier = "basic_display_software_rendering"
+                force_software_gl = True
+                block_nouveau = True
+                reasons.append(
+                    f"[{pci_id}] {model} ({arch}): nouveau tren Linux {kernver} chua ho tro tang toc Blackwell/Rubin -> fallback an toan sang simpledrm + llvmpipe."
+                )
+            else:
+                selected_driver = "nouveau_mesa"
+                acceleration_tier = "open_kms_nvk" if primary_nv["nvk_vulkan_tier"] in ("production", "supported_open") else "open_kms_gl"
+                reasons.append(f"[{pci_id}] {model} ({arch}): su dung driver ma nguon mo nouveau + Mesa theo yeu cau.")
+        else:
+            # Auto or explicit `nvidia` mode: check whether installed NVIDIA module supports this exact PCI ID!
+            can_use_nvidia_mod = False
+            if stack["present"] and stack["lockstep_valid"]:
+                mod_ver = stack["module_version"] or ""
+                if stack["is_open_flavor"]:
+                    if mod_ver.startswith("620."):
+                        can_use_nvidia_mod = bool(primary_nv["nvidia_open_620_supported"])
+                    elif mod_ver.startswith("615."):
+                        can_use_nvidia_mod = bool(primary_nv["nvidia_open_615_supported"])
+                    else:
+                        can_use_nvidia_mod = bool(primary_nv["has_gsp"])
+                else:
+                    # Legacy 580xx proprietary module flavor (Maxwell / Pascal / Volta / Turing+)
+                    if stack["major_branch"] == 580:
+                        can_use_nvidia_mod = bool(primary_nv["nvidia_legacy_580_supported"])
+
+            if can_use_nvidia_mod:
+                selected_driver = "nvidia_open" if stack["is_open_flavor"] else "nvidia_legacy_580xx"
+                acceleration_tier = "full_nvidia_kms_vulkan"
+                block_nouveau = True
+                block_nvidia = False
+                enable_prime_offload = scan["topology"] == "hybrid_optimus_prime"
+                reasons.append(
+                    f"[{pci_id}] {model} ({arch}): chon {selected_driver} ({stack['module_version']}) da ky X.509 & khop ABI kernel {kernver}."
+                )
+            else:
+                # Pre-Turing GPU on nvidia-modern ISO, OR Base open-source ISO, OR ABI/signature mismatch!
+                block_nvidia = True
+                if stack["present"] and not stack["lockstep_valid"]:
+                    reasons.append(
+                        f"Tu choi nap module nvidia do khong dat kiem tra an toan/ABI: {'; '.join(stack['issues'])}."
+                    )
+                elif stack["present"] and not can_use_nvidia_mod:
+                    reasons.append(
+                        f"[{pci_id}] {model} ({arch}) KHONG nam trong danh sach ho tro cua module nvidia ({stack['module_version']}); KHONG blacklist nouveau de bao toan fallback!"
+                    )
+
+                if arch in ("Blackwell", "Vera_Rubin"):
+                    selected_driver = "simpledrm_llvmpipe"
+                    acceleration_tier = "basic_display_software_rendering"
+                    force_software_gl = True
+                    block_nouveau = True
+                    if arch == "Vera_Rubin" and stack.get("module_version", "").startswith("615."):
+                        reasons.append(
+                            f"[{pci_id}] {model} (Vera Rubin GR100) can nvidia-open >= 620.70.06 (R620); tam dung simpledrm + llvmpipe."
+                        )
+                    else:
+                        reasons.append(
+                            f"[{pci_id}] {model} ({arch}) tren profile khong co nvidia-open tuong thich: dung simpledrm (UEFI GOP) + Mesa llvmpipe; hay dung profile 'nvidia-modern' de co tang toc 3D."
+                        )
+                elif arch in ("Unknown_NVIDIA_PCI_ID", "Fahrenheit_Kelvin_Rankine", "Curie_NV40"):
+                    selected_driver = "simpledrm_llvmpipe"
+                    acceleration_tier = "basic_display_software_rendering"
+                    force_software_gl = True
+                    block_nouveau = True
+                    reasons.append(
+                        f"[{pci_id}] {model} ({arch}): uu tien boot an toan qua simpledrm + Mesa llvmpipe."
+                    )
+                else:
+                    selected_driver = "nouveau_mesa"
+                    acceleration_tier = (
+                        "open_kms_nvk"
+                        if primary_nv["nvk_vulkan_tier"] in ("production", "supported_open")
+                        else "open_kms_gl"
+                    )
+                    block_nouveau = False
+                    reasons.append(
+                        f"[{pci_id}] {model} ({arch}): su dung nouveau KMS + Mesa ({primary_nv['nvk_vulkan_tier']} NVK)."
+                    )
+                    if primary_nv["eol_proprietary_rejected"]:
+                        reasons.append(
+                            f"[{pci_id}] ({arch}): AniTails TU CHOI driver proprietary EOL (470xx/390xx/340xx) de giu nguyen IBT, lockdown va module.sig_enforce=1."
+                        )
+
+    xorg_enabled = bool(boot_opts["xorg_opt_in"])
+    if xorg_enabled:
+        reasons.append(
+            "CANH BAO BAO MAT: Nguoi dung da opt-in anitails.xorg_fallback=1. X11 KHONG co co che co lap cua so nhu Wayland!"
+        )
+
+    return {
+        "schema_version": 1,
+        "kernel_release": kernver,
+        "topology": scan["topology"],
+        "iommu_active": scan["iommu_active"],
+        "boot_options": boot_opts,
+        "selected_driver": selected_driver,
+        "acceleration_tier": acceleration_tier,
+        "force_software_gl": force_software_gl,
+        "block_nvidia_modules": block_nvidia,
+        "block_nouveau_module": block_nouveau,
+        "enable_prime_offload": enable_prime_offload,
+        "allow_egpu_thunderbolt": allow_egpu_thunderbolt,
+        "wayland_default": not xorg_enabled,
+        "xorg_fallback_opt_in": xorg_enabled,
+        "dkms_runtime_invoked": False,
+        "network_invoked": False,
+        "nvidia_stack_check": stack,
+        "reasons": reasons,
+        "warnings": scan["warnings"],
+    }
+
+
+def render_modprobe_conf(decision: dict[str, Any]) -> str:
+    lines = [
+        "# Auto-generated by anitails-gpu-select in volatile RAM (/run/modprobe.d)",
+        "# Conflict-free dynamic dispatch — NEVER hardcodes a permanent nouveau blacklist on disk.",
+        "blacklist nova_core",
+        "blacklist nova_drm",
+    ]
+    if decision["block_nvidia_modules"]:
+        for m in ("nvidia", "nvidia_drm", "nvidia_modeset", "nvidia_uvm", "nvidia_peermem"):
+            lines.append(f"blacklist {m}")
+            lines.append(f"install {m} /bin/false")
+    if decision["block_nouveau_module"]:
+        lines.append("blacklist nouveau")
+        lines.append("install nouveau /bin/false")
+
+    if decision["selected_driver"] in ("nvidia_open", "nvidia_legacy_580xx", "nvidia_headless"):
+        lines.extend([
+            "options nvidia_drm modeset=1 fbdev=1",
+            "options nvidia NVreg_EnableGpuFirmware=1 NVreg_PreserveVideoMemoryAllocations=0 NVreg_TemporaryFilePath=/run/anitails-nvidia-ram NVreg_UseKernelSuspendNotifiers=0",
+            "softdep nvidia post: nvidia-modeset nvidia-uvm nvidia-drm",
+        ])
+    return "\n".join(lines) + "\n"
+
+
+def render_session_env(decision: dict[str, Any]) -> str:
+    lines = [
+        "# Auto-generated by anitails-gpu-select (/run/anitails/gpu.env)",
+        "MOZ_ENABLE_WAYLAND=1",
+    ]
+    if decision["force_software_gl"]:
+        lines.append("LIBGL_ALWAYS_SOFTWARE=1")
+        lines.append("GSK_RENDERER=cairo")
+    elif decision["selected_driver"] == "nouveau_mesa" and decision["nvidia_stack_check"].get("userspace_versions"):
+        # Critical fix: if nvidia-utils is co-installed on nvidia-modern ISO while booted on a Pascal/Maxwell/Kepler GPU,
+        # force GLVND & Vulkan Loader to use Mesa/NVK instead of 10_nvidia.json / nvidia_icd.json!
+        lines.append("__GLX_VENDOR_LIBRARY_NAME=mesa")
+        lines.append("__EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json")
+        lines.append("VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nouveau_icd.x86_64.json:/usr/share/vulkan/icd.d/lvp_icd.x86_64.json")
+    elif decision["selected_driver"] in ("nvidia_open", "nvidia_legacy_580xx"):
+        if decision["enable_prime_offload"]:
+            # Hybrid Optimus: let Intel/AMD iGPU drive GNOME Wayland, keep NVIDIA ready for PRIME offload via switcheroo-control
+            lines.append("ANITAILS_PRIME_AVAILABLE=1")
+        else:
+            lines.append("GBM_BACKEND=nvidia-drm")
+            lines.append("__GLX_VENDOR_LIBRARY_NAME=nvidia")
+    return "\n".join(lines) + "\n"
+
+
+def render_diagnostic_banner(scan: dict[str, Any], decision: dict[str, Any]) -> str:
+    lines = [
+        "=== AniTails Graphics & GPU Diagnostic Summary (Privacy-Redacted) ===",
+        f"Topology          : {scan['topology']} (IOMMU active: {scan['iommu_active']})",
+        f"Selected Path     : {decision['selected_driver']} [{decision['acceleration_tier']}]",
+        f"Display Session   : {'Wayland (default isolated)' if decision['wayland_default'] else 'Xorg Fallback (OPT-IN, REDUCED ISOLATION)'}",
+    ]
+    for g in scan["gpus"]:
+        if g["vendor_id"] == "10de":
+            nv = g["nvidia"]
+            lines.append(
+                f"NVIDIA GPU        : [{g['pci_id']}] [subsys {g['subsystem_id']}] class=0x{g['pci_class']} "
+                f"model='{nv['resolved_model']}' arch={nv['architecture']} bound={g['bound_driver'] or 'none'}"
+            )
+        else:
+            lines.append(
+                f"Display Adapter   : [{g['pci_id']}] [subsys {g['subsystem_id']}] class=0x{g['pci_class']} "
+                f"vendor='{g['vendor_name']}' bound={g['bound_driver'] or 'none'}"
+            )
+    for r in decision["reasons"]:
+        lines.append(f"Policy Note       : {r}")
+    for w in decision["warnings"]:
+        lines.append(f"Hardware Warning  : {w}")
+    lines.append(
+        "Recovery Tip      : Neu man hinh den tren GPU moi/Optimus, khoi dong lai va chon 'AniTails Live (Safe Graphics Fallback - nomodeset)' hoac 'Hybrid Laptop iGPU-Only'."
+    )
+    return DETECT.redact_sensitive("\n".join(lines) + "\n")
+
+
+def apply_runtime_files(root: Path, scan: dict[str, Any], decision: dict[str, Any]) -> None:
+    modprobe_dir = root / "run/modprobe.d"
+    state_dir = root / "run/anitails"
+    nv_ram_dir = root / "run/anitails-nvidia-ram"
+    env_d_dir = root / "run/environment.d"
+
+    modprobe_dir.mkdir(parents=True, exist_ok=True)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    env_d_dir.mkdir(parents=True, exist_ok=True)
+    nv_ram_dir.mkdir(parents=True, exist_ok=True)
+    os.chmod(nv_ram_dir, 0o700)
+
+    (modprobe_dir / "10-anitails-gpu.conf").write_text(render_modprobe_conf(decision), encoding="utf-8")
+    env_txt = render_session_env(decision)
+    (state_dir / "gpu.env").write_text(env_txt, encoding="utf-8")
+    (env_d_dir / "50-anitails-gpu.conf").write_text(env_txt, encoding="utf-8")
+    (state_dir / "gpu-decision.json").write_text(
+        DETECT.redact_sensitive(json.dumps(decision, indent=2, ensure_ascii=False) + "\n"),
+        encoding="utf-8",
+    )
+    (state_dir / "gpu-diagnostic.txt").write_text(render_diagnostic_banner(scan, decision), encoding="utf-8")
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="AniTails dynamic conflict-free GPU selector & fallback guard")
+    ap.add_argument("--root", default="/", help="Target root/sysfs prefix (defaults to /)")
+    ap.add_argument("--db", default=None, help="Override path to nvidia-pci-db.json")
+    ap.add_argument("--cmdline", default=None, help="Override kernel /proc/cmdline string")
+    ap.add_argument("--uname-r", default=None, help="Override running kernel release")
+    ap.add_argument("--dry-run", action="store_true", help="Print JSON decision without writing /run files")
+    args = ap.parse_args(argv)
+
+    root = Path(args.root)
+    kernver = args.uname_r or platform.uname().release
+    if args.cmdline is not None:
+        cmdline = args.cmdline
+    else:
+        proc_cmd = root / "proc/cmdline"
+        cmdline = proc_cmd.read_text(encoding="utf-8", errors="replace") if proc_cmd.is_file() else ""
+
+    boot_opts = parse_cmdline(cmdline)
+    scan = DETECT.scan_gpus(root, Path(args.db) if args.db else None)
+    stack = inspect_installed_nvidia_stack(root, kernver, boot_opts["sig_enforce"])
+    decision = decide_gpu_policy(scan, stack, boot_opts, kernver)
+
+    if not args.dry_run:
+        apply_runtime_files(root, scan, decision)
+
+    sys.stdout.write(DETECT.redact_sensitive(json.dumps(decision, indent=2, ensure_ascii=False)) + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

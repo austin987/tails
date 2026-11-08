@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+"""
+AniTails Optional CUDA / OpenCL Compute Compatibility Verifier (`anitails-cuda-check`)
+======================================================================================
+CUDA and OpenCL are NEVER installed in the AniTails base profile (`archiso/`).
+When the user explicitly selects the optional compute profile (`nvidia-cuda-optional`),
+this tool verifies compatibility across:
+  1. Actual detected NVIDIA GPU PCI ID & Compute Capability (`SM X.Y`)
+  2. Installed NVIDIA kernel/userspace driver branch (`615.x`, `620.x`, `580.x`)
+  3. Installed CUDA Toolkit runtime version (e.g. `13.4.3` vs `12.x`)
+
+Specifically guards against assuming all NVIDIA GPUs run the latest CUDA:
+  - CUDA >= 13.0 DROPPED SM 5.x (Maxwell), SM 6.x (Pascal), and SM 7.0/7.2 (Volta),
+    requiring SM >= 7.5 (Turing+)!
+  - Kepler (SM 3.x) maxed out at CUDA 11.x (and 3.0 at CUDA 10.2); Fermi (SM 2.x) at CUDA 8.0.
+  - Vera Rubin (SM 13.0) requires R620 (>= 620.70.06) + CUDA >= 13.4+.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.machinery
+import importlib.util
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+
+def _load_detect_module():
+    here = Path(__file__).resolve().parent / "anitails-gpu-detect"
+    loader = importlib.machinery.SourceFileLoader("anitails_gpu_detect", str(here))
+    spec = importlib.util.spec_from_loader("anitails_gpu_detect", loader)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+
+DETECT = _load_detect_module()
+
+
+def _parse_sm(sm: str | None) -> tuple[int, int] | None:
+    if not sm or "." not in sm:
+        return None
+    a, b = sm.split(".", 1)
+    if a.isdigit() and b.isdigit():
+        return int(a), int(b)
+    return None
+
+
+def _detect_cuda_version(root: Path, override: str | None) -> str | None:
+    if override:
+        return override
+    ver_json = root / "opt/cuda/version.json"
+    if ver_json.is_file():
+        data = json.loads(ver_json.read_text(encoding="utf-8"))
+        c = data.get("cuda", {}).get("version")
+        if c:
+            return str(c)
+    ver_txt = root / "opt/cuda/version.txt"
+    if ver_txt.is_file():
+        m = re.search(r"(\d+\.\d+(?:\.\d+)?)", ver_txt.read_text(encoding="utf-8", errors="replace"))
+        if m:
+            return m.group(1)
+    return None
+
+
+def _detect_driver_version(root: Path, override: str | None) -> str | None:
+    if override:
+        return override
+    usr_lib = root / "usr/lib"
+    if usr_lib.is_dir():
+        for p in sorted(usr_lib.glob("libcuda.so.*.*")):
+            m = re.match(r"^libcuda\.so\.(\d+\.\d+(?:\.\d+)?)$", p.name)
+            if m:
+                return m.group(1)
+    return None
+
+
+def evaluate_cuda_compatibility(
+    scan: dict[str, Any],
+    cuda_version: str | None,
+    driver_version: str | None,
+    opencl_present: bool,
+) -> dict[str, Any]:
+    nv_gpus = [g for g in scan["gpus"] if g["vendor_id"] == "10de"]
+    if not nv_gpus:
+        return {
+            "status": "SKIPPED",
+            "compatible": False,
+            "cuda_version": cuda_version,
+            "driver_version": driver_version,
+            "opencl_icd_present": opencl_present,
+            "gpu_evaluations": [],
+            "summary": "Khong phat hien GPU NVIDIA (PCI vendor 0x10de) tren he thong.",
+        }
+
+    cuda_major = int(cuda_version.split(".")[0]) if cuda_version and cuda_version.split(".")[0].isdigit() else None
+    drv_major = int(driver_version.split(".")[0]) if driver_version and driver_version.split(".")[0].isdigit() else None
+
+    evals: list[dict[str, Any]] = []
+    all_ok = True
+
+    for g in nv_gpus:
+        nv = g["nvidia"]
+        sm_str = nv["compute_capability"]
+        sm = _parse_sm(sm_str)
+        issues: list[str] = []
+
+        if sm is None:
+            issues.append(f"GPU [{g['pci_id']}] ({nv['architecture']}) khong ho tro CUDA compute capability.")
+        else:
+            if drv_major is None:
+                issues.append("Chua cai libcuda.so (profile base ma nguon mo khong bao gom driver CUDA proprietary).")
+            elif sm >= (13, 0) and drv_major < 620:
+                issues.append(f"GPU Vera Rubin (SM {sm_str}) yeu cau driver >= R620 (620.70.06+), hien tai={driver_version}.")
+            elif sm >= (10, 0) and drv_major < 570:
+                issues.append(f"GPU Blackwell (SM {sm_str}) yeu cau driver nvidia-open >= R570/R615, hien tai={driver_version}.")
+            elif sm < (5, 0):
+                issues.append(
+                    f"GPU {nv['architecture']} (SM {sm_str}) thuoc nhanh EOL (<= 470xx/390xx); AniTails khong dong goi CUDA/driver EOL khong va bao mat."
+                )
+            elif sm < (7, 5) and drv_major >= 590:
+                issues.append(
+                    f"GPU {nv['architecture']} (SM {sm_str}) khong duoc ho tro boi driver R{drv_major} (chi ho tro toi da tren nhanh R580 580.196.07)."
+                )
+
+            if cuda_major is not None:
+                if cuda_major >= 13 and sm < (7, 5):
+                    issues.append(
+                        f"KHONG TUONG THICH: CUDA {cuda_version} da ngung ho tro SM < 7.5! GPU [{g['pci_id']}] {nv['resolved_model']} co SM {sm_str} ({nv['architecture']}) chi ho tro toi da CUDA 12.x tren nhanh R580."
+                    )
+                elif cuda_major >= 12 and sm < (5, 0):
+                    issues.append(
+                        f"KHONG TUONG THICH: CUDA {cuda_version} yeu cau SM >= 5.0, nhung GPU [{g['pci_id']}] co SM {sm_str}."
+                    )
+                if cuda_major >= 13 and drv_major is not None and drv_major < 580:
+                    issues.append(
+                        f"CUDA {cuda_version} yeu cau NVIDIA driver >= R580, hien tai={driver_version}."
+                    )
+
+        gpu_ok = len(issues) == 0 and (driver_version is not None)
+        if not gpu_ok:
+            all_ok = False
+        evals.append({
+            "pci_id": g["pci_id"],
+            "subsystem_id": g["subsystem_id"],
+            "model": nv["resolved_model"],
+            "architecture": nv["architecture"],
+            "compute_capability": sm_str,
+            "cuda_compatible": gpu_ok,
+            "issues": issues,
+        })
+
+    return {
+        "status": "PASS" if all_ok else "INCOMPATIBLE",
+        "compatible": all_ok,
+        "cuda_version": cuda_version,
+        "driver_version": driver_version,
+        "opencl_icd_present": opencl_present,
+        "gpu_evaluations": evals,
+        "summary": (
+            "Tat ca GPU NVIDIA tren he thong tuong thich voi driver va CUDA runtime hien tai."
+            if all_ok
+            else "Mot hoac nhieu GPU KHONG tuong thich voi CUDA/driver hien tai — xem gpu_evaluations[].issues."
+        ),
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="AniTails optional CUDA/OpenCL compute capability verifier")
+    ap.add_argument("--root", default="/", help="Root filesystem prefix")
+    ap.add_argument("--db", default=None, help="Override path to nvidia-pci-db.json")
+    ap.add_argument("--cuda-version", default=None, help="Override CUDA toolkit version for simulation")
+    ap.add_argument("--driver-version", default=None, help="Override NVIDIA driver version for simulation")
+    args = ap.parse_args(argv)
+
+    root = Path(args.root)
+    scan = DETECT.scan_gpus(root, Path(args.db) if args.db else None)
+    cuda_ver = _detect_cuda_version(root, args.cuda_version)
+    drv_ver = _detect_driver_version(root, args.driver_version)
+    ocl = (root / "etc/OpenCL/vendors/nvidia.icd").is_file()
+
+    res = evaluate_cuda_compatibility(scan, cuda_ver, drv_ver, ocl)
+    sys.stdout.write(DETECT.redact_sensitive(json.dumps(res, indent=2, ensure_ascii=False)) + "\n")
+    return 0 if res["compatible"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

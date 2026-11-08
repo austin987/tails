@@ -35,14 +35,35 @@ if [[ -x /usr/bin/dconf ]]; then
     /usr/bin/dconf update
 fi
 
-# 5. Mask forbidden services (swap, sshd, clearnet NTP/DNS resolvers)
+# 5. Mask forbidden services (swap, sshd, clearnet NTP/DNS resolvers, NVIDIA sleep/VRAM-dump/daemon units)
 ln -sf /dev/null /etc/systemd/system/swap.target
 ln -sf /dev/null /etc/systemd/system/sshd.service
 ln -sf /dev/null /etc/systemd/system/sshd.socket
 ln -sf /dev/null /etc/systemd/system/systemd-timesyncd.service
 ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
+ln -sf /dev/null /etc/systemd/system/nvidia-persistenced.service
+ln -sf /dev/null /etc/systemd/system/nvidia-suspend.service
+ln -sf /dev/null /etc/systemd/system/nvidia-hibernate.service
+ln -sf /dev/null /etc/systemd/system/nvidia-resume.service
+ln -sf /dev/null /etc/systemd/system/nvidia-suspend-then-hibernate.service
 
-# 6. Enable mandatory security & desktop units
+# 5b. Neutralize static `blacklist nouveau` & `/var/tmp` VRAM dump path from nvidia-utils(.conf) if present
+#     so `anitails-gpu-select` dynamically dispatches `nvidia` vs `nouveau` vs `simpledrm` in `/run/modprobe.d`
+#     without breaking fallback on pre-Turing GPUs!
+for nv_modconf in /usr/lib/modprobe.d/nvidia-utils.conf /usr/lib/modprobe.d/nvidia-580xx-utils.conf /usr/lib/modprobe.d/nvidia.conf; do
+    if [[ -f "${nv_modconf}" ]]; then
+        cat > "${nv_modconf}" <<'EOF'
+# Neutralized by AniTailszz-99-anitails-finalize.hook:
+# Static `blacklist nouveau` and `NVreg_TemporaryFilePath=/var/tmp` removed to preserve
+# pre-Turing nouveau fallback and prevent VRAM persistence on disk.
+# Dynamic dispatch is managed in /run/modprobe.d/10-anitails-gpu.conf by anitails-gpu-select.
+blacklist nova_core
+blacklist nova_drm
+EOF
+    fi
+done
+
+# 6. Enable mandatory security, GPU fallback guard & desktop units
 mkdir -p /etc/systemd/system/multi-user.target.wants \
          /etc/systemd/system/sysinit.target.wants \
          /etc/systemd/system/local-fs.target.wants
@@ -50,6 +71,7 @@ ln -sf /usr/lib/systemd/system/nftables.service /etc/systemd/system/multi-user.t
 ln -sf /usr/lib/systemd/system/apparmor.service /etc/systemd/system/multi-user.target.wants/apparmor.service
 ln -sf /usr/lib/systemd/system/NetworkManager.service /etc/systemd/system/multi-user.target.wants/NetworkManager.service
 ln -sf /usr/lib/systemd/system/gdm.service /etc/systemd/system/display-manager.service
+ln -sf /etc/systemd/system/anitails-gpu-guard.service /etc/systemd/system/sysinit.target.wants/anitails-gpu-guard.service
 ln -sf /etc/systemd/system/anitails-create-netns.service /etc/systemd/system/sysinit.target.wants/anitails-create-netns.service
 ln -sf /etc/systemd/system/anitails-onion-grater.service /etc/systemd/system/multi-user.target.wants/anitails-onion-grater.service
 ln -sf /etc/systemd/system/run-initramfs.mount /etc/systemd/system/local-fs.target.wants/run-initramfs.mount
@@ -62,3 +84,9 @@ ln -sf /etc/systemd/system/anitails-shutdown-on-media-removal.service /etc/syste
 
 # 8. Remove any stray .pacnew files so image contents remain clean and deterministic
 find /etc -name "*.pacnew" -delete 2>/dev/null || true
+
+# 9. Rebuild initramfs after NIC blocklist generation and NVIDIA modprobe neutralization
+#    so early-boot `modconf`/`kms` hooks inside initramfs-linux-anitails.img match airootfs
+if [[ -x /usr/bin/mkinitcpio ]] && compgen -G "/usr/lib/modules/*/vmlinuz" >/dev/null; then
+    /usr/bin/mkinitcpio -P
+fi

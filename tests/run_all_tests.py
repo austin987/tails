@@ -114,6 +114,53 @@ def probe_blocked_gates() -> list[dict[str, str]]:
         "detail": "No external offline/HSM release signing key provided; refusing to generate a fake release key.",
     })
 
+    # 7. Physical NVIDIA GPU KMS / Wayland / GSP / Fallback / VRAM Validation
+    gpu_probe = subprocess.run(
+        ["python3", str(REPO_ROOT / "archiso/airootfs/usr/local/bin/anitails-gpu-detect")],
+        capture_output=True, text=True,
+    )
+    nv_count = 0
+    if gpu_probe.returncode == 0:
+        try:
+            nv_count = json.loads(gpu_probe.stdout).get("nvidia_gpu_count", 0)
+        except json.JSONDecodeError:
+            nv_count = 0
+
+    if nv_count > 0:
+        gates.append({
+            "id": "GATE-NVIDIA-PHYSICAL-GPU-KMS",
+            "severity": "P1",
+            "status": "SKIPPED",
+            "command": "anitails-gpu-detect && dmesg | grep -E 'nvidia|nouveau|drm'",
+            "detail": f"Detected {nv_count} physical NVIDIA PCI device(s) on host, but live ISO boot/VFIO KMS test was not executed.",
+        })
+    else:
+        gates.append({
+            "id": "GATE-NVIDIA-PHYSICAL-GPU-KMS",
+            "severity": "P1",
+            "status": "BLOCKED",
+            "command": "Live boot / VFIO PCIe passthrough on physical NVIDIA GPUs (Tesla NV50..Blackwell/Rubin)",
+            "detail": "Container /sys/bus/pci/devices has 0 physical NVIDIA GPUs (0x10de). Note: QEMU virtual GPUs (virtio/qxl/bochs) DO NOT prove real NVIDIA GPU functionality.",
+        })
+
+    # 8. Hybrid Optimus Laptop MUX / External DisplayPort-HDMI & Thunderbolt eGPU Hardware Gate
+    gates.append({
+        "id": "GATE-NVIDIA-HYBRID-OPTIMUS-AND-EGPU",
+        "severity": "P1",
+        "status": "SKIPPED",
+        "command": "Boot base & nvidia-modern ISO on Intel/AMD+NVIDIA Optimus laptop + HDMI/DP + IOMMU Thunderbolt eGPU",
+        "detail": "Requires physical hybrid Optimus laptop (MUXless & MUXed) and IOMMU-enabled Thunderbolt eGPU enclosure.",
+    })
+
+    # 9. Non-x86_64 NVIDIA Jetson (Orin/Thor) & Grace ARM64 Target Gate
+    gates.append({
+        "id": "GATE-ARM64-JETSON-GRACE",
+        "severity": "P2",
+        "status": "SKIPPED",
+        "command": "Architecture feasibility study only (x86_64 ISO does not boot on aarch64 Tegra/Jetson/Grace)",
+        "detail": "Separate aarch64 target documented in docs/NVIDIA_COMPATIBILITY.md; requires user confirmation of exact Jetson/Grace board & L4T QSPI firmware before any ARM64 image build.",
+    })
+
     return gates
 
 

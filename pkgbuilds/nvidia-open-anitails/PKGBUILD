@@ -1,0 +1,100 @@
+# Maintainer: AniTails Security Engineering (Independent Arch Derivative)
+# Package: Pre-compiled, build-time X.509-signed NVIDIA Open GPU Kernel Modules
+# Target Kernel: linux-anitails 7.3.3-1 (7.3.3-anitails1)
+# Supported Architectures: Turing (TU10x/TU11x), Ampere (GA100/GA10x), Ada Lovelace (AD10x),
+#                          Hopper (GH100), Blackwell (GB100/GB102/GB20x/GB10/B200/B300/GB300).
+#                          (Note: Vera Rubin GR100 10de:3041 requires bump to >= 620.70.06 once
+#                           Arch [extra] promotes nvidia-utils 620.x).
+#
+# SECURITY & ARCHITECTURAL INVARIANTS:
+# 1. Pre-compiled at ISO build time — ZERO `dkms`, `gcc`, or network access in live session!
+# 2. Strictly version-locked to `nvidia-utils=${pkgver}` and GSP firmware (`gsp_*.bin`).
+# 3. Signed with ephemeral ISO build module key (`sign-file sha512`) so `module.sig_enforce=1`,
+#    `lockdown=integrity`, and `CONFIG_X86_KERNEL_IBT=y` remain 100% enabled!
+# 4. Kernel modules here are Dual MIT/GPL-2.0-only, while required runtime userspace
+#    (`nvidia-utils`) and GSP firmware (`gsp_tu10x.bin`, `gsp_ga10x.bin`) are proprietary
+#    (`LicenseRef-NVIDIA-Driver-License-Agreement`).
+
+pkgname=nvidia-open-anitails
+pkgver=615.78.08
+pkgrel=1
+_kernpkgver=7.3.3
+pkgdesc="Pre-compiled & signed NVIDIA open GPU kernel modules for linux-anitails ${_kernpkgver} (Turing+)"
+arch=('x86_64')
+url="https://github.com/NVIDIA/open-gpu-kernel-modules"
+license=('MIT AND GPL-2.0-only')
+depends=(
+  "linux-anitails=${_kernpkgver}"
+  "nvidia-utils=${pkgver}"
+  'libglvnd'
+)
+makedepends=(
+  "linux-anitails-headers=${_kernpkgver}"
+  'bc'
+  'kmod'
+  'libelf'
+  'openssl'
+  'pahole'
+  'zstd'
+)
+provides=('NVIDIA-MODULE')
+conflicts=('nvidia' 'nvidia-open' 'nvidia-open-dkms' 'nvidia-580xx-anitails' 'nvidia-580xx-dkms')
+options=('!strip' '!debug')
+source=(
+  "open-gpu-kernel-modules-${pkgver}.tar.gz::https://codeload.github.com/NVIDIA/open-gpu-kernel-modules/tar.gz/refs/tags/${pkgver}"
+)
+# Verified upstream tarball SHA-256 (fetched & audited 2026-11-08; Linux 7.3 conftest verified)
+sha256sums=(
+  'eac0ecd52facab28ad2963cf7e03ae8d2289d596ad590c703b5f72d65899e2bf'
+)
+
+prepare() {
+  cd "${srcdir}/open-gpu-kernel-modules-${pkgver}"
+  # Reproducible build metadata overrides (aligned with official Arch nvidia-utils PKGBUILD)
+  sed -i "s/^  HOSTNAME.*/  HOSTNAME = echo anitails/" utils.mk
+  sed -i "s/^WHOAMI.*/WHOAMI = echo builder/" utils.mk
+  sed -i "s/^DATE.*/DATE = date -u -d @${SOURCE_DATE_EPOCH:-1794096000}/" utils.mk
+}
+
+build() {
+  local _kernver
+  _kernver="$(</usr/lib/modules/${_kernpkgver}-anitails1/build/version)"
+  cd "${srcdir}/open-gpu-kernel-modules-${pkgver}"
+
+  # Exclude InfiniBand RDMA peer-memory module (`nvidia-peermem`) to minimize kernel attack surface
+  make SYSSRC="/usr/lib/modules/${_kernver}/build" \
+       SYSOUT="/usr/lib/modules/${_kernver}/build" \
+       IGNORE_PREEMPT_RT_PRESENCE=1 \
+       NV_EXCLUDE_BUILD_MODULES="nvidia-peermem" \
+       modules
+}
+
+package() {
+  local _kernver _builddir _extradir
+  _kernver="$(</usr/lib/modules/${_kernpkgver}-anitails1/build/version)"
+  _builddir="/usr/lib/modules/${_kernver}/build"
+  _extradir="${pkgdir}/usr/lib/modules/${_kernver}/extramodules"
+
+  cd "${srcdir}/open-gpu-kernel-modules-${pkgver}"
+  install -dm755 "${_extradir}"
+
+  for _ko in kernel-open/nvidia.ko kernel-open/nvidia-modeset.ko kernel-open/nvidia-drm.ko kernel-open/nvidia-uvm.ko; do
+    install -m644 "${_ko}" "${_extradir}/$(basename "${_ko}")"
+    # Sign out-of-tree module before compression so `module.sig_enforce=1` passes without weakening lockdown!
+    if [[ -n "${ANITAILS_KMOD_KEY:-}" && -n "${ANITAILS_KMOD_CERT:-}" ]]; then
+      "${_builddir}/scripts/sign-file" sha512 "${ANITAILS_KMOD_KEY}" "${ANITAILS_KMOD_CERT}" \
+        "${_extradir}/$(basename "${_ko}")"
+    elif [[ -f "${_builddir}/certs/signing_key.pem" && -f "${_builddir}/certs/signing_key.x509" ]]; then
+      "${_builddir}/scripts/sign-file" sha512 \
+        "${_builddir}/certs/signing_key.pem" \
+        "${_builddir}/certs/signing_key.x509" \
+        "${_extradir}/$(basename "${_ko}")"
+    else
+      echo "ERROR: Refusing to package unsigned nvidia-open module (module.sig_enforce=1 is mandatory)!" >&2
+      return 1
+    fi
+    zstd --rm -19 -q "${_extradir}/$(basename "${_ko}")"
+  done
+
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

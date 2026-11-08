@@ -54,3 +54,32 @@ CONFIG_NFT_REJECT_INET=m
 CONFIG_NFT_LOG=m
 CONFIG_NFT_COUNTER=m
 CONFIG_NFT_SOCKET=m
+
+# --- Module Signature Enforcement, Intel CET/IBT & Hardware IOMMU DMA Protection ---
+CONFIG_MODULE_SIG=y
+CONFIG_MODULE_SIG_FORCE=y
+CONFIG_MODULE_SIG_ALL=y
+CONFIG_MODULE_SIG_SHA512=y
+CONFIG_X86_KERNEL_IBT=y
+CONFIG_IOMMU_SUPPORT=y
+CONFIG_INTEL_IOMMU=y
+CONFIG_INTEL_IOMMU_DEFAULT_ON=y
+CONFIG_AMD_IOMMU=y
+
+# --- Display Fallback (simpledrm) & Conflict-Free GPU KMS Baseline ---
+# Required by ArchWiki NVIDIA#Custom_kernel: CONFIG_DRM_SIMPLEDRM=y guarantees
+# UEFI GOP / BIOS VESA fallback display even if GPU KMS modules fail or are blocked.
+# Experimental Rust Nova (`CONFIG_NOVA_CORE`) is explicitly disabled on Linux 7.3
+# to avoid PCI probe races against `nouveau` and `nvidia-open`.
+CONFIG_SYSFB=y
+CONFIG_SYSFB_SIMPLEFB=y
+CONFIG_DRM=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_DRM_SIMPLEDRM=y
+CONFIG_DRM_NOUVEAU=m
+CONFIG_DRM_NOUVEAU_BACKLIGHT=y
+CONFIG_DRM_I915=m
+CONFIG_DRM_XE=m
+CONFIG_DRM_AMDGPU=m
+# CONFIG_NOVA_CORE is not set
+# CONFIG_DRM_NOVA is not set
