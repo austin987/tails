@@ -54,8 +54,18 @@ for iso in "${ISO_FILES[@]}"; do
     fi
 
     echo "[verify-iso] Auditing ISO 9660 structure & El Torito boot catalog: $(basename "${iso}") (${size_bytes} bytes)"
-    # Note: xorriso exits 5 on benign hybrid MBR/GPT/future-timestamp WARNINGs unless -return_with SORRY 32 is set
-    iso_listing="$(xorriso -report_about SORRY -return_with SORRY 32 -indev "${iso}" -find / -print 2>/dev/null)"
+    # GNU xorriso returns exit code 5 when libisofs emits benign WARNINGs on hybrid MBR+GPT El Torito ISOs;
+    # exit codes 1..4 indicate actual SORRY/FAILURE/FATAL/ABORT errors.
+    xorriso_err="$(mktemp)"
+    xorriso_rc=0
+    iso_listing="$(env -u SOURCE_DATE_EPOCH xorriso -indev "${iso}" -find / -print 2>"${xorriso_err}")" || xorriso_rc=$?
+    if (( xorriso_rc != 0 && xorriso_rc != 5 )) || [[ -z "${iso_listing}" ]]; then
+        cat "${xorriso_err}" >&2 || true
+        rm -f "${xorriso_err}"
+        echo "FAIL: xorriso failed to read ISO 9660 tree of ${iso} (exit ${xorriso_rc})!" >&2
+        exit 1
+    fi
+    rm -f "${xorriso_err}"
 
     for required_path in \
         "/EFI/BOOT/BOOTX64.EFI" \
