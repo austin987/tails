@@ -89,7 +89,16 @@ class TestGitHubActionsIsoWorkflow(unittest.TestCase):
         self.assertNotIn("SigLevel = Never", raw_txt)
 
     def test_ci_scripts_syntax_and_profile_validation(self) -> None:
-        for rel in ("scripts/ci-build-local-repo.sh", "scripts/ci-verify-iso.sh", "scripts/build-iso.sh"):
+        for rel in (
+            "scripts/ci-build-local-repo.sh",
+            "scripts/ci-verify-iso.sh",
+            "scripts/build-iso.sh",
+            "scripts/sign-release.sh",
+            "archiso/profiledef.sh",
+            "archiso/airootfs/usr/local/lib/anitails-alpm-finalize",
+            "archiso/airootfs/usr/local/lib/anitails-unblock-network",
+            "archiso/airootfs/usr/local/lib/anitails-spoof-mac",
+        ):
             script = REPO_ROOT / rel
             self.assertTrue(script.is_file(), f"Missing {rel}")
             syn = subprocess.run(["bash", "-n", str(script)], capture_output=True, text=True)

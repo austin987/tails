@@ -79,7 +79,7 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends nftables python3 python3-yaml shellcheck
 
-      - name: Audit shell syntax across build & live runtime scripts
+      - name: Audit shell & Python syntax across build & live runtime scripts
         run: |
           for sh_script in \
             scripts/build-iso.sh \
@@ -89,10 +89,15 @@ jobs:
             archiso/profiledef.sh \
             archiso/airootfs/usr/local/lib/anitails-alpm-finalize \
             archiso/airootfs/usr/local/lib/anitails-unblock-network \
-            archiso/airootfs/usr/local/lib/anitails-spoof-mac \
-            archiso/airootfs/usr/local/bin/anitails-gpu-select; do
+            archiso/airootfs/usr/local/lib/anitails-spoof-mac; do
             bash -n "${sh_script}"
           done
+          python3 -m py_compile \
+            archiso/airootfs/usr/local/bin/anitails-gpu-detect \
+            archiso/airootfs/usr/local/bin/anitails-gpu-select \
+            archiso/airootfs/usr/local/bin/anitails-cuda-check \
+            scripts/verify-nvidia-lockstep.py \
+            scripts/generate-sbom-and-checksums.py
 
       - name: Validate nftables default-drop Tor firewall via kernel Netlink
         run: |
