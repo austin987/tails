@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# AniTails Offline Bubblewrap Sandbox Wrapper for Media & Document Viewers
+# Used for Celluloid (replacing Totem per Tails 7.10), Papers (PDF), and Loupe (Images):
+# Enforces `--unshare-net` (zero network interfaces, not even Tor SOCKS!) so malicious
+# media/PDF exploits cannot exfiltrate files over the network.
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 <binary> [args...]" >&2
+    exit 2
+fi
+
+APP_BIN="$1"
+shift
+
+exec /usr/bin/bwrap \
+    --die-with-parent \
+    --new-session \
+    --unshare-net \
+    --unshare-ipc \
+    --unshare-pid \
+    --unshare-uts \
+    --ro-bind /usr /usr \
+    --symlink usr/lib /lib \
+    --symlink usr/lib /lib64 \
+    --symlink usr/bin /bin \
+    --ro-bind /etc/fonts /etc/fonts \
+    --ro-bind /etc/localtime /etc/localtime \
+    --proc /proc \
+    --dev /dev \
+    --tmpfs /tmp \
+    --ro-bind-try "${HOME}/Tor Browser" "${HOME}/Tor Browser" \
+    --bind-try "${HOME}/Persistent" "${HOME}/Persistent" \
+    --ro-bind-try "/run/user/$(id -u)/wayland-0" "/run/user/$(id -u)/wayland-0" \
+    --ro-bind-try "/run/user/$(id -u)/pipewire-0" "/run/user/$(id -u)/pipewire-0" \
+    --ro-bind-try "/run/user/$(id -u)/pulse" "/run/user/$(id -u)/pulse" \
+    -- "${APP_BIN}" "$@"

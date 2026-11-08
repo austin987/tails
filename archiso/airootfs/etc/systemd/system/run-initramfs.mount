@@ -1,0 +1,14 @@
+[Unit]
+Description=Extracted Initramfs RAM Pivot Directory (/run/initramfs with exec)
+ConditionPathIsSymbolicLink=!/run/initramfs
+DefaultDependencies=no
+Before=anitails-initramfs-restore.service local-fs.target
+
+[Mount]
+What=tmpfs
+Where=/run/initramfs
+Type=tmpfs
+Options=mode=755,exec,nosuid,nodev
+
+[Install]
+WantedBy=local-fs.target

@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# Create and lock down isolated network namespaces for Tor Browser,
+# Bridge Configurator (torlaunch), OnionCircuits, and OnionShare.
+# Ported from Tails usr/local/lib/tails-create-netns to native nftables + iproute2 on Arch Linux.
+set -euo pipefail
+
+GUEST_VETH="veth0"
+
+inc_ipv4() {
+    local ip="$1"
+    local prefix="${ip%.*}"
+    local host="${ip##*.}"
+    printf "%s.%d\n" "${prefix}" "$((host + 1))"
+}
+
+delete_netns() {
+    local name="$1"
+    local host_veth="veth-${name}"
+    /usr/bin/ip link del "${host_veth}" 2>/dev/null || true
+    /usr/bin/ip netns del "${name}" 2>/dev/null || true
+}
+
+create_netns() {
+    local name="$1"
+    local host_ip="$2"
+    local exposed_ports="$3" # space-separated list of guest_port:host_port
+    local host_veth="veth-${name}"
+    local guest_ip
+    guest_ip="$(inc_ipv4 "${host_ip}")"
+
+    if (( ${#host_veth} >= 16 )); then
+        echo "ERROR: veth interface name too long: ${host_veth}" >&2
+        exit 2
+    fi
+
+    delete_netns "${name}"
+    /usr/bin/ip netns add "${name}"
+    /usr/bin/ip netns exec "${name}" /usr/bin/ip link set dev lo up
+
+    /usr/bin/ip link add "${host_veth}" type veth peer name "${GUEST_VETH}"
+    /usr/bin/ip link set "${GUEST_VETH}" netns "${name}"
+
+    /usr/bin/ip addr add "${host_ip}/30" dev "${host_veth}"
+    /usr/bin/ip link set dev "${host_veth}" up
+
+    /usr/bin/ip netns exec "${name}" /usr/bin/ip addr add "${guest_ip}/30" dev "${GUEST_VETH}"
+    /usr/bin/ip netns exec "${name}" /usr/bin/ip link set dev "${GUEST_VETH}" up
+
+    # Disable IPv6 and IP forwarding on both ends; allow route_localnet inside netns for 127.0.0.1 DNAT
+    /usr/bin/sysctl -qw "net.ipv4.ip_forward=0"
+    /usr/bin/sysctl -qw "net.ipv4.conf.${host_veth}.forwarding=0"
+    /usr/bin/sysctl -qw "net.ipv6.conf.${host_veth}.disable_ipv6=1"
+
+    /usr/bin/ip netns exec "${name}" /usr/bin/sysctl -qw net.ipv4.ip_forward=0
+    /usr/bin/ip netns exec "${name}" /usr/bin/sysctl -qw net.ipv4.conf.all.forwarding=0
+    /usr/bin/ip netns exec "${name}" /usr/bin/sysctl -qw net.ipv4.conf.lo.forwarding=0
+    /usr/bin/ip netns exec "${name}" /usr/bin/sysctl -qw net.ipv4.conf.all.route_localnet=1
+    /usr/bin/ip netns exec "${name}" /usr/bin/sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+    /usr/bin/ip netns exec "${name}" /usr/bin/sysctl -qw net.ipv6.conf.default.disable_ipv6=1
+
+    # Build atomic inside-netns nftables ruleset:
+    # - Drop ALL IPv6
+    # - Only allow TCP to explicitly exposed host_ip:host_port (via 127.0.0.1:guest_port DNAT or direct host_ip)
+    # - Forbid IP spoofing and block all UDP/ICMP egress from netns
+    local dnat_rules=""
+    local allow_rules=""
+    local pair gport hport
+    for pair in ${exposed_ports}; do
+        gport="${pair%%:*}"
+        hport="${pair##*:}"
+        dnat_rules+="        oifname \"lo\" ip daddr 127.0.0.1 tcp dport ${gport} dnat to ${host_ip}:${hport}"$'\n'
+        allow_rules+="        oifname \"${GUEST_VETH}\" ip saddr ${guest_ip} ip daddr ${host_ip} tcp dport ${hport} accept"$'\n'
+    done
+
+    /usr/bin/ip netns exec "${name}" /usr/bin/nft -f - <<EOF
+flush ruleset
+table inet netns_filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+        ct state invalid drop
+        meta nfproto ipv6 drop
+        iifname "lo" accept
+        iifname "${GUEST_VETH}" ip saddr ${host_ip} ip daddr ${guest_ip} ct state established accept
+    }
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+    }
+    chain output {
+        type filter hook output priority filter; policy drop;
+        ct state invalid drop
+        meta nfproto ipv6 reject
+        oifname "lo" ip daddr 127.0.0.0/8 accept
+        ct state established accept
+${allow_rules}
+        reject with icmpx type port-unreachable
+    }
+}
+table ip netns_nat {
+    chain output {
+        type nat hook output priority dstnat; policy accept;
+${dnat_rules}
+    }
+    chain postrouting {
+        type nat hook postrouting priority srcnat; policy accept;
+        oifname "${GUEST_VETH}" masquerade
+    }
+}
+EOF
+}
+
+case "${1:-}" in
+    start)
+        /usr/bin/modprobe veth || true
+        create_netns "tbb"        "10.200.1.1"  "9050:9050 9051:9051"
+        create_netns "onioncircs" "10.200.1.5"  "9051:9051"
+        create_netns "torlaunch"  "10.200.1.9"  "9051:9051"
+        create_netns "onionshare" "10.200.1.13" "9050:9065 9051:9051"
+        ;;
+    stop)
+        delete_netns "tbb"
+        delete_netns "onioncircs"
+        delete_netns "torlaunch"
+        delete_netns "onionshare"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}" >&2
+        exit 2
+        ;;
+esac

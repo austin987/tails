@@ -1,0 +1,21 @@
+# Maintainer: AniTails Security Engineering
+pkgname=anitails-udev-watchdog
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Emergency kernel uevent block-device removal watchdog for AniTails RAM wipe'
+arch=('x86_64')
+license=('GPL-2.0-or-later')
+depends=('glibc')
+source=('anitails-udev-watchdog.c' 'Makefile')
+sha256sums=(
+  'fda7468e947846598e16d44a20aba9137d6bc822ba3032026fcdb7bde0aed2a2'
+  '095b29b092448b31e7f8aa8835bc0b07f9698ba0dea7859701c64731305d3ca9'
+)
+
+build() {
+  make
+}
+
+package() {
+  make DESTDIR="${pkgdir}" PREFIX=/usr install
+}

@@ -1,0 +1,19 @@
+[Unit]
+Description=AniTails Tor ControlPort Least-Privilege Filter Proxy (onion-grater)
+After=anitails-create-netns.service nftables.service
+Requires=anitails-create-netns.service nftables.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/lib/anitails-onion-grater --listen-host 0.0.0.0 --listen-port 9051 --control-host 127.0.0.1 --control-port 9052 --cookie-file /run/tor/control.authcookie --profile-dir /etc/onion-grater.d
+Restart=on-failure
+RestartSec=2s
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadOnlyPaths=/etc/onion-grater.d /run/tor
+
+[Install]
+WantedBy=multi-user.target

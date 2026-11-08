@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Executed by systemd-shutdown inside /run/initramfs during poweroff/reboot/halt.
+# Wipes writable tmpfs branches, closes LUKS2 mappings, and drops page/dentry/inode
+# caches so freed physical pages are overwritten via kernel init_on_free=1 + page_poison=1.
+set +e
+
+echo "[AniTails] Closing encrypted volumes and wiping session memory caches..." > /dev/console 2>/dev/null
+
+# Close any remaining dm-crypt mappings (e.g., AniTailsData_unlocked)
+if [[ -x /usr/bin/cryptsetup ]]; then
+    for dm in /dev/mapper/*; do
+        base="$(basename "${dm}")"
+        if [[ "${base}" != "control" ]]; then
+            /usr/bin/umount -l "${dm}" 2>/dev/null
+            /usr/bin/cryptsetup close "${base}" 2>/dev/null
+        fi
+    done
+fi
+
+# Delete writable Archiso cowspace upper/work directories so tmpfs frees pages
+rm -rf /oldroot/run/archiso/cowspace/* /run/archiso/cowspace/* 2>/dev/null
+
+# Unmount oldroot and cowspace tmpfs
+/usr/bin/umount -R /oldroot 2>/dev/null
+
+# Flush and drop kernel pagecache, dentries, and inodes (triggers init_on_free=1 zeroing)
+sync
+echo 3 > /proc/sys/vm/drop_caches 2>/dev/null
+sync
+exit 0

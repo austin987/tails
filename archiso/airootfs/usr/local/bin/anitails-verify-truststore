@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""
+AniTails Trust-Store Cryptographic Auditor (`anitails-verify-truststore`).
+
+Verifies in ~10ms (pure-Python ASN.1 DER SubjectPublicKeyInfo + SHA-256 parser, with
+OpenSSL fallback for `BEGIN TRUSTED CERTIFICATE` auxiliary blocks) that a PEM CA bundle
+does NOT trust:
+  1. Any distrusted eMudhra or Sectigo `AAA Certificate Services` cross-signing root SHA-256
+  2. Any of the 16 compromised intermediate CA certificate SHA-256s
+  3. Any of the 8 compromised P-384 intermediate SubjectPublicKeyInfo (SPKI) SHA-256s
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import hashlib
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+PEM_BLOCK_RE = re.compile(
+    r"-----BEGIN (?:TRUSTED )?CERTIFICATE-----.*?-----END (?:TRUSTED )?CERTIFICATE-----",
+    re.DOTALL,
+)
+
+
+def _read_tlv(buf: bytes, off: int) -> Tuple[int, int, int]:
+    tag = buf[off]
+    l0 = buf[off + 1]
+    if l0 < 0x80:
+        return tag, off + 2, off + 2 + l0
+    nb = l0 & 0x7F
+    ln = int.from_bytes(buf[off + 2 : off + 2 + nb], "big")
+    return tag, off + 2 + nb, off + 2 + nb + ln
+
+
+def extract_der_spki_and_sha256(der: bytes) -> Tuple[str, str]:
+    cert_sha256 = hashlib.sha256(der).hexdigest().upper()
+    _, tbs_hdr, _ = _read_tlv(der, 0)
+    _, f_off, _ = _read_tlv(der, tbs_hdr)
+    tag, _, nxt = _read_tlv(der, f_off)
+    if tag == 0xA0:  # Optional [0] EXPLICIT Version
+        f_off = nxt
+    # Skip serialNumber, signature, issuer, validity, subject
+    for _ in range(5):
+        _, _, f_off = _read_tlv(der, f_off)
+    _, _, spki_end = _read_tlv(der, f_off)
+    spki_sha256 = hashlib.sha256(der[f_off:spki_end]).hexdigest().upper()
+    return cert_sha256, spki_sha256
+
+
+def compute_cert_and_spki_sha256(pem_block: str) -> Tuple[str, str, bool]:
+    if "BEGIN TRUSTED CERTIFICATE" in pem_block:
+        txt_proc = subprocess.run(
+            ["openssl", "x509", "-trustout", "-text", "-noout"],
+            input=pem_block.encode("ascii"),
+            capture_output=True,
+            check=True,
+        )
+        txt = txt_proc.stdout.decode("utf-8", errors="replace")
+        if "Rejected Uses:" in txt and "TLS Web Server Authentication" in txt:
+            return "", "", True
+        der_proc = subprocess.run(
+            ["openssl", "x509", "-outform", "DER"],
+            input=pem_block.encode("ascii"),
+            capture_output=True,
+            check=True,
+        )
+        der = der_proc.stdout
+    else:
+        b64 = "".join(ln.strip() for ln in pem_block.splitlines() if not ln.startswith("-----"))
+        der = base64.b64decode(b64)
+
+    cert_sha256, spki_sha256 = extract_der_spki_and_sha256(der)
+    return cert_sha256, spki_sha256, False
+
+
+def scan_bundle(bundle_path: Path, indicators_path: Path) -> Tuple[int, List[str]]:
+    indicators = json.loads(indicators_path.read_text(encoding="utf-8"))
+    bad_cert_hashes: Dict[str, str] = {
+        r["sha256"].upper(): f"{r['name']} ({r.get('operator', r.get('role', 'distrusted'))})"
+        for r in indicators["distrusted_roots"]
+    }
+    for icert in indicators.get("compromised_intermediate_cert_sha256", []):
+        bad_cert_hashes[icert["sha256"].upper()] = f"{icert['name']} (Issued by {icert['issued_by']})"
+
+    bad_spkis: Dict[str, str] = {
+        r["spki_sha256"].upper(): f"Root SPKI: {r['name']}"
+        for r in indicators["distrusted_roots"]
+        if "spki_sha256" in r
+    }
+    comp_spkis = indicators.get("compromised_intermediate_spki_sha256", {})
+    if isinstance(comp_spkis, dict):
+        for name, spki in comp_spkis.items():
+            bad_spkis[spki.upper()] = f"Compromised Intermediate SPKI: {name}"
+    for item in indicators.get("compromised_intermediate_spkis", []):
+        bad_spkis[item["spki_sha256"].upper()] = f"Compromised Intermediate SPKI: {item['name']}"
+
+    raw = bundle_path.read_text(encoding="utf-8", errors="replace")
+    blocks = [m.group(0) for m in PEM_BLOCK_RE.finditer(raw)]
+    if not blocks:
+        return 0, [f"EMPTY_BUNDLE: no PEM certificates found in {bundle_path}"]
+
+    violations: List[str] = []
+    for idx, block in enumerate(blocks):
+        cert_sha256, spki_sha256, is_explicit_reject = compute_cert_and_spki_sha256(block)
+        if is_explicit_reject:
+            continue
+        if cert_sha256 in bad_cert_hashes:
+            violations.append(
+                f"Cert #{idx} matches distrusted SHA-256 {cert_sha256}: {bad_cert_hashes[cert_sha256]}"
+            )
+        if spki_sha256 in bad_spkis:
+            violations.append(
+                f"Cert #{idx} matches distrusted/compromised SPKI {spki_sha256}: {bad_spkis[spki_sha256]}"
+            )
+
+    return len(blocks), violations
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Verify CA bundle rejects eMudhra & Sectigo cross-signed roots/SPKIs")
+    parser.add_argument(
+        "--bundle",
+        default="/etc/ssl/certs/ca-certificates.crt",
+        help="Path to PEM CA bundle to audit",
+    )
+    parser.add_argument(
+        "--indicators",
+        default="/usr/share/anitails/ca-distrust/emudhra-indicators.json",
+        help="Path to emudhra-indicators.json",
+    )
+    args = parser.parse_args()
+
+    count, violations = scan_bundle(Path(args.bundle), Path(args.indicators))
+    if violations:
+        print(f"FAIL: {len(violations)} trust-store violation(s) in {args.bundle} ({count} certs scanned):", file=sys.stderr)
+        for v in violations:
+            print(f"  - {v}", file=sys.stderr)
+        return 1
+
+    print(f"PASS: Scanned {count} certificate(s) in {args.bundle}; 0 eMudhra/AAA-cross-sign violations found.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

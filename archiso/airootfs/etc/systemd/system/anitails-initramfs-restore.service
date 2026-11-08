@@ -1,0 +1,13 @@
+[Unit]
+Description=Prepare /run/initramfs for Shutdown RAM Wipe Pivot
+Requires=run-initramfs.mount
+After=run-initramfs.mount
+ConditionPathExists=!/run/initramfs/shutdown
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/anitails-initramfs-restore
+
+[Install]
+WantedBy=multi-user.target

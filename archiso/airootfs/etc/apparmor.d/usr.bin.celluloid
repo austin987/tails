@@ -1,0 +1,25 @@
+#include <tunables/global>
+
+# Arch Linux AppArmor confinement for Celluloid media player (replaces Totem per Tails 7.10)
+profile anitails_celluloid /usr/bin/celluloid flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/audio>
+  #include <abstractions/fonts>
+  #include <abstractions/gnome>
+
+  # Strictly forbid all network access inside media player
+  deny network inet,
+  deny network inet6,
+  deny network raw,
+  deny network packet,
+
+  /usr/bin/celluloid mr,
+  owner @{HOME}/Tor\ Browser/** r,
+  owner @{HOME}/Persistent/** r,
+
+  deny @{HOME}/.gnupg/** rwx,
+  deny @{HOME}/.ssh/** rwx,
+  deny @{HOME}/.electrum/** rwx,
+  deny @{HOME}/.config/keepassxc/** rwx,
+  deny /usr/bin/sudo rwx,
+}

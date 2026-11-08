@@ -1,0 +1,43 @@
+# Maintainer: AniTails Security Engineering
+# Official Tor Browser 16.0 (Firefox 153.6.0esr) matching Tails 7.16 (2026-10-30).
+# Fixes CVE-2026-113470 (MFSA 2026-112 / Bug 2084311: OneCRL initialization for eMudhra revocations).
+#
+# CRITICAL ANTI-TOR-OVER-TOR & FINGERPRINT INVARIANTS:
+# 1. Strips bundled `Browser/TorBrowser/Tor` directory so Tor Browser can NEVER spawn
+#    a second Tor client over system Tor.
+# 2. Does NOT add or remove extensions inside `omni.ja` or `Browser/TorBrowser/Data/Browser/profile.default/extensions`
+#    (preserves official Tor Browser web fingerprint).
+
+pkgname=tor-browser-anitails
+pkgver=16.0
+pkgrel=1
+pkgdesc='Official Tor Browser 16.0 configured to use AniTails system Tor without Tor-over-Tor'
+arch=('x86_64')
+url='https://www.torproject.org/projects/torbrowser.html.en'
+license=('MPL-2.0')
+depends=('alsa-lib' 'dbus-glib' 'fontconfig' 'freetype2' 'gtk3' 'libxcb' 'libxtst' 'nss' 'ttf-dejavu')
+options=('!strip')
+source=(
+  "https://dist.torproject.org/torbrowser/${pkgver}/tor-browser-linux-x86_64-${pkgver}.tar.xz"
+  "https://dist.torproject.org/torbrowser/${pkgver}/tor-browser-linux-x86_64-${pkgver}.tar.xz.asc"
+)
+# Official SHA-256 from https://dist.torproject.org/torbrowser/16.0/sha256sums-signed-build.txt
+sha256sums=(
+  'de3370b67389c2848738cdd515bb2e3b232a4ae93290eae74185c4c43a291a24'
+  'SKIP'
+)
+# Official Tor Browser Developers signing key
+validpgpkeys=('EF6E286DDA85EA2A4BA7DE684E2C6E8793298290')
+
+package() {
+  install -dm0755 "${pkgdir}/opt/tor-browser"
+  cp -a "${srcdir}/tor-browser/Browser" "${pkgdir}/opt/tor-browser/"
+
+  # Remove bundled Tor daemon & PT binaries to guarantee zero Tor-over-Tor
+  rm -rf "${pkgdir}/opt/tor-browser/Browser/TorBrowser/Tor"
+  rm -rf "${pkgdir}/opt/tor-browser/Browser/TorBrowser/Docs"
+
+  # Ensure required runtime directories exist as expected by Tor Browser
+  install -dm0755 "${pkgdir}/opt/tor-browser/Browser/TorBrowser/Data/Browser/Caches"
+  install -dm0755 "${pkgdir}/opt/tor-browser/Browser/TorBrowser/UpdateInfo"
+}

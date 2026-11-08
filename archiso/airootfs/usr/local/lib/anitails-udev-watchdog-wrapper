@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Monitor the Archiso live boot medium (/run/archiso/bootmnt) and trigger
+# immediate emergency session termination + RAM wipe poweroff upon removal.
+# Ported from Tails udev-watchdog-wrapper (/lib/live/mount/medium -> /run/archiso/bootmnt).
+set -euo pipefail
+
+BOOTMNT="${ANITAILS_BOOTMNT:-/run/archiso/bootmnt}"
+WATCHDOG_BIN="${ANITAILS_WATCHDOG_BIN:-/usr/bin/anitails-udev-watchdog}"
+
+emergency_poweroff() {
+    logger -t anitails-watchdog -p authpriv.emerg "EMERGENCY: Live boot medium removed! Killing user session and wiping RAM."
+    /usr/bin/loginctl --signal=9 kill-user amnesia 2>/dev/null || true
+    /usr/bin/systemctl stop gdm.service 2>/dev/null || true
+    /usr/bin/systemctl --signal=9 kill gdm.service 2>/dev/null || true
+    /usr/bin/loginctl --signal=9 kill-user gdm 2>/dev/null || true
+    # Close any unlocked LUKS2 Persistent Storage immediately
+    /usr/local/bin/anitails-persistence lock 2>/dev/null || true
+    # Trigger immediate systemd-shutdown -> /run/initramfs/shutdown RAM wipe
+    /usr/bin/systemctl --force poweroff
+}
+
+resolve_boot_block_dev() {
+    local src
+    src="$(/usr/bin/findmnt -no SOURCE "${BOOTMNT}" 2>/dev/null || true)"
+    if [[ -z "${src}" || ! -b "${src}" ]]; then
+        echo ""
+        return
+    fi
+    # Resolve partition (e.g. /dev/sdb1) to parent whole disk (/dev/sdb) if applicable
+    local pkname
+    pkname="$(/usr/bin/lsblk -no PKNAME "${src}" 2>/dev/null | head -n1 | tr -d '[:space:]')"
+    if [[ -n "${pkname}" && -b "/dev/${pkname}" ]]; then
+        echo "/dev/${pkname}"
+    else
+        echo "${src}"
+    fi
+}
+
+BOOT_DEV="$(resolve_boot_block_dev)"
+if [[ -z "${BOOT_DEV}" || ! -e "${BOOT_DEV}" ]]; then
+    emergency_poweroff
+    exit 0
+fi
+
+DEV_UDEV_PATH="$(/usr/bin/udevadm info --query=path --name="${BOOT_DEV}")"
+DEV_TYPE="$(/usr/bin/udevadm info --query=property --name="${BOOT_DEV}" | awk -F= '$1=="ID_TYPE"{print $2; exit}')"
+if [[ "${DEV_TYPE}" != "cd" ]]; then
+    DEV_TYPE="disk"
+fi
+
+if "${WATCHDOG_BIN}" "${DEV_UDEV_PATH}" "${DEV_TYPE}"; then
+    emergency_poweroff
+fi
