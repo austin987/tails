@@ -46,7 +46,7 @@ noextract=("linux-${pkgver}.tar.xz")
 sha256sums=(
   '79c66dde66cd96877fcde8f7d36aec946b1f423d2b97b5a7b1751b75c764f3d1'
   'SKIP'
-  'ade9715c364443b744e0ceaee64cd23db3f5181501304c06fabfd615df4cb922'
+  'cb7442a2f94e05a281e3ca41b9bf7f5ea5c080c2600f89ae42bb978776800578'
 )
 # Official Linux Kernel Release Signing Keys (https://www.kernel.org/signature.html):
 # - Linus Torvalds: ABAF11C65A2970B130ABE3C479BE3E4300411886
@@ -66,12 +66,18 @@ prepare() {
   echo "Verifying uncompressed kernel tarball PGP signature against Greg KH / Linus Torvalds keyring..."
   xz -cd "${srcdir}/linux-${pkgver}.tar.xz" | gpg --verify "${srcdir}/linux-${pkgver}.tar.sign" -
 
-  tar -xf "${srcdir}/linux-${pkgver}.tar"
+  tar -xJf "${srcdir}/linux-${pkgver}.tar.xz"
   cd "linux-${pkgver}"
 
   echo "-anitails1" > localversion.10-pkgname
   make defconfig
   ./scripts/kconfig/merge_config.sh -m .config "${srcdir}/config.anitails.fragment"
+  # Enroll ephemeral ISO-build out-of-tree kmod public certificate if provided by builder
+  # (allows pre-compiled nvidia-open-anitails .ko.zst to pass module.sig_enforce=1 while
+  # the private key is shredded before SquashFS creation).
+  if [[ -n "${ANITAILS_KMOD_CERT:-}" && -f "${ANITAILS_KMOD_CERT}" ]]; then
+    ./scripts/config --set-str SYSTEM_TRUSTED_KEYS "${ANITAILS_KMOD_CERT}"
+  fi
   make olddefconfig
   make -s kernelrelease > version
 }
@@ -116,4 +122,11 @@ package_linux-anitails-headers() {
   install -Dt "${builddir}/arch/x86" -m644 arch/x86/Makefile
   cp -t "${builddir}" -a scripts include
   cp -t "${builddir}/arch/x86" -a arch/x86/include
+  # Required by ArchWiki NVIDIA#Custom_kernel for IBT objtool + BTF external module builds:
+  if [[ -x tools/objtool/objtool ]]; then
+    install -Dt "${builddir}/tools/objtool" -m755 tools/objtool/objtool
+  fi
+  if [[ -x tools/bpf/resolve_btfids/resolve_btfids ]]; then
+    install -Dt "${builddir}/tools/bpf/resolve_btfids" -m755 tools/bpf/resolve_btfids/resolve_btfids
+  fi
 }

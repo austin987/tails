@@ -1,8 +1,8 @@
 {
   "executed_at_utc": "2026-11-08",
-  "duration_seconds": 8.771,
-  "unit_and_simulation_tests_total": 13,
-  "unit_and_simulation_tests_passed": 13,
+  "duration_seconds": 16.22,
+  "unit_and_simulation_tests_total": 22,
+  "unit_and_simulation_tests_passed": 22,
   "unit_and_simulation_tests_failed": 0,
   "environment_gates": [
     {
@@ -24,7 +24,7 @@
       "severity": "P0",
       "status": "BLOCKED",
       "command": "./scripts/build-iso.sh",
-      "detail": "BLOCKED: missing required Arch Linux build tool 'mkarchiso' on current host (Linux 6.1.158+ x86_64).\nNext step: run './scripts/build-iso.sh' inside a clean x86_64 Arch Linux builder with archiso >= 92-1 installed."
+      "detail": "BLOCKED: missing required Arch Linux build tool 'mkarchiso' on current host (Linux 6.1.158+ x86_64).\nNext step: run './scripts/build-iso.sh --profile base' inside a clean x86_64 Arch Linux builder with archiso >= 92-1 installed."
     },
     {
       "id": "GATE-QEMU-BOOT-BIOS-UEFI",
@@ -46,6 +46,27 @@
       "status": "BLOCKED",
       "command": "ANITAILS_RELEASE_GPG_FPR=<HSM_KEY> ./scripts/sign-release.sh <manifest-dir>",
       "detail": "No external offline/HSM release signing key provided; refusing to generate a fake release key."
+    },
+    {
+      "id": "GATE-NVIDIA-PHYSICAL-GPU-KMS",
+      "severity": "P1",
+      "status": "BLOCKED",
+      "command": "Live boot / VFIO PCIe passthrough on physical NVIDIA GPUs (Tesla NV50..Blackwell/Rubin)",
+      "detail": "Container /sys/bus/pci/devices has 0 physical NVIDIA GPUs (0x10de). Note: QEMU virtual GPUs (virtio/qxl/bochs) DO NOT prove real NVIDIA GPU functionality."
+    },
+    {
+      "id": "GATE-NVIDIA-HYBRID-OPTIMUS-AND-EGPU",
+      "severity": "P1",
+      "status": "SKIPPED",
+      "command": "Boot base & nvidia-modern ISO on Intel/AMD+NVIDIA Optimus laptop + HDMI/DP + IOMMU Thunderbolt eGPU",
+      "detail": "Requires physical hybrid Optimus laptop (MUXless & MUXed) and IOMMU-enabled Thunderbolt eGPU enclosure."
+    },
+    {
+      "id": "GATE-ARM64-JETSON-GRACE",
+      "severity": "P2",
+      "status": "SKIPPED",
+      "command": "Architecture feasibility study only (x86_64 ISO does not boot on aarch64 Tegra/Jetson/Grace)",
+      "detail": "Separate aarch64 target documented in docs/NVIDIA_COMPATIBILITY.md; requires user confirmation of exact Jetson/Grace board & L4T QSPI firmware before any ARM64 image build."
     }
   ],
   "release_ready": false,

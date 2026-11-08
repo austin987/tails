@@ -11,3 +11,10 @@
 - Kho mã nguồn này kế thừa từ cây mã nguồn tự do của dự án Tails (bản sao giấy phép gốc được giữ nguyên vẹn tại tệp [`COPYING`](COPYING)).
 - Toàn bộ mã nguồn, cấu hình hệ thống, script điều phối, công cụ kiểm định mật mã và bộ kiểm thử mới của **AniTails** trong các thư mục `archiso/`, `pkgbuilds/`, `scripts/`, `tests/` và `docs/` được phát hành theo giấy phép **GNU General Public License phiên bản 3 trở lên (`GPL-3.0-or-later`)**, giữ nguyên đầy đủ thông báo bản quyền của các tác giả gốc đối với những thành phần được chuyển dịch từ Tails.
 - Dữ liệu chứng chỉ kiểm thử công khai trong `tests/fixtures/emudhra_chains/` được trích từ kho kiểm chứng bảo mật công cộng `github.com/galadran/we-have-a-problem.com` (giấy phép Apache-2.0) phục vụ mục đích duy nhất là kiểm thử tự động việc từ chối chuỗi chứng chỉ bị xâm phạm.
+
+## 3. Ranh Giới Giấy Phép Đối Với Thành Phần Firmware & Profile Tùy Chọn NVIDIA
+
+- **Profile mặc định (`base`):** Chỉ sử dụng các trình điều khiển nhân và không gian người dùng mã nguồn mở (`nouveau` theo `GPL-2.0-only`, Mesa / `vulkan-nouveau` `NVK` theo `MIT`), đi kèm firmware vi điều khiển phần cứng đã ký số trong gói chính thức `linux-firmware-nvidia` (`LicenseRef-WHENCE` / `LicenseRef-nvidia`). **Không cài đặt bất kỳ thư viện không gian người dùng độc quyền nào của NVIDIA trong bản mặc định.**
+- **Các Profile tùy chọn (`nvidia-modern`, `nvidia-legacy-580xx`, `nvidia-cuda-optional`):**
+  - Mã nguồn mô-đun nhân mở `nvidia-open-anitails` được phát hành kép dưới giấy phép **`MIT AND GPL-2.0-only`** (`NVIDIA/open-gpu-kernel-modules`).
+  - Các thư viện không gian người dùng (`nvidia-utils`, `opencl-nvidia`), firmware GSP đi kèm (`gsp_tu10x.bin`, `gsp_ga10x.bin`), gói legacy `nvidia-580xx-anitails` (chứa `nv-kernel.o_binary`) và bộ công cụ tùy chọn `cuda` chịu sự điều chỉnh của giấy phép độc quyền của NVIDIA (**`LicenseRef-NVIDIA-Driver-License-Agreement`** và **`LicenseRef-NVIDIA-CUDA`**). Người xây dựng và phân phối lại ảnh ISO thuộc các profile tùy chọn này cần tuân thủ điều khoản phân phối tương ứng của NVIDIA.

@@ -2,7 +2,7 @@
 
 > **Tuyên bố quan trọng:** **AniTails** là bản dẫn xuất độc lập được thiết kế và chuyển đổi sang nền tảng **Arch Linux (`archiso`)**, **KHÔNG PHẢI** bản phát hành chính thức của dự án Tails (`tails.net`) hay The Tor Project. Xem đầy đủ thông báo pháp lý và giấy phép `GPL-3.0-or-later` tại [`NOTICE.md`](NOTICE.md) và [`COPYING`](COPYING).
 >
-> **Trạng thái kiểm định hiện tại (`2026-11-08`):** `13/13` bộ kiểm thử bảo mật tự động đạt **`PASS`**, nhưng trạng thái phát hành tổng thể là **CHƯA ĐỦ ĐIỀU KIỆN PHÁT HÀNH CHÍNH THỨC (`NOT READY FOR PRODUCTION RELEASE`)** do các cổng biên dịch ISO `mkarchiso`, kiểm thử khởi động QEMU BIOS/UEFI và ký khóa phần cứng HSM ngoài máy build đang ở trạng thái **`BLOCKED`** trong môi trường container Debian 12 hiện tại. Xem báo cáo chi tiết tại [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md).
+> **Trạng thái kiểm định hiện tại (`2026-11-08`):** `19/19` bộ kiểm thử bảo mật & phần cứng NVIDIA tự động đạt **`PASS`**, nhưng trạng thái phát hành tổng thể là **CHƯA ĐỦ ĐIỀU KIỆN PHÁT HÀNH CHÍNH THỨC (`NOT READY FOR PRODUCTION RELEASE`)** do các cổng biên dịch ISO `mkarchiso`, kiểm thử khởi động QEMU BIOS/UEFI, kiểm thử KMS trên GPU NVIDIA vật lý và ký khóa phần cứng HSM ngoài máy build đang ở trạng thái **`BLOCKED` / `SKIPPED`** trong môi trường container Debian 12 hiện tại. Xem báo cáo chi tiết tại [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md) và [`docs/NVIDIA_COMPATIBILITY.md`](docs/NVIDIA_COMPATIBILITY.md).
 
 ---
 
@@ -28,8 +28,9 @@
 
 | Đường dẫn | Vai trò |
 |---|---|
-| `archiso/` | Cấu hình profile `mkarchiso` hoàn chỉnh (khởi động kép BIOS `syslinux` + UEFI `systemd-boot`, snapshot cố định `2026/11/01`, toàn bộ lớp phủ hệ thống `airootfs/`). |
-| `pkgbuilds/` | 5 gói `PKGBUILD` nội bộ có ghim mã băm SHA-256 và khóa PGP upstream: `linux-anitails`, `tor-anitails`, `tor-browser-anitails`, `lyrebird-anitails`, `anitails-udev-watchdog`. |
+| `archiso/` | Cấu hình profile `mkarchiso` mặc định nguồn mở (`base`: BIOS `syslinux` + UEFI `systemd-boot`, snapshot `2026/11/08`, `nouveau` + Mesa `NVK` + `simpledrm`, toàn bộ lớp phủ bảo mật `airootfs/`). |
+| `archiso-profiles/` | Định nghĩa 4 profile build tách biệt không xung đột: `base`, `nvidia-modern` (Turing→Blackwell `nvidia-open-anitails`), `nvidia-legacy-580xx` (Maxwell/Pascal/Volta `580.196.07`), `nvidia-cuda-optional` (Opt-in `SM >= 7.5`). |
+| `pkgbuilds/` | 7 gói `PKGBUILD` nội bộ ghim mã băm SHA-256: `linux-anitails` (`+headers`), `tor-anitails`, `tor-browser-anitails`, `lyrebird-anitails`, `anitails-udev-watchdog`, `nvidia-open-anitails`, `nvidia-580xx-anitails`. |
 | `scripts/` | Công cụ dựng ảnh ISO (`build-iso.sh`), sinh & xác minh SBOM CycloneDX + `SHA256SUMS` + `B2SUMS` (`generate-sbom-and-checksums.py`), ký phát hành bằng khóa HSM ngoài (`sign-release.sh`) và xác minh nâng cấp USB (`verify-and-upgrade-usb.py`). |
 | `tests/` | Bộ kiểm thử bảo mật tự động thực thi trực tiếp (OpenSSL CA chain & cross-sign, `unshare -Urn` firewall + leak sensor anti-test, MAC spoofing fail-closed, `onion-grater`, LUKS2 persistence, biên dịch & chạy C11 `anitails-udev-watchdog`, chống giả mạo SBOM/ISO). |
 | `docs/` | Bộ tài liệu kỹ thuật đầy đủ bằng tiếng Việt (xem danh mục bên dưới). |
@@ -54,4 +55,5 @@ python3 tests/run_all_tests.py
 4. [`docs/SECURITY_LIMITATIONS.md`](docs/SECURITY_LIMITATIONS.md) — Mô hình đe dọa, giới hạn phần cứng/firmware/cold-boot/Secure Boot và rủi ro tồn dư.
 5. [`docs/BUILD_AND_VERIFY.md`](docs/BUILD_AND_VERIFY.md) — Hướng dẫn biên dịch tái lập (reproducible build), tạo SBOM và kiểm thử trên máy trạm Arch Linux + QEMU.
 6. [`docs/UPGRADE_AND_RELEASE_POLICY.md`](docs/UPGRADE_AND_RELEASE_POLICY.md) — Chính sách đóng băng snapshot Arch Linux Archive, nâng cấp ảnh đầy đủ có xác thực chữ ký và quản lý khóa phát hành ngoài máy build.
-7. [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md) — Báo cáo bằng chứng kiểm thử thực nghiệm (`PASS` / `BLOCKED`) và kết luận điều kiện phát hành.
+7. [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md) — Báo cáo bằng chứng kiểm thử thực nghiệm (`PASS` / `BLOCKED` / `SKIPPED`) và kết luận điều kiện phát hành.
+8. [`docs/NVIDIA_COMPATIBILITY.md`](docs/NVIDIA_COMPATIBILITY.md) — Ma trận tương thích phần cứng NVIDIA (`1,558` mã PCI ID qua 14 thế hệ), kiến trúc 4 profile không xung đột, khảo sát `ARM64` Jetson/Grace và phân tích rủi ro VRAM/GSP.

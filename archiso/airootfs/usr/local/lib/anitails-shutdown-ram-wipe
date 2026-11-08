@@ -17,8 +17,27 @@ if [[ -x /usr/bin/cryptsetup ]]; then
     done
 fi
 
-# Delete writable Archiso cowspace upper/work directories so tmpfs frees pages
-rm -rf /oldroot/run/archiso/cowspace/* /run/archiso/cowspace/* 2>/dev/null
+# Delete writable Archiso cowspace upper/work directories and ephemeral NVIDIA RAM scratch space
+rm -rf /oldroot/run/archiso/cowspace/* /run/archiso/cowspace/* \
+       /oldroot/run/anitails-nvidia-ram/* /run/anitails-nvidia-ram/* 2>/dev/null
+
+# Best-effort GPU framebuffer zeroing & PCIe driver unbind on shutdown:
+# NOTE: CPU init_on_free=1 DOES NOT wipe discrete GDDR/HBM VRAM inside GPU silicon.
+# Zeroing /dev/fb* overwrites visible scanout buffers and unbinding triggers driver teardown;
+# complete physical VRAM remanence decay still requires full power-off (cold shutdown).
+for fb in /dev/fb[0-9]*; do
+    if [[ -c "${fb}" && -w "${fb}" ]]; then
+        dd if=/dev/zero of="${fb}" bs=1M conv=notrunc 2>/dev/null || true
+    fi
+done
+for drv_unbind in /sys/bus/pci/drivers/nvidia/unbind /sys/bus/pci/drivers/nouveau/unbind; do
+    if [[ -w "${drv_unbind}" ]]; then
+        drv_dir="$(dirname "${drv_unbind}")"
+        for bdf in "${drv_dir}"/0000:*; do
+            [[ -e "${bdf}" ]] && basename "${bdf}" > "${drv_unbind}" 2>/dev/null || true
+        done
+    fi
+done
 
 # Unmount oldroot and cowspace tmpfs
 /usr/bin/umount -R /oldroot 2>/dev/null

@@ -37,7 +37,11 @@ export TOR_CONTROL_PORT="9051"
 export TOR_TRANSPROXY=0
 export MOZ_ENABLE_WAYLAND=1
 
-# Enter network namespace 'tbb' via privileged setns helper or ip netns exec
+# Enter network namespace 'tbb' via bubblewrap sandbox.
+# GPU PRIVACY & SANDBOX INVARIANT:
+# `--dev /dev` mounts an isolated synthetic tmpfs `/dev` (ONLY null, zero, full, random, urandom, tty, pts, shm)
+# and NEVER bind-mounts `/dev/nvidia*`, `/dev/nvidiactl`, `/dev/nvidia-uvm`, or `/dev/dri/renderD*` into Tor Browser,
+# preventing untrusted web pages from invoking NVIDIA kernel ioctls or GPU hardware fingerprinting.
 exec /usr/bin/bwrap \
     --die-with-parent \
     --new-session \

@@ -30,8 +30,19 @@
     "apparmor": {"repo": "extra", "version": "4.1.8-2"},
     "bubblewrap": {"repo": "extra", "version": "0.13.1-1"},
     "linux-firmware": {"repo": "core", "version": "20261019-1"},
+    "linux-firmware-nvidia": {"repo": "core", "version": "20260622-1", "license": "LicenseRef-WHENCE AND LicenseRef-nvidia"},
     "amd-ucode": {"repo": "core", "version": "20261019-1"},
     "intel-ucode": {"repo": "core", "version": "20260925-1"},
+    "mesa": {"repo": "extra", "version": "1:26.2.6-1"},
+    "vulkan-nouveau": {"repo": "extra", "version": "1:26.2.6-1", "license": "MIT AND BSD-3-Clause AND SGI-B-2.0"},
+    "switcheroo-control": {"repo": "extra", "version": "3.0-2", "license": "GPL-3.0-or-later"},
+    "nvidia-open": {"repo": "extra", "version": "615.78.08-4", "note": "Compiled for [core]/linux 7.2.14.arch1-1; AniTails uses custom nvidia-open-anitails 615.78.08-1 compiled for linux-anitails 7.3.3-1"},
+    "nvidia-open-dkms": {"repo": "extra", "version": "615.78.08-1"},
+    "nvidia-utils": {"repo": "extra", "version": "615.78.08-1", "license": "LicenseRef-NVIDIA-Driver-License-Agreement", "profile": "nvidia-modern / nvidia-cuda-optional"},
+    "opencl-nvidia": {"repo": "extra", "version": "615.78.08-1", "license": "LicenseRef-NVIDIA-Driver-License-Agreement", "profile": "nvidia-cuda-optional"},
+    "egl-wayland": {"repo": "extra", "version": "4:1.1.24-1", "profile": "nvidia-modern / nvidia-legacy-580xx"},
+    "nvidia-prime": {"repo": "extra", "version": "1.0-6", "license": "0BSD", "profile": "nvidia-modern"},
+    "cuda": {"repo": "extra", "version": "13.4.3-1", "license": "LicenseRef-NVIDIA-CUDA", "profile": "nvidia-cuda-optional (SM >= 7.5 Turing+ only)"},
     "gnome-shell": {"repo": "extra", "version": "1:51.1-1"},
     "gdm": {"repo": "extra", "version": "51.1.1-1"},
     "thunderbird": {"repo": "extra", "version": "158.0.1-1"},
@@ -86,6 +97,28 @@
     "anitails-udev-watchdog": {
       "version": "0.1.0-1",
       "reason": "Emergency RAM-wipe shutdown trigger on boot media removal ported for archiso /run/archiso/bootmnt"
+    },
+    "nvidia-open-anitails": {
+      "version": "615.78.08-1",
+      "profile": "nvidia-modern / nvidia-cuda-optional",
+      "license": "MIT AND GPL-2.0-only (paired with proprietary nvidia-utils 615.78.08-1)",
+      "reason": "Arch [extra] nvidia-open 615.78.08-4 targets [core]/linux 7.2.14.arch1-1; AniTails pre-compiles & X.509-signs open kernel modules against linux-anitails 7.3.3-1 at ISO build time (zero runtime DKMS)",
+      "upstream_url": "https://codeload.github.com/NVIDIA/open-gpu-kernel-modules/tar.gz/refs/tags/615.78.08",
+      "sha256": "eac0ecd52facab28ad2963cf7e03ae8d2289d596ad590c703b5f72d65899e2bf",
+      "newer_production_branch_tracked": {
+        "version": "620.70.06",
+        "release_date_utc": "2026-11-05",
+        "sha256": "bc9fa156dcdc5e0ed19c3c9ea70cfe2b8c9a0fdc415426af1ba5c3a1f9a7238d",
+        "note": "Adds Vera Rubin GR100 (10de:3041) and RTX Spark; promote lockstep once Arch [extra] updates nvidia-utils to 620.x"
+      }
+    },
+    "nvidia-580xx-anitails": {
+      "version": "580.196.07-1",
+      "profile": "nvidia-legacy-580xx (optional isolated Maxwell/Pascal/Volta build)",
+      "license": "LicenseRef-NVIDIA-Driver-License-Agreement",
+      "reason": "Maxwell, Pascal, and Volta GPUs lack GSP hardware and were dropped from R590/R615/R620; R580 (580.196.07, 2026-10-21) is the active security-maintained legacy branch",
+      "upstream_url": "https://us.download.nvidia.com/XFree86/Linux-x86_64/580.196.07/NVIDIA-Linux-x86_64-580.196.07.run",
+      "sha256": "0aab0518db53cf73c412dc7f32bbc850ca95e839d8923d0de4bff42c1c9169ce"
     }
   }
 }
