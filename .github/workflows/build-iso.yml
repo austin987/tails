@@ -255,6 +255,10 @@ jobs:
             ' 2>&1 | tee /tmp/anitails-docker-build.log || {
               rc=$?
               sudo chown -R "${HOST_UID}:${HOST_GID}" /tmp/anitails-ci-cache 2>/dev/null || true
+              err_lines="$(grep -iE 'error:|failed|fatal|corrupt|invalid|conflict|unable' /tmp/anitails-docker-build.log | tail -n 20 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' || true)"
+              if [[ -n "${err_lines}" ]]; then
+                echo "::error title=ISO Build Matched Errors::${err_lines}"
+              fi
               tail_msg="$(tail -n 35 /tmp/anitails-docker-build.log | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
               echo "::error title=ISO Build Log Tail::${tail_msg}"
               exit "${rc}"

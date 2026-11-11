@@ -107,4 +107,20 @@ if prof_name != "base":
 PY
 
 cp -f "${STAGE_DIR}/mirrorlist.snapshot" /etc/pacman.d/mirrorlist.snapshot
-exec mkarchiso -v -w "${WORK_DIR}/mkarchiso-${SELECTED_PROFILE}" -o "${OUT_DIR}" "${STAGE_DIR}"
+
+# Retry mkarchiso up to 4 times on transient archive.archlinux.org HTTP 502/503/stream resets.
+# mkarchiso invokes `pacstrap -c`, so packages already downloaded in earlier attempts stay cached
+# in the container's /var/cache/pacman/pkg/ and only missing packages are fetched on retry.
+for attempt in 1 2 3 4; do
+    rm -rf "${WORK_DIR}/mkarchiso-${SELECTED_PROFILE}"
+    rm -f /var/cache/pacman/pkg/*.part
+    echo "[build-iso] Running mkarchiso (attempt ${attempt}/4) for profile '${SELECTED_PROFILE}'..."
+    if mkarchiso -v -w "${WORK_DIR}/mkarchiso-${SELECTED_PROFILE}" -o "${OUT_DIR}" "${STAGE_DIR}"; then
+        exit 0
+    fi
+    echo "::warning::mkarchiso attempt ${attempt}/4 failed; cleaning partial .part downloads and retrying..." >&2
+    sleep $((attempt * 6))
+done
+
+echo "ERROR: mkarchiso failed after 4 attempts for profile '${SELECTED_PROFILE}'." >&2
+exit 1

@@ -238,10 +238,30 @@ cp -f "${REPO_ROOT}/archiso/mirrorlist.snapshot" /etc/pacman.d/mirrorlist
 echo "[1/6] Initializing builder pacman keyring & installing Archiso / kernel build dependencies..."
 pacman-key --init
 pacman-key --populate archlinux
-pacman -Syu --noconfirm --needed \
-    archiso base-devel bc binutils ccache cpio curl dosfstools edk2-ovmf gettext git \
-    gnupg kmod libelf libisoburn mtools nftables openssl pahole perl python \
-    python-yaml rsync squashfs-tools syslinux tar xxhash xz zlib zstd
+for attempt in 1 2 3 4; do
+    rm -f /var/cache/pacman/pkg/*.part
+    if pacman -Sy --noconfirm archlinux-keyring; then
+        break
+    fi
+    echo "::warning::archlinux-keyring sync attempt ${attempt}/4 failed; retrying..." >&2
+    sleep $((attempt * 5))
+done
+pacman-key --populate archlinux
+for attempt in 1 2 3 4; do
+    rm -f /var/cache/pacman/pkg/*.part
+    if pacman -Syu --noconfirm --needed \
+        archiso base-devel bc binutils ccache cpio curl dosfstools edk2-ovmf gettext git \
+        gnupg kmod libelf libisoburn mtools nftables openssl pahole perl python \
+        python-yaml rsync squashfs-tools syslinux tar xxhash xz zlib zstd; then
+        break
+    fi
+    if [[ "${attempt}" -eq 4 ]]; then
+        echo "ERROR: Builder dependency installation failed after 4 attempts." >&2
+        exit 1
+    fi
+    echo "::warning::Builder dependency pacman -Syu attempt ${attempt}/4 failed; retrying..." >&2
+    sleep $((attempt * 5))
+done
 
 echo "[2/6] Configuring unprivileged 'builder' account & parallel makepkg environment..."
 if ! id -u builder >/dev/null 2>&1; then
