@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# AniTails End-to-End Live OS Boot Verifier (QEMU BIOS + UEFI OVMF)
+# AniTails End-to-End Live OS Boot Verifier (QEMU BIOS USB3 + UEFI OVMF CD-ROM)
 # ==============================================================================
-# Boots the unmodified built `.iso` image in TWO distinct firmware/graphics modes:
-#   1. Legacy BIOS (`syslinux` + `virtio-vga` KMS)
+# Boots the unmodified built `.iso` image in TWO distinct firmware/media/GPU modes:
+#   1. Legacy BIOS + USB 3.0 Flash Stick (`isohdpfx.bin` -> `syslinux` + `virtio-vga` KMS)
 #   2. Modern UEFI (`edk2-ovmf` -> `BOOTX64.EFI` `systemd-boot` + `stdvga`/`bochs-drm` KMS)
 #
 # Asserts that each mode boots all the way into the live operating system:
@@ -87,23 +87,62 @@ cleanup() {
 }
 trap cleanup EXIT
 
+capture_qmp_screen_ocr() {
+    local qmp_sock="$1"
+    local ppm_file="$2"
+    if [[ ! -S "${qmp_sock}" ]]; then
+        return 0
+    fi
+    python3 - "${qmp_sock}" "${ppm_file}" <<'PY' 2>/dev/null || true
+import json, socket, sys, time
+sock_path, ppm_path = sys.argv[1], sys.argv[2]
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.settimeout(3.0)
+s.connect(sock_path)
+s.recv(4096)
+s.sendall(b'{"execute":"qmp_capabilities"}\n')
+time.sleep(0.2)
+s.recv(4096)
+cmd = json.dumps({"execute": "screendump", "arguments": {"filename": ppm_path}}).encode() + b"\n"
+s.sendall(cmd)
+time.sleep(0.4)
+s.recv(4096)
+s.close()
+PY
+    if [[ -s "${ppm_file}" ]] && command -v tesseract >/dev/null 2>&1; then
+        tesseract "${ppm_file}" stdout 2>/dev/null | tr -s '\n' | tail -n 20 || true
+    fi
+}
+
 run_boot_mode() {
     local mode="$1"
     local status_file="${WORK_TMP}/status-${mode}.log"
     local serial_file="${WORK_TMP}/serial-${mode}.log"
     local qemu_err="${WORK_TMP}/qemu-${mode}.err"
+    local qmp_sock="${WORK_TMP}/qmp-${mode}.sock"
+    local ppm_file="${WORK_TMP}/screen-${mode}.ppm"
     : > "${status_file}"
     : > "${serial_file}"
+    rm -f "${qmp_sock}" "${ppm_file}"
 
     local -a mode_args=()
     if [[ "${mode}" == "bios" ]]; then
-        mode_args=(-vga none -device virtio-vga)
+        mode_args=(
+            -machine pc
+            -vga virtio
+            -device qemu-xhci,id=xhci0
+            -drive "if=none,id=usbdisk0,format=raw,readonly=on,file=${ISO_FILE}"
+            -device "usb-storage,bus=xhci0.0,drive=usbdisk0,bootindex=1,removable=on"
+        )
     elif [[ "${mode}" == "uefi" ]]; then
         cp -f "${OVMF_VARS}" "${WORK_TMP}/efivars-${mode}.fd"
         mode_args=(
+            -machine q35
             -drive "if=pflash,format=raw,readonly=on,file=${OVMF_CODE}"
             -drive "if=pflash,format=raw,file=${WORK_TMP}/efivars-${mode}.fd"
             -vga std
+            -drive "file=${ISO_FILE},media=cdrom,readonly=on"
+            -boot d
         )
     fi
 
@@ -112,15 +151,13 @@ run_boot_mode() {
         "${ACCEL_ARGS[@]}" \
         -m 3072 \
         -smp 2 \
-        -machine q35 \
         "${mode_args[@]}" \
-        -drive "file=${ISO_FILE},media=cdrom,readonly=on" \
-        -boot d \
         -net none \
         -device virtio-serial-pci \
         -chardev "file,id=status0,path=${status_file}" \
         -device "virtserialport,chardev=status0,name=org.anitails.status" \
         -serial "file:${serial_file}" \
+        -qmp "unix:${qmp_sock},server=on,wait=off" \
         -display none \
         -no-reboot \
         2>"${qemu_err}" &
@@ -129,17 +166,21 @@ run_boot_mode() {
     local elapsed=0
     while (( elapsed < TIMEOUT_SECS )); do
         if grep -Fq "ANITAILS_OS_BOOT_READY" "${status_file}" 2>/dev/null; then
-            echo "PASS [${mode^^}]: $(cat "${status_file}")"
+            echo "PASS [${mode^^}]:"
+            cat "${status_file}"
             kill "${QEMU_PID}" 2>/dev/null || true
             wait "${QEMU_PID}" 2>/dev/null || true
             QEMU_PID=""
             return 0
         fi
         if grep -Fq "ANITAILS_OS_BOOT_FAILED" "${status_file}" 2>/dev/null; then
+            local ocr_txt
+            ocr_txt="$(capture_qmp_screen_ocr "${qmp_sock}" "${ppm_file}")"
             echo "FAIL [${mode^^}]: Guest reported boot failure:" >&2
             cat "${status_file}" >&2
+            [[ -n "${ocr_txt}" ]] && printf "=== Screen OCR ===\n%s\n" "${ocr_txt}" >&2
             local diag
-            diag="$(tail -n 35 "${status_file}" | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
+            diag="$( { cat "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | tail -n 40 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' )"
             echo "::error title=OS Boot Failure (${mode^^})::${diag}"
             kill "${QEMU_PID}" 2>/dev/null || true
             wait "${QEMU_PID}" 2>/dev/null || true
@@ -148,11 +189,9 @@ run_boot_mode() {
         fi
         if ! kill -0 "${QEMU_PID}" 2>/dev/null; then
             echo "FAIL [${mode^^}]: QEMU exited prematurely before reaching live desktop!" >&2
-            cat "${qemu_err}" >&2 || true
-            cat "${serial_file}" >&2 || true
-            cat "${status_file}" >&2 || true
+            cat "${qemu_err}" "${serial_file}" "${status_file}" >&2 || true
             local pdiag
-            pdiag="$(cat "${qemu_err}" "${serial_file}" "${status_file}" | tail -n 30 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
+            pdiag="$(cat "${qemu_err}" "${serial_file}" "${status_file}" | tail -n 35 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
             echo "::error title=QEMU Premature Exit (${mode^^})::${pdiag:-QEMU exited before guest virtio status}"
             QEMU_PID=""
             return 1
@@ -161,23 +200,30 @@ run_boot_mode() {
         elapsed=$((elapsed + 2))
     done
 
+    local ocr_txt
+    ocr_txt="$(capture_qmp_screen_ocr "${qmp_sock}" "${ppm_file}")"
     echo "FAIL [${mode^^}]: Timed out after ${TIMEOUT_SECS}s waiting for ANITAILS_OS_BOOT_READY!" >&2
-    cat "${qemu_err}" >&2 || true
-    cat "${serial_file}" >&2 || true
-    cat "${status_file}" >&2 || true
+    cat "${qemu_err}" "${serial_file}" "${status_file}" >&2 || true
+    [[ -n "${ocr_txt}" ]] && printf "=== Screen OCR ===\n%s\n" "${ocr_txt}" >&2
     local tdiag
-    tdiag="$(cat "${qemu_err}" "${serial_file}" "${status_file}" | tail -n 30 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
+    tdiag="$( { cat "${qemu_err}" "${serial_file}" "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | tail -n 35 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' )"
     echo "::error title=OS Boot Timeout (${mode^^})::Timed out after ${TIMEOUT_SECS}s. Logs: ${tdiag}"
     kill -9 "${QEMU_PID}" 2>/dev/null || true
+    wait "${QEMU_PID}" 2>/dev/null || true
     QEMU_PID=""
     return 1
 }
 
-run_boot_mode bios
-run_boot_mode uefi
+OVERALL_RC=0
+run_boot_mode bios || OVERALL_RC=1
+run_boot_mode uefi || OVERALL_RC=1
+
+if [[ "${OVERALL_RC}" -ne 0 ]]; then
+    exit "${OVERALL_RC}"
+fi
 
 if [[ -f "${OUT_DIR}/SHA256SUMS" ]]; then
     (cd "${OUT_DIR}" && sha256sum -c SHA256SUMS)
 fi
 
-echo "PASS: Both Legacy BIOS and UEFI Live OS boot tests reached GDM + amnesia GNOME session cleanly!"
+echo "PASS: Both Legacy BIOS (USB3) and UEFI (OVMF) Live OS boot tests reached GDM + amnesia GNOME session cleanly!"

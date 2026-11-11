@@ -5,23 +5,56 @@
 #   - Strictly WRITE-ONLY to `/dev/virtio-ports/org.anitails.status`.
 #   - NEVER reads commands, stdin, or configuration from the virtio port.
 #   - NEVER emits hardware serial numbers, MAC addresses, or user data.
-#   - Guarded by `ConditionVirtualization=vm` + `ConditionPathExists` in systemd.
+#   - Guarded by `ConditionVirtualization=vm` in systemd.
 set -euo pipefail
 
-PORT="/dev/virtio-ports/org.anitails.status"
-if [[ ! -e "${PORT}" ]]; then
+/usr/bin/modprobe virtio_pci 2>/dev/null || true
+/usr/bin/modprobe virtio_console 2>/dev/null || true
+
+find_or_create_port() {
+    local symlink="/dev/virtio-ports/org.anitails.status"
+    if [[ -c "${symlink}" ]]; then
+        echo "${symlink}"
+        return 0
+    fi
+    local sys_p name dev_node maj_min
     for sys_p in /sys/class/virtio-ports/*; do
-        if [[ -f "${sys_p}/name" && "$(cat "${sys_p}/name" 2>/dev/null)" == "org.anitails.status" ]]; then
-            PORT="/dev/$(basename "${sys_p}")"
-            break
+        [[ -d "${sys_p}" && -f "${sys_p}/name" ]] || continue
+        name="$(tr -d '\r\n' < "${sys_p}/name" 2>/dev/null || true)"
+        if [[ "${name}" == "org.anitails.status" ]]; then
+            dev_node="/dev/$(basename "${sys_p}")"
+            if [[ ! -c "${dev_node}" && -f "${sys_p}/dev" ]]; then
+                maj_min="$(tr -d '\r\n' < "${sys_p}/dev" 2>/dev/null || true)"
+                if [[ "${maj_min}" =~ ^([0-9]+):([0-9]+)$ ]]; then
+                    /usr/bin/mknod -m 0600 "${dev_node}" c "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" 2>/dev/null || true
+                fi
+            fi
+            if [[ -c "${dev_node}" ]]; then
+                echo "${dev_node}"
+                return 0
+            fi
         fi
     done
-fi
-if [[ ! -e "${PORT}" ]]; then
+    return 1
+}
+
+PORT=""
+for _ in $(seq 1 30); do
+    if PORT="$(find_or_create_port)"; then
+        break
+    fi
+    sleep 0.5
+done
+
+if [[ -z "${PORT}" || ! -c "${PORT}" ]]; then
     exit 0
 fi
 
-DEADLINE=$((SECONDS + 90))
+printf "ANITAILS_BOOT_HEARTBEAT stage=early kernel=%s uptime=%s\n" \
+    "$(uname -r)" "$(awk '{print $1}' /proc/uptime 2>/dev/null || echo 0)" > "${PORT}"
+
+DEADLINE=$((SECONDS + 150))
+NEXT_PROGRESS=$((SECONDS + 10))
 GDM_OK="false"
 SESSION_OK="false"
 FIREWALL_OK="false"
@@ -54,7 +87,7 @@ while (( SECONDS < DEADLINE )); do
     fi
 
     if [[ "${GDM_OK}" == "true" && "${SESSION_OK}" == "true" && "${FIREWALL_OK}" == "true" && "${NETNS_OK}" == "true" ]]; then
-        # Hold 3 seconds to confirm no post-login service (such as udisks2 / media watchdog) powers off or crashes GDM
+        # Hold 3 seconds to confirm no post-login service (udisks2 / media watchdog) powers off or crashes GDM
         sleep 3
         if /usr/bin/systemctl is-active --quiet gdm.service \
            && ( /usr/bin/loginctl list-sessions --no-legend 2>/dev/null | grep -qw "amnesia" \
@@ -66,18 +99,28 @@ while (( SECONDS < DEADLINE )); do
             exit 0
         fi
     fi
+
+    if (( SECONDS >= NEXT_PROGRESS )); then
+        SYS_STATE="$(/usr/bin/systemctl is-system-running 2>/dev/null || true)"
+        printf "ANITAILS_BOOT_PROGRESS sec=%d state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
+            "${SECONDS}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}" > "${PORT}"
+        NEXT_PROGRESS=$((SECONDS + 10))
+    fi
+
     sleep 1
 done
 
 {
     printf "ANITAILS_OS_BOOT_FAILED kernel=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
         "$(uname -r)" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}"
+    echo "=== systemctl list-jobs ==="
+    /usr/bin/systemctl list-jobs --no-pager 2>&1 || true
     echo "=== systemctl --failed ==="
     /usr/bin/systemctl --failed --no-pager 2>&1 || true
     echo "=== loginctl list-sessions ==="
     /usr/bin/loginctl list-sessions --no-pager 2>&1 || true
-    echo "=== journalctl -b -p warning..emerg (last 60 lines) ==="
-    /usr/bin/journalctl -b -p warning..emerg --no-pager -n 60 2>&1 || true
+    echo "=== journalctl -b -p warning..emerg (last 50 lines) ==="
+    /usr/bin/journalctl -b -p warning..emerg --no-pager -n 50 2>&1 || true
     echo "=== journalctl -u gdm.service (last 40 lines) ==="
     /usr/bin/journalctl -u gdm.service --no-pager -n 40 2>&1 || true
 } > "${PORT}"

@@ -64,9 +64,13 @@ EOF
 done
 
 # 6. Enable mandatory security, GPU fallback guard & desktop units
-mkdir -p /etc/systemd/system/multi-user.target.wants \
+mkdir -p /etc/systemd/system/graphical.target.wants \
+         /etc/systemd/system/multi-user.target.wants \
          /etc/systemd/system/sysinit.target.wants \
-         /etc/systemd/system/local-fs.target.wants
+         /etc/systemd/system/local-fs.target.wants \
+         /etc/systemd/system-generators
+ln -sf /dev/null /etc/systemd/system-generators/systemd-gpt-auto-generator
+ln -sf /usr/lib/systemd/system/graphical.target /etc/systemd/system/default.target
 ln -sf /usr/lib/systemd/system/nftables.service /etc/systemd/system/multi-user.target.wants/nftables.service
 ln -sf /usr/lib/systemd/system/apparmor.service /etc/systemd/system/multi-user.target.wants/apparmor.service
 ln -sf /usr/lib/systemd/system/NetworkManager.service /etc/systemd/system/multi-user.target.wants/NetworkManager.service
@@ -77,8 +81,8 @@ ln -sf /etc/systemd/system/anitails-onion-grater.service /etc/systemd/system/mul
 ln -sf /etc/systemd/system/run-initramfs.mount /etc/systemd/system/local-fs.target.wants/run-initramfs.mount
 ln -sf /etc/systemd/system/anitails-initramfs-restore.service /etc/systemd/system/multi-user.target.wants/anitails-initramfs-restore.service
 ln -sf /etc/systemd/system/anitails-remove-overlayfs-dirs.service /etc/systemd/system/multi-user.target.wants/anitails-remove-overlayfs-dirs.service
-ln -sf /etc/systemd/system/anitails-shutdown-on-media-removal.service /etc/systemd/system/multi-user.target.wants/anitails-shutdown-on-media-removal.service
-ln -sf /etc/systemd/system/anitails-virtio-boot-status.service /etc/systemd/system/multi-user.target.wants/anitails-virtio-boot-status.service
+ln -sf /etc/systemd/system/anitails-shutdown-on-media-removal.service /etc/systemd/system/graphical.target.wants/anitails-shutdown-on-media-removal.service
+ln -sf /etc/systemd/system/anitails-virtio-boot-status.service /etc/systemd/system/sysinit.target.wants/anitails-virtio-boot-status.service
 
 # 7. Ensure reproducible empty /etc/machine-id (populated in RAM at boot without re-running systemd preset)
 : > /etc/machine-id

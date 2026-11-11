@@ -1,12 +1,12 @@
 [Unit]
 Description=AniTails Read-Only Virtio Boot Health Reporter (VM Test Harness Only)
 ConditionVirtualization=vm
-After=multi-user.target nftables.service anitails-create-netns.service gdm.service systemd-user-sessions.service
+DefaultDependencies=no
+After=systemd-remount-fs.service
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/usr/local/lib/anitails-virtio-boot-status
-TimeoutStartSec=120s
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sysinit.target
