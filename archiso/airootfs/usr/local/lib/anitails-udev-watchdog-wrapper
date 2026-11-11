@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Monitor the Archiso live boot medium (/run/archiso/bootmnt) and trigger
-# immediate emergency session termination + RAM wipe poweroff upon removal.
+# immediate emergency session termination + RAM wipe poweroff upon physical removal.
 # Ported from Tails udev-watchdog-wrapper (/lib/live/mount/medium -> /run/archiso/bootmnt).
 set -euo pipefail
 
@@ -26,6 +26,13 @@ resolve_boot_block_dev() {
         echo ""
         return
     fi
+    # Skip virtual/RAM/loopback/Ventoy device-mapper mounts where no physical USB/CD node is bound
+    case "${src}" in
+        /dev/loop*|/dev/dm-*|/dev/mapper/*|/dev/ram*|/dev/zram*)
+            echo ""
+            return
+            ;;
+    esac
     # Resolve partition (e.g. /dev/sdb1) to parent whole disk (/dev/sdb) if applicable
     local pkname
     pkname="$(/usr/bin/lsblk -no PKNAME "${src}" 2>/dev/null | head -n1 | tr -d '[:space:]')"
@@ -36,9 +43,26 @@ resolve_boot_block_dev() {
     fi
 }
 
+is_medium_actually_gone() {
+    local dev="$1"
+    if [[ ! -b "${dev}" ]]; then
+        return 0
+    fi
+    local bname size_sectors
+    bname="$(basename "${dev}")"
+    size_sectors="$(cat "/sys/class/block/${bname}/size" 2>/dev/null || echo "0")"
+    if [[ -z "${size_sectors}" || "${size_sectors}" == "0" ]]; then
+        return 0
+    fi
+    if ! /usr/bin/dd if="${dev}" of=/dev/null bs=512 count=1 status=none 2>/dev/null; then
+        return 0
+    fi
+    return 1
+}
+
 BOOT_DEV="$(resolve_boot_block_dev)"
-if [[ -z "${BOOT_DEV}" || ! -e "${BOOT_DEV}" ]]; then
-    emergency_poweroff
+if [[ -z "${BOOT_DEV}" || ! -b "${BOOT_DEV}" ]]; then
+    logger -t anitails-watchdog "Boot medium is RAM/loopback/mapper; skipping physical block-removal watchdog."
     exit 0
 fi
 
@@ -48,6 +72,17 @@ if [[ "${DEV_TYPE}" != "cd" ]]; then
     DEV_TYPE="disk"
 fi
 
-if "${WATCHDOG_BIN}" "${DEV_UDEV_PATH}" "${DEV_TYPE}"; then
-    emergency_poweroff
-fi
+while true; do
+    if "${WATCHDOG_BIN}" "${DEV_UDEV_PATH}" "${DEV_TYPE}"; then
+        # Physical USB disk `ACTION=remove` is unconditional; CD/DVD `ACTION=change` can also
+        # be emitted by udisks2/cdrom_id media probes during boot, so verify actual ejection!
+        if [[ "${DEV_TYPE}" == "disk" ]] || is_medium_actually_gone "${BOOT_DEV}"; then
+            emergency_poweroff
+            exit 0
+        fi
+        logger -t anitails-watchdog "Ignored benign udev change probe on ${BOOT_DEV} (medium still present)."
+        sleep 0.2
+    else
+        sleep 1
+    fi
+done

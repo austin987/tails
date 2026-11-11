@@ -241,7 +241,7 @@ pacman-key --populate archlinux
 pacman -Syu --noconfirm --needed \
     archiso base-devel bc binutils ccache cpio curl dosfstools edk2-ovmf gettext git \
     gnupg kmod libelf libisoburn mtools nftables openssl pahole perl python \
-    python-yaml rsync squashfs-tools syslinux tar xz zstd
+    python-yaml rsync squashfs-tools syslinux tar xxhash xz zlib zstd
 
 echo "[2/6] Configuring unprivileged 'builder' account & parallel makepkg environment..."
 if ! id -u builder >/dev/null 2>&1; then
@@ -353,6 +353,7 @@ for pkg_dir in "${PKGBUILDS_TO_BUILD[@]}"; do
         export SOURCE_DATE_EPOCH='${SOURCE_DATE_EPOCH}'
         export ANITAILS_KMOD_KEY='${EPHEMERAL_KEY_DIR}/kmod.key'
         export ANITAILS_KMOD_CERT='${EPHEMERAL_KEY_DIR}/kmod.pem'
+        export MAKEFLAGS=\"-j\$(nproc)\"
         export PATH='/usr/lib/ccache/bin:'\"\${PATH}\"
         cd '${BUILD_WORK}/${pkg_dir}'
         makepkg -s --noconfirm --needed --cleanbuild --nocheck

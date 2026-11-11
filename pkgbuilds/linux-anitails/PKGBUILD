@@ -31,21 +31,26 @@ makedepends=(
   'perl'
   'python'
   'tar'
+  'xxhash'
   'xz'
+  'zlib'
   'zstd'
 )
 options=('!debug' '!strip')
 source=(
   "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-${pkgver}.tar.xz"
   "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-${pkgver}.tar.sign"
+  "config.arch.x86_64::https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/a6ef53be1f83078a3311939f9b7df866853d2a04/config.x86_64"
   "config.anitails.fragment"
 )
 noextract=("linux-${pkgver}.tar.xz")
 # Official SHA-256 from https://cdn.kernel.org/pub/linux/kernel/v7.x/sha256sums.asc
+# + pinned Arch Linux config.x86_64 (commit a6ef53be1f83078a3311939f9b7df866853d2a04)
 sha256sums=(
   '79c66dde66cd96877fcde8f7d36aec946b1f423d2b97b5a7b1751b75c764f3d1'
   'SKIP'
-  'a0c23169f6fc7e8fa2b592ef3aa28122f69896a570fe2f4179a07d0c1404198a'
+  'ea7fe1e206eab2458ed710db696278b51df08642a6f06de3d8358db340652528'
+  '48a5000e4bf17b8792ea2696d9f40f761ac93a70db56ef7bef7568b5638f3dfa'
 )
 # Official Linux Kernel Release Signing Keys (https://www.kernel.org/signature.html):
 # - Linus Torvalds: ABAF11C65A2970B130ABE3C479BE3E4300411886
@@ -69,7 +74,7 @@ prepare() {
   cd "linux-${pkgver}"
 
   echo "-anitails1" > localversion.10-pkgname
-  make defconfig
+  cp "${srcdir}/config.arch.x86_64" .config
   ./scripts/kconfig/merge_config.sh -m .config "${srcdir}/config.anitails.fragment"
   # Enroll ephemeral ISO-build out-of-tree kmod public certificate if provided by builder
   # (allows pre-compiled nvidia-open-anitails .ko.zst to pass module.sig_enforce=1 while
@@ -79,11 +84,12 @@ prepare() {
   fi
   make olddefconfig
   make -s kernelrelease > version
+  echo "Prepared linux-anitails kernelrelease: $(<version)"
 }
 
 build() {
   cd "linux-${pkgver}"
-  make all
+  make -j"$(nproc)" all
 }
 
 package_linux-anitails() {

@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# AniTails Read-Only Virtio Boot Health Reporter (VM CI Verification Only)
+# ========================================================================
+# SECURITY INVARIANTS:
+#   - Strictly WRITE-ONLY to `/dev/virtio-ports/org.anitails.status`.
+#   - NEVER reads commands, stdin, or configuration from the virtio port.
+#   - NEVER emits hardware serial numbers, MAC addresses, or user data.
+#   - Guarded by `ConditionVirtualization=vm` + `ConditionPathExists` in systemd.
+set -euo pipefail
+
+PORT="/dev/virtio-ports/org.anitails.status"
+if [[ ! -e "${PORT}" ]]; then
+    for sys_p in /sys/class/virtio-ports/*; do
+        if [[ -f "${sys_p}/name" && "$(cat "${sys_p}/name" 2>/dev/null)" == "org.anitails.status" ]]; then
+            PORT="/dev/$(basename "${sys_p}")"
+            break
+        fi
+    done
+fi
+if [[ ! -e "${PORT}" ]]; then
+    exit 0
+fi
+
+DEADLINE=$((SECONDS + 90))
+GDM_OK="false"
+SESSION_OK="false"
+FIREWALL_OK="false"
+NETNS_OK="false"
+
+while (( SECONDS < DEADLINE )); do
+    if /usr/bin/systemctl is-active --quiet gdm.service; then
+        GDM_OK="true"
+    else
+        GDM_OK="false"
+    fi
+
+    if /usr/bin/loginctl list-sessions --no-legend 2>/dev/null | grep -qw "amnesia" \
+       || /usr/bin/pgrep -u amnesia -f "gnome-session|gnome-shell" >/dev/null 2>&1; then
+        SESSION_OK="true"
+    else
+        SESSION_OK="false"
+    fi
+
+    if /usr/bin/nft list table inet anitails_filter >/dev/null 2>&1; then
+        FIREWALL_OK="true"
+    else
+        FIREWALL_OK="false"
+    fi
+
+    if /usr/bin/ip netns list 2>/dev/null | grep -qw "tbb"; then
+        NETNS_OK="true"
+    else
+        NETNS_OK="false"
+    fi
+
+    if [[ "${GDM_OK}" == "true" && "${SESSION_OK}" == "true" && "${FIREWALL_OK}" == "true" && "${NETNS_OK}" == "true" ]]; then
+        # Hold 3 seconds to confirm no post-login service (such as udisks2 / media watchdog) powers off or crashes GDM
+        sleep 3
+        if /usr/bin/systemctl is-active --quiet gdm.service \
+           && ( /usr/bin/loginctl list-sessions --no-legend 2>/dev/null | grep -qw "amnesia" \
+                || /usr/bin/pgrep -u amnesia -f "gnome-session|gnome-shell" >/dev/null 2>&1 ); then
+            KVER="$(uname -r)"
+            SYS_STATE="$(/usr/bin/systemctl is-system-running 2>/dev/null || true)"
+            printf "ANITAILS_OS_BOOT_READY kernel=%s state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
+                "${KVER}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}" > "${PORT}"
+            exit 0
+        fi
+    fi
+    sleep 1
+done
+
+{
+    printf "ANITAILS_OS_BOOT_FAILED kernel=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
+        "$(uname -r)" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}"
+    echo "=== systemctl --failed ==="
+    /usr/bin/systemctl --failed --no-pager 2>&1 || true
+    echo "=== loginctl list-sessions ==="
+    /usr/bin/loginctl list-sessions --no-pager 2>&1 || true
+    echo "=== journalctl -b -p warning..emerg (last 60 lines) ==="
+    /usr/bin/journalctl -b -p warning..emerg --no-pager -n 60 2>&1 || true
+    echo "=== journalctl -u gdm.service (last 40 lines) ==="
+    /usr/bin/journalctl -u gdm.service --no-pager -n 40 2>&1 || true
+} > "${PORT}"
+exit 1

@@ -270,6 +270,15 @@ jobs:
             /tmp/anitails-ci-cache/pkgs
           key: anitails-pkgcache-v2-${{ matrix.profile }}-${{ hashFiles('pkgbuilds/**/PKGBUILD', 'pkgbuilds/linux-anitails/config.anitails.fragment', 'archiso/snapshot.lock.json') }}-${{ github.run_id }}
 
+      - name: Boot-test built ISO end-to-end in QEMU (Legacy BIOS + UEFI OVMF -> GDM amnesia session)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-x86 ovmf
+          if [[ -e /dev/kvm ]]; then
+            sudo chmod 0666 /dev/kvm
+          fi
+          ./scripts/ci-boot-test-iso.sh --out-dir out --timeout 240
+
       - name: Publish ISO checksums & offline HSM signing instructions to Job Summary
         run: |
           {

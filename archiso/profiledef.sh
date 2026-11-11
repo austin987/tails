@@ -58,5 +58,6 @@ file_permissions=(
   ["/usr/local/lib/anitails-swapon-disabled"]="0:0:0755"
   ["/usr/local/lib/anitails-udev-watchdog-wrapper"]="0:0:0755"
   ["/usr/local/lib/anitails-unblock-network"]="0:0:0755"
+  ["/usr/local/lib/anitails-virtio-boot-status"]="0:0:0755"
   ["/home/amnesia"]="1000:1000:0700"
 )

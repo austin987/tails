@@ -92,10 +92,12 @@ class TestGitHubActionsIsoWorkflow(unittest.TestCase):
         for rel in (
             "scripts/ci-build-local-repo.sh",
             "scripts/ci-verify-iso.sh",
+            "scripts/ci-boot-test-iso.sh",
             "scripts/build-iso.sh",
             "scripts/sign-release.sh",
             "archiso/profiledef.sh",
             "archiso/airootfs/usr/local/lib/anitails-alpm-finalize",
+            "archiso/airootfs/usr/local/lib/anitails-virtio-boot-status",
             "archiso/airootfs/usr/local/lib/anitails-unblock-network",
             "archiso/airootfs/usr/local/lib/anitails-spoof-mac",
         ):
