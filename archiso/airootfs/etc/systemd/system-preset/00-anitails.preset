@@ -1,0 +1,27 @@
+# AniTails systemd first-boot preset policy
+# Prevents systemd first-boot preset-all (triggered because mkarchiso sets
+# /etc/machine-id to 'uninitialized') from starting interactive wizards
+# (systemd-firstboot) or competing network managers (systemd-networkd).
+disable systemd-firstboot.service
+disable systemd-networkd.service
+disable systemd-networkd.socket
+disable systemd-networkd-wait-online.service
+disable systemd-resolved.service
+disable systemd-timesyncd.service
+disable systemd-homed.service
+disable systemd-loop@.service
+disable sshd.service
+disable sshd.socket
+
+enable gdm.service
+enable NetworkManager.service
+enable nftables.service
+enable apparmor.service
+enable anitails-gpu-guard.service
+enable anitails-create-netns.service
+enable anitails-onion-grater.service
+enable run-initramfs.mount
+enable anitails-initramfs-restore.service
+enable anitails-remove-overlayfs-dirs.service
+enable anitails-shutdown-on-media-removal.service
+enable anitails-virtio-boot-status.service

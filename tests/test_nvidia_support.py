@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -414,6 +415,21 @@ class TestNvidiaSupport(unittest.TestCase):
         wipe_sh = (REPO_ROOT / "archiso/airootfs/usr/local/lib/anitails-shutdown-ram-wipe").read_text(encoding="utf-8")
         self.assertIn("/run/anitails-nvidia-ram", wipe_sh)
         self.assertIn("/sys/bus/pci/drivers/nvidia/unbind", wipe_sh)
+
+        # 4. Regression guard: shallow installation depth (e.g. /tmp/xxx/anitails-gpu-select, <= 4 parents
+        # like /usr/local/bin/anitails-gpu-select in live SquashFS) and LC_ALL=C MUST NOT raise IndexError!
+        with tempfile.TemporaryDirectory(dir="/tmp") as shallow_bin, tempfile.TemporaryDirectory() as root_td:
+            sb = Path(shallow_bin)
+            shutil.copy2(REPO_ROOT / "archiso/airootfs/usr/local/bin/anitails-gpu-detect", sb / "anitails-gpu-detect")
+            shutil.copy2(SELECT_BIN, sb / "anitails-gpu-select")
+            r = Path(root_td)
+            _add_pci_dev(r, "0000:00:01.0", "1234", "1111", boot_vga="1", bound_driver="bochs-drm")
+            env_c = {**os.environ, "LC_ALL": "C"}
+            p_shallow = subprocess.run(
+                ["python3", str(sb / "anitails-gpu-select"), "--root", str(r), "--db", str(DB_PATH), "--cmdline", "", "--uname-r", "7.3.3-anitails1"],
+                capture_output=True, text=True, env=env_c, check=True,
+            )
+            self.assertEqual(json.loads(p_shallow.stdout)["selected_driver"], "non_nvidia_kms")
 
 
 if __name__ == "__main__":

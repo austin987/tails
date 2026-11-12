@@ -15,14 +15,13 @@ fi
 WORKDIR="$(/usr/bin/mktemp -d)"
 trap 'rm -rf "${WORKDIR}"' EXIT
 
-/usr/bin/lsinitcpio -x "${INITRD_IMG}" -C "${WORKDIR}" 2>/dev/null || {
-    (cd "${WORKDIR}" && /usr/bin/lsinitcpio -x "${INITRD_IMG}")
-}
+(cd "${WORKDIR}" && /usr/bin/lsinitcpio -x "${INITRD_IMG}") || true
 
 # Remove kernel modules (~66% of uncompressed initramfs) since kernel already has needed drivers
 rm -rf "${WORKDIR}/usr/lib/modules" "${WORKDIR}/lib/modules"
 
-cp -a "${WORKDIR}/." "${DEST}/"
+cp -a "${WORKDIR}/." "${DEST}/" || true
+mkdir -p "${DEST}/etc" "${DEST}/usr/bin" "${DEST}/usr/lib/systemd/system-shutdown"
 
 # Install systemd-shutdown entrypoint and AniTails shutdown memory-wipe hook
 install -Dm0755 /usr/lib/systemd/systemd-shutdown "${DEST}/shutdown"

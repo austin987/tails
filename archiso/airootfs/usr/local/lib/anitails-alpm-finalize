@@ -36,7 +36,11 @@ if [[ -x /usr/local/lib/anitails-unblock-network ]]; then
     /usr/local/lib/anitails-unblock-network generate-blacklist
 fi
 
-echo "[anitails-finalize] 4/9 Compiling GNOME dconf database..."
+echo "[anitails-finalize] 4/9 Compiling UTF-8 locales & GNOME dconf database..."
+ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+if [[ -x /usr/bin/locale-gen && -f /etc/locale.gen ]]; then
+    /usr/bin/locale-gen
+fi
 if [[ -x /usr/bin/dconf ]]; then
     /usr/bin/dconf update
 fi
@@ -45,6 +49,10 @@ echo "[anitails-finalize] 5/9 Masking forbidden services & neutralizing static n
 ln -sf /dev/null /etc/systemd/system/swap.target
 ln -sf /dev/null /etc/systemd/system/sshd.service
 ln -sf /dev/null /etc/systemd/system/sshd.socket
+ln -sf /dev/null /etc/systemd/system/systemd-firstboot.service
+ln -sf /dev/null /etc/systemd/system/systemd-loop@.service
+ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
+ln -sf /dev/null /etc/systemd/system/systemd-networkd.socket
 ln -sf /dev/null /etc/systemd/system/systemd-timesyncd.service
 ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
 ln -sf /dev/null /etc/systemd/system/nvidia-persistenced.service
@@ -87,8 +95,13 @@ ln -sf /etc/systemd/system/anitails-remove-overlayfs-dirs.service /etc/systemd/s
 ln -sf /etc/systemd/system/anitails-shutdown-on-media-removal.service /etc/systemd/system/graphical.target.wants/anitails-shutdown-on-media-removal.service
 ln -sf /etc/systemd/system/anitails-virtio-boot-status.service /etc/systemd/system/sysinit.target.wants/anitails-virtio-boot-status.service
 
-echo "[anitails-finalize] 7/9 Cleaning .pacnew files & enforcing Tor directory permissions..."
+echo "[anitails-finalize] 7/9 Cleaning .pacnew files & enforcing amnesia/Tor directory permissions..."
 find /etc -name "*.pacnew" -delete 2>/dev/null || true
+if [[ -d /home/amnesia ]]; then
+    chown -R 1000:1000 /home/amnesia
+    chmod 0700 /home/amnesia
+    [[ -d /home/amnesia/.gnupg ]] && chmod 0700 /home/amnesia/.gnupg
+fi
 TOR_UID="$(id -u tor 2>/dev/null || echo 43)"
 TOR_GID="$(id -g tor 2>/dev/null || echo 43)"
 install -d -m 0700 -o "${TOR_UID}" -g "${TOR_GID}" /var/lib/tor

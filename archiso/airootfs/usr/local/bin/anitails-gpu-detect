@@ -31,7 +31,12 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_DB_PATH = Path("/usr/share/anitails/gpu/nvidia-pci-db.json")
-REPO_DB_FALLBACK = Path(__file__).resolve().parents[4] / "archiso/airootfs/usr/share/anitails/gpu/nvidia-pci-db.json"
+_RESOLVED_SELF = Path(__file__).resolve()
+REPO_DB_FALLBACK = (
+    _RESOLVED_SELF.parents[4] / "archiso/airootfs/usr/share/anitails/gpu/nvidia-pci-db.json"
+    if len(_RESOLVED_SELF.parents) > 4
+    else DEFAULT_DB_PATH
+)
 
 VIRTUAL_GPU_VENDORS = {
     "1234": "QEMU Bochs/StdVGA",
@@ -327,7 +332,8 @@ def main(argv: list[str] | None = None) -> int:
 
     report = scan_gpus(Path(args.sysfs_root), Path(args.db) if args.db else None)
     text = json.dumps(report, indent=2 if args.pretty else None, ensure_ascii=False)
-    sys.stdout.write(redact_sensitive(text) + "\n")
+    sys.stdout.buffer.write((redact_sensitive(text) + "\n").encode("utf-8"))
+    sys.stdout.buffer.flush()
     return 0
 
 

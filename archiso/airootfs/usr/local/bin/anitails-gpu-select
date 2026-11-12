@@ -498,7 +498,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.dry_run:
         apply_runtime_files(root, scan, decision)
 
-    sys.stdout.write(DETECT.redact_sensitive(json.dumps(decision, indent=2, ensure_ascii=False)) + "\n")
+    sys.stdout.buffer.write(
+        (DETECT.redact_sensitive(json.dumps(decision, indent=2, ensure_ascii=False)) + "\n").encode("utf-8")
+    )
+    sys.stdout.buffer.flush()
     return 0
 
 

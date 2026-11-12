@@ -97,7 +97,10 @@ for iso in "${ISO_FILES[@]}"; do
         rm -rf "${sfs_tmp}"
         for req_rootfs_entry in \
             "squashfs-root/etc/anitails-finalized" \
+            "squashfs-root/etc/localtime" \
+            "squashfs-root/etc/locale.conf" \
             "squashfs-root/etc/systemd/system/display-manager.service" \
+            "squashfs-root/etc/systemd/system/systemd-firstboot.service" \
             "squashfs-root/etc/systemd/system/sysinit.target.wants/anitails-virtio-boot-status.service" \
             "squashfs-root/etc/modprobe.d/90-all-net-blacklist.conf"; do
             if ! grep -Fxq "${req_rootfs_entry}" <<<"${sfs_list}"; then
