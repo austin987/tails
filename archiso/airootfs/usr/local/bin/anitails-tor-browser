@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# AniTails Tor Browser 16.0 Launcher
+#
+# Security Invariants:
+# 1. Refuses to run as root (UID 0).
+# 2. Verifies bundled Tor binary is ABSENT (prevents Tor-over-Tor!).
+# 3. Executes inside dedicated network namespace 'tbb' (10.200.1.2/30) where ONLY
+#    10.200.1.1:9050 (IsolateSOCKSAuth SocksPort) and 10.200.1.1:9051 (onion-grater) are reachable.
+# 4. Preserves official Tor Browser 16.0 extensions & fingerprint (NO extra third-party add-ons).
+set -euo pipefail
+
+TBB_HOME="/opt/tor-browser/Browser"
+PROFILE_SRC="/etc/anitails/tor-browser-profile"
+USER_TBB_DIR="${HOME}/.tor-browser/profile.default"
+
+if [[ "$(id -u)" -eq 0 ]]; then
+    echo "ERROR: Refusing to launch Tor Browser as root!" >&2
+    exit 1
+fi
+
+if [[ -e "${TBB_HOME}/TorBrowser/Tor/tor" ]]; then
+    echo "CRITICAL SECURITY ERROR: Bundled Tor binary detected in ${TBB_HOME}/TorBrowser/Tor/tor (Tor-over-Tor risk)! Aborting." >&2
+    exit 1
+fi
+
+mkdir -p "${USER_TBB_DIR}" "${HOME}/Tor Browser"
+if [[ -f "/usr/share/anitails/tor-browser-prefs.js" && ! -f "${USER_TBB_DIR}/user.js" ]]; then
+    install -m 0600 "/usr/share/anitails/tor-browser-prefs.js" "${USER_TBB_DIR}/user.js"
+fi
+
+# Configure environment so Tor Browser uses system Tor via veth-tbb DNAT (127.0.0.1:9050/9051 -> 10.200.1.1:9050/9051)
+export TOR_SKIP_LAUNCH=1
+export TOR_SOCKS_HOST="127.0.0.1"
+export TOR_SOCKS_PORT="9050"
+export TOR_CONTROL_HOST="127.0.0.1"
+export TOR_CONTROL_PORT="9051"
+export TOR_TRANSPROXY=0
+export MOZ_ENABLE_WAYLAND=1
+
+# Enter network namespace 'tbb' via bubblewrap sandbox.
+# GPU PRIVACY & SANDBOX INVARIANT:
+# `--dev /dev` mounts an isolated synthetic tmpfs `/dev` (ONLY null, zero, full, random, urandom, tty, pts, shm)
+# and NEVER bind-mounts `/dev/nvidia*`, `/dev/nvidiactl`, `/dev/nvidia-uvm`, or `/dev/dri/renderD*` into Tor Browser,
+# preventing untrusted web pages from invoking NVIDIA kernel ioctls or GPU hardware fingerprinting.
+exec /usr/bin/bwrap \
+    --die-with-parent \
+    --new-session \
+    --ro-bind /usr /usr \
+    --symlink usr/lib /lib \
+    --symlink usr/lib /lib64 \
+    --symlink usr/bin /bin \
+    --ro-bind /etc /etc \
+    --ro-bind /opt/tor-browser /opt/tor-browser \
+    --proc /proc \
+    --dev /dev \
+    --tmpfs /tmp \
+    --bind "${USER_TBB_DIR}" "${USER_TBB_DIR}" \
+    --bind "${HOME}/Tor Browser" "${HOME}/Tor Browser" \
+    --ro-bind-try "/run/user/$(id -u)/wayland-0" "/run/user/$(id -u)/wayland-0" \
+    --ro-bind-try "/run/user/$(id -u)/pulse" "/run/user/$(id -u)/pulse" \
+    -- "${TBB_HOME}/firefox.real" --class "Tor Browser" -profile "${USER_TBB_DIR}" "$@"

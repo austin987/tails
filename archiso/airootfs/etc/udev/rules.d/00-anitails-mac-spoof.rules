@@ -1,0 +1,3 @@
+# AniTails MAC Address Anonymization udev rules
+# ARPHDR_ETHER == 1. Skip loopback, veth pairs, and ipheth USB tethering.
+SUBSYSTEM=="net", ACTION=="add", ATTR{type}=="1", KERNEL!="lo|veth*", DRIVERS!="ipheth", RUN+="/usr/local/lib/anitails-spoof-mac $name"

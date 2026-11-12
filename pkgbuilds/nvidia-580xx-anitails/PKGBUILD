@@ -1,0 +1,117 @@
+# Maintainer: AniTails Security Engineering (Independent Arch Derivative)
+# Package: Optional Legacy NVIDIA R580 (580.196.07) Pre-Compiled Driver Bundle
+#          for Maxwell (GM10x/GM20x), Pascal (GP10x), and Volta (GV100) GPUs ONLY!
+#
+# CRITICAL SECURITY & MAINTENANCE NOTICE:
+# 1. Maxwell, Pascal, and Volta GPUs LACK hardware GSP processors and were dropped from
+#    NVIDIA R590/R615/R620 and `nvidia-open`. NVIDIA R580 (`580.196.07`, released 2026-10-21)
+#    is the active LTSB/legacy branch still receiving NVIDIA security updates.
+# 2. Unlike `nvidia-open-anitails`, this package embeds NVIDIA's closed-source kernel core
+#    blob (`nv-kernel.o_binary`) under `LicenseRef-NVIDIA-Driver-License-Agreement`.
+# 3. NEVER installed in the default `base` or `nvidia-modern` ISO! Used ONLY when building
+#    the isolated `--profile nvidia-legacy-580xx` image in a clean chroot.
+# 4.AniTails STRICTLY REJECTS EOL branches (`470xx` Kepler, `390xx` Fermi, `340xx` Tesla):
+#    they receive zero security fixes and `470xx` requires `ibt=off` (disabling Intel CET!).
+
+pkgname=nvidia-580xx-anitails
+pkgver=580.196.07
+pkgrel=1
+_kernpkgver=7.3.3
+pkgdesc="Optional isolated NVIDIA R580 legacy driver & signed kmods for Maxwell/Pascal/Volta on linux-anitails ${_kernpkgver}"
+arch=('x86_64')
+url="https://www.nvidia.com/en-us/drivers/unix/"
+license=('LicenseRef-NVIDIA-Driver-License-Agreement')
+depends=(
+  "linux-anitails=${_kernpkgver}"
+  'libglvnd'
+  'egl-wayland'
+  'egl-gbm'
+)
+makedepends=(
+  "linux-anitails-headers=${_kernpkgver}"
+  'bc'
+  'kmod'
+  'libelf'
+  'openssl'
+  'pahole'
+  'zstd'
+)
+provides=('NVIDIA-MODULE' 'nvidia-utils' 'vulkan-driver' 'opengl-driver')
+conflicts=('nvidia-open-anitails' 'nvidia-open' 'nvidia-open-dkms' 'nvidia-utils' 'nvidia')
+options=('!strip' '!debug')
+_pkg="NVIDIA-Linux-x86_64-${pkgver}"
+source=(
+  "https://us.download.nvidia.com/XFree86/Linux-x86_64/${pkgver}/${_pkg}.run"
+)
+# Pinned SHA-256 verified against upstream R580 580.196.07 (2026-10-21, fixes Linux >= 7.0 screen_info)
+sha256sums=(
+  '0aab0518db53cf73c412dc7f32bbc850ca95e839d8923d0de4bff42c1c9169ce'
+)
+
+prepare() {
+  # Verify NVIDIA self-extracting archive internal integrity check in addition to makepkg SHA-256
+  sh "${srcdir}/${_pkg}.run" --check
+  sh "${srcdir}/${_pkg}.run" --extract-only --target "${srcdir}/${_pkg}"
+}
+
+build() {
+  local _kernver
+  _kernver="$(</usr/lib/modules/${_kernpkgver}-anitails1/build/version)"
+  cd "${srcdir}/${_pkg}/kernel"
+
+  make SYSSRC="/usr/lib/modules/${_kernver}/build" \
+       SYSOUT="/usr/lib/modules/${_kernver}/build" \
+       IGNORE_PREEMPT_RT_PRESENCE=1 \
+       NV_EXCLUDE_BUILD_MODULES="nvidia-peermem" \
+       modules
+}
+
+package() {
+  local _kernver _builddir _extradir
+  _kernver="$(</usr/lib/modules/${_kernpkgver}-anitails1/build/version)"
+  _builddir="/usr/lib/modules/${_kernver}/build"
+  _extradir="${pkgdir}/usr/lib/modules/${_kernver}/extramodules"
+
+  cd "${srcdir}/${_pkg}"
+  install -dm755 "${_extradir}"
+
+  for _ko in kernel/nvidia.ko kernel/nvidia-modeset.ko kernel/nvidia-drm.ko kernel/nvidia-uvm.ko; do
+    install -m644 "${_ko}" "${_extradir}/$(basename "${_ko}")"
+    if [[ -n "${ANITAILS_KMOD_KEY:-}" && -n "${ANITAILS_KMOD_CERT:-}" ]]; then
+      "${_builddir}/scripts/sign-file" sha512 "${ANITAILS_KMOD_KEY}" "${ANITAILS_KMOD_CERT}" \
+        "${_extradir}/$(basename "${_ko}")"
+    elif [[ -f "${_builddir}/certs/signing_key.pem" && -f "${_builddir}/certs/signing_key.x509" ]]; then
+      "${_builddir}/scripts/sign-file" sha512 \
+        "${_builddir}/certs/signing_key.pem" \
+        "${_builddir}/certs/signing_key.x509" \
+        "${_extradir}/$(basename "${_ko}")"
+    else
+      echo "ERROR: Refusing to package unsigned nvidia-580xx module (module.sig_enforce=1 is mandatory)!" >&2
+      return 1
+    fi
+    zstd --rm -19 -q "${_extradir}/$(basename "${_ko}")"
+  done
+
+  # Userspace EGL/GLX/Vulkan/GBM libraries (isolated to this profile; no static nouveau blacklist!)
+  install -Dm755 "libGLX_nvidia.so.${pkgver}" "${pkgdir}/usr/lib/libGLX_nvidia.so.${pkgver}"
+  ln -s "libGLX_nvidia.so.${pkgver}" "${pkgdir}/usr/lib/libGLX_nvidia.so.0"
+  install -Dm755 "libEGL_nvidia.so.${pkgver}" "${pkgdir}/usr/lib/libEGL_nvidia.so.${pkgver}"
+  ln -s "libEGL_nvidia.so.${pkgver}" "${pkgdir}/usr/lib/libEGL_nvidia.so.0"
+  install -Dm755 "libGLESv2_nvidia.so.${pkgver}" "${pkgdir}/usr/lib/libGLESv2_nvidia.so.${pkgver}"
+  ln -s "libGLESv2_nvidia.so.${pkgver}" "${pkgdir}/usr/lib/libGLESv2_nvidia.so.2"
+  install -Dm755 "libnvidia-glcore.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-glcore.so.${pkgver}"
+  install -Dm755 "libnvidia-eglcore.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-eglcore.so.${pkgver}"
+  install -Dm755 "libnvidia-glsi.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-glsi.so.${pkgver}"
+  install -Dm755 "libnvidia-tls.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-tls.so.${pkgver}"
+  install -Dm755 "libnvidia-glvkspirv.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-glvkspirv.so.${pkgver}"
+  install -Dm755 "libnvidia-gpucomp.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-gpucomp.so.${pkgver}"
+  install -Dm755 "libnvidia-allocator.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-allocator.so.${pkgver}"
+  ln -s "libnvidia-allocator.so.${pkgver}" "${pkgdir}/usr/lib/libnvidia-allocator.so.1"
+  install -dm755 "${pkgdir}/usr/lib/gbm"
+  ln -sr "${pkgdir}/usr/lib/libnvidia-allocator.so.${pkgver}" "${pkgdir}/usr/lib/gbm/nvidia-drm_gbm.so"
+  install -Dm644 "10_nvidia.json" "${pkgdir}/usr/share/glvnd/egl_vendor.d/10_nvidia.json"
+  install -Dm644 "nvidia_icd.json" "${pkgdir}/usr/share/vulkan/icd.d/nvidia_icd.json"
+  install -Dm644 "nvidia_layers.json" "${pkgdir}/usr/share/vulkan/implicit_layer.d/nvidia_layers.json"
+
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

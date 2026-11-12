@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Unpack Archiso initramfs into /run/initramfs (mounted tmpfs with exec) so
+# systemd-shutdown pivots into RAM and unmounts/wipes the live overlayfs & caches.
+# Ported from Tails usr/local/lib/initramfs-restore (unmkinitramfs -> Arch lsinitcpio -x).
+set -euo pipefail
+
+INITRD_IMG="/run/archiso/bootmnt/arch/boot/x86_64/initramfs-linux-anitails.img"
+DEST="/run/initramfs"
+
+if [[ ! -r "${INITRD_IMG}" ]]; then
+    logger -t anitails-initramfs "Initramfs image ${INITRD_IMG} not found; skipping."
+    exit 0
+fi
+
+WORKDIR="$(/usr/bin/mktemp -d)"
+trap 'rm -rf "${WORKDIR}"' EXIT
+
+/usr/bin/lsinitcpio -x "${INITRD_IMG}" -C "${WORKDIR}" 2>/dev/null || {
+    (cd "${WORKDIR}" && /usr/bin/lsinitcpio -x "${INITRD_IMG}")
+}
+
+# Remove kernel modules (~66% of uncompressed initramfs) since kernel already has needed drivers
+rm -rf "${WORKDIR}/usr/lib/modules" "${WORKDIR}/lib/modules"
+
+cp -a "${WORKDIR}/." "${DEST}/"
+
+# Install systemd-shutdown entrypoint and AniTails shutdown memory-wipe hook
+install -Dm0755 /usr/lib/systemd/systemd-shutdown "${DEST}/shutdown"
+install -Dm0755 /usr/local/lib/anitails-shutdown-ram-wipe "${DEST}/usr/lib/systemd/system-shutdown/anitails-wipe"
+install -Dm0755 /usr/bin/mount "${DEST}/usr/bin/mount"
+install -Dm0755 /usr/bin/umount "${DEST}/usr/bin/umount"
+install -Dm0755 /usr/bin/cryptsetup "${DEST}/usr/bin/cryptsetup" || true
+touch "${DEST}/etc/initrd-release"

@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# AniTails Read-Only VM Boot Health Reporter (CI Test Harness Only)
+# =================================================================
+# SECURITY INVARIANTS:
+#   - Activates ONLY inside a VM (`ConditionVirtualization=vm`) when the
+#     explicit QEMU test-harness marker (`-smbios type=11,value=anitails_ci_boot_test`
+#     or virtio port `org.anitails.status`) is present.
+#   - Strictly WRITE-ONLY: NEVER reads commands, stdin, or config from host.
+#   - NEVER emits hardware serial numbers, MAC addresses, or user data.
+set -euo pipefail
+
+has_harness_marker() {
+    if [[ -r /sys/firmware/dmi/tables/DMI ]] && /usr/bin/grep -aq "anitails_ci_boot_test" /sys/firmware/dmi/tables/DMI 2>/dev/null; then
+        return 0
+    fi
+    if [[ -e "/dev/virtio-ports/org.anitails.status" ]]; then
+        return 0
+    fi
+    local sys_p name
+    for sys_p in /sys/class/virtio-ports/*; do
+        [[ -d "${sys_p}" && -f "${sys_p}/name" ]] || continue
+        name="$(tr -d '\r\n' < "${sys_p}/name" 2>/dev/null || true)"
+        if [[ "${name}" == "org.anitails.status" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+if ! has_harness_marker; then
+    /usr/bin/modprobe virtio_pci 2>/dev/null || true
+    /usr/bin/modprobe virtio_console 2>/dev/null || true
+    for _ in $(seq 1 10); do
+        if has_harness_marker; then
+            break
+        fi
+        sleep 0.5
+    done
+fi
+
+if ! has_harness_marker; then
+    exit 0
+fi
+
+if [[ ! -c /dev/ttyS0 ]]; then
+    /usr/bin/mknod -m 0600 /dev/ttyS0 c 4 64 2>/dev/null || true
+fi
+
+emit_report() {
+    local payload="$1"
+    if [[ -c /dev/ttyS0 ]]; then
+        printf "%s\n" "${payload}" > /dev/ttyS0 2>/dev/null || true
+    fi
+    if [[ -c /dev/virtio-ports/org.anitails.status ]]; then
+        /usr/bin/timeout 1 bash -c 'cat > "$1"' _ /dev/virtio-ports/org.anitails.status <<<"${payload}" 2>/dev/null || true
+    fi
+}
+
+emit_report "$(printf "ANITAILS_BOOT_HEARTBEAT stage=early kernel=%s uptime=%s" \
+    "$(uname -r)" "$(awk '{print $1}' /proc/uptime 2>/dev/null || echo 0)")"
+
+DEADLINE=$((SECONDS + 165))
+NEXT_PROGRESS=$((SECONDS + 10))
+GDM_OK="false"
+SESSION_OK="false"
+FIREWALL_OK="false"
+NETNS_OK="false"
+
+while (( SECONDS < DEADLINE )); do
+    if /usr/bin/systemctl is-active --quiet gdm.service; then
+        GDM_OK="true"
+    else
+        GDM_OK="false"
+    fi
+
+    if /usr/bin/loginctl list-sessions --no-legend 2>/dev/null | grep -qw "amnesia" \
+       || /usr/bin/pgrep -u amnesia -f "gnome-session|gnome-shell" >/dev/null 2>&1; then
+        SESSION_OK="true"
+    else
+        SESSION_OK="false"
+    fi
+
+    if /usr/bin/nft list table inet anitails_filter >/dev/null 2>&1; then
+        FIREWALL_OK="true"
+    else
+        FIREWALL_OK="false"
+    fi
+
+    if /usr/bin/ip netns list 2>/dev/null | grep -qw "tbb"; then
+        NETNS_OK="true"
+    else
+        NETNS_OK="false"
+    fi
+
+    if [[ "${GDM_OK}" == "true" && "${SESSION_OK}" == "true" && "${FIREWALL_OK}" == "true" && "${NETNS_OK}" == "true" ]]; then
+        # Hold 3 seconds to confirm no post-login service (udisks2 / media watchdog) powers off or crashes GDM
+        sleep 3
+        if /usr/bin/systemctl is-active --quiet gdm.service \
+           && ( /usr/bin/loginctl list-sessions --no-legend 2>/dev/null | grep -qw "amnesia" \
+                || /usr/bin/pgrep -u amnesia -f "gnome-session|gnome-shell" >/dev/null 2>&1 ); then
+            KVER="$(uname -r)"
+            SYS_STATE="$(/usr/bin/systemctl is-system-running 2>/dev/null || true)"
+            emit_report "$(printf "ANITAILS_OS_BOOT_READY kernel=%s state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s" \
+                "${KVER}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}")"
+            exit 0
+        fi
+    fi
+
+    if (( SECONDS >= NEXT_PROGRESS )); then
+        SYS_STATE="$(/usr/bin/systemctl is-system-running 2>/dev/null || true)"
+        emit_report "$(printf "ANITAILS_BOOT_PROGRESS sec=%d state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s" \
+            "${SECONDS}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}")"
+        NEXT_PROGRESS=$((SECONDS + 10))
+    fi
+
+    sleep 1
+done
+
+FAIL_DUMP="$(
+    printf "ANITAILS_OS_BOOT_FAILED kernel=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
+        "$(uname -r)" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}"
+    echo "=== systemctl list-jobs ==="
+    /usr/bin/systemctl list-jobs --no-pager 2>&1 || true
+    echo "=== systemctl --failed ==="
+    /usr/bin/systemctl --failed --no-pager 2>&1 || true
+    echo "=== loginctl list-sessions ==="
+    /usr/bin/loginctl list-sessions --no-pager 2>&1 || true
+    echo "=== journalctl -b -p warning..emerg (last 40 lines) ==="
+    /usr/bin/journalctl -b -p warning..emerg --no-pager -n 40 2>&1 || true
+    echo "=== journalctl -u gdm.service (last 35 lines) ==="
+    /usr/bin/journalctl -u gdm.service --no-pager -n 35 2>&1 || true
+)"
+emit_report "${FAIL_DUMP}"
+exit 1

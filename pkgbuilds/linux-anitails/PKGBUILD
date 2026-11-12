@@ -1,0 +1,137 @@
+# Maintainer: AniTails Security Engineering (Independent Arch Derivative)
+# Upstream Target: Linux 7.3.3 (Latest non-rc, non-EOL stable kernel on kernel.org as of 2026-11-08)
+# Rationale: Arch [core] `linux` is at 7.2.14.arch1-1 (7.2 branch reached EOL at 7.2.15).
+#            Includes mainline fixes for CVE-2026-64560, CVE-2026-43503 (DirtyClone), and CVE-2026-46331.
+#
+# IMPORTANT KERNEL.ORG PGP NOTE:
+# kernel.org signs the UNCOMPRESSED `linux-7.3.3.tar` stream (`linux-7.3.3.tar.sign`), NOT `.tar.xz`.
+# Therefore `noextract` + explicit `xz -cd ... | gpg --verify` in `prepare()` is mandatory and audited.
+
+pkgbase=linux-anitails
+pkgname=(
+  'linux-anitails'
+  'linux-anitails-headers'
+)
+pkgver=7.3.3
+pkgrel=1
+pkgdesc='Linux 7.3.3 stable kernel hardened for AniTails live system (AppArmor LSM + init_on_free)'
+url='https://www.kernel.org/'
+arch=('x86_64')
+license=('GPL-2.0-only')
+makedepends=(
+  'bc'
+  'binutils'
+  'cpio'
+  'gettext'
+  'gnupg'
+  'kmod'
+  'libelf'
+  'openssl'
+  'pahole'
+  'perl'
+  'python'
+  'tar'
+  'xxhash'
+  'xz'
+  'zlib'
+  'zstd'
+)
+options=('!debug' '!strip')
+source=(
+  "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-${pkgver}.tar.xz"
+  "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-${pkgver}.tar.sign"
+  "config.arch.x86_64::https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/a6ef53be1f83078a3311939f9b7df866853d2a04/config.x86_64"
+  "config.anitails.fragment"
+)
+noextract=("linux-${pkgver}.tar.xz")
+# Official SHA-256 from https://cdn.kernel.org/pub/linux/kernel/v7.x/sha256sums.asc
+# + pinned Arch Linux config.x86_64 (commit a6ef53be1f83078a3311939f9b7df866853d2a04)
+sha256sums=(
+  '79c66dde66cd96877fcde8f7d36aec946b1f423d2b97b5a7b1751b75c764f3d1'
+  'SKIP'
+  'ea7fe1e206eab2458ed710db696278b51df08642a6f06de3d8358db340652528'
+  '48a5000e4bf17b8792ea2696d9f40f761ac93a70db56ef7bef7568b5638f3dfa'
+)
+# Official Linux Kernel Release Signing Keys (https://www.kernel.org/signature.html):
+# - Linus Torvalds: ABAF11C65A2970B130ABE3C479BE3E4300411886
+# - Greg Kroah-Hartman (stable): 647F28654894E3BD457199BE38DBBDC86092693E
+# - Sasha Levin (stable): E27E5D8A3403A2EF66873BBCDEA66FF797772CDC
+validpgpkeys=(
+  'ABAF11C65A2970B130ABE3C479BE3E4300411886'
+  '647F28654894E3BD457199BE38DBBDC86092693E'
+  'E27E5D8A3403A2EF66873BBCDEA66FF797772CDC'
+)
+
+export KBUILD_BUILD_HOST=anitails
+export KBUILD_BUILD_USER=builder
+export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
+
+prepare() {
+  echo "Verifying uncompressed kernel tarball PGP signature against Greg KH / Linus Torvalds keyring..."
+  xz -cd "${srcdir}/linux-${pkgver}.tar.xz" | gpg --verify "${srcdir}/linux-${pkgver}.tar.sign" -
+
+  tar -xJf "${srcdir}/linux-${pkgver}.tar.xz"
+  cd "linux-${pkgver}"
+
+  echo "-anitails1" > localversion.10-pkgname
+  cp "${srcdir}/config.arch.x86_64" .config
+  ./scripts/kconfig/merge_config.sh -m .config "${srcdir}/config.anitails.fragment"
+  # Enroll ephemeral ISO-build out-of-tree kmod public certificate if provided by builder
+  # (allows pre-compiled nvidia-open-anitails .ko.zst to pass module.sig_enforce=1 while
+  # the private key is shredded before SquashFS creation).
+  if [[ -n "${ANITAILS_KMOD_CERT:-}" && -f "${ANITAILS_KMOD_CERT}" ]]; then
+    ./scripts/config --set-str SYSTEM_TRUSTED_KEYS "${ANITAILS_KMOD_CERT}"
+  fi
+  make olddefconfig
+  make -s kernelrelease > version
+  echo "Prepared linux-anitails kernelrelease: $(<version)"
+}
+
+build() {
+  cd "linux-${pkgver}"
+  make -j"$(nproc)" all
+}
+
+package_linux-anitails() {
+  pkgdesc="The ${pkgdesc} kernel and modules"
+  depends=('coreutils' 'initramfs' 'kmod')
+  optdepends=(
+    'linux-firmware: firmware images needed for hardware devices'
+    'amd-ucode: microcode updates for AMD CPUs'
+    'intel-ucode: microcode updates for Intel CPUs'
+  )
+  provides=("VIRTUALBOX-GUEST-MODULES" "WIREGUARD-MODULE" "KSMBD-MODULE" "linux=${pkgver}")
+
+  cd "linux-${pkgver}"
+  local kernver
+  kernver="$(<version)"
+  local modulesdir="${pkgdir}/usr/lib/modules/${kernver}"
+
+  install -Dm644 "$(make -s image_name)" "${modulesdir}/vmlinuz"
+  echo "${pkgbase}" | install -Dm644 /dev/stdin "${modulesdir}/pkgbase"
+
+  ZSTD_CLEVEL=19 make INSTALL_MOD_PATH="${pkgdir}/usr" INSTALL_MOD_STRIP=1 \
+    DEPMOD=/doesnt/exist modules_install
+
+  rm -f "${modulesdir}/build"
+}
+
+package_linux-anitails-headers() {
+  pkgdesc="Headers and scripts for building modules for the ${pkgdesc} kernel"
+  depends=('pahole')
+
+  cd "linux-${pkgver}"
+  local builddir="${pkgdir}/usr/lib/modules/$(<version)/build"
+  install -Dt "${builddir}" -m644 .config Makefile Module.symvers System.map version vmlinux
+  install -Dt "${builddir}/kernel" -m644 kernel/Makefile
+  install -Dt "${builddir}/arch/x86" -m644 arch/x86/Makefile
+  cp -t "${builddir}" -a scripts include
+  cp -t "${builddir}/arch/x86" -a arch/x86/include
+  # Required by ArchWiki NVIDIA#Custom_kernel for IBT objtool + BTF external module builds:
+  if [[ -x tools/objtool/objtool ]]; then
+    install -Dt "${builddir}/tools/objtool" -m755 tools/objtool/objtool
+  fi
+  if [[ -x tools/bpf/resolve_btfids/resolve_btfids ]]; then
+    install -Dt "${builddir}/tools/bpf/resolve_btfids" -m755 tools/bpf/resolve_btfids/resolve_btfids
+  fi
+}

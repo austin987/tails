@@ -1,0 +1,335 @@
+#!/usr/bin/env python3
+"""
+AniTails Hardware-Truthful GPU & Display Topology Detector (`anitails-gpu-detect`)
+==================================================================================
+Identifies GPUs strictly via kernel sysfs PCI attributes:
+  - `vendor` (`0x10de` NVIDIA, `0x8086` Intel, `0x1002` AMD, virtual GPU vendors)
+  - `device` (`0xXXXX` 4-hex PCI device ID)
+  - `subsystem_vendor` & `subsystem_device` (`YYYY:ZZZZ` SKU/OEM/Max-Q disambiguation)
+  - `class` (`0x0300xx` VGA controller, `0x0302xx` 3D controller, `0x0380xx` Display)
+  - `driver` symlink (actual bound kernel module: `nvidia`, `nouveau`, `i915`, `xe`,
+    `amdgpu`, `simpledrm`, `vfio-pci`, or `unbound`)
+  - DRM connectors (`card*-HDMI-*`, `card*-DP-*`, `card*-eDP-*`) & `boot_vga`
+  - IOMMU group & Thunderbolt parent bridge (eGPU DMA safety verification)
+
+Security & Privacy Invariants:
+  - NEVER infers GPU architecture or driver support from marketing strings ("GTX"/"RTX").
+  - Explicitly flags QEMU/KVM/VMware/VirtualBox virtual GPUs (`is_virtual_gpu=True`) so
+    virtualized boot tests can NEVER be misreported as real NVIDIA GPU hardware tests.
+  - Redacts GPU UUIDs (`GPU-...`), board serial numbers, VBIOS serials, DMI serials, and
+    MAC addresses from all outputs.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+DEFAULT_DB_PATH = Path("/usr/share/anitails/gpu/nvidia-pci-db.json")
+REPO_DB_FALLBACK = Path(__file__).resolve().parents[4] / "archiso/airootfs/usr/share/anitails/gpu/nvidia-pci-db.json"
+
+VIRTUAL_GPU_VENDORS = {
+    "1234": "QEMU Bochs/StdVGA",
+    "1af4": "Red Hat Virtio-GPU",
+    "1b36": "Red Hat QXL",
+    "15ad": "VMware SVGA",
+    "80ee": "VirtualBox Graphics",
+    "1414": "Microsoft Hyper-V Synthetic Video",
+}
+
+KNOWN_DISPLAY_VENDORS = {
+    "10de": "NVIDIA Corporation",
+    "8086": "Intel Corporation",
+    "1002": "Advanced Micro Devices (AMD/ATI)",
+    "1a03": "ASPEED Technology (Server BMC VGA)",
+    "102b": "Matrox Electronics (Server/Workstation VGA)",
+    **VIRTUAL_GPU_VENDORS,
+}
+
+PCI_DISPLAY_CLASSES = {
+    "0300": "VGA compatible controller",
+    "0301": "XGA compatible controller",
+    "0302": "3D controller (often MUXless Optimus dGPU or headless Data Center GPU)",
+    "0380": "Display controller",
+}
+
+SENSITIVE_PATTERNS = [
+    (re.compile(r"\bGPU-[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b"), "GPU-[REDACTED-UUID]"),
+    (re.compile(r"\bMIG-[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b"), "MIG-[REDACTED-UUID]"),
+    (re.compile(r"(?i)(Serial\s*(?:Number|No\.?|#)?\s*[:=]\s*)([A-Za-z0-9_-]{5,})"), r"\1[REDACTED-SERIAL]"),
+    (re.compile(r"\b(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\b"), "[REDACTED-MAC]"),
+]
+
+
+def redact_sensitive(text: str) -> str:
+    out = text
+    for pat, repl in SENSITIVE_PATTERNS:
+        out = pat.sub(repl, out)
+    return out
+
+
+def _read_hex4(path: Path) -> str:
+    if not path.is_file():
+        return "0000"
+    raw = path.read_text(encoding="utf-8", errors="replace").strip().lower()
+    if raw.startswith("0x"):
+        raw = raw[2:]
+    return raw.zfill(4)[-4:]
+
+
+def _read_class_prefix(path: Path) -> tuple[str, str]:
+    if not path.is_file():
+        return "0000", "000000"
+    raw = path.read_text(encoding="utf-8", errors="replace").strip().lower()
+    if raw.startswith("0x"):
+        raw = raw[2:]
+    raw = raw.zfill(6)[-6:]
+    return raw[:4], raw
+
+
+def load_nvidia_db(db_path: Path | None = None) -> dict[str, Any]:
+    candidates = [p for p in [db_path, DEFAULT_DB_PATH, REPO_DB_FALLBACK] if p is not None]
+    for c in candidates:
+        if c.is_file():
+            return json.loads(c.read_text(encoding="utf-8"))
+    raise FileNotFoundError(f"NVIDIA PCI database not found in {[str(c) for c in candidates]}")
+
+
+def detect_iommu_active(sysfs_root: Path) -> bool:
+    iommu_dir = sysfs_root / "sys/class/iommu"
+    if not iommu_dir.is_dir():
+        return False
+    try:
+        return any(True for _ in iommu_dir.iterdir())
+    except OSError:
+        return False
+
+
+def _inspect_drm_connectors(dev_dir: Path) -> list[dict[str, str]]:
+    connectors: list[dict[str, str]] = []
+    drm_dir = dev_dir / "drm"
+    if not drm_dir.is_dir():
+        return connectors
+    for card_dir in sorted(drm_dir.glob("card[0-9]*")):
+        if "-" in card_dir.name:
+            continue
+        for conn_dir in sorted(drm_dir.glob(f"{card_dir.name}-*")):
+            status_file = conn_dir / "status"
+            status = status_file.read_text(encoding="utf-8", errors="replace").strip() if status_file.is_file() else "unknown"
+            conn_name = conn_dir.name[len(card_dir.name) + 1:]
+            connectors.append({
+                "card": card_dir.name,
+                "connector": conn_name,
+                "status": status,
+                "is_external": not conn_name.startswith(("eDP", "LVDS", "DSI")),
+            })
+    return connectors
+
+
+def _detect_thunderbolt_chain(dev_dir: Path) -> bool:
+    # Check symlink target path or explicit marker file in synthetic sysfs
+    marker = dev_dir / "anitails_thunderbolt_egpu"
+    if marker.is_file() and marker.read_text(encoding="utf-8", errors="replace").strip() == "1":
+        return True
+    try:
+        resolved = str(dev_dir.resolve())
+        if "thunderbolt" in resolved.lower():
+            return True
+    except OSError:
+        pass
+    removable = dev_dir / "removable"
+    if removable.is_file():
+        val = removable.read_text(encoding="utf-8", errors="replace").strip()
+        if val == "removable":
+            return True
+    return False
+
+
+def scan_gpus(sysfs_root: Path = Path("/"), db_path: Path | None = None) -> dict[str, Any]:
+    db = load_nvidia_db(db_path)
+    nv_devices = db.get("devices", {})
+    arch_policies = db.get("architecture_policies", {})
+
+    pci_dir = sysfs_root / "sys/bus/pci/devices"
+    iommu_active = detect_iommu_active(sysfs_root)
+
+    gpus: list[dict[str, Any]] = []
+    if pci_dir.is_dir():
+        for dev_dir in sorted(pci_dir.iterdir(), key=lambda p: p.name):
+            cls4, cls6 = _read_class_prefix(dev_dir / "class")
+            if cls4 not in PCI_DISPLAY_CLASSES:
+                continue
+
+            vendor = _read_hex4(dev_dir / "vendor")
+            device = _read_hex4(dev_dir / "device")
+            sub_vendor = _read_hex4(dev_dir / "subsystem_vendor")
+            sub_device = _read_hex4(dev_dir / "subsystem_device")
+            subsys_key = f"{sub_vendor}:{sub_device}"
+
+            rev_file = dev_dir / "revision"
+            revision = rev_file.read_text(encoding="utf-8", errors="replace").strip() if rev_file.is_file() else "0x00"
+
+            boot_vga_file = dev_dir / "boot_vga"
+            boot_vga = boot_vga_file.is_file() and boot_vga_file.read_text(encoding="utf-8", errors="replace").strip() == "1"
+
+            driver_link = dev_dir / "driver"
+            bound_driver = None
+            if driver_link.is_symlink():
+                bound_driver = Path(os.readlink(driver_link)).name
+            elif (dev_dir / "bound_driver").is_file():
+                bound_driver = (dev_dir / "bound_driver").read_text(encoding="utf-8", errors="replace").strip() or None
+
+            iommu_has_group = (dev_dir / "iommu_group").exists()
+            connectors = _inspect_drm_connectors(dev_dir)
+            is_egpu = _detect_thunderbolt_chain(dev_dir)
+            is_virtual = vendor in VIRTUAL_GPU_VENDORS
+
+            rec: dict[str, Any] = {
+                "pci_slot": redact_sensitive(dev_dir.name),
+                "pci_id": f"{vendor}:{device}",
+                "vendor_id": vendor,
+                "device_id": device,
+                "vendor_name": KNOWN_DISPLAY_VENDORS.get(vendor, f"PCI Vendor 0x{vendor}"),
+                "subsystem_id": subsys_key,
+                "pci_class": cls4,
+                "pci_class_full": cls6,
+                "pci_class_desc": PCI_DISPLAY_CLASSES[cls4],
+                "revision": revision,
+                "boot_vga": boot_vga,
+                "bound_driver": bound_driver,
+                "iommu_grouped": iommu_has_group,
+                "is_thunderbolt_egpu": is_egpu,
+                "is_virtual_gpu": is_virtual,
+                "drm_connectors": connectors,
+            }
+
+            if vendor == "10de":
+                nv_entry = nv_devices.get(device)
+                if nv_entry:
+                    subs = nv_entry.get("subsystems", {})
+                    exact_model = subs.get(subsys_key, nv_entry["name"])
+                    arch = nv_entry["arch"]
+                    pol = arch_policies.get(arch, {})
+                    headless_no_display = (cls4 == "0302" and nv_entry.get("headless_hint", False) and len(connectors) == 0)
+                    rec["nvidia"] = {
+                        "known_pci_id": True,
+                        "chip": nv_entry["chip"],
+                        "architecture": arch,
+                        "base_model": nv_entry["name"],
+                        "resolved_model": exact_model,
+                        "subsystem_matched": subsys_key in subs,
+                        "max_q_design": "max-q" in exact_model.lower(),
+                        "compute_capability": nv_entry["sm"],
+                        "has_gsp": nv_entry["gsp"],
+                        "nvidia_open_615_supported": nv_entry["open_615"],
+                        "nvidia_open_620_supported": nv_entry["open_620"],
+                        "nvidia_legacy_580_supported": nv_entry["legacy_580"],
+                        "nouveau_tier": nv_entry["nouveau"],
+                        "nvk_vulkan_tier": nv_entry["nvk"],
+                        "headless_compute_only": headless_no_display,
+                        "recommended_profile": pol.get("recommended_profile", "base"),
+                        "cuda_13_4_compatible": pol.get("cuda_13_4_compatible", False),
+                        "eol_proprietary_rejected": arch in ("Kepler", "Fermi", "Tesla_NV50", "Curie_NV40", "Fahrenheit_Kelvin_Rankine"),
+                    }
+                else:
+                    rec["nvidia"] = {
+                        "known_pci_id": False,
+                        "chip": "UNKNOWN_10DE",
+                        "architecture": "Unknown_NVIDIA_PCI_ID",
+                        "base_model": f"Unlisted NVIDIA GPU [10de:{device}]",
+                        "resolved_model": f"Unlisted NVIDIA GPU [10de:{device} subsys {subsys_key}]",
+                        "subsystem_matched": False,
+                        "max_q_design": False,
+                        "compute_capability": None,
+                        "has_gsp": None,
+                        "nvidia_open_615_supported": False,
+                        "nvidia_open_620_supported": False,
+                        "nvidia_legacy_580_supported": False,
+                        "nouveau_tier": "unknown",
+                        "nvk_vulkan_tier": "unknown",
+                        "headless_compute_only": cls4 == "0302",
+                        "recommended_profile": "safe-fallback",
+                        "cuda_13_4_compatible": False,
+                        "eol_proprietary_rejected": False,
+                    }
+            gpus.append(rec)
+
+    nv_gpus = [g for g in gpus if g["vendor_id"] == "10de"]
+    igpus = [g for g in gpus if g["vendor_id"] in ("8086", "1002") and not g["is_thunderbolt_egpu"]]
+    bmc_gpus = [g for g in gpus if g["vendor_id"] in ("1a03", "102b")]
+    virt_gpus = [g for g in gpus if g["is_virtual_gpu"]]
+
+    if nv_gpus and igpus:
+        topology = "hybrid_optimus_prime"
+    elif nv_gpus and bmc_gpus:
+        topology = "server_bmc_plus_nvidia"
+    elif nv_gpus:
+        if all(g["nvidia"]["headless_compute_only"] for g in nv_gpus):
+            topology = "nvidia_headless_3d_only_no_display"
+        else:
+            topology = "nvidia_discrete_only"
+    elif virt_gpus and not nv_gpus:
+        topology = "virtual_gpu_only"
+    elif gpus:
+        topology = "non_nvidia_gpu_only"
+    else:
+        topology = "no_pci_gpu_detected"
+
+    dgpu_external_ports = [
+        {"pci_slot": g["pci_slot"], **c}
+        for g in nv_gpus
+        for c in g["drm_connectors"]
+        if c["is_external"]
+    ]
+
+    warnings: list[str] = []
+    if topology == "virtual_gpu_only":
+        warnings.append(
+            "Chi phat hien GPU ao (QEMU/Virtio/VMware). Ket qua boot nay KHONG chung minh tuong thich phan cung NVIDIA that."
+        )
+    if topology == "nvidia_headless_3d_only_no_display":
+        warnings.append(
+            "Chi phat hien card NVIDIA PCI class 0x0302 headless (Tesla/Data Center khong co display engine) va khong co iGPU/BMC VGA; khong the xuat hinh truc tiep."
+        )
+    if topology == "hybrid_optimus_prime" and dgpu_external_ports:
+        warnings.append(
+            "Laptop Hybrid Optimus co cong xuat hinh ngoai (HDMI/DP) noi truc tiep vao NVIDIA dGPU: neu chon che do 'anitails.gpu=igpu', man hinh ngoai qua cong dGPU se khong hoat dong."
+        )
+    for g in nv_gpus:
+        if g["is_thunderbolt_egpu"] and not iommu_active:
+            warnings.append(
+                f"Phat hien eGPU Thunderbolt [{g['pci_id']}] nhung IOMMU DMA remapping KHONG bat: AniTails chan thunderbolt de chong tan cong DMA!"
+            )
+
+    return {
+        "schema_version": 1,
+        "topology": topology,
+        "iommu_active": iommu_active,
+        "gpu_count": len(gpus),
+        "nvidia_gpu_count": len(nv_gpus),
+        "virtual_gpu_count": len(virt_gpus),
+        "gpus": gpus,
+        "warnings": warnings,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="AniTails PCI-ID GPU & topology detector (UUID-redacted)")
+    ap.add_argument("--sysfs-root", default="/", help="Root path containing sys/bus/pci/devices (for testing)")
+    ap.add_argument("--db", default=None, help="Override path to nvidia-pci-db.json")
+    ap.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
+    args = ap.parse_args(argv)
+
+    report = scan_gpus(Path(args.sysfs_root), Path(args.db) if args.db else None)
+    text = json.dumps(report, indent=2 if args.pretty else None, ensure_ascii=False)
+    sys.stdout.write(redact_sensitive(text) + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

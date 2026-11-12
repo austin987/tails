@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""
+AniTails Tor Connection & Pluggable Transport Configurator (CLI / Zenity wrapper).
+Runs inside the 'torlaunch' network namespace (10.200.1.10 -> 10.200.1.9:9051)
+so it ONLY speaks to anitails-onion-grater and never touches clearnet directly.
+Supports:
+- Direct Tor connection (DisableNetwork=0, UseBridges=0)
+- Pluggable Transports via /usr/bin/lyrebird (obfs4, webtunnel, meek_lite)
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import socket
+import sys
+
+ALLOWED_TRANSPORTS = {"obfs4", "webtunnel", "meek_lite", "scramblesuit"}
+BRIDGE_LINE_RE = re.compile(
+    r"^(?:(?P<pt>obfs4|webtunnel|meek_lite|scramblesuit)\s+)?"
+    r"(?P<addr>(?:\d{1,3}\.){3}\d{1,3}:\d{1,5})"
+    r"(?:\s+(?P<fp>[0-9A-Fa-f]{40}))?"
+    r"(?:\s+(?P<params>[^\r\n;\"']+))?$"
+)
+
+
+def validate_bridge_line(line: str) -> str:
+    cleaned = " ".join(line.strip().split())
+    if cleaned.lower().startswith("bridge "):
+        cleaned = cleaned[7:].strip()
+    m = BRIDGE_LINE_RE.match(cleaned)
+    if not m:
+        raise ValueError(f"Invalid or unsafe bridge specification: {line!r}")
+    ip_part, port_str = m.group("addr").rsplit(":", 1)
+    port = int(port_str)
+    if not (1 <= port <= 65535):
+        raise ValueError(f"Bridge port out of range: {port}")
+    for octet in ip_part.split("."):
+        if not (0 <= int(octet) <= 255):
+            raise ValueError(f"Invalid IPv4 octet in bridge: {ip_part}")
+    return cleaned
+
+
+def send_control_commands(host: str, port: int, commands: list[str]) -> list[str]:
+    replies: list[str] = []
+    with socket.create_connection((host, port), timeout=10.0) as sock:
+        reader = sock.makefile("r", encoding="utf-8", newline="\n")
+        for cmd in ["AUTHENTICATE"] + commands + ["QUIT"]:
+            sock.sendall((cmd + "\r\n").encode("utf-8"))
+            lines = []
+            while True:
+                line = reader.readline()
+                if not line:
+                    break
+                lines.append(line.strip())
+                if len(line) >= 4 and line[3] == " ":
+                    break
+            reply = "\n".join(lines)
+            replies.append(reply)
+            if not reply.startswith("250"):
+                raise RuntimeError(f"Tor control rejected {cmd!r}: {reply}")
+    return replies
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Configure Tor bridges and enable Tor networking safely")
+    parser.add_argument("--control-host", default="127.0.0.1")
+    parser.add_argument("--control-port", type=int, default=9051)
+    parser.add_argument("--direct", action="store_true", help="Connect directly to Tor without bridges")
+    parser.add_argument("--bridge", action="append", default=[], help="Bridge line (obfs4 / webtunnel / meek_lite / vanilla)")
+    parser.add_argument("--disable-network", action="store_true", help="Set DisableNetwork=1 immediately")
+    parser.add_argument("--status", action="store_true", help="Query bootstrap phase")
+    args = parser.parse_args()
+
+    if args.status:
+        out = send_control_commands(args.control_host, args.control_port, ["GETINFO status/bootstrap-phase status/circuit-established"])
+        print(out[1])
+        return 0
+
+    if args.disable_network:
+        send_control_commands(args.control_host, args.control_port, ["SETCONF DisableNetwork=1"])
+        print("Tor network disabled (DisableNetwork=1).")
+        return 0
+
+    cmds: list[str] = []
+    if args.bridge:
+        validated = [validate_bridge_line(b) for b in args.bridge]
+        bridge_args = " ".join(f'Bridge="{b}"' for b in validated)
+        cmds.append(f"SETCONF UseBridges=1 {bridge_args} DisableNetwork=0")
+    elif args.direct:
+        cmds.append("SETCONF UseBridges=0 Bridge= DisableNetwork=0")
+    else:
+        parser.error("Specify --direct, --bridge <LINE>, --disable-network, or --status")
+
+    send_control_commands(args.control_host, args.control_port, cmds)
+    print("Tor network configuration applied via onion-grater.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

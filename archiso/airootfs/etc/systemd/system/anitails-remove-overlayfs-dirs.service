@@ -1,0 +1,14 @@
+[Unit]
+Description=Erase Writable Archiso Overlayfs Directories Late on Shutdown
+DefaultDependencies=no
+Before=sysinit.target shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStop=/usr/bin/rm -rf /run/archiso/cowspace/persistent /run/archiso/cowspace/workdir
+TimeoutStopSec=90s
+
+[Install]
+WantedBy=multi-user.target

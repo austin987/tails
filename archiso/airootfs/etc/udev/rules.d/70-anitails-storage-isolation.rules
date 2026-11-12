@@ -1,0 +1,9 @@
+# AniTails Storage Isolation & Anti-Automount Rules (enforces features/untrusted_partitions.feature)
+# 1. Never auto-mount ANY block device (internal SATA/NVMe or external USB/SD)
+SUBSYSTEM=="block", ENV{UDISKS_AUTO}="0"
+
+# 2. Never activate any Linux swap partition discovered on host drives
+SUBSYSTEM=="block", ENV{ID_FS_TYPE}=="swap", ENV{UDISKS_IGNORE}="1", ENV{SYSTEMD_READY}="0"
+
+# 3. Mark live boot medium read-only / system-protected in udisks2
+SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="ANITAILS_*", ENV{UDISKS_SYSTEM}="1", ENV{UDISKS_IGNORE}="1"

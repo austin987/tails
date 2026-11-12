@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+# AniTails Fail-Closed MAC Address Spoofer (ported & hardened from Tails tails-spoof-mac)
+#
+# Invariants:
+# 1. Never allow a physical Ethernet/Wi-Fi NIC to come UP with its factory MAC
+#    unless the user explicitly booted with anitails.macspoof=0.
+# 2. Verify actual post-change MAC from sysfs (/sys/class/net/<nic>/address) — NEVER
+#    trust exit code 0 from macchanger alone (catches silent driver/tool failures!).
+# 3. Fail-closed panic mode:
+#    - Immediately force NIC link DOWN
+#    - Blacklist driver module (.ko / .ko.zst aware on Arch Linux) and unload it
+#    - If NIC still exists in sysfs, stop, disable, and mask NetworkManager completely.
+
+set -euo pipefail
+
+NIC="${1:-}"
+SYSFS_ROOT="${ANITAILS_SYSFS_ROOT:-/sys/class/net}"
+MODPROBE_BLACKLIST_DIR="${ANITAILS_MODPROBE_DIR:-/run/modprobe.d}"
+PANIC_STATE_DIR="${ANITAILS_PANIC_DIR:-/run/anitails/mac-spoof-panic}"
+CMDLINE_FILE="${ANITAILS_CMDLINE_FILE:-/proc/cmdline}"
+MACCHANGER_BIN="${ANITAILS_MACCHANGER_BIN:-/usr/bin/macchanger}"
+IP_BIN="${ANITAILS_IP_BIN:-/usr/sbin/ip}"
+RMMOD_BIN="${ANITAILS_RMMOD_BIN:-/usr/sbin/modprobe}"
+SYSTEMCTL_BIN="${ANITAILS_SYSTEMCTL_BIN:-/usr/bin/systemctl}"
+
+if [[ ! -x "${IP_BIN}" && -x /usr/bin/ip ]]; then
+    IP_BIN="/usr/bin/ip"
+fi
+
+log_msg() {
+    logger -t anitails-spoof-mac "$*" 2>/dev/null || true
+    printf "[anitails-spoof-mac] %s\n" "$*" >&2
+}
+
+if [[ -z "${NIC}" ]]; then
+    log_msg "ERROR: missing interface name"
+    exit 2
+fi
+
+# Skip loopback and virtual ethernet pairs used for local netns isolation
+if [[ "${NIC}" == "lo" || "${NIC}" == veth* ]]; then
+    exit 0
+fi
+
+# Offline boot guard: never allow any physical NIC up in strict offline mode
+if [[ -r "${CMDLINE_FILE}" ]] && grep -qw "anitails.offline=1" "${CMDLINE_FILE}"; then
+    "${IP_BIN}" link set dev "${NIC}" down 2>/dev/null || true
+    log_msg "Offline mode enabled; forced ${NIC} down."
+    exit 0
+fi
+
+# Opt-out check (only if explicitly disabled at boot)
+if [[ -r "${CMDLINE_FILE}" ]] && grep -qw "anitails.macspoof=0" "${CMDLINE_FILE}"; then
+    log_msg "MAC spoofing explicitly disabled via kernel cmdline for ${NIC}."
+    exit 0
+fi
+
+NIC_DIR="${SYSFS_ROOT}/${NIC}"
+
+nic_exists() {
+    if [[ "${SYSFS_ROOT}" == "/sys/class/net" ]]; then
+        "${IP_BIN}" link show dev "${NIC}" >/dev/null 2>&1
+    else
+        [[ -e "${NIC_DIR}/address" ]]
+    fi
+}
+
+if ! nic_exists; then
+    log_msg "NIC ${NIC} does not exist; aborting."
+    exit 1
+fi
+
+read_mac() {
+    if [[ "${SYSFS_ROOT}" == "/sys/class/net" ]]; then
+        local link_out
+        link_out="$("${IP_BIN}" -o link show dev "${NIC}" 2>/dev/null || true)"
+        if [[ "${link_out}" =~ link/ether[[:space:]]+([0-9a-fA-F:]{17}) ]]; then
+            printf '%s\n' "${BASH_REMATCH[1],,}"
+            return 0
+        fi
+    fi
+    tr '[:upper:]' '[:lower:]' < "${NIC_DIR}/address" | tr -d '[:space:]'
+}
+
+get_nic_driver_module() {
+    if [[ -L "${NIC_DIR}/device/driver/module" ]]; then
+        basename "$(readlink -f "${NIC_DIR}/device/driver/module")"
+    else
+        echo ""
+    fi
+}
+
+stop_and_disable_network_manager() {
+    mkdir -p "${PANIC_STATE_DIR}"
+    printf "ALL_NETWORKING_DISABLED=1\nFAILED_NIC=%s\n" "${NIC}" > "${PANIC_STATE_DIR}/lockdown.state"
+    for svc in NetworkManager-dispatcher.service NetworkManager-wait-online.service NetworkManager.service; do
+        "${SYSTEMCTL_BIN}" stop "${svc}" 2>/dev/null || true
+        "${SYSTEMCTL_BIN}" disable "${svc}" 2>/dev/null || true
+        "${SYSTEMCTL_BIN}" mask "${svc}" 2>/dev/null || true
+    done
+    log_msg "CRITICAL LOCKDOWN: NetworkManager stopped and masked due to unrecoverable MAC spoof failure on ${NIC}."
+}
+
+mac_spoof_panic() {
+    mkdir -p "${PANIC_STATE_DIR}" "${MODPROBE_BLACKLIST_DIR}"
+    "${IP_BIN}" link set dev "${NIC}" down 2>/dev/null || log_msg "WARN: failed to set ${NIC} down in panic"
+
+    local drv_mod
+    drv_mod="$(get_nic_driver_module)"
+    if [[ -n "${drv_mod}" ]]; then
+        printf "install %s /bin/false\nblacklist %s\n" "${drv_mod}" "${drv_mod}" \
+            > "${MODPROBE_BLACKLIST_DIR}/99-panic-${drv_mod}.conf"
+        "${RMMOD_BIN}" -r "${drv_mod}" 2>/dev/null || true
+    fi
+
+    if nic_exists; then
+        printf "NIC_STILL_PRESENT=1\nNIC=%s\nMODULE=%s\n" "${NIC}" "${drv_mod}" > "${PANIC_STATE_DIR}/${NIC}.panic"
+        stop_and_disable_network_manager
+    else
+        printf "NIC_UNLOADED=1\nNIC=%s\nMODULE=%s\n" "${NIC}" "${drv_mod}" > "${PANIC_STATE_DIR}/${NIC}.panic"
+        log_msg "Unloaded driver module '${drv_mod}' for failed NIC ${NIC}."
+    fi
+}
+
+apply_spoof_once() {
+    "${IP_BIN}" link set dev "${NIC}" down
+    if [[ -x "${MACCHANGER_BIN}" ]]; then
+        "${MACCHANGER_BIN}" -e "${NIC}" >/dev/null 2>&1
+    else
+        # Fallback when macchanger binary is absent: preserve 3-byte vendor OUI (unicast) and randomize 3 NIC bytes
+        local cur_mac oui rand_tail
+        cur_mac="$(read_mac)"
+        oui="$(printf "%s" "${cur_mac}" | cut -d: -f1-3)"
+        # Ensure multicast bit (LSB of first octet) is 0
+        rand_tail="$(od -An -N3 -tx1 /dev/urandom | tr -s ' ' | sed 's/^ //;s/ $//;s/ /:/g' | tr '[:upper:]' '[:lower:]')"
+        if [[ -z "${oui}" || -z "${rand_tail}" ]]; then
+            return 1
+        fi
+        "${IP_BIN}" link set dev "${NIC}" address "${oui}:${rand_tail}"
+    fi
+}
+
+OLD_MAC="$(read_mac)"
+NEW_MAC=""
+
+for attempt in 1 2 3; do
+    if ! apply_spoof_once; then
+        NEW_MAC=""
+        break
+    fi
+    NEW_MAC="$(read_mac)"
+    if [[ -n "${NEW_MAC}" && "${NEW_MAC}" != "${OLD_MAC}" && "${NEW_MAC}" != "00:00:00:00:00:00" ]]; then
+        break
+    fi
+done
+
+FORCE_PANIC=0
+if [[ -r "${CMDLINE_FILE}" ]] && grep -qw "debug=test_mac_spoof_panic" "${CMDLINE_FILE}"; then
+    FORCE_PANIC=1
+fi
+
+if [[ "${FORCE_PANIC}" -eq 1 || -z "${OLD_MAC}" || -z "${NEW_MAC}" || "${OLD_MAC}" == "${NEW_MAC}" ]]; then
+    log_msg "FAIL-CLOSED: MAC spoofing failed on ${NIC} (old=${OLD_MAC:-none}, new=${NEW_MAC:-none}); entering panic mode!"
+    mac_spoof_panic
+    exit 1
+fi
+
+log_msg "Successfully spoofed MAC on ${NIC} (${OLD_MAC} -> ${NEW_MAC})."
+exit 0
