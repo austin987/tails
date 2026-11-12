@@ -87,6 +87,19 @@ cleanup() {
 }
 trap cleanup EXIT
 
+gh_escape() {
+    python3 -c '
+import re, sys
+raw = sys.stdin.buffer.read().decode("utf-8", "replace")
+raw = raw.replace("\x00", "")
+raw = re.sub(r"\x1b\[[0-9;?]*[a-zA-Z]", "", raw)
+raw = raw.replace("\r\n", "\n").replace("\r", "\n")
+lines = [ln for ln in raw.splitlines() if ln.strip()]
+out = "\n".join(lines[-45:])
+sys.stdout.write(out.replace("%", "%25").replace("\n", "%0A"))
+'
+}
+
 capture_qmp_screen_ocr() {
     local qmp_sock="$1"
     local ppm_file="$2"
@@ -118,7 +131,7 @@ diagnose_direct_kernel_serial() {
     if ! command -v bsdtar >/dev/null 2>&1; then
         return 0
     fi
-    echo "=== [boot-test] Running 45s direct kernel+initramfs serial trace for root-cause inspection ===" >&2
+    echo "=== [boot-test] Running 55s direct kernel+initramfs+journald serial trace for root-cause inspection ===" >&2
     local diag_dir="${WORK_TMP}/direct-diag"
     local diag_log="${WORK_TMP}/direct-serial.log"
     mkdir -p "${diag_dir}"
@@ -129,13 +142,14 @@ diagnose_direct_kernel_serial() {
 
     local kopts
     kopts="$(awk '/^options[[:space:]]+/{sub(/^options[[:space:]]+/,""); print; exit}' "${diag_dir}/loader/entries/01-anitails-x86_64-linux.conf" | sed 's/\bquiet\b//g')"
-    kopts="${kopts} earlyprintk=serial,ttyS0,115200 console=ttyS0,115200 loglevel=7 systemd.log_level=info"
+    kopts="${kopts} earlyprintk=serial,ttyS0,115200 console=ttyS0,115200 loglevel=7 systemd.show_status=true systemd.journald.forward_to_console=1"
 
-    timeout 45 qemu-system-x86_64 \
+    timeout 55 qemu-system-x86_64 \
         "${ACCEL_ARGS[@]}" \
         -m 3072 \
         -smp 2 \
         -machine q35 \
+        -smbios "type=11,value=anitails_ci_boot_test" \
         -vga std \
         -drive "file=${ISO_FILE},media=cdrom,readonly=on" \
         -net none \
@@ -148,10 +162,10 @@ diagnose_direct_kernel_serial() {
 
     if [[ -s "${diag_log}" ]]; then
         local err_excerpt tail_excerpt
-        err_excerpt="$(grep -iE 'panic|error|fail|denied|corrupt|unable|interactive|timeout|reject|missing|emergency' "${diag_log}" | tail -n 25 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' || true)"
-        tail_excerpt="$(tail -n 35 "${diag_log}" | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
-        [[ -n "${err_excerpt}" ]] && echo "::error title=Direct Kernel Serial Errors::${err_excerpt}"
-        echo "::error title=Direct Kernel Serial Tail::${tail_excerpt}"
+        err_excerpt="$(grep -aiE 'ANITAILS_|panic|error|fail|denied|corrupt|unable|interactive|timeout|reject|missing|emergency|gdm|gnome-shell' "${diag_log}" | gh_escape || true)"
+        tail_excerpt="$(gh_escape < "${diag_log}")"
+        [[ -n "${err_excerpt}" ]] && echo "::error title=Direct Kernel+Journald Matches::${err_excerpt}"
+        echo "::error title=Direct Kernel+Journald Tail::${tail_excerpt}"
     fi
 }
 
@@ -193,6 +207,7 @@ run_boot_mode() {
         "${ACCEL_ARGS[@]}" \
         -m 3072 \
         -smp 2 \
+        -smbios "type=11,value=anitails_ci_boot_test" \
         "${mode_args[@]}" \
         -net none \
         -device virtio-serial-pci \
@@ -207,22 +222,22 @@ run_boot_mode() {
 
     local elapsed=0
     while (( elapsed < TIMEOUT_SECS )); do
-        if grep -Fq "ANITAILS_OS_BOOT_READY" "${serial_file}" "${status_file}" 2>/dev/null; then
+        if grep -aFq "ANITAILS_OS_BOOT_READY" "${serial_file}" "${status_file}" 2>/dev/null; then
             echo "PASS [${mode^^}]:"
-            grep -F "ANITAILS_" "${serial_file}" "${status_file}" 2>/dev/null || true
+            grep -aF "ANITAILS_" "${serial_file}" "${status_file}" 2>/dev/null || true
             kill "${QEMU_PID}" 2>/dev/null || true
             wait "${QEMU_PID}" 2>/dev/null || true
             QEMU_PID=""
             return 0
         fi
-        if grep -Fq "ANITAILS_OS_BOOT_FAILED" "${serial_file}" "${status_file}" 2>/dev/null; then
+        if grep -aFq "ANITAILS_OS_BOOT_FAILED" "${serial_file}" "${status_file}" 2>/dev/null; then
             local ocr_txt
             ocr_txt="$(capture_qmp_screen_ocr "${qmp_sock}" "${ppm_file}")"
             echo "FAIL [${mode^^}]: Guest reported boot failure:" >&2
             cat "${serial_file}" "${status_file}" >&2
             [[ -n "${ocr_txt}" ]] && printf "=== Screen OCR ===\n%s\n" "${ocr_txt}" >&2
             local diag
-            diag="$( { cat "${serial_file}" "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | tail -n 40 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' )"
+            diag="$( { cat "${serial_file}" "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | gh_escape )"
             echo "::error title=OS Boot Failure (${mode^^})::${diag}"
             kill "${QEMU_PID}" 2>/dev/null || true
             wait "${QEMU_PID}" 2>/dev/null || true
@@ -233,8 +248,8 @@ run_boot_mode() {
             echo "FAIL [${mode^^}]: QEMU exited prematurely before reaching live desktop!" >&2
             cat "${qemu_err}" "${serial_file}" "${status_file}" >&2 || true
             local pdiag
-            pdiag="$(cat "${qemu_err}" "${serial_file}" "${status_file}" | tail -n 35 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
-            echo "::error title=QEMU Premature Exit (${mode^^})::${pdiag:-QEMU exited before guest virtio status}"
+            pdiag="$(cat "${qemu_err}" "${serial_file}" "${status_file}" | gh_escape)"
+            echo "::error title=QEMU Premature Exit (${mode^^})::${pdiag:-QEMU exited before guest status}"
             QEMU_PID=""
             return 1
         fi
@@ -248,7 +263,7 @@ run_boot_mode() {
     cat "${qemu_err}" "${serial_file}" "${status_file}" >&2 || true
     [[ -n "${ocr_txt}" ]] && printf "=== Screen OCR ===\n%s\n" "${ocr_txt}" >&2
     local tdiag
-    tdiag="$( { cat "${qemu_err}" "${serial_file}" "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | tail -n 35 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' )"
+    tdiag="$( { cat "${qemu_err}" "${serial_file}" "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | gh_escape )"
     echo "::error title=OS Boot Timeout (${mode^^})::Timed out after ${TIMEOUT_SECS}s. Logs: ${tdiag}"
     kill -9 "${QEMU_PID}" 2>/dev/null || true
     wait "${QEMU_PID}" 2>/dev/null || true

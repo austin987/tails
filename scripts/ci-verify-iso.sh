@@ -89,6 +89,24 @@ for iso in "${ISO_FILES[@]}"; do
         echo "CRITICAL SECURITY FAIL: Private key filename pattern detected in ISO 9660 tree of ${iso}!" >&2
         exit 1
     fi
+
+    if command -v bsdtar >/dev/null 2>&1 && command -v unsquashfs >/dev/null 2>&1; then
+        sfs_tmp="$(mktemp -d)"
+        bsdtar -xf "${iso}" -C "${sfs_tmp}" arch/x86_64/airootfs.sfs
+        sfs_list="$(unsquashfs -l "${sfs_tmp}/arch/x86_64/airootfs.sfs")"
+        rm -rf "${sfs_tmp}"
+        for req_rootfs_entry in \
+            "squashfs-root/etc/anitails-finalized" \
+            "squashfs-root/etc/systemd/system/display-manager.service" \
+            "squashfs-root/etc/systemd/system/sysinit.target.wants/anitails-virtio-boot-status.service" \
+            "squashfs-root/etc/modprobe.d/90-all-net-blacklist.conf"; do
+            if ! grep -Fxq "${req_rootfs_entry}" <<<"${sfs_list}"; then
+                echo "FAIL: Missing post-pacstrap entry '${req_rootfs_entry}' inside airootfs.sfs of ${iso}!" >&2
+                exit 1
+            fi
+        done
+        echo "[verify-iso] Verified post-pacstrap finalization & GDM/firewall/watchdog symlinks inside airootfs.sfs."
+    fi
 done
 
 MANIFEST_STAGE="$(mktemp -d)"

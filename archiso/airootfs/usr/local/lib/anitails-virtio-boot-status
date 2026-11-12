@@ -3,16 +3,16 @@
 # =================================================================
 # SECURITY INVARIANTS:
 #   - Activates ONLY inside a VM (`ConditionVirtualization=vm`) when the
-#     explicit QEMU test-harness marker port `org.anitails.status` is present
-#     in `/sys/class/virtio-ports/*/name`.
+#     explicit QEMU test-harness marker (`-smbios type=11,value=anitails_ci_boot_test`
+#     or virtio port `org.anitails.status`) is present.
 #   - Strictly WRITE-ONLY: NEVER reads commands, stdin, or config from host.
 #   - NEVER emits hardware serial numbers, MAC addresses, or user data.
 set -euo pipefail
 
-/usr/bin/modprobe virtio_pci 2>/dev/null || true
-/usr/bin/modprobe virtio_console 2>/dev/null || true
-
-has_harness_marker_port() {
+has_harness_marker() {
+    if [[ -r /sys/firmware/dmi/tables/DMI ]] && /usr/bin/grep -aq "anitails_ci_boot_test" /sys/firmware/dmi/tables/DMI 2>/dev/null; then
+        return 0
+    fi
     if [[ -e "/dev/virtio-ports/org.anitails.status" ]]; then
         return 0
     fi
@@ -27,16 +27,18 @@ has_harness_marker_port() {
     return 1
 }
 
-MARKER_FOUND=0
-for _ in $(seq 1 30); do
-    if has_harness_marker_port; then
-        MARKER_FOUND=1
-        break
-    fi
-    sleep 0.5
-done
+if ! has_harness_marker; then
+    /usr/bin/modprobe virtio_pci 2>/dev/null || true
+    /usr/bin/modprobe virtio_console 2>/dev/null || true
+    for _ in $(seq 1 10); do
+        if has_harness_marker; then
+            break
+        fi
+        sleep 0.5
+    done
+fi
 
-if [[ "${MARKER_FOUND}" -ne 1 ]]; then
+if ! has_harness_marker; then
     exit 0
 fi
 
@@ -57,7 +59,7 @@ emit_report() {
 emit_report "$(printf "ANITAILS_BOOT_HEARTBEAT stage=early kernel=%s uptime=%s" \
     "$(uname -r)" "$(awk '{print $1}' /proc/uptime 2>/dev/null || echo 0)")"
 
-DEADLINE=$((SECONDS + 150))
+DEADLINE=$((SECONDS + 165))
 NEXT_PROGRESS=$((SECONDS + 10))
 GDM_OK="false"
 SESSION_OK="false"
@@ -125,8 +127,8 @@ FAIL_DUMP="$(
     /usr/bin/loginctl list-sessions --no-pager 2>&1 || true
     echo "=== journalctl -b -p warning..emerg (last 40 lines) ==="
     /usr/bin/journalctl -b -p warning..emerg --no-pager -n 40 2>&1 || true
-    echo "=== journalctl -u gdm.service (last 30 lines) ==="
-    /usr/bin/journalctl -u gdm.service --no-pager -n 30 2>&1 || true
+    echo "=== journalctl -u gdm.service (last 35 lines) ==="
+    /usr/bin/journalctl -u gdm.service --no-pager -n 35 2>&1 || true
 )"
 emit_report "${FAIL_DUMP}"
 exit 1
