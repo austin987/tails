@@ -1,57 +1,61 @@
 #!/usr/bin/env bash
-# AniTails Read-Only Virtio Boot Health Reporter (VM CI Verification Only)
-# ========================================================================
+# AniTails Read-Only VM Boot Health Reporter (CI Test Harness Only)
+# =================================================================
 # SECURITY INVARIANTS:
-#   - Strictly WRITE-ONLY to `/dev/virtio-ports/org.anitails.status`.
-#   - NEVER reads commands, stdin, or configuration from the virtio port.
+#   - Activates ONLY inside a VM (`ConditionVirtualization=vm`) when the
+#     explicit QEMU test-harness marker port `org.anitails.status` is present
+#     in `/sys/class/virtio-ports/*/name`.
+#   - Strictly WRITE-ONLY: NEVER reads commands, stdin, or config from host.
 #   - NEVER emits hardware serial numbers, MAC addresses, or user data.
-#   - Guarded by `ConditionVirtualization=vm` in systemd.
 set -euo pipefail
 
 /usr/bin/modprobe virtio_pci 2>/dev/null || true
 /usr/bin/modprobe virtio_console 2>/dev/null || true
 
-find_or_create_port() {
-    local symlink="/dev/virtio-ports/org.anitails.status"
-    if [[ -c "${symlink}" ]]; then
-        echo "${symlink}"
+has_harness_marker_port() {
+    if [[ -e "/dev/virtio-ports/org.anitails.status" ]]; then
         return 0
     fi
-    local sys_p name dev_node maj_min
+    local sys_p name
     for sys_p in /sys/class/virtio-ports/*; do
         [[ -d "${sys_p}" && -f "${sys_p}/name" ]] || continue
         name="$(tr -d '\r\n' < "${sys_p}/name" 2>/dev/null || true)"
         if [[ "${name}" == "org.anitails.status" ]]; then
-            dev_node="/dev/$(basename "${sys_p}")"
-            if [[ ! -c "${dev_node}" && -f "${sys_p}/dev" ]]; then
-                maj_min="$(tr -d '\r\n' < "${sys_p}/dev" 2>/dev/null || true)"
-                if [[ "${maj_min}" =~ ^([0-9]+):([0-9]+)$ ]]; then
-                    /usr/bin/mknod -m 0600 "${dev_node}" c "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" 2>/dev/null || true
-                fi
-            fi
-            if [[ -c "${dev_node}" ]]; then
-                echo "${dev_node}"
-                return 0
-            fi
+            return 0
         fi
     done
     return 1
 }
 
-PORT=""
+MARKER_FOUND=0
 for _ in $(seq 1 30); do
-    if PORT="$(find_or_create_port)"; then
+    if has_harness_marker_port; then
+        MARKER_FOUND=1
         break
     fi
     sleep 0.5
 done
 
-if [[ -z "${PORT}" || ! -c "${PORT}" ]]; then
+if [[ "${MARKER_FOUND}" -ne 1 ]]; then
     exit 0
 fi
 
-printf "ANITAILS_BOOT_HEARTBEAT stage=early kernel=%s uptime=%s\n" \
-    "$(uname -r)" "$(awk '{print $1}' /proc/uptime 2>/dev/null || echo 0)" > "${PORT}"
+if [[ ! -c /dev/ttyS0 ]]; then
+    /usr/bin/mknod -m 0600 /dev/ttyS0 c 4 64 2>/dev/null || true
+fi
+
+emit_report() {
+    local payload="$1"
+    if [[ -c /dev/ttyS0 ]]; then
+        printf "%s\n" "${payload}" > /dev/ttyS0 2>/dev/null || true
+    fi
+    if [[ -c /dev/virtio-ports/org.anitails.status ]]; then
+        /usr/bin/timeout 1 bash -c 'cat > "$1"' _ /dev/virtio-ports/org.anitails.status <<<"${payload}" 2>/dev/null || true
+    fi
+}
+
+emit_report "$(printf "ANITAILS_BOOT_HEARTBEAT stage=early kernel=%s uptime=%s" \
+    "$(uname -r)" "$(awk '{print $1}' /proc/uptime 2>/dev/null || echo 0)")"
 
 DEADLINE=$((SECONDS + 150))
 NEXT_PROGRESS=$((SECONDS + 10))
@@ -94,23 +98,23 @@ while (( SECONDS < DEADLINE )); do
                 || /usr/bin/pgrep -u amnesia -f "gnome-session|gnome-shell" >/dev/null 2>&1 ); then
             KVER="$(uname -r)"
             SYS_STATE="$(/usr/bin/systemctl is-system-running 2>/dev/null || true)"
-            printf "ANITAILS_OS_BOOT_READY kernel=%s state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
-                "${KVER}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}" > "${PORT}"
+            emit_report "$(printf "ANITAILS_OS_BOOT_READY kernel=%s state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s" \
+                "${KVER}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}")"
             exit 0
         fi
     fi
 
     if (( SECONDS >= NEXT_PROGRESS )); then
         SYS_STATE="$(/usr/bin/systemctl is-system-running 2>/dev/null || true)"
-        printf "ANITAILS_BOOT_PROGRESS sec=%d state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
-            "${SECONDS}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}" > "${PORT}"
+        emit_report "$(printf "ANITAILS_BOOT_PROGRESS sec=%d state=%s gdm=%s amnesia_session=%s firewall=%s netns=%s" \
+            "${SECONDS}" "${SYS_STATE}" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}")"
         NEXT_PROGRESS=$((SECONDS + 10))
     fi
 
     sleep 1
 done
 
-{
+FAIL_DUMP="$(
     printf "ANITAILS_OS_BOOT_FAILED kernel=%s gdm=%s amnesia_session=%s firewall=%s netns=%s\n" \
         "$(uname -r)" "${GDM_OK}" "${SESSION_OK}" "${FIREWALL_OK}" "${NETNS_OK}"
     echo "=== systemctl list-jobs ==="
@@ -119,9 +123,10 @@ done
     /usr/bin/systemctl --failed --no-pager 2>&1 || true
     echo "=== loginctl list-sessions ==="
     /usr/bin/loginctl list-sessions --no-pager 2>&1 || true
-    echo "=== journalctl -b -p warning..emerg (last 50 lines) ==="
-    /usr/bin/journalctl -b -p warning..emerg --no-pager -n 50 2>&1 || true
-    echo "=== journalctl -u gdm.service (last 40 lines) ==="
-    /usr/bin/journalctl -u gdm.service --no-pager -n 40 2>&1 || true
-} > "${PORT}"
+    echo "=== journalctl -b -p warning..emerg (last 40 lines) ==="
+    /usr/bin/journalctl -b -p warning..emerg --no-pager -n 40 2>&1 || true
+    echo "=== journalctl -u gdm.service (last 30 lines) ==="
+    /usr/bin/journalctl -u gdm.service --no-pager -n 30 2>&1 || true
+)"
+emit_report "${FAIL_DUMP}"
 exit 1

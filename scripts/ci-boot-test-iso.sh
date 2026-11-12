@@ -105,12 +105,53 @@ time.sleep(0.2)
 s.recv(4096)
 cmd = json.dumps({"execute": "screendump", "arguments": {"filename": ppm_path}}).encode() + b"\n"
 s.sendall(cmd)
-time.sleep(0.4)
+time.sleep(0.5)
 s.recv(4096)
 s.close()
 PY
     if [[ -s "${ppm_file}" ]] && command -v tesseract >/dev/null 2>&1; then
-        tesseract "${ppm_file}" stdout 2>/dev/null | tr -s '\n' | tail -n 20 || true
+        tesseract "${ppm_file}" stdout 2>/dev/null | tr -s '\n' | tail -n 25 || true
+    fi
+}
+
+diagnose_direct_kernel_serial() {
+    if ! command -v bsdtar >/dev/null 2>&1; then
+        return 0
+    fi
+    echo "=== [boot-test] Running 45s direct kernel+initramfs serial trace for root-cause inspection ===" >&2
+    local diag_dir="${WORK_TMP}/direct-diag"
+    local diag_log="${WORK_TMP}/direct-serial.log"
+    mkdir -p "${diag_dir}"
+    bsdtar -xf "${ISO_FILE}" -C "${diag_dir}" \
+        arch/boot/x86_64/vmlinuz-linux-anitails \
+        arch/boot/x86_64/initramfs-linux-anitails.img \
+        loader/entries/01-anitails-x86_64-linux.conf 2>/dev/null || return 0
+
+    local kopts
+    kopts="$(awk '/^options[[:space:]]+/{sub(/^options[[:space:]]+/,""); print; exit}' "${diag_dir}/loader/entries/01-anitails-x86_64-linux.conf" | sed 's/\bquiet\b//g')"
+    kopts="${kopts} earlyprintk=serial,ttyS0,115200 console=ttyS0,115200 loglevel=7 systemd.log_level=info"
+
+    timeout 45 qemu-system-x86_64 \
+        "${ACCEL_ARGS[@]}" \
+        -m 3072 \
+        -smp 2 \
+        -machine q35 \
+        -vga std \
+        -drive "file=${ISO_FILE},media=cdrom,readonly=on" \
+        -net none \
+        -kernel "${diag_dir}/arch/boot/x86_64/vmlinuz-linux-anitails" \
+        -initrd "${diag_dir}/arch/boot/x86_64/initramfs-linux-anitails.img" \
+        -append "${kopts}" \
+        -serial "file:${diag_log}" \
+        -display none \
+        -no-reboot >/dev/null 2>&1 || true
+
+    if [[ -s "${diag_log}" ]]; then
+        local err_excerpt tail_excerpt
+        err_excerpt="$(grep -iE 'panic|error|fail|denied|corrupt|unable|interactive|timeout|reject|missing|emergency' "${diag_log}" | tail -n 25 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' || true)"
+        tail_excerpt="$(tail -n 35 "${diag_log}" | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g')"
+        [[ -n "${err_excerpt}" ]] && echo "::error title=Direct Kernel Serial Errors::${err_excerpt}"
+        echo "::error title=Direct Kernel Serial Tail::${tail_excerpt}"
     fi
 }
 
@@ -120,10 +161,11 @@ run_boot_mode() {
     local serial_file="${WORK_TMP}/serial-${mode}.log"
     local qemu_err="${WORK_TMP}/qemu-${mode}.err"
     local qmp_sock="${WORK_TMP}/qmp-${mode}.sock"
+    local vnc_sock="${WORK_TMP}/vnc-${mode}.sock"
     local ppm_file="${WORK_TMP}/screen-${mode}.ppm"
     : > "${status_file}"
     : > "${serial_file}"
-    rm -f "${qmp_sock}" "${ppm_file}"
+    rm -f "${qmp_sock}" "${vnc_sock}" "${ppm_file}"
 
     local -a mode_args=()
     if [[ "${mode}" == "bios" ]]; then
@@ -158,29 +200,29 @@ run_boot_mode() {
         -device "virtserialport,chardev=status0,name=org.anitails.status" \
         -serial "file:${serial_file}" \
         -qmp "unix:${qmp_sock},server=on,wait=off" \
-        -display none \
+        -vnc "unix:${vnc_sock}" \
         -no-reboot \
         2>"${qemu_err}" &
     QEMU_PID=$!
 
     local elapsed=0
     while (( elapsed < TIMEOUT_SECS )); do
-        if grep -Fq "ANITAILS_OS_BOOT_READY" "${status_file}" 2>/dev/null; then
+        if grep -Fq "ANITAILS_OS_BOOT_READY" "${serial_file}" "${status_file}" 2>/dev/null; then
             echo "PASS [${mode^^}]:"
-            cat "${status_file}"
+            grep -F "ANITAILS_" "${serial_file}" "${status_file}" 2>/dev/null || true
             kill "${QEMU_PID}" 2>/dev/null || true
             wait "${QEMU_PID}" 2>/dev/null || true
             QEMU_PID=""
             return 0
         fi
-        if grep -Fq "ANITAILS_OS_BOOT_FAILED" "${status_file}" 2>/dev/null; then
+        if grep -Fq "ANITAILS_OS_BOOT_FAILED" "${serial_file}" "${status_file}" 2>/dev/null; then
             local ocr_txt
             ocr_txt="$(capture_qmp_screen_ocr "${qmp_sock}" "${ppm_file}")"
             echo "FAIL [${mode^^}]: Guest reported boot failure:" >&2
-            cat "${status_file}" >&2
+            cat "${serial_file}" "${status_file}" >&2
             [[ -n "${ocr_txt}" ]] && printf "=== Screen OCR ===\n%s\n" "${ocr_txt}" >&2
             local diag
-            diag="$( { cat "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | tail -n 40 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' )"
+            diag="$( { cat "${serial_file}" "${status_file}"; [[ -n "${ocr_txt}" ]] && printf "ScreenOCR:\n%s\n" "${ocr_txt}"; } | tail -n 40 | sed 's/%/%25/g; s/\r/%0D/g; :a;N;$!ba;s/\n/%0A/g' )"
             echo "::error title=OS Boot Failure (${mode^^})::${diag}"
             kill "${QEMU_PID}" 2>/dev/null || true
             wait "${QEMU_PID}" 2>/dev/null || true
@@ -219,6 +261,7 @@ run_boot_mode bios || OVERALL_RC=1
 run_boot_mode uefi || OVERALL_RC=1
 
 if [[ "${OVERALL_RC}" -ne 0 ]]; then
+    diagnose_direct_kernel_serial
     exit "${OVERALL_RC}"
 fi
 
